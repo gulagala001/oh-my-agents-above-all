@@ -2739,6 +2739,16 @@
       "src/client/zcode-workflow-graph.css": "bdd53afcb60a9377d66479fe6a0cfbf21899f2a661b2b83fd6f287adb19d95c9",
       "src/client/zcode-workflow-graph-intl.jsx": "a6ce1fdb422aff56f620c2f1baf3838f9cbd56170ea27c059b00b2c75df29677",
       "src/client/zcode-workflow-graph-messages.mjs": "bfc71986b334233db794d3807ad76adcfc3bdeb044c98466c3c8959d78546e88"
+    },
+    "assetGenerator": {
+      "module": "scripts/build-zcode-graph-ui-assets.mjs",
+      "sha256": "e54480ea499586c63fa6e2515d22016b5c86696c4f2e6072f656dd346b2e7bb9",
+      "mode": "Build calls read-only check; CLI --write regenerates, --output-dir previews separately. Fixed40 source SHA/commit and37 runtime closure; DSH/Intl bridge is explicit.",
+      "buildDependencies": {
+        "tailwindcss": "4.2.2",
+        "postcss": "8.5.6"
+      },
+      "runtimeDependency": false
     }
   }
 }
