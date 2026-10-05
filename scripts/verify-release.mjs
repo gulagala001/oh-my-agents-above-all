@@ -51,7 +51,14 @@ async function main() {
     remote = jsonApi(`repos/${repo}/git/tags/${remote.sha}`).object;
   }
   requireMatch(remote?.type === 'commit' && remote.sha === localCommit, 'Remote release tag points to a different source commit.');
-  const release = jsonApi(`repos/${repo}/releases/tags/${encodeURIComponent(tag)}`);
+  // GitHub's by-tag REST endpoint excludes drafts, even for their owner. gh's
+  // release resolver supports both drafts and public releases; still validate
+  // its destination before retrieving the authoritative numeric-ID record.
+  const lookup = parseJson(command('gh', ['release', 'view', tag, '--repo', repo, '--json', 'apiUrl,tagName'], 'Release lookup'), 'Release lookup');
+  requireMatch(lookup.tagName === tag && typeof lookup.apiUrl === 'string', 'Release lookup differs from the requested tag.');
+  const releasePrefix = `https://api.github.com/repos/${repo}/releases/`;
+  requireMatch(lookup.apiUrl.startsWith(releasePrefix) && /^[1-9]\d*$/.test(lookup.apiUrl.slice(releasePrefix.length)), 'Invalid release API destination.');
+  const release = jsonApi(lookup.apiUrl.slice('https://api.github.com/'.length));
   requireMatch(release.tag_name === tag && Number.isSafeInteger(release.id), 'Release tag or ID differs from the requested release.');
   const pages = parseJson(api(`repos/${repo}/releases/${release.id}/assets?per_page=100`, ['--paginate', '--slurp']), 'Release asset inventory');
   requireMatch(Array.isArray(pages) && pages.every(Array.isArray), 'Invalid release asset inventory.');
