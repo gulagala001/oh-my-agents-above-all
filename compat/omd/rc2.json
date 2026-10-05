@@ -5,7 +5,7 @@
   "sourceCommit": "d29b75c98a0f6575af5880497c4d970125eeedf2",
   "sourceTag": "v0.2.0-rc.2.omd.0.6.1",
   "patch": "rc2.patch",
-  "patchSha256": "c33f2b8ba18d8c6d41fd3554ff3181b030e602b24d8b95456bd98c89b448558f",
+  "patchSha256": "006b6480684bfa33b7b28a3f295dff84868c5b0a966fbccc8b08db9255008b9c",
   "basePackageSha256": "9c1ce6d8b0f3c8ef725b352c464942c722830005484eeb080b05824b1e073a03",
   "files": {
     "CHANGELOG.md": "31c5f7b9435d92401c9b366a1efe1387818eaa8730a5452f753def0671ae5eef",
@@ -871,7 +871,7 @@
     "vendor/prompt-optimizer/templates/user-prompt-professional.ts": "6d2d73a11493cdf003cd9f4775920ffef1b73e305167f103914f7c800f4be7cf"
   },
   "patchedFiles": {
-    "src/index.mjs": "4338d0a4356d2e25f8ca18aa37c8b21a05fd897156f8d9380b784c0083821ec9",
+    "src/index.mjs": "803197b9115ed3227ca08860c69bacaa77f81a19d52edc3e1715a276605a14c2",
     "src/ultracode.mjs": "c496fb6ca70fd5d333ea89cce82992ee72fc54a29621d52b8233538bc24e8e74",
     "src/codegraph-agent.mjs": "49d264727612c0c5c238f81b739150b87e72607352fc1037825ba6a7cb7c8075",
     "src/client/appearance-brand.jsx": "7dc3cb11d7d6d6437face667414a2d7130c46bfb9b3b4874179d54da10357ef2",
@@ -884,7 +884,7 @@
     "src/client/projectless-state.mjs": "77c48bafca63715c10db9a8f118b9c2c195192153203f0d184912460aaa788b4"
   },
   "additions": {
-    "src/omaa-enhancement.mjs": "e327ca18a8aaeec80f6b4cd00186de91b3f300e01510eb83fb8fb9ee918455ea",
+    "src/omaa-enhancement.mjs": "5c25d508d800aed3f67ae8368f43e4b9d31007db6a830b0b2c982add271d626e",
     "src/client/skins/coordinator.mjs": "b30beaa540f7279a94d1b201654b3f4d25114c19d64c9becb851d8c61c2fc21a"
   },
   "optionalPackagingFiles": {

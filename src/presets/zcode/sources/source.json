@@ -752,7 +752,8 @@
       "kind": "official-section-output",
       "sha256": "ad7287b7ad8d9eb03eacc1855f0878e12a77dd3d09e1085416bccc765314b515",
       "bytes": 7376,
-      "selector": "Default no-output-style CLI prefix, identity, desktop, dynamic behavior and context management. Environment/memory/skills/user context are session-generated; their complete builders are retained."
+      "selector": "Default no-output-style CLI prefix, identity, desktop, dynamic behavior and context management. Environment/memory/skills/user context are session-generated; their complete builders are retained.",
+      "gitBlobSha1": "5091674b3dacc29c6a6361dc74e2d9bed4ea140c"
     },
     {
       "file": "sources/upstream/apps/zcode-cli/packages/core/src/session-context/read-session-context.ts",
@@ -762,6 +763,69 @@
       "bytes": 11782,
       "kind": "official-source",
       "gitBlobSha1": "2385146bb1d47620c6cc14e3b6e2c4ecd2b325e6"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/tools/saved-workflow.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/saved-workflow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/tools/saved-workflow.ts",
+      "sha256": "c569f1f7c579681d97867746bec28c78628eb72e20132e5f58d1faf7ba283fec",
+      "bytes": 6748,
+      "kind": "official-source",
+      "gitBlobSha1": "26c4bcf8896d7685fd0e1f6c6e4a6a0135192aca"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/tools/save-workflow.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/save-workflow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/tools/save-workflow.ts",
+      "sha256": "c8d561133488927797a2eaf905a94655812e46a9bf94cc4c123b20bbd89e2806",
+      "bytes": 4942,
+      "kind": "official-source",
+      "gitBlobSha1": "cacd30cc1f0431ee99c741c80657c78fe7899887"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/tools/list-saved-workflows.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/list-saved-workflows.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/tools/list-saved-workflows.ts",
+      "sha256": "1c4ae0375e56a101ed42cdc5198a352d32a26bef657732a8ac523bcc45df06ba",
+      "bytes": 1719,
+      "kind": "official-source",
+      "gitBlobSha1": "872159756190a6597b71c813f8e193ce52c15d18"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/saved-workflows/args.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/saved-workflows/args.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/saved-workflows/args.ts",
+      "sha256": "4b7a2bc35c9c77d0f043903a6d9c79e25796300be636e6c001e554859cb1c0bf",
+      "bytes": 4041,
+      "kind": "official-source",
+      "gitBlobSha1": "02108b8018d2a60e6f7aca064b1847e32666342b"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/workflow-path-source.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/workflow-path-source.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/workflow-path-source.ts",
+      "sha256": "90857478330e0e24ce8db0f1d552c6e8ec4b4f41b0a0e508fbf0a4468d3d9b3b",
+      "bytes": 5091,
+      "kind": "official-source",
+      "gitBlobSha1": "38250d5efad409b646f97850975f87fa15074a53"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/workflow-script-analysis.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/workflow-script-analysis.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/workflow-script-analysis.ts",
+      "sha256": "1fe49ed66c8babad63008e360f3dc03f5266075b20b1d8fdda18875a67de05d0",
+      "bytes": 1251,
+      "kind": "official-source",
+      "gitBlobSha1": "70a1ba4da1c8cd337fb903a7d683bab8e7d81e45"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/package.json",
+      "path": "apps/zcode-cli/packages/core/package.json",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/package.json",
+      "sha256": "abf5a6c8715fe87ea4b5ef3a48b225f94980dc386fe2ccfe98844347aa16bcd8",
+      "bytes": 1366,
+      "kind": "official-source",
+      "gitBlobSha1": "6ea21f876843b7d78c1cb0f774d210610440a7bb"
     }
   ],
   "adaptation": {
@@ -769,7 +833,7 @@
     "main": "Full default stable/dynamic section output, with explicit host-surface and live-tool replacements documented in docs/products/zcode.md.",
     "plan": "Full official Enter/Exit text only when both host plan tools exist; preserve prior user consent via actual ask_user_question (explicit Plan selection counts), entry itself has no second approval; exit uses plan with Markdown heading and native Approve/Keep planning.",
     "compaction": "buildCompactionPrompt is the full official default compact instruction adapted to summary-only output in the existing DSH compaction transaction.",
-    "excluded": "Official runtime, account/provider machinery, second compaction pipeline, unimplemented code-comment renderer and dynamic-workflow tools."
+    "excluded": "Official runtime, account/provider machinery, second compaction pipeline, unimplemented code-comment renderer, original TypeScript workflow facade/static graph analysis and graph amendment."
   },
   "nativeWorkflow": {
     "module": "../workflow.mjs",
@@ -792,11 +856,20 @@
   "omdEnhancementAdaptation": {
     "capability": "optional Pro/Ultra",
     "module": "../workflow.mjs",
-    "sha256": "80244ec1759dd18213e9b09bd280db1da129eb666e43dd455f6eacc184283343",
+    "sha256": "f3ae5f28967833898822d722032ad4e0724e626e3a6735b1429a356aea6b63da",
     "promptModule": "../prompt.mjs",
-    "promptSha256": "714e02670a9aae9dc5507aaba407c5353bfcd85badfa08313ac83702cf8a5ef8",
+    "promptSha256": "288ebbb4452f597c569f3797e689ead3485994e6bf92688dd63403b59f8a4ca9",
     "original": "Without an explicit workflow request, do not start a workflow.",
     "activeModeAdaptation": "Pro/Ultracode selection is the user standing workflow authorization; the default source text remains unchanged and the actual zcode-workflows skill gate remains.",
     "runtime": "Same DSH loop and session; compatible OMD workflow implementation selected once in the existing private delegation realm, never two active engines."
+  },
+  "savedWorkflowAdapter": {
+    "module": "saved-workflows.mjs",
+    "sourceContract": "apps/zcode-cli/packages/contracts/src/tools/saved-workflow.ts",
+    "nativeContract": "Native fs observations and tools.execute write/workflow; no alternate execution loop",
+    "format": "Original YAML block comment + exact native JavaScript body in .dwf.ts; project before global, scoped lookup/list",
+    "validation": "Original metadata and argument validation derived from source; Zod record overload adapted to host 4. Plain JS syntax validation before save; native workflow runtime checks at execution",
+    "limits": "256 KiB per definition, 256 directory entries/definitions, 1 MiB aggregate list reads",
+    "differences": "No original TypeScript facade/static graph analysis or graph amend. Metadata archive is not the workflow run journal."
   }
 }

@@ -30,7 +30,7 @@ export function branchTreeRows(branches) {
 }
 
 export function createPiBranches(settings, uiWorkspace, sessions, request = fetch) {
-  let state = { sessionId: settings.getSnapshot().sessionId, data: null, loading: false, saving: false, error: '' };
+  let state = { sessionId: settings.getSnapshot().sessionId, data: null, result: null, loading: false, saving: false, error: '' };
   let generation = 0, readController, productId = settings.getSnapshot().data?.product?.id;
   const listeners = new Set();
   const emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
@@ -46,7 +46,7 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
     if (id === state.sessionId && product === productId) return;
     productId = product;
     readController?.abort(); ++generation;
-    emit({ sessionId: id, data: null, loading: false, saving: false, error: '' });
+    emit({ sessionId: id, data: null, result: null, loading: false, saving: false, error: '' });
   });
   return {
     getSnapshot: () => state,
@@ -58,16 +58,17 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
       emit({ sessionId: id, loading: true, error: '' });
       try {
         const data = await api(id, undefined, signal);
-        if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) emit({ data, loading: false });
+        if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) emit({ data, result: null, loading: false });
       } catch (error) { if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) emit({ loading: false, error: error.message }); }
     },
     open(sessionId, expectedId = state.sessionId) {
       requirePi(settings, expectedId);
-      if (state.sessionId !== expectedId || !state.data?.branches.some(branch => branch.sessionId === sessionId)) throw new Error('该分支已不在当前分支列表，请刷新。');
+      if (state.sessionId !== expectedId || !(state.result?.sessionId === sessionId || state.data?.branches.some(branch => branch.sessionId === sessionId))) throw new Error('该分支已不在当前分支列表，请刷新。');
       uiWorkspace.openSession(sessionId);
     },
     async fork({ atSeq, withSummary = false } = {}, expectedId = state.sessionId) {
       requirePi(settings, expectedId, true);
+      if (state.result?.sessionId) throw new Error('分支已创建，请先打开该分支或刷新列表。');
       if (state.sessionId !== expectedId || state.loading || state.saving || !state.data?.canFork) throw new Error('当前回合尚不能分叉，请刷新或等待运行结束。');
       if (atSeq !== undefined && !state.data.points.some(point => point.seq === atSeq)) throw new Error('所选回合已不可用，请刷新。');
       const version = ++generation, head = state.data.head;
@@ -75,7 +76,13 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
       try {
         const result = await api(expectedId, { head, ...(atSeq === undefined ? {} : { atSeq }), withSummary: Boolean(withSummary) });
         if (version !== generation || settings.getSnapshot().sessionId !== expectedId) return result;
-        await sessions.refresh();
+        emit({ result });
+        try { await sessions.refresh(); }
+        catch (error) {
+          if (version === generation && settings.getSnapshot().sessionId === expectedId) emit({ saving: false,
+            error: `分支已创建，列表刷新失败：${error.message}。可直接打开该分支或刷新列表。` });
+          return result;
+        }
         if (version !== generation || settings.getSnapshot().sessionId !== expectedId) return result;
         emit({ saving: false, result }); uiWorkspace.openSession(result.sessionId);
         return result;

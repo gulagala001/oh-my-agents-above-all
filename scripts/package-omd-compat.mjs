@@ -8,7 +8,7 @@ import { build, version as esbuildVersion } from 'esbuild';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const overlay = join(root, 'compat', 'omd');
-const usage = 'Usage: node scripts/package-omd-compat.mjs --base <official-directory|official.tgz> --host-version <0.2.0-rc.2|0.2.1-alpha.1> [--omd-version 0.7.1] [--out-dir dist]';
+const usage = 'Usage: node scripts/package-omd-compat.mjs --base <official-directory|official.tgz> --host-version <0.2.0-rc.2|0.2.1-alpha.1> [--omd-version 0.8.0] [--out-dir dist]';
 const args = process.argv.slice(2), options = {};
 for (let i = 0; i < args.length; i += 2) {
   const key = args[i];
@@ -19,7 +19,7 @@ if (!options['--base'] || !options['--host-version']) throw new Error(usage);
 const hostVersion = options['--host-version'];
 const variant = { '0.2.0-rc.2': 'rc2', '0.2.1-alpha.1': 'alpha' }[hostVersion];
 if (!variant) throw new Error(`Unsupported host ${hostVersion}; review and register a new baseline before packaging.`);
-const omdVersion = options['--omd-version'] ?? '0.7.1';
+const omdVersion = options['--omd-version'] ?? '0.8.0';
 if (!/^\d+\.\d+\.\d+$/.test(omdVersion)) throw new Error('OMD version must have three numeric components.');
 const [major, minor] = omdVersion.split('.').map(Number);
 if (major === 0 && minor < 7) throw new Error('The OMAA bridge is a new feature; OMD must be 0.7.0 or newer.');

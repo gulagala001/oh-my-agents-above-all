@@ -1,3 +1,4 @@
+import { personalityText } from './cc-adaptation/personality.mjs';
 import { apply as applyCodegraph } from './codegraph-agent.mjs';
 import { registerComputerTools } from '#opencu/src/computer-use/tools.mjs';
 
@@ -23,3 +24,5 @@ export async function installOmaaEnhancement(scope, computer) {
   // CodeGraph's catalog can appear later; the two prefixes stay owned by OMD.
   return [...new Set([...names, 'codegraph_index', 'computer_use', 'computer_use_reset'])];
 }
+
+export const omaaIdentityPrompt = hub => personalityText(hub.config());

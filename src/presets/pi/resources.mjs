@@ -1,3 +1,4 @@
+import { applySharedIdentity, omdIdentityPrompt } from '../../host/identity.mjs';
 import path from 'node:path';
 import { homedir } from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -196,7 +197,7 @@ export function apply(ctx, config = {}) {
     return { ...assembly, sections: assembly.sections.map(section => {
       if (section.name === 'deployment:persona-prefix' && catalog.system?.text) {
         const cwd = context.agent.session.header.cwd.replaceAll('\\', '/').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        return { ...section, text: catalog.system.text + '\n\n<cwd>\n' + cwd + '\n</cwd>', interpolate: false };
+        return { ...section, text: applySharedIdentity(catalog.system.text, 'pi', omdIdentityPrompt(ctx), { userSystem: true, child: context.agent.session.header.origin === 'subagent' }) + '\n\n<cwd>\n' + cwd + '\n</cwd>', interpolate: false };
       }
       if (section.name === 'omaa:pi-addendum') return { ...section, text: catalog.append?.text ? '<addendum>\n' + catalog.append.text + '\n</addendum>' : '', interpolate: false };
       if (section.name === 'omaa:pi-global-context') {

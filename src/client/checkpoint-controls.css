@@ -1,5 +1,6 @@
 .omaa-checkpoints { margin:0 20px 20px; padding-top:15px; border-top:1px solid var(--dsw-alias-border-l2); color:var(--dsw-alias-label-primary); font-size:12px; }
 .omaa-checkpoints h3 { font-size:14px; margin:0 0 8px; }
+.omaa-checkpoints header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px; }.omaa-checkpoints header h3 { margin:0; }
 .omaa-checkpoints select,.omaa-checkpoints button { color:inherit; background:var(--dsw-alias-bg-layer-1); border:1px solid var(--dsw-alias-border-l2); border-radius:5px; padding:5px 7px; font:inherit; }
 .omaa-checkpoints button { cursor:pointer; }.omaa-checkpoints :disabled { opacity:.55; cursor:not-allowed; }
 .omaa-checkpoint-file { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin:9px 0; }

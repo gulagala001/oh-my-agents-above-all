@@ -17,3 +17,5 @@ DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行
 兼容交付已转为固定官方 OMD 0.6.1 基线与入库最小补丁，通过 `scripts/package-omd-compat.mjs` 生成对应宿主的 tgz、SHA256 与来源元数据；不把本机缓存 stage 作为源码。正式附件由 GitHub Releases 交付，升级先审阅基线差异，保持对应宿主原生工厂、无项目聊天和 rc.2 草稿恢复。
 
 当前交付要求是在 GitHub 仓库及 Releases 提供可安装成品、来源补丁、两宿主包和维护流程。当前 UI 修复聚焦无项目 Pro/Ultra 首次发送、设置保存竞态、同 ID 切预设残留、主题过渡与窄侧栏。正在运行的用户任务应保持，桌面重载在空闲后进行。
+
+已补 ZCode 项目／全局保存与按名复用工作流，仍由 native write/workflow 和原生日志承载；新增配对 GitHub 更新入口，防止兼容 OMD 被普通 OMD 更新覆盖。Pi extension 已依据固定官方 ABI 与 native hook 研究出 extension-only sandbox callback bridge；尚未实现，下一步直接加载原版受用户配置允许的本地 TS/JS factory，不能拿普通宿主插件或格式改写冒充原版扩展支持。
