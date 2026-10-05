@@ -1,0 +1,18 @@
+.omaa-pi-extensions { box-sizing:border-box; width:100%; min-width:0; max-width:700px; margin:0 auto; padding:20px; color:var(--dsw-alias-label-primary); font:inherit; font-size:13px; overflow-wrap:anywhere; }
+.omaa-pi-extensions header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.omaa-pi-extensions h2 { margin:0; font-size:17px; font-weight:600; }
+.omaa-pi-extensions p { font-size:12px; line-height:1.6; margin:8px 0; }
+.omaa-pi-extension-help { color:var(--dsw-alias-label-secondary); }
+.omaa-pi-extensions label { display:block; margin:16px 0 10px; }
+.omaa-pi-extensions textarea { display:block; box-sizing:border-box; width:100%; min-width:0; min-height:110px; resize:vertical; margin-top:7px; padding:8px; font:inherit; font-family:var(--dsw-font-mono,monospace); line-height:1.5; color:inherit; background:var(--dsw-alias-bg-layer-1); border:1px solid var(--dsw-alias-border-l2); border-radius:6px; }
+.omaa-pi-extensions button { box-sizing:border-box; max-width:100%; padding:6px 9px; font:inherit; color:inherit; background:var(--dsw-alias-bg-layer-1); border:1px solid var(--dsw-alias-border-l2); border-radius:6px; cursor:pointer; }
+.omaa-pi-extension-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.omaa-pi-extensions :disabled { opacity:.55; cursor:not-allowed; }
+.omaa-pi-extensions :focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
+.omaa-pi-extension-error { color:var(--dsw-alias-state-error-primary); white-space:pre-wrap; }
+.omaa-pi-extension-states { list-style:none; padding:0; margin:16px 0 0; }
+.omaa-pi-extension-states li { border-top:1px solid var(--dsw-alias-border-l2); padding:10px 0; }
+.omaa-pi-extension-states li>div { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; }
+.omaa-pi-extension-states code { flex:1; min-width:0; overflow-wrap:anywhere; }
+.omaa-pi-extension-states small { display:block; margin-top:5px; line-height:1.6; color:var(--dsw-alias-label-secondary); }
+@media(max-width:420px) { .omaa-pi-extensions { padding:15px; } }

@@ -36,14 +36,19 @@ test('review opens the recorded comparison and preserves its exact native file i
   assert.equal(f.calls.length, 1);
 });
 
-test('stale callbacks, running changes and hidden session never open another session or admit restores', () => {
+test('stale callbacks and hidden session cannot navigate; running only blocks idle operations', () => {
   const f = fixture(); f.switch('b');
   assert.throws(() => openCheckpointReview(f.settings, f.sidebarRight, 'a/#', checkpoint), /会话已切换/);
   assert.throws(() => assertCheckpointSession(f.settings, 'a/#', f.sidebarRight), /会话已切换/);
   f.switch('a/#'); f.run();
-  assert.throws(() => openCheckpointFile(f.settings, f.sidebarRight, 'a/#', { path: 'src/a.js' }), /停止/);
-  f.unmount(); assert.throws(() => assertCheckpointSession(f.settings, 'a/#', f.sidebarRight), /会话已切换/);
-  assert.equal(f.calls.length, 0);
+  assert.throws(() => assertCheckpointSession(f.settings, 'a/#', f.sidebarRight), /停止/);
+  openCheckpointFile(f.settings, f.sidebarRight, 'a/#', { path: 'src/a.js' });
+  openCheckpointReview(f.settings, f.sidebarRight, 'a/#', checkpoint, 1);
+  assert.equal(f.calls.length, 2);
+  f.unmount();
+  assert.throws(() => assertCheckpointSession(f.settings, 'a/#', f.sidebarRight), /会话已切换/);
+  assert.throws(() => openCheckpointFile(f.settings, f.sidebarRight, 'a/#', { path: 'src/a.js' }), /会话已切换/);
+  assert.equal(f.calls.length, 2);
 });
 
 test('current preview is separate from recorded diff and refuses files absent after restore', () => {

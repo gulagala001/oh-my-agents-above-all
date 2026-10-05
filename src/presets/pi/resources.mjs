@@ -212,7 +212,8 @@ export function apply(ctx, config = {}) {
     const decision = await next();
     if (decision.kind === 'reject') return decision;
     const catalog = catalogs.get(agent) ?? await load(agent, signal);
-    return { ...decision, messages: decision.messages.map(message => {
+    const messages = ctx.get('omaaPiExtensions') ? await ctx.get('omaaPiExtensions').input(agent, decision.messages, signal) : decision.messages;
+    return { ...decision, messages: messages.map(message => {
       if (message.role !== 'user' || message.source?.kind !== 'user') return message;
       const content = message.content.map(part => part.type === 'text' ? { ...part, text: expandPromptTemplate(part.text, catalog.templates) } : part);
       return { ...message, content };

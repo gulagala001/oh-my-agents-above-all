@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 
@@ -19,6 +19,8 @@ test('checkpoint retry and Pi fork recovery preserve the actual native target', 
   const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   t.after(() => browser.close());
   const page = await browser.newPage();
+  await mkdir('.cache', { recursive: true });
+  await page.exposeFunction('captureRunningPreview', () => page.locator('.omaa-checkpoints').screenshot({ path: '.cache/cursor-running-review-fixture.png' }));
   await page.setContent('<div id="app"></div>');
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
   const result = await page.evaluate(async () => {
@@ -49,10 +51,20 @@ test('checkpoint retry and Pi fork recovery preserve the actual native target', 
       await until(() => document.querySelector('[role="alert"]')?.textContent.includes('临时读取失败') && button('刷新检查点') && !button('刷新检查点').disabled);
       stages.failedCheckpoint = document.querySelector('select[aria-label="文件检查点"]').textContent;
       click('刷新检查点'); await until(() => calls.length === 2);
-      calls.at(-1).finish({ sessionId: 'cursor-a', checkpoints: [{ turn: 1, seq: 9, reviewAvailable: false,
+      calls.at(-1).finish({ sessionId: 'cursor-a', checkpoints: [{ turn: 1, seq: 9, reviewAvailable: true, summary: { files: [{ path: 'src/a.js' }] },
         files: [{ path: 'src/a.js', before: { kind: 'bytes' }, after: { kind: 'bytes' }, restorable: true }] }] });
       await until(() => button('预览当前文件')); click('预览当前文件');
       stages.preview = opened.at(-1);
+      const beforeRunning = calls.length;
+      set({ ...state, data: { ...state.data, running: true } });
+      await until(() => document.body.textContent.includes('运行中可查看已加载回合'));
+      stages.runningControls = { preview: !button('预览当前文件').disabled, review: !button('审阅本回合 1 个文件').disabled,
+        restore: button('恢复文件').disabled, findIssues: button('查找此文件问题').disabled,
+        selection: !document.querySelector('select[aria-label="文件检查点"]').disabled };
+      click('预览当前文件'); click('审阅本回合 1 个文件');
+      stages.runningReview = opened.at(-1);
+      stages.noPolling = calls.length === beforeRunning;
+      await window.captureRunningPreview();
       set({ sessionId: 'pi-a', data: { product: { id: 'pi' }, mode: 'default', running: false } });
       await until(() => calls.at(-1).url.includes('/pi-branches'));
       const branchData = points => ({ sessionId: 'pi-a', head: 20, canFork: true,
@@ -77,6 +89,9 @@ test('checkpoint retry and Pi fork recovery preserve the actual native target', 
   });
   assert.match(result.failedCheckpoint, /读取失败，请刷新/);
   assert.deepEqual(result.preview, ['cursor-a', 'dsh-resource://file/session/cursor-a/src/a.js']);
+  assert.deepEqual(result.runningControls, { preview: true, review: true, restore: true, findIssues: true, selection: true });
+  assert.deepEqual(result.runningReview, ['cursor-a', 'dsh-resource://changes-review/session/cursor-a/9/1', { params: { index: 0 } }]);
+  assert.equal(result.noPolling, true);
   assert.equal(result.refreshedPoint, '');
   assert.deepEqual(result.forkBody, { head: 20, withSummary: false });
   assert.equal(result.createdNotice, true);

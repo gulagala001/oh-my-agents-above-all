@@ -6,6 +6,7 @@ import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
 import { createUpdates } from './updates.mjs';
+import { createPiExtensionSettings } from './host/pi-extensions.mjs';
 import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
 
 export const name = 'omaa';
@@ -81,13 +82,40 @@ function mount(ctx) {
       return (await hub.inspect(sessionId)).value;
     },
   };
+  const extensionSettings = createPiExtensionSettings(join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa'));
+  const extensionStates = new Map(), extensionNotices = new Map();
+  let noticeId = 0;
+  hub.piExtensions = {
+    settings: extensionSettings, states: extensionStates,
+    notify(agent, text, type = 'info') {
+      if (typeof text !== 'string' || text.length > 4096) throw Error('Pi 扩展通知须为不超过 4096 字符的文字');
+      const notices = extensionNotices.get(agent.id) ?? [];
+      notices.push({ id: ++noticeId, type: ['info', 'warning', 'error'].includes(type) ? type : 'info', text });
+      extensionNotices.set(agent.id, notices.slice(-32));
+    },
+    notices(sessionId, after = 0) {
+      if (!Number.isSafeInteger(after) || after < 0) throw Error('通知位置无效');
+      const notices = (extensionNotices.get(sessionId) ?? []).filter(n => n.id > after);
+      return { enabled: extensionSettings.read().files.length > 0, cursor: Math.max(after, ...notices.map(n => n.id)), notices };
+    },
+    describe: () => ({ ...extensionSettings.read(), states: [...extensionStates].map(([sessionId, state]) => ({ sessionId, ...state.view() })) }),
+    async update(files, revision) {
+      const agents = ctx.agents.list().filter(agent => hub.product(agent.session)?.id === 'pi');
+      if ([...extensionStates.values()].some(state => state.busy()) || agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length || ctx.get('jobs')?.list(agent.id).some(job => ['running', 'stopping'].includes(job.status)))) throw Error('请先停止 Pi 任务，再更改执行扩展');
+      // Validate/CAS before teardown; the next assembly initializes the new set.
+      extensionSettings.write(files, revision);
+      await Promise.all([...extensionStates.values()].map(state => state.dispose()));
+      return hub.piExtensions.describe();
+    },
+  };
+  ctx.on('agent/disposed', ({ agent }) => { extensionNotices.delete(agent.id); }, { global: true });
   const transferSession = createSessionTransfer({ store, hub, workControl: () => ctx.get('trisoulX')?.omaaWorkMode,
     flush: session => ctx.sessions.flush(session) });
   hub.updates = createUpdates({ getManager: () => ctx.get('pluginManager'),
     getOmdVersion: () => ctx.get('trisoulX')?.omaaInstalledVersion,
     isRunning: () => {
       const agents = ctx.agents.list(), jobs = ctx.get('jobs');
-      return agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length)
+      return [...extensionStates.values()].some(state => state.busy()) || agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length)
         || [undefined, ...agents.map(agent => agent.id)].some(owner => jobs?.list(owner).some(job => ['running', 'stopping'].includes(job.status)));
     } });
   ctx.effect(() => () => hub.updates.close());
@@ -113,7 +141,19 @@ function mount(ctx) {
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (!['/omaa/api/updates', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/updates', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (url.pathname === '/omaa/api/pi-extensions') {
+          if (req.method === 'GET') sendJson(res, 200, hub.piExtensions.describe());
+          else if (req.method === 'POST') { const data = await readJson(req); sendJson(res, 200, await hub.piExtensions.update(data.files, data.revision)); }
+          else sendJson(res, 405, { error: '不支持此方法' });
+          return;
+        }
+        if (url.pathname === '/omaa/api/pi-extension-notices') {
+          if (req.method !== 'GET') { sendJson(res, 405, { error: '不支持此方法' }); return; }
+          const { session } = await hub.inspect(url.searchParams.get('session'));
+          if (hub.product(session)?.id !== 'pi') throw Error('请选择 Pi 会话');
+          sendJson(res, 200, hub.piExtensions.notices(session.id, Number(url.searchParams.get('after') ?? 0))); return;
+        }
         if (url.pathname === '/omaa/api/updates') {
           if (req.method === 'GET') {
             await hub.updates.check(url.searchParams.get('refresh') === '1');
