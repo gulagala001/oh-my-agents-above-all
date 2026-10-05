@@ -1,4 +1,5 @@
 import { analyzeWorkflowScript, createWorkflowProgram, collectSites, synthesizeAskSchemas, buildAskSpecs, lowerWorkflow, collectWorldRunCommands } from '../../../lib/zcode-workflow-compiler.mjs';
+import { boundCausalityGraph } from '../../../lib/zcode-run-projection.mjs';
 
 export const ZCODE_FACADE_MARKER = '// @omaa-workflow-facade: zcode';
 const MAX_BYTES = 256 * 1024;
@@ -13,5 +14,6 @@ export function prepareTypedWorkflow(script) {
   const program = createWorkflowProgram(script), sites = collectSites(program), schemas = synthesizeAskSchemas(program, sites), worldRun = collectWorldRunCommands(program, sites);
   if (schemas.diagnostics.length || worldRun.diagnostics.length) return { ok: false, diagnostics: hostDiagnostics([...schemas.diagnostics, ...worldRun.diagnostics]) };
   return { ok: true, diagnostics: [], sites, askSpecs: buildAskSpecs(sites, schemas.schemas),
-    lowered: lowerWorkflow(program, sites), declaredRunCommands: new Set(worldRun.commands), graph: analysis.graph, causalityGraph: analysis.causality };
+    lowered: lowerWorkflow(program, sites), declaredRunCommands: new Set(worldRun.commands), graph: analysis.graph,
+    causalityGraph: analysis.causality, displayGraph: analysis.causality ? boundCausalityGraph(analysis.causality, analysis.flow, analysis.handoff) : undefined };
 }

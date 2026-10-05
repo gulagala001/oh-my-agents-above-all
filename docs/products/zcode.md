@@ -39,7 +39,7 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 `agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于原生 descriptor，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
 
-支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。OMAA 0.7.0 接入文件、Git 与字面命令 world facade（见下文），0.8.0 接入产物（见下节）。自动专家/planner/critic 生成、同一运行的 graph amend、原厂 workflow 审批/动态图界面与原厂运行日志重放仍有差异。修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入，不冒充原位修图或原厂工作流重放。
+支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。OMAA 0.7.0 接入文件、Git 与字面命令 world facade（见下文），0.8.0 接入产物（见下节）。自动专家/planner/critic 生成、successor-run Amend、原厂 workflow 审批/动态图界面与原厂运行日志重放仍有差异。修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入，不冒充原位修图或原厂工作流重放。
 
 ### OMAA 0.7.0 的 world facade
 
@@ -51,7 +51,7 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 原版限制明确拒绝而不截断成功结果：glob 最多 2000 文件；grep 最多 2000 条且序列化结果最多 256 KiB；Git diff 最多 512 KiB；Git log 默认 20 条、最多 100 条；world.run 的 stdout/stderr 各最多 256 KiB，默认超时 300000 ms，显式 timeout 不做上限钳制。Git 其它文本输出另受适配端口 4 MiB 限制。参数与越界错误保留 `DriverError`，结果超限使用 `WorldReadCapExceeded`；原生权限与沙箱负责实际访问边界，类型检查和词法路径校验本身不替代隔离。
 
-此路径使用原生 workflow 工具调用的权限边界与当前授权，不提供原厂 workflow journal/replay、Bash 逐条工具审批或 escalation。原厂 graph amend 与 live graph UI 仍未接入；world 调用本身沿用原生工具界面，产物另有下述右栏。既有 OMAA 0.6 与 Actor 验证记录保持原范围。
+此路径使用原生 workflow 工具调用的权限边界与当前授权，不提供原厂 workflow journal/replay、Bash 逐条工具审批或 escalation。公开 0.8.0 未接入原厂 Amend 与 live graph；新增未发布运行投影见下文。world 调用本身沿用原生工具界面，产物另有下述右栏。既有 OMAA 0.6 与 Actor 验证记录保持原范围。
 
 `test/installed-zcode-world.test.mjs` 的一个隔离原版 DSH 安装 fixture 已实际通过，记录在本地 `.cache/zcode-world-installed-check.log`。它覆盖 native 文件观测与原厂 glob 语义、UTF-16 BOM/CRLF 读取、宿主 bundled ripgrep、Git、相对可执行路径、非零退出结果、超限拒绝、native workspace-write 与后台工作在父会话切换 Ask 后取消。这是单个 fixture 的执行证据，不证明全部模型、跨平台/asar 运行、原厂 workflow 全能力或动态图界面等价。
 
@@ -74,11 +74,19 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 原生 Domain `omaa_zcode_workflows` 仅保存小 summary。完整 metadata、成功版本与报告使用 DSH 原生 content-addressed 文件附件 refs，不建立自己的 blob 存储，不改 native journal 格式。读取按当前 session、run、version 授权，跨 session 请求拒绝；整个宿主冷启动后只读查找仍能取回原快照，不激活原会话、不追加 native 事件。文件通过 `fileHostPath` 指向不可变快照，沿用原生 Text/Markdown/文档预览。
 
-独立“工作流产物”右栏可从工具结果“查看产物”进入，按 run 导航并请求真实 native Stop。可见时读取采用单飞、pending 重读及过期响应过滤。Chart 保留完整原厂 ChartView，使用固定 Recharts 3.8.0，以 lazy 和局部错误边界加载；Table/Metrics/Board 使用原 parse/fold/palette 并适配 DSH CSS。graph 目前只展示真实静态 graph/causality JSON，没有 live graph、graph amend 或原厂 engine journal/replay。
+独立“工作流产物”右栏可从工具结果“查看产物”进入，按 run 导航并请求真实 native Stop。可见时读取采用单飞、pending 重读及过期响应过滤。Chart 保留完整原厂 ChartView，使用固定 Recharts 3.8.0，以 lazy 和局部错误边界加载；Table/Metrics/Board 使用原 parse/fold/palette 并适配 DSH CSS。公开 0.8.0 的 graph 只展示真实静态 graph/causality JSON；下述未发布源码新增原版运行投影，不提供 Amend 或原厂 engine journal/replay。
 
 一个最终原生 fixture `test/installed-zcode-artifacts.test.mjs` 已实际通过，本地记录为 `.cache/zcode-artifacts-installed-check.log`：覆盖 spec 调用后变更不影响快照、两个成功版本、工作区后改与冷重启内容保持、四种声明与分页/table upsert、文件过大/逃逸/缺失/primary 的可 catch 错误、跨 session 拒读、非法 spec 导致 run 失败及读取不追加 native 事件。此轮未扩五预设矩阵。
 
 已配置 `opencode-zen/space-bunny-free` 完成一个实际产物任务：真实加载技能并调用 `create_workflow`，发布 Chart、Table 和 primary Markdown，返回 `delivery` 的 `{id,version:1}`。结果记录为本地 `.cache/zcode-artifacts-live-result.json` 的 `outcome`。在原生 alpha Web UI 实点工具结果“查看产物”打开对应 run；完整原版 ChartView 显示两点图，Table 的同 key 数据只保留一行且 value 为 3；实点“打开原生预览”读取 native `attachments/v1` 中不可变 `delivery.md`。实拍入口为 `.cache/zcode-artifact-chart.jpg` 与 `.cache/zcode-artifact-preview.jpg`。这是一个真实模型任务与该 Web 流程的有限证据；UI 全面验收、Desktop/Windows 产物 UI 和其他模型仍未全面验证，不推导原厂能力等价。
+
+### 未发布开发源码：原版运行投影与时间线
+
+当前公开版本仍是 OMAA 0.8.0。新增开发源码保留固定 `29628c9` 的 41 文件显示/reducer closure，以及 37 份原版 UI 代码、样式与中英 locale；Timeline 和 WorkflowRunPhaseList 是真实原版组件，不是 ReactFlow。`scripts/build-zcode-run-projection.mjs` 在严格 SHA closure 下派生 `lib/zcode-run-projection.mjs`，保留三类 graph bounds 投影及原 workflowRuns reducer，不导入原执行 engine。
+
+`run-progress.mjs` 只把实际 site×ordinal、phase、Actor birth、native child accepted receipt、队列、dispatch 与 settled 事实送入投影；未知 provider backoff 不猜测。样式由临时目录中的 Tailwind 4.2.2 构建生成，不增加 Tailwind runtime dependency。lucide-react 固定 1.17.0，原 peer 支持 React 18；实际许可为 ISC，包含 Feather 派生图标的 MIT 原文。最终 native graph fixture 尚在运行，不据此宣称通过、浏览器实拍、部署或发布。
+
+原厂 Amend 的真实语义是停止前驱，创建 successor 新 run，并继承缓存与精确 Actor 转录前缀；同 run 调整是并发 retune，resume 要求 script bytes 相同。OMAA 尚未接线 Amend，无缓存的 stop/new 不等价。精确 completed prefix 继承可通过公开专用 continuity provider 实现，manager 仍负责新 parent、descriptor 与权限，seed 来自旧 Actor 完整已完成前缀；这条能力不必先修改宿主，目前仍未接入 OMAA。
 
 ## 保存与按名复用工作流
 
@@ -93,3 +101,5 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 
 TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已实际核对 typed 保存/按名运行、两次真实 submit_result、同一原生日志、整宿主重启后的字面角色续问；另一个短用例核对后台运行在父会话切到 Ask 后停止并等待 child drain。已配置 Space Bunny Free 的短任务实际读取一次 fact.txt，再在同一 Actor 中只凭历史返回第二个类型化结果，两次正确；它不证明所有模型或复杂编排质量。
+
+未发布 0.9.0 图接线的一个最终原生 fixture 已核对原三输入有界 display、Actor 在出生时分配 site × ordinal（反序 ask 不颠倒身份）、phase 出生快照、同一 native child 两问与 world-read 终态。另一个已配置 Space Bunny Free 短任务实际返回预期 Actor 回复与文件内容；alpha Web 原 Timeline／PhaseList 已点击展开，Actor 卡片打开真实 continuable child，父会话面包屑可返回。证据为本地 `.cache/zcode-graph-native-check.log`、`.cache/zcode-graph-ui-result.json` 与 timeline／actor 实拍；没有据此宣称完整 in-flight/backoff、桌面或 Windows 新图验收，也未发布或部署 0.9.0。

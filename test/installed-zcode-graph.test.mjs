@@ -1,0 +1,54 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { installedHost, textReply, toolReply } from './fixtures/installed-host.mjs';
+const textOf = message => typeof message.content === 'string' ? message.content : (message.content ?? []).map(part => part.text ?? '').join('\n');
+
+test('ZCode graph uses original bounded projections and native actor/world instance facts', { timeout: 90000 }, async t => {
+  const f = await installedHost(t); await writeFile(join(f.workspace, 'fact.txt'), 'GRAPH_WORLD_FACT');
+  await f.install(); await f.boot(); const { sessionId } = await f.create('omaa-zcode');
+  const script = `phase('Research');
+const reviewer=agent('Reviewer','GRAPH_NATIVE_ACTOR');
+const team=['Earlier','Later'].map(name=>agent(name,'GRAPH_NATIVE_ACTOR'));
+await team[1].ask<string>('Ask later-born Actor first');
+await team[0].ask<string>('Ask earlier-born Actor second');
+const first=await reviewer.ask<string>('First native actor task');
+phase('Build');
+const second=await reviewer.ask<string>('Second native actor task');
+const fact=await files.read('fact.txt');
+return {first,second,fact};`;
+  let stage = 0;
+  f.replyWith(request => {
+    const system = request.messages.filter(message => message.role === 'system').map(textOf).join('\n');
+    if (system.includes('GRAPH_NATIVE_ACTOR')) return textReply('ACTOR_NATIVE_RESULT');
+    if (!request.tools?.length) return textReply('Native graph fixture.');
+    if (stage++ === 0) return toolReply('skill', { name: 'zcode-workflows' });
+    if (stage === 2) return toolReply('create_workflow', { script, run_in_background: false });
+    return textReply('Native graph result collected.');
+  });
+  const result = await f.prompt(sessionId, 'Execute this native graph fixture as a workflow.');
+  const call = result.records.findLast(row => row.event?.type === 'tool/call' && row.event.data.name === 'create_workflow')?.event;
+  assert(call);
+  const event = result.records.find(row => row.event?.type === 'tool/result' && row.event.data.message?.toolCallId === call.data.callId)?.event;
+  const outcome = JSON.parse(textOf(event.data.message)); assert(outcome.ok, JSON.stringify(outcome));
+  assert.deepEqual(outcome.value, { first: 'ACTOR_NATIVE_RESULT', second: 'ACTOR_NATIVE_RESULT', fact: 'GRAPH_WORLD_FACT' });
+  const response = await fetch(f.origin + '/omaa/api/zcode-workflow?' + new URLSearchParams({ session: sessionId, run: outcome.runId }), { headers: { cookie: f.cookie } });
+  assert.equal(response.status, 200); const detail = await response.json();
+  assert(detail.displayGraph.participants.length >= 2); assert(detail.displayGraph.handoffs); assert(detail.displayGraph.phaseEdges);
+  assert.equal(detail.runtime.status, 'completed'); assert.equal(detail.runtime.actors.length, 3);
+  const reviewer = detail.runtime.actors.find(actor => actor.name === 'Reviewer');
+  assert.equal(reviewer.phaseName, 'Research'); assert.equal(typeof reviewer.sessionId, 'string');
+  assert.equal(detail.runtime.actors.find(actor => actor.name === 'Earlier').ordinal, 1);
+  assert.equal(detail.runtime.actors.find(actor => actor.name === 'Later').ordinal, 2);
+  const asks = detail.runtime.nodes.filter(node => node.kind === 'ask'); assert.equal(asks.length, 4);
+  assert.deepEqual(asks.map(node => node.phaseName), ['Research', 'Research', 'Research', 'Build']);
+  assert(asks.every(node => node.ordinal === 1 && node.phase === 'settled' && node.outcome === 'ok'));
+  assert(detail.runtime.nodes.some(node => node.kind === 'world-read' && node.phaseName === 'Build' && node.outcome === 'ok'));
+  const projection = await f.rpc('session/projections', { sessionId: reviewer.sessionId });
+  const child = await f.rpc('session/page', { address: { kind: 'subagent', parentSessionId: sessionId, childSessionId: reviewer.sessionId, mode: 'continuable' }, throughSeq: projection.asOfSeq, maxMessages: 100 });
+  const actorTasks = child.records.filter(row => row.event?.type === 'user/message')
+    .map(row => textOf(row.event.data.message ?? row.event.data)).filter(text => /(?:First|Second) native actor task/.test(text));
+  assert.equal(actorTasks.length, 2); assert(actorTasks[0].includes('First')); assert(actorTasks[1].includes('Second'));
+  assert.deepEqual(f.errors, []);
+});

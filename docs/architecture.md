@@ -60,3 +60,9 @@ OMD 人格／初始身份兼容与工具增强独立。每次装配读取同一 
 
 
 ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。脚本先经原厂 analyze/typecheck、site table、schema 合成和 lowering，再由隔离 native ptcRuntime 运行；没有原厂引擎、provider 或独立模型循环。Actor 以 native continuable childId 持久存在，重复 ask 排队且每次声明实际 submit_result，成功结果和关联回合结束共同决定提交。原生 descriptor 保存 literal persona，长期装配 hook 保证冷恢复；脚本正常返回会取消遗留 ask 并等待 drain。背景执行和停止通过原生 jobs，父权限/Ask/Plan 变化会主动取消。定义档的 facade marker 决定 TypeScript 或既有 JavaScript 路由；静态图是纯分析输出，不等同于原厂动态图、amend 或运行日志重放。
+
+## 未发布的 ZCode 运行投影
+
+公开版本仍为 OMAA 0.8.0。开发源码用严格固定 41 文件 closure 派生 `lib/zcode-run-projection.mjs`，仅包含三类 bounds 显示投影与原 workflowRuns reducer。真实 native site×ordinal、phase/birth、child accepted receipt、队列/dispatch/settled 事实由 `run-progress.mjs` 注入；未知 provider backoff 不推断。原版 Timeline/RunPhaseList 的 37 份 UI 代码、样式和中英 locale 完整保留，不是 ReactFlow，也不运行原 engine。最终 native fixture、浏览器实拍和发布均未据此宣称通过。
+
+Amend 尚未接线。原厂 Amend 以停止前驱、创建 successor 新 run 并继承缓存与精确 completed Actor transcript prefix 实现；同 run 仅并发 retune，resume 要求脚本字节相同。公开专用 continuity provider 可以提供精确前缀 seed，manager 保持新 parent/descriptor/权限，因此不必以修改宿主为前提；普通 stop/new 缺少缓存与转录继承，不能当作同等 Amend。
