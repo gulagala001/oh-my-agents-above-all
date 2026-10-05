@@ -1,0 +1,22 @@
+.omaa-preset-chip { box-sizing:border-box; display:inline-flex; align-items:center; gap:4px; min-width:0; min-height:24px; max-width:128px; border:0; border-radius:6px; background:transparent; color:var(--dsw-alias-label-secondary); padding:3px 6px; font:inherit; font-size:11px; line-height:16px; cursor:pointer; white-space:nowrap; }
+.omaa-preset-chip:hover { background:var(--dsw-alias-interactive-bg-hover); color:var(--dsw-alias-label-primary); }
+.omaa-preset-chip-name { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.omaa-preset-chip small { flex-shrink:0; color:var(--dsw-alias-label-tertiary); font-size:10px; }
+.omaa-preset-chip-chevron { flex-shrink:0; width:9px; text-align:center; }
+.omaa-preset-controls { box-sizing:border-box; width:100%; min-width:0; max-width:700px; margin:0 auto; padding:20px; color:var(--dsw-alias-label-primary); font-family:inherit; font-size:13px; container-type:inline-size; container-name:omaa-settings; overflow-wrap:anywhere; }
+.omaa-preset-controls h2 { font-size:17px; font-weight:600; margin:0 0 6px; }
+.omaa-preset-controls header { margin-bottom:22px; }
+.omaa-preset-controls header p,.omaa-help { color:var(--dsw-alias-label-secondary); line-height:1.5; margin:6px 0 14px; font-size:12px; }
+.omaa-setting-row { display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:39px; margin:9px 0; }
+.omaa-setting-row select { box-sizing:border-box; width:60%; min-width:0; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; padding:6px 8px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); font:inherit; }
+.omaa-setting-row input { accent-color:var(--dsw-alias-brand-primary); }
+.omaa-setting-row :disabled { opacity:.55; cursor:not-allowed; }
+.omaa-enhancement-work-mode { margin-top:4px; }.omaa-enhancement-work-mode .omaa-help { margin-bottom:9px; }
+.omaa-error { color:var(--dsw-alias-state-error-primary); font-size:12px; line-height:1.5; }
+.omaa-retry { font:inherit; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; color:var(--dsw-alias-label-primary); background:transparent; padding:5px 9px; cursor:pointer; }
+.omaa-preset-controls :focus-visible,.omaa-preset-chip:focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
+/* DSH 0.2.1's native header is a grid; the pinned Codex adapter places the
+   same children as one horizontal title bar, above its 58px-inset pane. */
+html.omd[data-omd-layout="codex-desktop"] .wSkVaW_header { display:flex; align-items:center; }
+@container omaa-settings (max-width:280px) { .omaa-setting-row:has(select) { flex-direction:column; align-items:stretch; gap:6px; margin:12px 0; } .omaa-setting-row select { width:100%; } }
+@media(max-width:420px) { .omaa-preset-controls { padding:15px; } .omaa-setting-row { gap:10px; } }

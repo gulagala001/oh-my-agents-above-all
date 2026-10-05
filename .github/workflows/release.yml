@@ -1,0 +1,62 @@
+name: Prepare GitHub release
+
+on:
+  push:
+    tags: ['v*.omaa.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omaa-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  packages:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+  release:
+    needs: packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Match the full source version and existing release tag
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          source_version="$(node -p 'require("./package.json").version')"
+          release_tag="v${source_version}"
+          if [ "$REF_TYPE" = tag ] && [ "$REF_NAME" != "$release_tag" ]; then
+            echo "Release tag must be ${release_tag}, found ${REF_NAME}" >&2
+            exit 1
+          fi
+          test "$(git rev-parse "${release_tag}^{commit}")" = "$(git rev-parse HEAD)"
+          echo "tag=${release_tag}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v7
+        with:
+          name: omaa-release-packages
+          path: release-assets
+      - name: Verify tarball checksums
+        working-directory: release-assets
+        run: sha256sum --check --strict *.tgz.sha256
+      - name: Create a draft with both host packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release ${RELEASE_TAG} already exists; refusing to overwrite published assets." >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --title "OMAA ${RELEASE_TAG#v}" --generate-notes

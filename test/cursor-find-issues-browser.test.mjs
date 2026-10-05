@@ -1,0 +1,36 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { chromium } from 'playwright';
+import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
+
+test('Cursor Find Issues submits the selected files through the native session in enforced Ask mode', { timeout: 60000 }, async t => {
+  const f = await installedHost(t); await f.install(); await f.boot();
+  const workspace = await f.rpc('workspace/create', { path: f.workspace });
+  const { sessionId } = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-cursor' });
+  let stage = 0;
+  f.replyWith(payload => payload.tools?.length && stage++ === 0 ? toolReply('write', { file_path: 'review.js', content: 'export const answer = 41;\n' }) : textReply('Created the file for review.'));
+  await f.prompt(sessionId, 'Create review.js for a code review.');
+  await f.rpc('session/rename', { sessionId, title: 'Cursor issue review' });
+  stage = 0;
+  f.replyWith(payload => payload.tools?.length && stage++ === 0 ? toolReply('write', { file_path: 'review.js', content: 'must be blocked\n' }) : textReply('FIND_ISSUES_COMPLETE: inspected the selected changes without editing.'));
+  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
+  const page = await context.newPage(), errors = []; page.setDefaultTimeout(12000); page.on('pageerror', error => errors.push(error.message));
+  t.after(() => browser.close()); await page.goto(f.origin);
+  await page.getByRole('button', { name: /^(Continue|继续)$/ }).click();
+  await page.getByText('Cursor issue review', { exact: true }).first().click();
+  await page.getByRole('button', { name: 'Cursor 预设设置', exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Cursor 文件检查点' });
+  await panel.getByRole('button', { name: '查找本回合问题', exact: true }).click();
+  await page.getByText('FIND_ISSUES_COMPLETE: inspected the selected changes without editing.', { exact: true }).waitFor();
+  await until(async () => !(await f.api(sessionId)).value.running);
+  assert.equal((await f.api(sessionId)).value.mode, 'ask');
+  assert.equal(await f.readWorkspace('review.js'), 'export const answer = 41;\n');
+  const snapshot = await f.snapshot(sessionId);
+  assert(JSON.stringify(snapshot.records).includes('ask mode permits reading'));
+  assert(f.requests.some(payload => payload.tools?.length && JSON.stringify(payload.messages).includes('Find issues in the file changes recorded for turn 1') && JSON.stringify(payload.messages).includes('review.js')));
+  await mkdir('.cache', { recursive: true }); await page.screenshot({ path: '.cache/cursor-find-issues.png' });
+  assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
+});

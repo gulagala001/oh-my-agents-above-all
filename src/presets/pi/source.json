@@ -1,0 +1,479 @@
+{
+  "id": "pi",
+  "repository": "https://github.com/earendil-works/pi",
+  "commit": "cd32f7725fdbddbaecdff5b1e68491563394e0ca",
+  "version": "v1.0.2",
+  "license": "MIT",
+  "retrievedAt": "2026-10-05",
+  "files": [
+    {
+      "path": "LICENSE",
+      "snapshot": "sources/LICENSE",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/LICENSE",
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
+      "bytes": 1069,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/README.md",
+      "snapshot": "sources/packages/coding-agent/README.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/README.md",
+      "sha256": "fbc7abec7d0829ac8bc4b217e950794e1ba4d8d1b3e0850f970da318ad72e863",
+      "bytes": 4080,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/extensions.md",
+      "snapshot": "sources/packages/coding-agent/docs/extensions.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/extensions.md",
+      "sha256": "da717a338c68708cb3e45b44c491287fde44059184dec2351d8d1dd430f73f76",
+      "bytes": 19852,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/compaction.md",
+      "snapshot": "sources/packages/coding-agent/docs/compaction.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/compaction.md",
+      "sha256": "190b8c651148504613aea98b0637807c536ed0362948fda1bcd1ae137d75ff4a",
+      "bytes": 23951,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/rpc.md",
+      "snapshot": "sources/packages/coding-agent/docs/rpc.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/rpc.md",
+      "sha256": "37a03d180115460a0a275022f4aeabef1e5345458df6a9b6e8a6de18474de720",
+      "bytes": 8897,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/rpc-commands.md",
+      "snapshot": "sources/packages/coding-agent/docs/rpc-commands.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/rpc-commands.md",
+      "sha256": "4deeee367852f4633ef594bc079f9e9fb14640a4e3ba8a69b7c89b6f54740838",
+      "bytes": 21482,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/system-prompt.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/system-prompt.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/system-prompt.ts",
+      "sha256": "e9cf234637f792c44e71764b8daff13bc15b0e77aa5574ec9728365ac9f61807",
+      "bytes": 9547,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/skills.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/skills.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/skills.ts",
+      "sha256": "055dbfde974fd1951267dd6f9204b5d713ff0004e0991eb870fce9158c6e359a",
+      "bytes": 14687,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/agent-session.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/agent-session.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "fa1a4f2d84efd0aab8f4a74301d1106395130d3cc59bd665c558280f27dceb03",
+      "bytes": 158139,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/resource-loader.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/resource-loader.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/resource-loader.ts",
+      "sha256": "45daa19ad4aa08856cf1eb9b026230b918eb25e163c7dc9ab5cf8add6825955a",
+      "bytes": 47634,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/extensions/types.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/extensions/types.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/types.ts",
+      "sha256": "837425f97af6921ae2f4c151d3386419479df6e9a209740e197bb3c3162525e2",
+      "bytes": 82743,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/agent/src/agent.ts",
+      "snapshot": "sources/packages/agent/src/agent.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/agent/src/agent.ts",
+      "sha256": "7024a3145a6ebc951a0f030164adb1dfb12d33d6e0dbbac15ef0efda49c87457",
+      "bytes": 19748,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/agent/src/agent-loop.ts",
+      "snapshot": "sources/packages/agent/src/agent-loop.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/agent/src/agent-loop.ts",
+      "sha256": "e773e822a2587caf314e6bb66ea6370fce3468b7eecd26d6a67afe673f81eabc",
+      "bytes": 29088,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/compaction/compaction.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/compaction/compaction.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/compaction.ts",
+      "sha256": "d5aebd41333957b57fa3f1bee2a18b3c00b5d47bb1b4af6f913cf8cd791099c8",
+      "bytes": 35513,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "sha256": "0279195d2cddfe99d4e42a1327d18c7f55ff15a8807d2c5d6cd465b2ab163011",
+      "bytes": 12714,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/compaction/utils.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/compaction/utils.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/utils.ts",
+      "sha256": "cc0baada8a2e31bcf1dbc18948c69ba2264fb2ad4d2c583ceb772fd3c3233674",
+      "bytes": 5809,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/index.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/index.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/index.ts",
+      "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
+      "bytes": 6784,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/read.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/read.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/read.ts",
+      "sha256": "297d26092979651091f44de8862a6fd55aaf59e7252f8fb8dd3d7cb3f9771518",
+      "bytes": 9451,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/bash.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/bash.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/bash.ts",
+      "sha256": "de2b54d4f4bfbb844ce6d8077f63d715f7d8e80079dd9689b561e45b6679c81b",
+      "bytes": 15678,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/edit.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/edit.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/edit.ts",
+      "sha256": "31a368c14cf5437ecac157765660001b16063302d9bd746303d6d1b1dcb5625d",
+      "bytes": 8564,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/write.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/write.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/write.ts",
+      "sha256": "2ee0a438c24cf83fefd733e349d55a21aa5b633c18934b2c80759fcf14b6f297",
+      "bytes": 3554,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/grep.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/grep.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/grep.ts",
+      "sha256": "88be3d00217d1a1caf8a9e7bb2b8d2e6d96edfa4b790c2cf76c746ab36b8841b",
+      "bytes": 11550,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/find.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/find.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/find.ts",
+      "sha256": "b06bcae6821a0e9fda1b63be613a7ce28eb0e66e1d01d16564e59e83f9ce10ea",
+      "bytes": 11178,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/ls.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/ls.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/ls.ts",
+      "sha256": "3d0a5457e4f5b9e9967c44608b76b060374d047e80d6871ecec4459b612cb6a3",
+      "bytes": 5840,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/powershell.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/powershell.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/powershell.ts",
+      "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
+      "bytes": 2348,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/truncate.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/tools/truncate.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/truncate.ts",
+      "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
+      "bytes": 9255,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/prompt-templates.ts",
+      "snapshot": "sources/packages/coding-agent/src/core/prompt-templates.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/prompt-templates.ts",
+      "sha256": "11db52a6bea6f3f094c6f533d4a3162462bdef4693f238ba1a8a1be6729d4545",
+      "bytes": 9551,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/utils/frontmatter.ts",
+      "snapshot": "sources/packages/coding-agent/src/utils/frontmatter.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/utils/frontmatter.ts",
+      "sha256": "99142d78b94e658e0be65cf05046be8069b3700168a683e0af64219ad903bcd6",
+      "bytes": 1203,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/prompt-templates.md",
+      "snapshot": "sources/packages/coding-agent/docs/prompt-templates.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/prompt-templates.md",
+      "sha256": "ad5113cce0d05ef0ac77b3c71f9ebe41ea68c072275f9273b9616e4924feda42",
+      "bytes": 2490,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/skills.md",
+      "snapshot": "sources/packages/coding-agent/docs/skills.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/skills.md",
+      "sha256": "5b9805525b194474ef1fe5455a0917ef15ed7f710aa9bec2eee11879556469e5",
+      "bytes": 4793,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/package-manager.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts",
+      "sha256": "c571e652abec58e1302177137e6640c228afa1d68089afd904d3073693691863",
+      "bytes": 87256,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/pi-manifest.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/pi-manifest.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/pi-manifest.ts",
+      "sha256": "cdeed96fef83e03043bb25081ad4b7abd26e739dfa464a0e1763c6473330bac3",
+      "bytes": 959,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/settings.md",
+      "snapshot": "sources/upstream/packages/coding-agent/docs/settings.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/settings.md",
+      "sha256": "dae0b70c2f852ff57b4a34947d5059f7bac18038ca7e1fae4c4ba97bcbd574c3",
+      "bytes": 13063,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/docs/packages.md",
+      "snapshot": "sources/upstream/packages/coding-agent/docs/packages.md",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/packages.md",
+      "sha256": "5fe4a3009d7260fe1e2f54b64086fc3c8b4d678232bfa2dbc7e91fe588fc9ea5",
+      "bytes": 6106,
+      "license": "MIT"
+    }
+  ],
+  "activePromptEntry": "packages/coding-agent/src/core/system-prompt.ts",
+  "sourcesAreData": true,
+  "runtime": "DSH model/API/tool loop/session; source files are reference data, never an external runtime",
+  "toolMapping": {
+    "read": "read (file_path instead of path)",
+    "bash": "bash / pwsh (host description/command/timeoutMs/workdir)",
+    "edit": "edit (file_path/old_string/new_string/replace_all, single replacement)",
+    "write": "write (file_path/content)",
+    "grep/find/ls": "Optional native tools; not Pi default composition",
+    "image input in read": "read_image only when registered"
+  },
+  "adaptations": [
+    {
+      "source": "system-prompt.ts preamble",
+      "original": "operating inside pi, a coding agent harness",
+      "adapted": "operating inside DSH with the Pi Coding Agent preset",
+      "reason": "Actual harness identity; remaining complete sentence retained"
+    },
+    {
+      "source": "tools/edit.ts snippet",
+      "original": "Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
+      "adapted": "Make precise file edits with exact text replacement",
+      "reason": "Host single replacement schema"
+    },
+    {
+      "source": "tools/edit.ts guideline 1",
+      "original": "Use edit for precise changes (edits[].oldText must match exactly)",
+      "adapted": "Use edit for precise changes (old_string must match exactly)",
+      "reason": "Host argument name"
+    },
+    {
+      "source": "tools/edit.ts guideline 2",
+      "original": "When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
+      "adapted": "When changing multiple separate locations in one file, use separate edit calls with file_path, old_string, and new_string.",
+      "reason": "Host does not implement original-file disjoint batch edits"
+    },
+    {
+      "source": "tools/edit.ts guideline 3",
+      "original": "Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
+      "adapted": "Each old_string is matched against the current file. Read the current contents after earlier edits when a later change depends on them. Merge nearby changes into one edit.",
+      "reason": "Host applies each separate call against current file"
+    },
+    {
+      "source": "tools/edit.ts guideline 4",
+      "original": "Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
+      "adapted": "Keep old_string as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
+      "reason": "Host argument name"
+    },
+    {
+      "source": "tools/bash.ts guidelines",
+      "original": "You can inspect PI_* environment variables for current model and session details.",
+      "adapted": "Not mounted",
+      "reason": "DSH does not expose native Pi session environment variables"
+    },
+    {
+      "source": "system-prompt.ts docs section",
+      "original": "Installation-owned getReadmePath/getDocsPath/getExamplesPath",
+      "adapted": "Fixed official raw source URLs; all original documentation instructions retained and a fetch instruction added; not mounted without command/web tool",
+      "reason": "Pi installation does not exist and read accepts local filesystem paths"
+    },
+    {
+      "source": "tools/read.ts multimodal image read",
+      "original": "read exposes images and text through same tool",
+      "adapted": "read_image described separately only when registered",
+      "reason": "Actual DSH tool split"
+    },
+    {
+      "source": "system-prompt.ts project_context/skills/cwd sections",
+      "original": "Project context and skills dynamic loading, normalized cwd",
+      "adapted": "cwd rendered; project instructions and skills provided by host sections",
+      "reason": "Avoid duplicate stale copies; preserve native DSH context ownership"
+    }
+  ],
+  "compactionPrompt": {
+    "snapshot": "sources/packages/coding-agent/src/core/compaction/compaction.ts",
+    "constant": "SUMMARIZATION_PROMPT",
+    "export": "buildCompactionPrompt",
+    "branch": "Normal summary; original complete text, not update or branch summary",
+    "hostIntegration": "Replace only last user instructions on native purpose:compaction call; host retains transaction/tool pairing"
+  },
+  "deferredBehaviors": [
+    "Separate Pi steer/follow-up UI controls and exact pre-assembly cancellation semantics",
+    "Pi extensions API events and section-delta transcript updates",
+    "Pi output truncation artifact contracts",
+    "Remote npm/git package installation, Pi extension execution/API, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
+    "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately"
+  ],
+  "nativeAbsences": [
+    "Default plan mode",
+    "Default subagents",
+    "Default permission approval system"
+  ],
+  "adaptedPrompt": {
+    "module": "prompt.mjs",
+    "sha256": "6bf0b61dc15c26be16b7d3beee93de6dec38211425b42ad1e5af1d97bcdd2d21"
+  },
+  "resourceAdapter": {
+    "module": "resources.mjs",
+    "source": [
+      "packages/coding-agent/src/core/prompt-templates.ts",
+      "packages/coding-agent/src/core/resource-loader.ts",
+      "packages/coding-agent/src/core/skills.ts",
+      "packages/coding-agent/src/utils/frontmatter.ts",
+      "packages/coding-agent/src/core/package-manager.ts",
+      "packages/coding-agent/src/core/pi-manifest.ts",
+      "packages/coding-agent/docs/settings.md",
+      "packages/coding-agent/docs/packages.md"
+    ],
+    "hostIntegration": "Pi scoped native filesystem/systemPrompt/commands/skill provider. No separate log or loop. Typed, steering and queued template messages keep original id/source.",
+    "adaptations": [
+      "SYSTEM replaces deployment:persona-prefix plus upstream cwd; all other host sections/guards remain. APPEND is literal addendum; project file takes precedence over user file.",
+      "Templates use complete official argument algorithm and default CLI PackageManager project-first name collision rule; native command names restricted to lowercase alphanumeric/hyphen/underscore for discovery. Other valid Pi filenames still expand in native typed input.",
+      "File reads use native ctx.fs, 64 KiB per file / 256 KiB resource budget, 128 templates / 512 directory entries. YAML uses existing js-yaml JSON schema.",
+      "Pi project trust dialog/runtime is not transplanted; existing host permissions remain authoritative.",
+      "Pi user agentDir context picks first AGENTS.override.md / AGENTS.md / AGENTS.MD / CLAUDE.md / CLAUDE.MD via native fs and official project_context text; native workspace instructions are not scanned or duplicated.",
+      "Fixed 0.2.1-alpha.1 private roots extension selects cwd.pi plus cwd-to-gitroot ancestor.agents and user directories, with CLI project-first precedence. Bounded native FS directory selection filters native scan inputs and returned candidate paths; actual parsing/get/watch/resource bases remain the same FileSystemSkillProvider. Bundle stops recursion; ignored SKILL does not stop it; Pi root flat files / agents nonroot flat files; dot/node_modules skipped.",
+      "Skill and prompt discovery uses upstream ignore@7.0.8 with exact prefixIgnorePattern and .gitignore/.ignore/.fdignore ordering, root-relative paths, directory pruning and negation. Rules inherit within each independent resource root, not from workspace ancestors. Native fs permissions/cancellation and 64 KiB per-rule / 256 KiB aggregate bounds remain authoritative. Native opaque versions detect rule/configuration/explicit-path changes at assembly and invalidate only through the Pi provider registration control; unchanged rules use stat without rescanning skill trees.",
+      "Project cwd.pi/settings.json and user agentDir/settings.json skills/prompts use their own base directories, absolute/tilde paths, native resource discovery and upstream minimatch@10.2.6 filter dimensions/order. Explicit project settings precede project auto roots, then explicit user settings, user auto roots, and package resources. Settings globs filter discovered plain entries; package manifest globs are enumerated through bounded native fs.",
+      "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract."
+    ],
+    "sha256": "5da98afcae0551512f41ade80ec86b57b40c47a7d3ccf8a75f8dfdd0e66ba4a8",
+    "helpers": [
+      { "module": "resource-ignore.mjs", "sha256": "b0d4adcc5e3b3fdce970574d0b5192ec98962d6bff1f1f3ff44738786c2d8204" },
+      { "module": "resource-paths.mjs", "sha256": "868df4f12ba17ff32a14a201f1747dd78be8d4edd935c6eee5f1a21bfc276ecf" },
+      { "module": "skill-discovery.mjs", "sha256": "3ba5d88ac6226662b076760d3019c46acd816357295f379e902255bf52eda461" }
+    ],
+    "verification": [
+      "test/installed-pi-resources.test.mjs: actual CLI project-first template/skill collisions, nested SKILL lazy full body via native skill, ancestor agents catalog, nearest git root cutoff, no invented ancestor.pi, native workspace rule appears once, SYSTEM/APPEND and global rule precedence/fallback, template command/quoting/default/slice/nonrecursive/steer/queue, stock scope exclusion; real ignore hide/negation/external-version refresh and replacement catalog, settings/package skill catalogs and lazy package body, configured/package prompt expansion and native commands, extension file never executed",
+      "test/pi-skill-discovery.test.mjs: ordered ignore rules, ancestor directory pruning, doublestar, nested rule scopes, ignored SKILL recursion, bundle boundaries, Pi/agents flat Markdown differences, independent bases, native version creation/edit/deletion/cancellation, settings paths, package manifest glob/filter precedence, convention directories, project package identity replacement, remote source skip and configuration changes"
+    ],
+    "auditReference": {
+      "path": "packages/coding-agent/src/core/package-manager.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts",
+      "sections": [
+        "resourcePrecedenceRank173-185",
+        "collectSkillEntries347-423",
+        "collectAncestorAgentsSkillDirs425-456",
+        "addAutoDiscoveredResources2259-2394",
+        "toResolvedPaths2451-2475"
+      ],
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/package-manager.ts"
+    }
+  },
+  "steeringAdapter": {
+    "module": "steering.mjs",
+    "sha256": "97d45062e34320ed0c3a9dfbf7b3150ae15ef81a91c24178af53cef95263eeec",
+    "source": "packages/agent/src/agent.ts and agent-loop.ts default one-at-a-time",
+    "hostIntegration": "Native scoped inbox events track typed next-step identities. Public pre-step mutable messages and native Inbox splice defer remaining steers before native message commit; original id/source kept, notifications/queue unchanged. No loop replacement or custom history.",
+    "boundary": "Native loop claims input and awaits system assembly before pre-step, so cancellation/failure before that hook cannot promise Pi remaining-queue parity.",
+    "verification": "test/installed-pi-steering.test.mjs actual installed two steers, sequential provider requests, preserved message identities and each native user event once"
+  },
+  "branchesAdapter": {
+    "module": "branches.mjs",
+    "sha256": "7107fd18422341f02c673619b990a62cd3f7fbf78ef8872824b3001e9c2190c9",
+    "source": [
+      {
+        "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
+        "snapshot": "sources/packages/coding-agent/src/core/compaction/branch-summarization.ts",
+        "constants": [
+          "BRANCH_SUMMARY_PROMPT",
+          "BRANCH_SUMMARY_PREAMBLE"
+        ],
+        "sha256": "0279195d2cddfe99d4e42a1327d18c7f55ff15a8807d2c5d6cd465b2ab163011"
+      },
+      {
+        "path": "packages/coding-agent/src/core/compaction/utils.ts",
+        "snapshot": "sources/packages/coding-agent/src/core/compaction/utils.ts",
+        "constants": [
+          "SUMMARIZATION_SYSTEM_PROMPT"
+        ],
+        "sha256": "cc0baada8a2e31bcf1dbc18948c69ba2264fb2ad4d2c583ceb772fd3c3233674"
+      },
+      {
+        "path": "packages/coding-agent/src/core/agent-session.ts",
+        "snapshot": "sources/packages/coding-agent/src/core/agent-session.ts",
+        "entry": "navigateTree/branch-summary lifecycle"
+      }
+    ],
+    "hostIntegration": "Public native sessionController list/inspect/fork owns observation, completed-prefix seed, journal and parent identity; actual PiBranches UI and authenticated /omaa/api/pi-branches route open native sessions. Optional derived capsule uses native systemPrompt.context and original-session model/API, without another journal or loop.",
+    "adaptations": [
+      "Only idle source sessions and completed turn/end boundaries are forkable; journal head is checked before and after optional summary. Native parent relations form a family of different sessionIds, not an in-place Pi JSONL tree leaf cursor.",
+      "Branches share the workspace directory. Switching/forking does not restore file state; parent journals remain unchanged as history sources.",
+      "withSummary defaults false in the client. Explicit true summarizes only source events after the selected fork boundary, if material exists. Full original BRANCH_SUMMARY_PROMPT, BRANCH_SUMMARY_PREAMBLE and SUMMARIZATION_SYSTEM_PROMPT are extracted verbatim.",
+      "Native text parts and tool call/result boundaries are serialized; hidden native reasoning is excluded. Each tool result is capped at2000 characters; newest event chunks are selected up to100000 text characters, with separate read/modified file path lists.",
+      "Current session provider/model supplies a no-tools summary request (maxTokens8192, timeout180s), rather than Pi-specific token estimation/retry/provider runtime. Error, abort, max-tokens, empty or over32000-character summary rejects fork; stale source revision also rejects.",
+      "Inherited and new summary form a derived context capsule at most60000 characters. Only this bounded data is atomically saved under DSH_HOME/omaa/pi-branch-context by native session hash, and read through native systemPrompt.context including cold startup. Further forks inherit the capsule even with no new summary requested.",
+      "Native fork and capsule save are distinct operations: if fork succeeds but capsule save fails, return an explicit error with the created sessionId; do not claim cross-session/file atomic rollback."
+    ],
+    "verification": {
+      "status": "passed",
+      "evidence": [
+        "test/installed-pi-branches.test.mjs: native completed prefix, selected departing branch only, configured model, unchanged source journal, capsule cold recovery and literal braces",
+        "test/pi-branches-browser.test.mjs: one actual packed Web fork/navigation, source retained, shared cwd, default summary off makes no model request"
+      ],
+      "limits": "Scripted provider verifies native contracts, not the real model quality of every generated branch summary."
+    }
+  }
+}

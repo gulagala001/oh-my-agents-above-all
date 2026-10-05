@@ -1,0 +1,40 @@
+{
+  "rows": 32,
+  "columns": 100,
+  "spans": [
+    {
+      "row": 15,
+      "column": 37,
+      "foreground": "default",
+      "bold": true,
+      "dim": false,
+      "text": "Cursor Agent"
+    },
+    {
+      "row": 16,
+      "column": 37,
+      "foreground": "default",
+      "bold": false,
+      "dim": true,
+      "text": "v2026.10.01-e373342"
+    },
+    {
+      "row": 17,
+      "column": 37,
+      "foreground": "ansi-2",
+      "bold": false,
+      "dim": false,
+      "text": "Press any key to log in..."
+    }
+  ],
+  "sgr": [
+    "0",
+    "1",
+    "2",
+    "22",
+    "32",
+    "36",
+    "39"
+  ],
+  "unsupported": []
+}

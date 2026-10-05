@@ -1,0 +1,76 @@
+# Oh My Agents Above All
+
+OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
+
+当前宿主版本为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
+
+与 OMD 同 profile 使用时，需要提供 OMAA 兼容增强与外观协调接口的 OMD。官方 OMD `0.6.1` 尚无该接口；使用发行附件中的对应宿主兼容 OMD，或在独立 DSH profile 使用。支持 Web DSH `0.2.1-alpha.1` 与桌面 DSH `0.2.0-rc.2`，两端包必须与正在运行的宿主匹配。
+
+## 安装与使用
+
+从 GitHub Releases 下载对应宿主的 OMAA 包与 SHA256；需要 OMD 增强或已有 OMD 的同 profile 安装，同时下载兼容 OMD 包。核对附件哈希后，通过正在使用的 DSH profile 原生插件入口安装，先安装兼容 OMD，再安装 OMAA。以下以 `web` 为例，路径替换为实际包位置：
+
+```sh
+dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.7.1.tgz
+dsh plugin --profile web add file:/absolute/path/OMAA.tgz
+dsh web
+```
+
+已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，应在桌面原生插件管理器中安装 rc.2 附件，不能用上述 CLI 命令直接修改。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
+
+在新会话中选择 `Codex · OMAA`、`Grok Build · OMAA`、`Cursor · OMAA`、`Pi Coding Agent · OMAA` 或 `ZCode · OMAA`。输入区预设按钮可打开右侧设置，通用设置中也有 OMAA 页面。
+
+- 工作模式：除 Pi 的精简默认模式外，支持执行、只读 Ask 和原生 Plan 审阅/批准流程。
+- 主题：跟随产品、指定另一套主题、恢复 DSH 外观或使用兼容 OMD 外观；明暗设置与宿主同步。
+- Cursor：加载适用的 MDC/项目规则，提供已记录文件变更的检查点查看与恢复。恢复会核对冲突并保留消息；它不是任意 shell 操作的全工作区快照。
+- Cursor 审阅：可针对本回合或单个文件“查找问题”，进入实际只读问答模式，由当前模型检查变更；切回执行模式后继续修复。
+- Codex：查看 Unstaged、Staged、Commit、Branch 和 Last turn；按文件或块暂存、取消暂存、撤回，选定代码行后立即发送反馈，或收集多文件批注一次提交。操作遵守宿主权限并拒绝过期比较。
+- Grok Build：实时 stdout 监控与原生 interval 定时任务，使用同一作业/会话生命周期。
+- Pi：加载 SYSTEM/APPEND、用户与项目规则、提示模板，以及项目/祖先 `.agents` 和深层技能资源；默认逐条 steer。Pi 分支面板可打开原生 parent 树、从已完成回合创建新会话，按需勾选离开分支摘要（默认关闭，使用当前模型）。分支共享目录，切换不回滚文件。
+- ZCode：用户明确点名工作流，或启用 Pro/Ultra 后，使用实际工作流与结构化子代理结果，仍先加载 `zcode-workflows` 技能；按用户引用的 session id 回查原生历史，可使用当前已配置模型提取上下文。
+- OMD 增强：默认关闭；基础增强提供 CodeGraph 和 Computer Use，可另选 Pro 或 Ultra 工作方式。高级方式复用 OMD 控制与持久化，使用当前模型最高可用 reasoning effort，保留 provider/model；开启高级方式自动开启增强，关闭增强同时关闭高级方式。Ask/Plan 暂停高级编排，恢复执行后可继续。主题选择独立。
+
+运行中的会话先使用原生停止入口，再修改预设设置。文件、diff、工具结果、附件和继续工作仍使用 DSH 的现有界面与生命周期。
+
+Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；开启 OMD 增强后可使用工作流支持。基础增强不强制工作流编排。安装或卸载 OMD 后需重载对应 profile，让预设重新选择工作流 engine；不支持无重载热切换。
+
+## 五个预设的差异
+
+| 预设 | 当前移植重点 | 明确差异 |
+| --- | --- | --- |
+| Codex | 官方完整指令/压缩、连续推进、真实 Git 范围与块操作、行反馈、桌面布局 | DSH 选择实际模型；未启用官方 persistent/cloud/app 专有运行层 |
+| Grok Build | 官方条件主提示词、计划/提问/任务、实时监控、interval 调度、独立主题 | 原生作业/会话；无跨会话 durable、即时首 fire 或原厂七天 TTL |
+| Cursor | 完整公开样本适配、MDC 规则、Plan/Ask、文件检查点、IDE/Agent 对话布局 | 样本非官方公开源码；专有 Instant Grep、Composer、云代理与 IDE 上下文不等同于宿主能力 |
+| Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题 | 不加入默认计划/子代理；不同原生 sessionId 共享目录，原厂扩展、同树日志和更早取消边界仍有差异 |
+| ZCode | 完整上下文、原生计划、实际工作流/结构化子代理、冷历史回查与主题 | JS/meta 和当前 DSH 模型；原厂 TS facade、graph amend、服务及界面有差异 |
+
+来源原文与实际适配分开保存，详细依据见 [产品资料](docs/product-sources.md) 和 [产品文档](docs/products/)。Cursor 配色沿用当前 DSH，桌面布局参考官方公开界面；没有把 CLI 登录前颜色当作整个 Cursor 的主题。
+
+## 从源码构建、卸载
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+node scripts/package.mjs
+```
+
+`pnpm build` 生成预设注册清单和 Web 客户端；`node scripts/package.mjs` 在 `dist` 生成当前宿主版本的 `.tgz`、SHA256 和元数据。桌面 DSH `0.2.0-rc.2` 使用 `node scripts/package.mjs --host-version 0.2.0-rc.2`；Web DSH `0.2.1-alpha.1` 可显式使用 `--host-version 0.2.1-alpha.1`。打包只复制发行白名单到独立 staging，并在副本内绑定对应宿主 SDK 和 loader，不改变源码 `package.json`；应先完成源码构建。卸载使用安装时的 profile：
+
+```sh
+dsh plugin --profile web remove oh-my-agents-above-all
+```
+
+卸载插件不会删除 DSH 会话和工作区文件。插件偏好、文件检查点和有界 Pi 分支派生上下文保存在 `DSH_HOME/omaa`（默认 `~/.dsh/omaa`），不自动清除；原生会话 journal 仍由 DSH 管理。
+
+兼容 OMD 通过已入库的 [固定补丁与基线](compat/omd/README.md) 构建，输入为官方 OMD `0.6.1` 包或其固定源码目录，输出独立 `.tgz`、SHA256 与来源元数据。它保留对应宿主的原生工厂、无项目聊天与 rc.2 草稿恢复，仅重建前端；不依赖本机缓存或另一个工作区的未提交修改。发行可同时附上两端兼容包，独立使用 OMAA 无需安装 OMD。
+
+```sh
+node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-alpha.tgz --host-version 0.2.1-alpha.1
+node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-rc2.tgz --host-version 0.2.0-rc.2
+```
+
+脚本严格核对已审阅的官方基线；新版本或内容差异会指出文件并停止，升级时先审阅上游差异、更新补丁与基线，再重新打包。它不自动下载宿主、不安装包，也不执行 OMD 的全量 host 构建。
+
+[架构](docs/architecture.md) · [OMD 增强边界](docs/omd-enhancement-boundary.md) · [主题来源](docs/theme-sources.md) · [第三方声明](THIRD_PARTY_NOTICES.md)
+
+[安装与更新](docs/install.md) · [贡献](CONTRIBUTING.md)

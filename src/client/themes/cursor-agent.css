@@ -1,0 +1,39 @@
+/* Agent pane relationships follow Cursor's public Desktop demos. These
+   dimensions are DSH adaptation choices, not extracted proprietary tokens. */
+html[data-omaa-theme="cursor-cli"] {
+  & .wSkVaW_header { border-color:var(--omd-border); }
+  & :is(.wSkVaW_crumb,.wSkVaW_tab) { font-size:13px; }
+  & .wSkVaW_crumbCurrent { font-weight:550; }
+  & :is(.wSkVaW_root,.wSkVaW_body) {
+    --dsh-chat-content-width:min(var(--dsh-chat-user-width, 780px), max(160px, calc(var(--dsh-conversation-column-width, 840px) - 36px)));
+    --dsh-composer-card-max-width:var(--dsh-chat-content-width);
+    --dsh-composer-side-clearance:12px;
+  }
+  & .EvIC1a_column { padding-top:18px; padding-bottom:18px; }
+  & .Sixlwa_userStack { max-width:100%; align-items:stretch; }
+  & .Sixlwa_bubble { padding:10px 12px; border-radius:8px; font-size:var(--dsh-content-font-size,14px); line-height:1.6; }
+  & .hWmORq_body { font-weight:400; }
+  & [data-disclosure-row] { font-size:12px; line-height:1.5; border-radius:6px; }
+  & [data-step-process-body] { border-radius:6px; }
+  & [data-chat-flow-kind] :is(p,li) { line-height:1.6; }
+  & [data-composer-card] { padding-top:10px; gap:8px; box-shadow:none; }
+  & [data-composer-input] { min-height:38px; padding:0 12px; line-height:22px; font-size:var(--dsh-content-font-size,14px); }
+  & [data-composer-placeholder] { left:12px; top:0; font-size:14px; }
+  & .uV2eYG_row { gap:5px; padding:0 8px 8px; }
+  & :is(.uV2eYG_tools,.uV2eYG_modes,.uV2eYG_trailing) { gap:4px; }
+  & .uV2eYG_select { font-size:12px; font-weight:400; }
+  & .uV2eYG_primary { width:28px; height:28px; border-radius:7px; }
+  & .omaa-preset-chip { border-radius:6px; padding:3px 6px; }
+  & [data-sidebar-right-panel][data-sidebar-right-open] { border-radius:8px; background:var(--omd-surface-solid); }
+  & .omaa-preset-controls { padding:16px; }
+  & .omaa-preset-controls h2 { font-size:15px; font-weight:550; }
+  & .omaa-setting-row { min-height:35px; }
+  & :is(pre,code,.cm-editor,.cm-content) { font-family:var(--omd-font-mono); }
+}
+@media(max-width:600px) {
+  html[data-omaa-theme="cursor-cli"] {
+    & .EvIC1a_column { padding-top:12px; }
+    & [data-composer-input] { padding-inline:10px; }
+    & .omaa-preset-controls { padding:14px; }
+  }
+}

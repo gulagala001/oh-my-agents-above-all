@@ -1,0 +1,25 @@
+/* DSH's normal chat width has a 680px minimum. Bound source themes by the
+   actual conversation column, including after leaving Codex's narrow pane. */
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) :is(.wSkVaW_root, .wSkVaW_body) {
+  --dsh-chat-content-width: min(var(--dsh-chat-user-width, clamp(680px, calc(var(--dsh-conversation-column-width, 840px) * .64), 920px)), max(160px, calc(var(--dsh-conversation-column-width, 840px) - 48px)));
+  --dsh-composer-card-max-width: var(--dsh-chat-content-width);
+}
+/* Keep OMD's optional dock controls in the native row instead of giving
+   their wrapper the entire width and squeezing the native statistics. */
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) .uV2eYG_dock:has(> [data-slot='conversation.composer.dock']) {
+  flex-wrap:wrap; align-items:center; gap:4px 8px; min-width:0;
+}
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) [data-slot='conversation.composer.dock'] {
+  display:flex; flex:1 1 auto; flex-wrap:wrap; align-items:center; gap:4px 6px; min-width:0; max-width:100%;
+}
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) .tx-composer-dock { display:contents; }
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) .tx-composer-tools { flex:0 0 auto; gap:2px; }
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) .tx-usage-toggle { margin-inline-start:auto; }
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) [data-composer-stat] { flex:0 1 auto; min-width:0; }
+html[data-omaa-theme]:not([data-omd-layout="codex-desktop"]) [data-composer-stat] > :first-child { padding:2px 4px; font-size:11px; gap:4px; }
+html[data-omaa-theme] [data-composer-card] { container-type:inline-size; container-name:omaa-composer; }
+@container omaa-composer (max-width:560px) {
+  html[data-omaa-theme] .uV2eYG_standardControls { gap:4px; }
+  html[data-omaa-theme] .omaa-preset-chip { max-width:104px; padding-inline:4px; }
+  html[data-omaa-theme] .omd-model-trigger { max-width:160px; gap:4px; font-size:11px; }
+}

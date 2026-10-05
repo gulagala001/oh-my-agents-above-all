@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "product": "Cursor",
+  "surface": "IDE Agent pane and Agents Window",
+  "retrievedAt": "2026-10-05",
+  "sources": [
+    {
+      "url": "https://cursor.com/docs/agent/agents-window",
+      "retrievedAt": "2026-10-05",
+      "htmlSha256": "eb3bd8c23c165cc686cf3840a00be233737d2ae588bc1087e478ea217bc1f37d",
+      "bytes": 248515,
+      "snapshotStored": false
+    },
+    {
+      "url": "https://cursor.com/product",
+      "retrievedAt": "2026-10-05",
+      "htmlSha256": "1108a84984d913bcff20f88dafda72d7497ff90f80dbc4c163247fa7729be0e1",
+      "bytes": 581257,
+      "snapshotStored": false
+    },
+    {
+      "url": "https://cursor.com/help/customization/themes",
+      "retrievedAt": "2026-10-05",
+      "htmlSha256": "9960c95df16af68456e21f4722695798f92201aeabead243cc12cc1979c07f50",
+      "bytes": 154080,
+      "snapshotStored": false
+    },
+    {
+      "url": "https://cursor.com/docs/agent/plan-mode",
+      "retrievedAt": "2026-10-05",
+      "htmlSha256": "2ea18266f852a923066ca6f53ae3e470421e2a5936098993032ad82598deffdd",
+      "bytes": 217919,
+      "snapshotStored": false
+    }
+  ],
+  "officialScreenshotReferences": [
+    {
+      "alt": "Command Palette showing the Open Agents Window command",
+      "width": 2400,
+      "height": 1399,
+      "url": "https://cursor.com/docs-static/_next/image?url=%2Fdocs-static%2Fimages%2Fagent%2Fopen-agents-window-final.png&w=1920&q=75&dpl=dpl_Hn4v2yxdcWESFfN3jCErjJqgXwNB"
+    },
+    {
+      "alt": "Actions menu showing the Open IDE command",
+      "width": 2400,
+      "height": 1399,
+      "url": "https://cursor.com/docs-static/_next/image?url=%2Fdocs-static%2Fimages%2Fagent%2Fopen-editor-window-final.png&w=1920&q=75&dpl=dpl_Hn4v2yxdcWESFfN3jCErjJqgXwNB"
+    },
+    {
+      "alt": "Agents Window showing file search and file viewing",
+      "width": 2400,
+      "height": 1386,
+      "url": "https://cursor.com/docs-static/_next/image?url=%2Fdocs-static%2Fimages%2Fagent%2Ffile-agents-window-final.png&w=1920&q=75&dpl=dpl_Hn4v2yxdcWESFfN3jCErjJqgXwNB"
+    }
+  ],
+  "verification": "Official documentation text and desktop interactive demo DOM inspected. Image references retained; native pixel geometry and palette values were not extracted.",
+  "roles": [
+    {
+      "role": "navigation",
+      "observation": "Desktop demo exposes a separate task list with work and review states.",
+      "adaptation": "Keep DSH session navigation; do not fabricate native work/review grouping."
+    },
+    {
+      "role": "conversation",
+      "observation": "Desktop demo has user requests, assistant responses and brief read/search/edit status lines.",
+      "adaptation": "Use proportional body text and compact native disclosure rows; retain original tool output and actions."
+    },
+    {
+      "role": "composer",
+      "observation": "Request input is followed by mode and model controls in the Desktop demo.",
+      "adaptation": "Keep native DSH editor, model selector, modes and stop action in a compact bottom card."
+    },
+    {
+      "role": "plan-and-files",
+      "observation": "Desktop planning demo separates plan Markdown and task list with a Build control from the agent request; Agents Window docs show file search/viewing.",
+      "adaptation": "Keep DSH right-side file/plan surfaces; do not substitute textual mode claims for plan state."
+    },
+    {
+      "role": "theme",
+      "observation": "Official IDE appearance help supports user-selected light/dark themes and OS detection; it tells Agents Window users to Open IDE for those steps.",
+      "adaptation": "Use current DSH palette as the adapter choice; no assertion that Agents Window inherits IDE or CLI colors."
+    }
+  ],
+  "adapterGeometry": {
+    "status": "DSH adaptation values, not original application token measurements",
+    "composerRadiusPx": 10,
+    "controlRadiusPx": 6,
+    "panelRadiusPx": 8,
+    "contentWidthCapPx": 780,
+    "bodyFont": "system proportional UI stack; code remains monospace"
+  },
+  "license": {
+    "declared": null,
+    "usage": "Own factual observations and source URLs. No proprietary product bundle, marketing CSS, fonts, icons or screenshots redistributed as theme assets."
+  },
+  "fixedProductRgbPalette": [],
+  "cliEvidence": {
+    "path": "cursor/provenance.json",
+    "scope": "Historical logged-out CLI startup only; no IDE or Agents Window equivalence."
+  }
+}

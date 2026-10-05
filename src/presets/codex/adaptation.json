@@ -1,0 +1,67 @@
+{
+  "source": "sources/instructions_template.md",
+  "sourceSha256": "152dfaeeb552876190962be1c12c93d426840ff12691f648261554a7675a6698",
+  "renderedSha256": "33c12b24957dff6c2b3f20939cdd16f3391afbd6b6e03657d5e7e19b3430dbe9",
+  "reviewConfiguration": {
+    "tools": [
+      "read",
+      "write",
+      "edit",
+      "read_image",
+      "glob",
+      "grep",
+      "bash",
+      "todo_write",
+      "ask_user_question",
+      "web_search",
+      "web_fetch",
+      "job_list",
+      "job_output",
+      "job_kill",
+      "enter_plan_mode",
+      "exit_plan_mode",
+      "subagent"
+    ],
+    "platform": "darwin",
+    "mode": "default"
+  },
+  "changes": [
+    {
+      "responsibility": "identity",
+      "reason": "Replace the GPT-6 model claim with the actual DSH-selected model; preserve Codex behavior identity."
+    },
+    {
+      "responsibility": "messages",
+      "reason": "Map named commentary/final channels to host progress and final assistant messages; no fictitious channel schema."
+    },
+    {
+      "responsibility": "clarification",
+      "reason": "Replace async question tool with actual ask_user_question when registered; do not preserve invented timeout or async behavior."
+    },
+    {
+      "responsibility": "search and orchestration",
+      "reason": "Prefer actual grep/glob tools; replace functions.exec JavaScript/Promise orchestration with native tool calls and preserve sequential dependency rules."
+    },
+    {
+      "responsibility": "shell",
+      "reason": "Use actual bash/pwsh with current schema, not cmd/yield_time_ms/session_id aliases; no persistent cwd assumption."
+    },
+    {
+      "responsibility": "skills and connectors",
+      "reason": "Preserve skill workflow while using actual supplied catalogs and registered tools, not orchestrator skill:// or codex_apps APIs."
+    },
+    {
+      "responsibility": "tools",
+      "reason": "Add schema-aware file, job, todo, question, web and optional subagent instructions only when registered."
+    },
+    {
+      "responsibility": "mode",
+      "reason": "Research-only plan/ask text follows actual mode argument; host enforces permission boundaries."
+    },
+    {
+      "responsibility": "compaction",
+      "reason": "Return the complete official compact.md to the native DSH summary call; do not activate persistent mode or copy an agent loop."
+    }
+  ],
+  "runtime": "prompt.mjs reads the unchanged source and conditionally adapts it; adaptation.diff is review evidence, not a second runtime prompt."
+}

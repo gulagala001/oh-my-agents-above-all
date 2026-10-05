@@ -1,0 +1,90 @@
+{
+  "name": "oh-my-agents-above-all",
+  "version": "0.2.1-alpha.1.omaa.0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH 五产品深度预设：Codex、Grok Build、Cursor、Pi、ZCode，独立主题与可选 OMD 增强",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "prompts:inspect": "node scripts/inspect-prompts.mjs"
+  },
+  "files": [
+    "src",
+    "lib",
+    "docs",
+    "README.md",
+    "cordis.patch.yml",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "devDependencies": {
+    "@deepseek-ai/cordis-plugin-loader": "1.0.6-alpha.1",
+    "@deepseek-ai/dsh": "0.2.1-alpha.1",
+    "@deepseek-ai/dsh-llm": "0.2.1-alpha.1",
+    "@deepseek-ai/dsh-skill-filesystem": "0.2.1-alpha.1",
+    "esbuild": "0.25.12",
+    "playwright": "1.63.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./agent": "./src/preset-agent.mjs",
+    "./plan-tools": "./src/plan-tools.mjs",
+    "./enhancement": "./src/enhancement.mjs",
+    "./package.json": "./package.json",
+    "./client": "./lib/client.js",
+    "./cursor-rules": "./src/cursor-rules.mjs",
+    "./checkpoints": "./src/checkpoints.mjs",
+    "./working-policy": "./src/working-policy.mjs",
+    "./working-tools": "./src/working-tools.mjs",
+    "./pi-resources": "./src/presets/pi/resources.mjs",
+    "./pi-steering": "./src/presets/pi/steering.mjs",
+    "./pi-branches": "./src/presets/pi/branches.mjs",
+    "./grok-monitor": "./src/presets/grok/monitor.mjs",
+    "./grok-scheduler": "./src/presets/grok/scheduler.mjs",
+    "./zcode-session-context": "./src/presets/zcode/session-context.mjs",
+    "./zcode-workflow": "./src/presets/zcode/workflow.mjs"
+  },
+  "dependencies": {
+    "ignore": "7.0.8",
+    "js-yaml": "4.1.0",
+    "minimatch": "10.2.6",
+    "zod": "4.5.4"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis-plugin-loader": "1.0.6-alpha.1",
+    "@deepseek-ai/dsh-llm": "0.2.1-alpha.1",
+    "@deepseek-ai/dsh-skill-filesystem": "0.2.1-alpha.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": [
+        "./cordis.patch.yml"
+      ]
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  }
+}

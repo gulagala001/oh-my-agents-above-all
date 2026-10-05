@@ -1,0 +1,14 @@
+.omaa-checkpoints { margin:0 20px 20px; padding-top:15px; border-top:1px solid var(--dsw-alias-border-l2); color:var(--dsw-alias-label-primary); font-size:12px; }
+.omaa-checkpoints h3 { font-size:14px; margin:0 0 8px; }
+.omaa-checkpoints select,.omaa-checkpoints button { color:inherit; background:var(--dsw-alias-bg-layer-1); border:1px solid var(--dsw-alias-border-l2); border-radius:5px; padding:5px 7px; font:inherit; }
+.omaa-checkpoints button { cursor:pointer; }.omaa-checkpoints :disabled { opacity:.55; cursor:not-allowed; }
+.omaa-checkpoint-file { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin:9px 0; }
+.omaa-checkpoint-file code { overflow-wrap:anywhere; flex:1; min-width:90px; }
+.omaa-checkpoint-file small { width:100%; color:var(--dsw-alias-label-secondary); }
+.omaa-review-file { display:block; margin:5px 0; max-width:100%; overflow-wrap:anywhere; text-align:left; }
+.omaa-checkpoint-review { margin:14px 0; }
+.omaa-checkpoints details { margin:12px 0; }.omaa-checkpoints summary { cursor:pointer; }
+.omaa-checkpoints .omaa-error { white-space:pre-wrap; }
+
+.omaa-checkpoints>label { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.omaa-checkpoints select { box-sizing:border-box; min-width:0; max-width:100%; }

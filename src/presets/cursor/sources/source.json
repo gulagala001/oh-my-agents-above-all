@@ -1,0 +1,53 @@
+{
+  "product": "Cursor",
+  "repository": "https://github.com/asgeirtj/system_prompts_leaks",
+  "commit": "38499c52b4c3f290e40843cb9514df84d9d23d4c",
+  "retrievedAt": "2026-10-05",
+  "selectedPrompt": "cursor-agent-sample.md",
+  "officialPrompt": false,
+  "sampleProvenance": "User-designated public repository. Original publisher, capture product build and capture authenticity are not independently established.",
+  "license": "Repository LICENSE copied verbatim; no assumption that the repository author can relicense underlying proprietary product prompt text.",
+  "files": [
+    {
+      "file": "sources/cursor-agent-sample.md",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks/blob/38499c52b4c3f290e40843cb9514df84d9d23d4c/Cursor/cursor.md",
+      "sha256": "d0b29a77fd270b80562eaa91eb79a902658ba248188d07e27d54c1752cdc0ec5",
+      "bytes": 18113,
+      "kind": "public-comparison-sample"
+    },
+    {
+      "file": "sources/sample-repository-LICENSE",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks/blob/38499c52b4c3f290e40843cb9514df84d9d23d4c/LICENSE",
+      "sha256": "f99ae25b6325d3a2fcebe74ee92296e2058fe84e97f228a5b81b5e8a1821f04f",
+      "bytes": 7049,
+      "kind": "repository-metadata"
+    },
+    {
+      "file": "sources/sample-repository-README.md",
+      "url": "https://github.com/asgeirtj/system_prompts_leaks/blob/38499c52b4c3f290e40843cb9514df84d9d23d4c/README.md",
+      "sha256": "b95a0b1d85e6dcab333073688c816e686013e96cf5820f4e885b234aa02890b3",
+      "bytes": 36863,
+      "kind": "repository-metadata"
+    }
+  ],
+  "officialDocumentation": [
+    {
+      "url": "https://cursor.com/docs/agent/overview",
+      "purpose": "Agent tools, checkpoints, queue and steering"
+    },
+    {
+      "url": "https://cursor.com/docs/rules",
+      "purpose": "MDC rules, frontmatter and attachment semantics"
+    },
+    {
+      "url": "https://cursor.com/docs/agent/plan-mode",
+      "purpose": "Research, reviewable Markdown plan and explicit build transition"
+    },
+    {
+      "url": "https://cursor.com/docs/agent/tools/search",
+      "purpose": "Exact search, proprietary Instant Grep, Explore subagent"
+    }
+  ],
+  "repositoryLicense": "CC0-1.0",
+  "sampleBlob": "f6951fa520e3e37f0ce09ab47ee564818769d034"
+}

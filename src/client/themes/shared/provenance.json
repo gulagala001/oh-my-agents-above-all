@@ -1,0 +1,43 @@
+{
+  "source": "Oh My DSH",
+  "repository": "https://github.com/gulagala001/oh-my-dsh",
+  "snapshots": [
+    {
+      "source": "src/client/skins/format.mjs",
+      "path": "format.mjs",
+      "sourceSha256": "d881b9b0df6927f98fdc83d24c2154dcfb43faf486e4459d3c64d1ccf1893285",
+      "sha256": "d881b9b0df6927f98fdc83d24c2154dcfb43faf486e4459d3c64d1ccf1893285"
+    },
+    {
+      "source": "src/client/skins/mapping.mjs",
+      "path": "mapping.mjs",
+      "sourceSha256": "fe6a15feec25b42d624184cfb4c7d5f5bbc91ec148d7934a26b15ba2590047ac",
+      "sha256": "fe6a15feec25b42d624184cfb4c7d5f5bbc91ec148d7934a26b15ba2590047ac"
+    },
+    {
+      "source": "src/client/skins/adapter.css",
+      "path": "adapter.css",
+      "sourceSha256": "adcdce3117f043e99035a82a7471e56db8af3d5e02429232fd454bdd375ae5d2",
+      "sha256": "adcdce3117f043e99035a82a7471e56db8af3d5e02429232fd454bdd375ae5d2"
+    },
+    {
+      "source": "src/client/skins/codex-desktop/layout.css",
+      "path": "codex-layout.css",
+      "sourceSha256": "7f1c2472f4524c5058cb4439ea93fbeb118811761f4657a485ce499a3a15df5f",
+      "sha256": "7f1c2472f4524c5058cb4439ea93fbeb118811761f4657a485ce499a3a15df5f"
+    },
+    {
+      "source": "src/client/skins/codex-desktop/integration.jsx",
+      "path": "codex-integration.jsx",
+      "sourceSha256": "63e8fa707304defc316a19145b7ff89eff9a563a5810dd9acfadb470604900c8",
+      "sha256": "17516797d3ededb4e2cb55b7867f8f8516859a06527990a0c11d998fb0c0dfa4",
+      "adaptation": "Only local slot helper import and the OMAA registration id differ."
+    },
+    {
+      "source": "vendor/opencu/src/client/slot-decoration.mjs",
+      "path": "slot-decoration.mjs",
+      "sourceSha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a",
+      "sha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a"
+    }
+  ]
+}
