@@ -1,0 +1,951 @@
+[
+  {
+    "insert": [
+      {
+        "id": "omaa",
+        "name": "oh-my-agents-above-all"
+      },
+      {
+        "id": "preset-omaa-codex",
+        "name": "@deepseek-ai/dsh-agent-preset",
+        "config": {
+          "id": "omaa-codex",
+          "name": "Codex · OMAA",
+          "description": "Codex 深度预设 · DSH 模型",
+          "order": 20,
+          "plugins": [
+            {
+              "id": "working",
+              "name": "cordis:group",
+              "group": true,
+              "isolate": {
+                "sandboxPolicy": true
+              },
+              "config": [
+                {
+                  "id": "working-policy",
+                  "name": "oh-my-agents-above-all/working-policy"
+                },
+                {
+                  "id": "working-tools",
+                  "name": "oh-my-agents-above-all/working-tools",
+                  "group": true,
+                  "config": [
+                    {
+                      "id": "agent-instructions",
+                      "name": "@deepseek-ai/dsh-agent-instructions",
+                      "config": {
+                        "maxBytes": 65536
+                      }
+                    },
+                    {
+                      "id": "tool-fs",
+                      "name": "@deepseek-ai/dsh-tool-fs"
+                    },
+                    {
+                      "id": "tool-bash",
+                      "name": "@deepseek-ai/dsh-tool-bash",
+                      "disabled": !!js process.platform === 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "tool-pwsh",
+                      "name": "@deepseek-ai/dsh-tool-pwsh",
+                      "disabled": !!js process.platform !== 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "skill-filesystem",
+                      "name": "@deepseek-ai/dsh-skill-filesystem"
+                    },
+                    {
+                      "id": "tool-skill",
+                      "name": "@deepseek-ai/dsh-tool-skill"
+                    },
+                    {
+                      "id": "tool-fs-search",
+                      "name": "@deepseek-ai/dsh-tool-fs-search",
+                      "config": {
+                        "sampleOverCapGlobResults": false
+                      }
+                    },
+                    {
+                      "id": "tool-todo",
+                      "name": "@deepseek-ai/dsh-tool-todo",
+                      "config": {
+                        "allowParallelInProgress": true
+                      }
+                    },
+                    {
+                      "id": "tool-jobs",
+                      "name": "@deepseek-ai/dsh-tool-jobs"
+                    },
+                    {
+                      "id": "tool-ask-user",
+                      "name": "@deepseek-ai/dsh-tool-ask-user"
+                    },
+                    {
+                      "id": "tool-web",
+                      "name": "@deepseek-ai/dsh-tool-web",
+                      "config": {
+                        "fetch": true
+                      }
+                    },
+                    {
+                      "id": "tool-present",
+                      "name": "@deepseek-ai/dsh-tool-present"
+                    },
+                    {
+                      "id": "delegation",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "workflowEngine": true
+                      },
+                      "config": [
+                        {
+                          "id": "workflow-ptc",
+                          "name": "@deepseek-ai/dsh-workflow-ptc"
+                        },
+                        {
+                          "id": "tool-workflow",
+                          "name": "@deepseek-ai/dsh-tool-workflow"
+                        },
+                        {
+                          "id": "tool-subagent-control",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control"
+                        },
+                        {
+                          "id": "tool-subagent-list-agents",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents"
+                        },
+                        {
+                          "id": "tool-subagent",
+                          "name": "@deepseek-ai/dsh-tool-subagent",
+                          "config": {
+                            "provider": "spawn",
+                            "toolName": "subagent",
+                            "modelSelectionSettings": true,
+                            "backgroundMode": "continuable"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "planning",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "planMode": true
+                      },
+                      "config": [
+                        {
+                          "id": "plan-mode",
+                          "name": "@deepseek-ai/dsh-plan-mode",
+                          "config": {
+                            "section": "You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy."
+                          }
+                        },
+                        {
+                          "id": "product-plan-tools",
+                          "name": "oh-my-agents-above-all/plan-tools"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "compaction",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "compaction": true
+                      },
+                      "config": [
+                        {
+                          "id": "compaction-basic",
+                          "name": "@deepseek-ai/dsh-compaction-basic",
+                          "config": {
+                            "headroomTokens": 8192,
+                            "maxTokens": 8192
+                          }
+                        },
+                        {
+                          "id": "command-compact",
+                          "name": "@deepseek-ai/dsh-command-compact"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "omaa-preset",
+                      "name": "oh-my-agents-above-all/agent",
+                      "config": {
+                        "product": "codex"
+                      }
+                    },
+                    {
+                      "id": "omaa-enhancement",
+                      "name": "oh-my-agents-above-all/enhancement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "preset-omaa-grok",
+        "name": "@deepseek-ai/dsh-agent-preset",
+        "config": {
+          "id": "omaa-grok",
+          "name": "Grok Build · OMAA",
+          "description": "Grok Build 深度预设 · DSH 模型",
+          "order": 21,
+          "plugins": [
+            {
+              "id": "working",
+              "name": "cordis:group",
+              "group": true,
+              "isolate": {
+                "sandboxPolicy": true
+              },
+              "config": [
+                {
+                  "id": "working-policy",
+                  "name": "oh-my-agents-above-all/working-policy"
+                },
+                {
+                  "id": "working-tools",
+                  "name": "oh-my-agents-above-all/working-tools",
+                  "group": true,
+                  "config": [
+                    {
+                      "id": "agent-instructions",
+                      "name": "@deepseek-ai/dsh-agent-instructions",
+                      "config": {
+                        "maxBytes": 65536
+                      }
+                    },
+                    {
+                      "id": "tool-fs",
+                      "name": "@deepseek-ai/dsh-tool-fs"
+                    },
+                    {
+                      "id": "tool-bash",
+                      "name": "@deepseek-ai/dsh-tool-bash",
+                      "disabled": !!js process.platform === 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "tool-pwsh",
+                      "name": "@deepseek-ai/dsh-tool-pwsh",
+                      "disabled": !!js process.platform !== 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "skill-filesystem",
+                      "name": "@deepseek-ai/dsh-skill-filesystem"
+                    },
+                    {
+                      "id": "tool-skill",
+                      "name": "@deepseek-ai/dsh-tool-skill"
+                    },
+                    {
+                      "id": "tool-fs-search",
+                      "name": "@deepseek-ai/dsh-tool-fs-search",
+                      "config": {
+                        "sampleOverCapGlobResults": false
+                      }
+                    },
+                    {
+                      "id": "tool-todo",
+                      "name": "@deepseek-ai/dsh-tool-todo",
+                      "config": {
+                        "allowParallelInProgress": true
+                      }
+                    },
+                    {
+                      "id": "tool-jobs",
+                      "name": "@deepseek-ai/dsh-tool-jobs"
+                    },
+                    {
+                      "id": "tool-ask-user",
+                      "name": "@deepseek-ai/dsh-tool-ask-user"
+                    },
+                    {
+                      "id": "tool-web",
+                      "name": "@deepseek-ai/dsh-tool-web",
+                      "config": {
+                        "fetch": true
+                      }
+                    },
+                    {
+                      "id": "tool-present",
+                      "name": "@deepseek-ai/dsh-tool-present"
+                    },
+                    {
+                      "id": "delegation",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "workflowEngine": true
+                      },
+                      "config": [
+                        {
+                          "id": "workflow-ptc",
+                          "name": "@deepseek-ai/dsh-workflow-ptc"
+                        },
+                        {
+                          "id": "tool-workflow",
+                          "name": "@deepseek-ai/dsh-tool-workflow"
+                        },
+                        {
+                          "id": "tool-subagent-control",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control"
+                        },
+                        {
+                          "id": "tool-subagent-list-agents",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents"
+                        },
+                        {
+                          "id": "tool-subagent",
+                          "name": "@deepseek-ai/dsh-tool-subagent",
+                          "config": {
+                            "provider": "spawn",
+                            "toolName": "subagent",
+                            "modelSelectionSettings": true,
+                            "backgroundMode": "continuable"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "planning",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "planMode": true
+                      },
+                      "config": [
+                        {
+                          "id": "plan-mode",
+                          "name": "@deepseek-ai/dsh-plan-mode",
+                          "config": {
+                            "section": "You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy."
+                          }
+                        },
+                        {
+                          "id": "product-plan-tools",
+                          "name": "oh-my-agents-above-all/plan-tools"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "compaction",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "compaction": true
+                      },
+                      "config": [
+                        {
+                          "id": "compaction-basic",
+                          "name": "@deepseek-ai/dsh-compaction-basic",
+                          "config": {
+                            "headroomTokens": 8192,
+                            "maxTokens": 8192
+                          }
+                        },
+                        {
+                          "id": "command-compact",
+                          "name": "@deepseek-ai/dsh-command-compact"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "grok-monitor",
+                      "name": "oh-my-agents-above-all/grok-monitor"
+                    },
+                    {
+                      "id": "grok-scheduler",
+                      "name": "oh-my-agents-above-all/grok-scheduler"
+                    },
+                    {
+                      "id": "omaa-preset",
+                      "name": "oh-my-agents-above-all/agent",
+                      "config": {
+                        "product": "grok"
+                      }
+                    },
+                    {
+                      "id": "omaa-enhancement",
+                      "name": "oh-my-agents-above-all/enhancement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "preset-omaa-cursor",
+        "name": "@deepseek-ai/dsh-agent-preset",
+        "config": {
+          "id": "omaa-cursor",
+          "name": "Cursor · OMAA",
+          "description": "Cursor 深度预设 · DSH 模型",
+          "order": 22,
+          "plugins": [
+            {
+              "id": "working",
+              "name": "cordis:group",
+              "group": true,
+              "isolate": {
+                "sandboxPolicy": true
+              },
+              "config": [
+                {
+                  "id": "working-policy",
+                  "name": "oh-my-agents-above-all/working-policy"
+                },
+                {
+                  "id": "working-tools",
+                  "name": "oh-my-agents-above-all/working-tools",
+                  "group": true,
+                  "config": [
+                    {
+                      "id": "agent-instructions",
+                      "name": "@deepseek-ai/dsh-agent-instructions",
+                      "config": {
+                        "maxBytes": 65536
+                      }
+                    },
+                    {
+                      "id": "tool-fs",
+                      "name": "@deepseek-ai/dsh-tool-fs"
+                    },
+                    {
+                      "id": "tool-bash",
+                      "name": "@deepseek-ai/dsh-tool-bash",
+                      "disabled": !!js process.platform === 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "tool-pwsh",
+                      "name": "@deepseek-ai/dsh-tool-pwsh",
+                      "disabled": !!js process.platform !== 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "skill-filesystem",
+                      "name": "@deepseek-ai/dsh-skill-filesystem"
+                    },
+                    {
+                      "id": "tool-skill",
+                      "name": "@deepseek-ai/dsh-tool-skill"
+                    },
+                    {
+                      "id": "tool-fs-search",
+                      "name": "@deepseek-ai/dsh-tool-fs-search",
+                      "config": {
+                        "sampleOverCapGlobResults": false
+                      }
+                    },
+                    {
+                      "id": "tool-todo",
+                      "name": "@deepseek-ai/dsh-tool-todo",
+                      "config": {
+                        "allowParallelInProgress": true
+                      }
+                    },
+                    {
+                      "id": "tool-jobs",
+                      "name": "@deepseek-ai/dsh-tool-jobs"
+                    },
+                    {
+                      "id": "tool-ask-user",
+                      "name": "@deepseek-ai/dsh-tool-ask-user"
+                    },
+                    {
+                      "id": "tool-web",
+                      "name": "@deepseek-ai/dsh-tool-web",
+                      "config": {
+                        "fetch": true
+                      }
+                    },
+                    {
+                      "id": "tool-present",
+                      "name": "@deepseek-ai/dsh-tool-present"
+                    },
+                    {
+                      "id": "delegation",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "workflowEngine": true
+                      },
+                      "config": [
+                        {
+                          "id": "workflow-ptc",
+                          "name": "@deepseek-ai/dsh-workflow-ptc"
+                        },
+                        {
+                          "id": "tool-workflow",
+                          "name": "@deepseek-ai/dsh-tool-workflow"
+                        },
+                        {
+                          "id": "tool-subagent-control",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control"
+                        },
+                        {
+                          "id": "tool-subagent-list-agents",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents"
+                        },
+                        {
+                          "id": "tool-subagent",
+                          "name": "@deepseek-ai/dsh-tool-subagent",
+                          "config": {
+                            "provider": "spawn",
+                            "toolName": "subagent",
+                            "modelSelectionSettings": true,
+                            "backgroundMode": "continuable"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "planning",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "planMode": true
+                      },
+                      "config": [
+                        {
+                          "id": "plan-mode",
+                          "name": "@deepseek-ai/dsh-plan-mode",
+                          "config": {
+                            "section": "You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy."
+                          }
+                        },
+                        {
+                          "id": "product-plan-tools",
+                          "name": "oh-my-agents-above-all/plan-tools"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "compaction",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "compaction": true
+                      },
+                      "config": [
+                        {
+                          "id": "compaction-basic",
+                          "name": "@deepseek-ai/dsh-compaction-basic",
+                          "config": {
+                            "headroomTokens": 8192,
+                            "maxTokens": 8192
+                          }
+                        },
+                        {
+                          "id": "command-compact",
+                          "name": "@deepseek-ai/dsh-command-compact"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cursor-rules",
+                      "name": "oh-my-agents-above-all/cursor-rules"
+                    },
+                    {
+                      "id": "cursor-checkpoints",
+                      "name": "oh-my-agents-above-all/checkpoints"
+                    },
+                    {
+                      "id": "omaa-preset",
+                      "name": "oh-my-agents-above-all/agent",
+                      "config": {
+                        "product": "cursor"
+                      }
+                    },
+                    {
+                      "id": "omaa-enhancement",
+                      "name": "oh-my-agents-above-all/enhancement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "preset-omaa-pi",
+        "name": "@deepseek-ai/dsh-agent-preset",
+        "config": {
+          "id": "omaa-pi",
+          "name": "Pi Coding Agent · OMAA",
+          "description": "Pi Coding Agent 深度预设 · DSH 模型",
+          "order": 23,
+          "plugins": [
+            {
+              "id": "working",
+              "name": "cordis:group",
+              "group": true,
+              "isolate": {
+                "sandboxPolicy": true
+              },
+              "config": [
+                {
+                  "id": "working-policy",
+                  "name": "oh-my-agents-above-all/working-policy"
+                },
+                {
+                  "id": "working-tools",
+                  "name": "oh-my-agents-above-all/working-tools",
+                  "group": true,
+                  "config": [
+                    {
+                      "id": "agent-instructions",
+                      "name": "@deepseek-ai/dsh-agent-instructions",
+                      "config": {
+                        "maxBytes": 65536
+                      }
+                    },
+                    {
+                      "id": "tool-fs",
+                      "name": "@deepseek-ai/dsh-tool-fs"
+                    },
+                    {
+                      "id": "tool-bash",
+                      "name": "@deepseek-ai/dsh-tool-bash",
+                      "disabled": !!js process.platform === 'win32',
+                      "config": {
+                        "promoteOnTimeout": false
+                      }
+                    },
+                    {
+                      "id": "tool-pwsh",
+                      "name": "@deepseek-ai/dsh-tool-pwsh",
+                      "disabled": !!js process.platform !== 'win32',
+                      "config": {
+                        "promoteOnTimeout": false
+                      }
+                    },
+                    {
+                      "id": "skill-filesystem",
+                      "name": "@deepseek-ai/dsh-skill-filesystem"
+                    },
+                    {
+                      "id": "tool-skill",
+                      "name": "@deepseek-ai/dsh-tool-skill"
+                    },
+                    {
+                      "id": "tool-jobs",
+                      "name": "@deepseek-ai/dsh-tool-jobs"
+                    },
+                    {
+                      "id": "delegation",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "workflowEngine": true
+                      },
+                      "config": [
+                        {
+                          "id": "workflow-ptc",
+                          "name": "@deepseek-ai/dsh-workflow-ptc"
+                        },
+                        {
+                          "id": "tool-workflow",
+                          "name": "@deepseek-ai/dsh-tool-workflow"
+                        },
+                        {
+                          "id": "tool-subagent-control",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control"
+                        },
+                        {
+                          "id": "tool-subagent-list-agents",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents"
+                        },
+                        {
+                          "id": "tool-subagent",
+                          "name": "@deepseek-ai/dsh-tool-subagent",
+                          "config": {
+                            "provider": "spawn",
+                            "toolName": "subagent",
+                            "modelSelectionSettings": true,
+                            "backgroundMode": "continuable"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "compaction",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "compaction": true
+                      },
+                      "config": [
+                        {
+                          "id": "compaction-basic",
+                          "name": "@deepseek-ai/dsh-compaction-basic",
+                          "config": {
+                            "headroomTokens": 8192,
+                            "maxTokens": 8192
+                          }
+                        },
+                        {
+                          "id": "command-compact",
+                          "name": "@deepseek-ai/dsh-command-compact"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "pi-resources",
+                      "name": "oh-my-agents-above-all/pi-resources"
+                    },
+                    {
+                      "id": "pi-steering",
+                      "name": "oh-my-agents-above-all/pi-steering"
+                    },
+                    {
+                      "id": "pi-branches",
+                      "name": "oh-my-agents-above-all/pi-branches"
+                    },
+                    {
+                      "id": "omaa-preset",
+                      "name": "oh-my-agents-above-all/agent",
+                      "config": {
+                        "product": "pi"
+                      }
+                    },
+                    {
+                      "id": "omaa-enhancement",
+                      "name": "oh-my-agents-above-all/enhancement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "preset-omaa-zcode",
+        "name": "@deepseek-ai/dsh-agent-preset",
+        "config": {
+          "id": "omaa-zcode",
+          "name": "ZCode · OMAA",
+          "description": "ZCode 深度预设 · DSH 模型",
+          "order": 24,
+          "plugins": [
+            {
+              "id": "working",
+              "name": "cordis:group",
+              "group": true,
+              "isolate": {
+                "sandboxPolicy": true
+              },
+              "config": [
+                {
+                  "id": "working-policy",
+                  "name": "oh-my-agents-above-all/working-policy"
+                },
+                {
+                  "id": "working-tools",
+                  "name": "oh-my-agents-above-all/working-tools",
+                  "group": true,
+                  "config": [
+                    {
+                      "id": "agent-instructions",
+                      "name": "@deepseek-ai/dsh-agent-instructions",
+                      "config": {
+                        "maxBytes": 65536
+                      }
+                    },
+                    {
+                      "id": "tool-fs",
+                      "name": "@deepseek-ai/dsh-tool-fs"
+                    },
+                    {
+                      "id": "tool-bash",
+                      "name": "@deepseek-ai/dsh-tool-bash",
+                      "disabled": !!js process.platform === 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "tool-pwsh",
+                      "name": "@deepseek-ai/dsh-tool-pwsh",
+                      "disabled": !!js process.platform !== 'win32',
+                      "config": {
+                        "promoteOnTimeout": true
+                      }
+                    },
+                    {
+                      "id": "skill-filesystem",
+                      "name": "@deepseek-ai/dsh-skill-filesystem"
+                    },
+                    {
+                      "id": "tool-skill",
+                      "name": "@deepseek-ai/dsh-tool-skill"
+                    },
+                    {
+                      "id": "tool-fs-search",
+                      "name": "@deepseek-ai/dsh-tool-fs-search",
+                      "config": {
+                        "sampleOverCapGlobResults": false
+                      }
+                    },
+                    {
+                      "id": "tool-todo",
+                      "name": "@deepseek-ai/dsh-tool-todo",
+                      "config": {
+                        "allowParallelInProgress": true
+                      }
+                    },
+                    {
+                      "id": "tool-jobs",
+                      "name": "@deepseek-ai/dsh-tool-jobs"
+                    },
+                    {
+                      "id": "tool-ask-user",
+                      "name": "@deepseek-ai/dsh-tool-ask-user"
+                    },
+                    {
+                      "id": "tool-web",
+                      "name": "@deepseek-ai/dsh-tool-web",
+                      "config": {
+                        "fetch": true
+                      }
+                    },
+                    {
+                      "id": "tool-present",
+                      "name": "@deepseek-ai/dsh-tool-present"
+                    },
+                    {
+                      "id": "delegation",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "workflowEngine": true
+                      },
+                      "config": [
+                        {
+                          "id": "workflow-ptc",
+                          "name": "@deepseek-ai/dsh-workflow-ptc"
+                        },
+                        {
+                          "id": "tool-workflow",
+                          "name": "@deepseek-ai/dsh-tool-workflow"
+                        },
+                        {
+                          "id": "tool-subagent-control",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control"
+                        },
+                        {
+                          "id": "tool-subagent-list-agents",
+                          "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents"
+                        },
+                        {
+                          "id": "tool-subagent",
+                          "name": "@deepseek-ai/dsh-tool-subagent",
+                          "config": {
+                            "provider": "spawn",
+                            "toolName": "subagent",
+                            "modelSelectionSettings": true,
+                            "backgroundMode": "continuable"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "planning",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "planMode": true
+                      },
+                      "config": [
+                        {
+                          "id": "plan-mode",
+                          "name": "@deepseek-ai/dsh-plan-mode",
+                          "config": {
+                            "section": "You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy."
+                          }
+                        },
+                        {
+                          "id": "product-plan-tools",
+                          "name": "oh-my-agents-above-all/plan-tools"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "compaction",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "compaction": true
+                      },
+                      "config": [
+                        {
+                          "id": "compaction-basic",
+                          "name": "@deepseek-ai/dsh-compaction-basic",
+                          "config": {
+                            "headroomTokens": 8192,
+                            "maxTokens": 8192
+                          }
+                        },
+                        {
+                          "id": "command-compact",
+                          "name": "@deepseek-ai/dsh-command-compact"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "zcode-session-context",
+                      "name": "oh-my-agents-above-all/zcode-session-context"
+                    },
+                    {
+                      "id": "zcode-workflow",
+                      "name": "oh-my-agents-above-all/zcode-workflow"
+                    },
+                    {
+                      "id": "omaa-preset",
+                      "name": "oh-my-agents-above-all/agent",
+                      "config": {
+                        "product": "zcode"
+                      }
+                    },
+                    {
+                      "id": "omaa-enhancement",
+                      "name": "oh-my-agents-above-all/enhancement"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

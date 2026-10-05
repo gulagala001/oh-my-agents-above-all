@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "product": "Cursor Agent CLI",
+  "scope": "logged-out terminal startup; not Cursor IDE",
+  "runtime": {
+    "version": "2026.10.01-e373342",
+    "platform": "darwin",
+    "arch": "arm64",
+    "archiveUrl": "https://downloads.cursor.com/lab/2026.10.01-e373342/darwin/arm64/agent-cli-package.tar.gz",
+    "archiveSha256": "629e51de43a0b7fb3b86f5ebc7e579f7df7df941b39f29e82945cde750145afc"
+  },
+  "sources": [
+    {
+      "url": "https://cursor.com/docs/cli/changelog",
+      "retrievedDate": "2026-10-05",
+      "section": "May 7, 2026",
+      "evidence": "CLI theme follows terminal; dynamic switching documented, not authenticated here"
+    },
+    {
+      "url": "https://cursor.com/docs/cli/reference/configuration",
+      "retrievedDate": "2026-10-05",
+      "evidence": "Published CLI config fields have no theme/palette setting; CURSOR_CONFIG_DIR documented"
+    },
+    {
+      "url": "https://invisible-island.net/xterm/ctlseqs/ctlseqs.html",
+      "retrievedDate": "2026-10-05",
+      "evidence": "Primary terminal SGR/OSC control reference; ANSI slots do not define Cursor RGB values"
+    }
+  ],
+  "usage": "Own capture of a locally executed UI and factual control-code observations. No proprietary bundle source, icon source, marketing CSS or IDE theme copied.",
+  "upstreamLicense": null,
+  "fixedProductRgbPalette": [],
+  "roleObservations": [
+    {
+      "role": "terminal surface",
+      "rawName": "no emitted background SGR",
+      "rawValue": "terminal default background",
+      "browserValue": null,
+      "scope": "logged-out screen"
+    },
+    {
+      "role": "identity",
+      "rawName": "Cursor Agent",
+      "rawValue": "SGR 1 then 22; default foreground",
+      "browserValue": null,
+      "bold": true
+    },
+    {
+      "role": "version",
+      "rawName": "v2026.10.01-e373342",
+      "rawValue": "SGR 2 then 22; default foreground",
+      "browserValue": null,
+      "dim": true
+    },
+    {
+      "role": "login instruction",
+      "rawName": "Press any key to log in...",
+      "rawValue": "SGR 32 then 39",
+      "ansiIndex": 2,
+      "browserValue": null
+    },
+    {
+      "role": "startup tip",
+      "rawName": "startup CLI alias hint",
+      "rawValue": "SGR 36 then 0",
+      "ansiIndex": 6,
+      "browserValue": null,
+      "clearedFromFinalScreen": true
+    }
+  ],
+  "unverified": [
+    "authenticated composer and transcript palettes",
+    "diff and tool status colors",
+    "actual OSC light/dark live switch",
+    "IDE theme equivalence",
+    "pixel RGB independent of terminal palette"
+  ]
+}

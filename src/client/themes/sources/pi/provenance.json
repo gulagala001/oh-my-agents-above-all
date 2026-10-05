@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "product": "pi",
+  "repository": "https://github.com/earendil-works/pi",
+  "version": "1.0.2",
+  "commit": "cd32f7725fdbddbaecdff5b1e68491563394e0ca",
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "sources": [
+    {
+      "path": "LICENSE",
+      "snapshot": "LICENSE",
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/dark.json",
+      "snapshot": "upstream/dark.json",
+      "sha256": "c11a588b714d35300293079b425fb09a3693d4b2d453585d211b08163c648b75"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/light.json",
+      "snapshot": "upstream/light.json",
+      "sha256": "f590c51c2bc8b238891efd0e983473ed2e2a6487b6692cc1d4b2845165e703f7"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme-json.ts",
+      "snapshot": "upstream/theme-json.ts.txt",
+      "sha256": "48d2ba48735eafb24e4812cf7c0d9b5c7e26253e6731616432850154079b3545"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
+      "snapshot": "upstream/theme.ts.txt",
+      "sha256": "082e9706529d468cfd3315f1d4c865a60ecd463e9fdd207b0b43607998a58ddc"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme-controller.ts",
+      "snapshot": "upstream/theme-controller.ts.txt",
+      "sha256": "b1ac907ac1ed5e1fbb754d93b42795605ca093cecdcfa3c661b3ed66f48a0d7f"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/system-theme.ts",
+      "snapshot": "upstream/system-theme.ts.txt",
+      "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/components/assistant-message.ts",
+      "snapshot": "upstream/assistant-message.ts.txt",
+      "sha256": "f8a20228291816aec253d3f115fec5ba765807275bc14077780225117e5912cb"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/components/user-message.ts",
+      "snapshot": "upstream/user-message.ts.txt",
+      "sha256": "22ffba3a5c014bc5cb7284ad03c39bc77b1788df34ed98f5856d87cfd856ce3b"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
+      "snapshot": "upstream/tool-execution.ts.txt",
+      "sha256": "58681d42b077bb9dc177b3d284149579c8769f8979ef90308829dba097f4018b"
+    },
+    {
+      "path": "packages/tui/src/colors.ts",
+      "snapshot": "upstream/colors.ts.txt",
+      "sha256": "d4fe729c424d2c07bc64cf0c3edfdbf5642865cba395dfb37234c6c88d65f468"
+    },
+    {
+      "path": "packages/tui/src/terminal-colors.ts",
+      "snapshot": "upstream/terminal-colors.ts.txt",
+      "sha256": "72d1ef298837bfe520bd8a060cb93ea27547dcbff04a167ace0f55b5183e550d"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+      "snapshot": "upstream/theme-schema.json",
+      "sha256": "8787918132dbf7aaee1be2ab30ee6306c715dad609cd85e448df595bb02e2a56"
+    },
+    {
+      "path": "packages/tui/src/oklab.ts",
+      "snapshot": "upstream/oklab.ts.txt",
+      "sha256": "45b067e6e3605b385f595adecd7c0216f1c6b6686680d5c73f661286de736be6"
+    }
+  ]
+}

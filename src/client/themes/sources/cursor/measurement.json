@@ -1,0 +1,48 @@
+{
+  "scope": "isolated logged-out startup only",
+  "rows": 32,
+  "columns": 100,
+  "networkDenied": true,
+  "keychainDenied": true,
+  "authenticationInputSent": false,
+  "results": [
+    {
+      "variant": "dark",
+      "version": "2026.10.01-e373342",
+      "bytes": 363,
+      "sha256": "4027d49034dc07a0ba947bc214f1e7bf7fb3debf3c6153dc9d0ecb33e2e85c47",
+      "exitCode": -15,
+      "terminalQueryReplies": [],
+      "sgr": [
+        "0",
+        "1",
+        "2",
+        "22",
+        "32",
+        "36",
+        "39"
+      ],
+      "nominalEmulatorForeground": "#e0e0e0",
+      "nominalEmulatorBackground": "#101010"
+    },
+    {
+      "variant": "light",
+      "version": "2026.10.01-e373342",
+      "bytes": 363,
+      "sha256": "4027d49034dc07a0ba947bc214f1e7bf7fb3debf3c6153dc9d0ecb33e2e85c47",
+      "exitCode": -15,
+      "terminalQueryReplies": [],
+      "sgr": [
+        "0",
+        "1",
+        "2",
+        "22",
+        "32",
+        "36",
+        "39"
+      ],
+      "nominalEmulatorForeground": "#202020",
+      "nominalEmulatorBackground": "#f4f4f4"
+    }
+  ]
+}

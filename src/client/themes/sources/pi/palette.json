@@ -1,0 +1,903 @@
+{
+  "schemaVersion": 1,
+  "product": "pi",
+  "status": "source-verified",
+  "source": {
+    "repository": "https://github.com/earendil-works/pi",
+    "version": "1.0.2",
+    "commit": "cd32f7725fdbddbaecdff5b1e68491563394e0ca",
+    "license": "MIT",
+    "licenseFile": "LICENSE",
+    "provenance": "provenance.json"
+  },
+  "conversion": {
+    "implementation": "Pinned packages/tui/src/colors.ts + oklab.ts",
+    "algorithm": "Upstream parseColor then colorToHex; truecolor sRGB rounded to 8-bit hex",
+    "terminal256ColorQuantization": "not applied to browser; native truecolor and indexed rendering differ"
+  },
+  "nativeSelection": {
+    "default": "system",
+    "defaultIsDynamic": true,
+    "evidence": "upstream/theme-controller.ts.txt; upstream/system-theme.ts.txt",
+    "builtInFixedThemes": [
+      "dark",
+      "light"
+    ],
+    "terminalDefaultBackground": {
+      "dark": "#000000",
+      "light": "#ffffff",
+      "scope": "fallback only, actual terminal colors may differ",
+      "evidence": "upstream/theme.ts.txt lines 216-219"
+    }
+  },
+  "variants": {
+    "dark": {
+      "nativeName": "dark",
+      "appearance": "dark",
+      "snapshot": "upstream/dark.json",
+      "sourceSha256": "c11a588b714d35300293079b425fb09a3693d4b2d453585d211b08163c648b75",
+      "vars": {
+        "text": "okhsl(234 3% 89%)",
+        "muted": "okhsl(229 6% 67%)",
+        "violet": "okhsl(295 50% 67%)",
+        "blue": "okhsl(232 54% 67%)",
+        "green": "okhsl(159 59% 67%)",
+        "red": "okhsl(20 72% 67%)",
+        "yellow": "okhsl(83 88% 67%)",
+        "blueBg": "okhsl(233 41% 24%)"
+      },
+      "palette": {
+        "accent": {
+          "rawName": "accent",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 50% 67%)",
+          "browserValue": "#a798d7",
+          "sourceLine": 16
+        },
+        "border": {
+          "rawName": "border",
+          "rawValue": "okhsl(231 57% 65%)",
+          "resolvedValue": "okhsl(231 57% 65%)",
+          "browserValue": "#5fa8cc",
+          "sourceLine": 17
+        },
+        "borderAccent": {
+          "rawName": "borderAccent",
+          "rawValue": "okhsl(295 53% 64%)",
+          "resolvedValue": "okhsl(295 53% 64%)",
+          "browserValue": "#a08ed5",
+          "sourceLine": 18
+        },
+        "borderMuted": {
+          "rawName": "borderMuted",
+          "rawValue": "okhsl(229 8% 53%)",
+          "resolvedValue": "okhsl(229 8% 53%)",
+          "browserValue": "#768186",
+          "sourceLine": 19
+        },
+        "success": {
+          "rawName": "success",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 59% 67%)",
+          "browserValue": "#68b78d",
+          "sourceLine": 20
+        },
+        "error": {
+          "rawName": "error",
+          "rawValue": "red",
+          "resolvedValue": "okhsl(20 72% 67%)",
+          "browserValue": "#ea7f81",
+          "sourceLine": 21
+        },
+        "warning": {
+          "rawName": "warning",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 88% 67%)",
+          "browserValue": "#cd9a22",
+          "sourceLine": 22
+        },
+        "muted": {
+          "rawName": "muted",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 7
+        },
+        "dim": {
+          "rawName": "dim",
+          "rawValue": "okhsl(229 8% 56%)",
+          "resolvedValue": "okhsl(229 8% 56%)",
+          "browserValue": "#7e888e",
+          "sourceLine": 24
+        },
+        "text": {
+          "rawName": "text",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(234 3% 89%)",
+          "browserValue": "#dee0e1",
+          "sourceLine": 6
+        },
+        "thinkingText": {
+          "rawName": "thinkingText",
+          "rawValue": "okhsl(226 7% 65%)",
+          "resolvedValue": "okhsl(226 7% 65%)",
+          "browserValue": "#96a0a4",
+          "sourceLine": 26
+        },
+        "selectedBg": {
+          "rawName": "selectedBg",
+          "rawValue": "blueBg",
+          "resolvedValue": "okhsl(233 41% 24%)",
+          "browserValue": "#213b49",
+          "sourceLine": 27
+        },
+        "scrollbarTrack": {
+          "rawName": "scrollbarTrack",
+          "rawValue": "okhsl(237 7% 33%)",
+          "resolvedValue": "okhsl(237 7% 33%)",
+          "browserValue": "#484e52",
+          "sourceLine": 28
+        },
+        "scrollbarThumb": {
+          "rawName": "scrollbarThumb",
+          "rawValue": "okhsl(232 7% 65%)",
+          "resolvedValue": "okhsl(232 7% 65%)",
+          "browserValue": "#97a0a5",
+          "sourceLine": 29
+        },
+        "searchMatchBg": {
+          "rawName": "searchMatchBg",
+          "rawValue": "okhsl(53 51% 24%)",
+          "resolvedValue": "okhsl(53 51% 24%)",
+          "browserValue": "#4e2f1b",
+          "sourceLine": 30
+        },
+        "searchMatchText": {
+          "rawName": "searchMatchText",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 31
+        },
+        "userMessageBg": {
+          "rawName": "userMessageBg",
+          "rawValue": "blueBg",
+          "resolvedValue": "okhsl(233 41% 24%)",
+          "browserValue": "#213b49",
+          "sourceLine": 32
+        },
+        "userMessageText": {
+          "rawName": "userMessageText",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(234 3% 89%)",
+          "browserValue": "#dee0e1",
+          "sourceLine": 33
+        },
+        "customMessageBg": {
+          "rawName": "customMessageBg",
+          "rawValue": "okhsl(295 42% 24%)",
+          "resolvedValue": "okhsl(295 42% 24%)",
+          "browserValue": "#3a3055",
+          "sourceLine": 34
+        },
+        "customMessageText": {
+          "rawName": "customMessageText",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 35
+        },
+        "customMessageLabel": {
+          "rawName": "customMessageLabel",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 50% 67%)",
+          "browserValue": "#a798d7",
+          "sourceLine": 36
+        },
+        "toolPendingBg": {
+          "rawName": "toolPendingBg",
+          "rawValue": "okhsl(229 5% 24%)",
+          "resolvedValue": "okhsl(229 5% 24%)",
+          "browserValue": "#34383a",
+          "sourceLine": 37
+        },
+        "toolSuccessBg": {
+          "rawName": "toolSuccessBg",
+          "rawValue": "okhsl(158 46% 25%)",
+          "resolvedValue": "okhsl(158 46% 25%)",
+          "browserValue": "#254131",
+          "sourceLine": 38
+        },
+        "toolErrorBg": {
+          "rawName": "toolErrorBg",
+          "rawValue": "okhsl(19 54% 25%)",
+          "resolvedValue": "okhsl(19 54% 25%)",
+          "browserValue": "#5b282a",
+          "sourceLine": 39
+        },
+        "toolTitle": {
+          "rawName": "toolTitle",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(234 3% 89%)",
+          "browserValue": "#dee0e1",
+          "sourceLine": 40
+        },
+        "toolOutput": {
+          "rawName": "toolOutput",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 41
+        },
+        "mdHeading": {
+          "rawName": "mdHeading",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 88% 67%)",
+          "browserValue": "#cd9a22",
+          "sourceLine": 42
+        },
+        "mdLink": {
+          "rawName": "mdLink",
+          "rawValue": "blue",
+          "resolvedValue": "okhsl(232 54% 67%)",
+          "browserValue": "#69add0",
+          "sourceLine": 43
+        },
+        "mdLinkUrl": {
+          "rawName": "mdLinkUrl",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 44
+        },
+        "mdCode": {
+          "rawName": "mdCode",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 50% 67%)",
+          "browserValue": "#a798d7",
+          "sourceLine": 45
+        },
+        "mdCodeBlock": {
+          "rawName": "mdCodeBlock",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 59% 67%)",
+          "browserValue": "#68b78d",
+          "sourceLine": 46
+        },
+        "mdCodeBlockBorder": {
+          "rawName": "mdCodeBlockBorder",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 47
+        },
+        "mdQuote": {
+          "rawName": "mdQuote",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 48
+        },
+        "mdQuoteBorder": {
+          "rawName": "mdQuoteBorder",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 49
+        },
+        "mdHr": {
+          "rawName": "mdHr",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 50
+        },
+        "mdListBullet": {
+          "rawName": "mdListBullet",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 50% 67%)",
+          "browserValue": "#a798d7",
+          "sourceLine": 51
+        },
+        "toolDiffAdded": {
+          "rawName": "toolDiffAdded",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 59% 67%)",
+          "browserValue": "#68b78d",
+          "sourceLine": 52
+        },
+        "toolDiffRemoved": {
+          "rawName": "toolDiffRemoved",
+          "rawValue": "red",
+          "resolvedValue": "okhsl(20 72% 67%)",
+          "browserValue": "#ea7f81",
+          "sourceLine": 53
+        },
+        "toolDiffContext": {
+          "rawName": "toolDiffContext",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 54
+        },
+        "syntaxComment": {
+          "rawName": "syntaxComment",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 55
+        },
+        "syntaxKeyword": {
+          "rawName": "syntaxKeyword",
+          "rawValue": "blue",
+          "resolvedValue": "okhsl(232 54% 67%)",
+          "browserValue": "#69add0",
+          "sourceLine": 56
+        },
+        "syntaxFunction": {
+          "rawName": "syntaxFunction",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 88% 67%)",
+          "browserValue": "#cd9a22",
+          "sourceLine": 57
+        },
+        "syntaxVariable": {
+          "rawName": "syntaxVariable",
+          "rawValue": "okhsl(202 58% 67%)",
+          "resolvedValue": "okhsl(202 58% 67%)",
+          "browserValue": "#5db3ba",
+          "sourceLine": 58
+        },
+        "syntaxString": {
+          "rawName": "syntaxString",
+          "rawValue": "okhsl(52 67% 67%)",
+          "resolvedValue": "okhsl(52 67% 67%)",
+          "browserValue": "#de8d5a",
+          "sourceLine": 59
+        },
+        "syntaxNumber": {
+          "rawName": "syntaxNumber",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 59% 67%)",
+          "browserValue": "#68b78d",
+          "sourceLine": 60
+        },
+        "syntaxType": {
+          "rawName": "syntaxType",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 50% 67%)",
+          "browserValue": "#a798d7",
+          "sourceLine": 61
+        },
+        "syntaxOperator": {
+          "rawName": "syntaxOperator",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 62
+        },
+        "syntaxPunctuation": {
+          "rawName": "syntaxPunctuation",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 6% 67%)",
+          "browserValue": "#9da5a9",
+          "sourceLine": 63
+        },
+        "thinkingOff": {
+          "rawName": "thinkingOff",
+          "rawValue": "okhsl(229 8% 49%)",
+          "resolvedValue": "okhsl(229 8% 49%)",
+          "browserValue": "#6c767b",
+          "sourceLine": 64
+        },
+        "thinkingMinimal": {
+          "rawName": "thinkingMinimal",
+          "rawValue": "okhsl(232 20% 52%)",
+          "resolvedValue": "okhsl(232 20% 52%)",
+          "browserValue": "#68808d",
+          "sourceLine": 65
+        },
+        "thinkingLow": {
+          "rawName": "thinkingLow",
+          "rawValue": "okhsl(232 45% 54%)",
+          "resolvedValue": "okhsl(232 45% 54%)",
+          "browserValue": "#5489a4",
+          "sourceLine": 66
+        },
+        "thinkingMedium": {
+          "rawName": "thinkingMedium",
+          "rawValue": "okhsl(263 59% 56%)",
+          "resolvedValue": "okhsl(263 59% 56%)",
+          "browserValue": "#6185cc",
+          "sourceLine": 67
+        },
+        "thinkingHigh": {
+          "rawName": "thinkingHigh",
+          "rawValue": "okhsl(295 73% 59%)",
+          "resolvedValue": "okhsl(295 73% 59%)",
+          "browserValue": "#9776e5",
+          "sourceLine": 68
+        },
+        "thinkingXhigh": {
+          "rawName": "thinkingXhigh",
+          "rawValue": "okhsl(337 81% 61%)",
+          "resolvedValue": "okhsl(337 81% 61%)",
+          "browserValue": "#de54c1",
+          "sourceLine": 69
+        },
+        "thinkingMax": {
+          "rawName": "thinkingMax",
+          "rawValue": "okhsl(20 99% 63%)",
+          "resolvedValue": "okhsl(20 99% 63%)",
+          "browserValue": "#fe5462",
+          "sourceLine": 70
+        },
+        "bashMode": {
+          "rawName": "bashMode",
+          "rawValue": "okhsl(159 64% 65%)",
+          "resolvedValue": "okhsl(159 64% 65%)",
+          "browserValue": "#5eb286",
+          "sourceLine": 71
+        },
+        "export.pageBg": {
+          "rawName": "export.pageBg",
+          "rawValue": "okhsl(262 14% 16%)",
+          "resolvedValue": "okhsl(262 14% 16%)",
+          "browserValue": "#21252c",
+          "sourceLine": 74,
+          "scope": "html-export-only"
+        },
+        "export.cardBg": {
+          "rawName": "export.cardBg",
+          "rawValue": "okhsl(264 13% 19%)",
+          "resolvedValue": "okhsl(264 13% 19%)",
+          "browserValue": "#282c34",
+          "sourceLine": 75,
+          "scope": "html-export-only"
+        },
+        "export.infoBg": {
+          "rawName": "export.infoBg",
+          "rawValue": "okhsl(53 51% 24%)",
+          "resolvedValue": "okhsl(53 51% 24%)",
+          "browserValue": "#4e2f1b",
+          "sourceLine": 76,
+          "scope": "html-export-only"
+        }
+      }
+    },
+    "light": {
+      "nativeName": "light",
+      "appearance": "light",
+      "snapshot": "upstream/light.json",
+      "sourceSha256": "f590c51c2bc8b238891efd0e983473ed2e2a6487b6692cc1d4b2845165e703f7",
+      "vars": {
+        "text": "okhsl(225 5% 27%)",
+        "muted": "okhsl(229 8% 47%)",
+        "violet": "okhsl(295 60% 46%)",
+        "blue": "okhsl(231 68% 47%)",
+        "green": "okhsl(159 75% 46%)",
+        "red": "okhsl(20 91% 47%)",
+        "yellow": "okhsl(83 99% 47%)",
+        "blueBg": "okhsl(235 19% 91%)"
+      },
+      "palette": {
+        "accent": {
+          "rawName": "accent",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 60% 46%)",
+          "browserValue": "#7459b4",
+          "sourceLine": 16
+        },
+        "border": {
+          "rawName": "border",
+          "rawValue": "okhsl(231 67% 55%)",
+          "resolvedValue": "okhsl(231 67% 55%)",
+          "browserValue": "#3d8eb3",
+          "sourceLine": 17
+        },
+        "borderAccent": {
+          "rawName": "borderAccent",
+          "rawValue": "okhsl(295 59% 55%)",
+          "resolvedValue": "okhsl(295 59% 55%)",
+          "browserValue": "#8a72cb",
+          "sourceLine": 18
+        },
+        "borderMuted": {
+          "rawName": "borderMuted",
+          "rawValue": "okhsl(235 7% 66%)",
+          "resolvedValue": "okhsl(235 7% 66%)",
+          "browserValue": "#9aa2a7",
+          "sourceLine": 19
+        },
+        "success": {
+          "rawName": "success",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 75% 46%)",
+          "browserValue": "#337e58",
+          "sourceLine": 20
+        },
+        "error": {
+          "rawName": "error",
+          "rawValue": "red",
+          "resolvedValue": "okhsl(20 91% 47%)",
+          "browserValue": "#c8253d",
+          "sourceLine": 21
+        },
+        "warning": {
+          "rawName": "warning",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 99% 47%)",
+          "browserValue": "#8f6802",
+          "sourceLine": 22
+        },
+        "muted": {
+          "rawName": "muted",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 7
+        },
+        "dim": {
+          "rawName": "dim",
+          "rawValue": "okhsl(229 7% 59%)",
+          "resolvedValue": "okhsl(229 7% 59%)",
+          "browserValue": "#879095",
+          "sourceLine": 24
+        },
+        "text": {
+          "rawName": "text",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(225 5% 27%)",
+          "browserValue": "#3b3f41",
+          "sourceLine": 6
+        },
+        "thinkingText": {
+          "rawName": "thinkingText",
+          "rawValue": "okhsl(234 8% 55%)",
+          "resolvedValue": "okhsl(234 8% 55%)",
+          "browserValue": "#7c868c",
+          "sourceLine": 26
+        },
+        "selectedBg": {
+          "rawName": "selectedBg",
+          "rawValue": "blueBg",
+          "resolvedValue": "okhsl(235 19% 91%)",
+          "browserValue": "#dfe7ec",
+          "sourceLine": 27
+        },
+        "scrollbarTrack": {
+          "rawName": "scrollbarTrack",
+          "rawValue": "okhsl(248 3% 90%)",
+          "resolvedValue": "okhsl(248 3% 90%)",
+          "browserValue": "#e1e3e4",
+          "sourceLine": 28
+        },
+        "scrollbarThumb": {
+          "rawName": "scrollbarThumb",
+          "rawValue": "okhsl(226 7% 65%)",
+          "resolvedValue": "okhsl(226 7% 65%)",
+          "browserValue": "#96a0a4",
+          "sourceLine": 29
+        },
+        "searchMatchBg": {
+          "rawName": "searchMatchBg",
+          "rawValue": "okhsl(56 22% 91%)",
+          "resolvedValue": "okhsl(56 22% 91%)",
+          "browserValue": "#ede3dd",
+          "sourceLine": 30
+        },
+        "searchMatchText": {
+          "rawName": "searchMatchText",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 31
+        },
+        "userMessageBg": {
+          "rawName": "userMessageBg",
+          "rawValue": "blueBg",
+          "resolvedValue": "okhsl(235 19% 91%)",
+          "browserValue": "#dfe7ec",
+          "sourceLine": 32
+        },
+        "userMessageText": {
+          "rawName": "userMessageText",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(225 5% 27%)",
+          "browserValue": "#3b3f41",
+          "sourceLine": 33
+        },
+        "customMessageBg": {
+          "rawName": "customMessageBg",
+          "rawValue": "okhsl(295 25% 91%)",
+          "resolvedValue": "okhsl(295 25% 91%)",
+          "browserValue": "#e6e4ee",
+          "sourceLine": 34
+        },
+        "customMessageText": {
+          "rawName": "customMessageText",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 35
+        },
+        "customMessageLabel": {
+          "rawName": "customMessageLabel",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 60% 46%)",
+          "browserValue": "#7459b4",
+          "sourceLine": 36
+        },
+        "toolPendingBg": {
+          "rawName": "toolPendingBg",
+          "rawValue": "okhsl(248 3% 91%)",
+          "resolvedValue": "okhsl(248 3% 91%)",
+          "browserValue": "#e4e5e6",
+          "sourceLine": 37
+        },
+        "toolSuccessBg": {
+          "rawName": "toolSuccessBg",
+          "rawValue": "okhsl(156 21% 91%)",
+          "resolvedValue": "okhsl(156 21% 91%)",
+          "browserValue": "#dee9e1",
+          "sourceLine": 38
+        },
+        "toolErrorBg": {
+          "rawName": "toolErrorBg",
+          "rawValue": "okhsl(24 23% 91%)",
+          "resolvedValue": "okhsl(24 23% 91%)",
+          "browserValue": "#eee2e1",
+          "sourceLine": 39
+        },
+        "toolTitle": {
+          "rawName": "toolTitle",
+          "rawValue": "text",
+          "resolvedValue": "okhsl(225 5% 27%)",
+          "browserValue": "#3b3f41",
+          "sourceLine": 40
+        },
+        "toolOutput": {
+          "rawName": "toolOutput",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 41
+        },
+        "mdHeading": {
+          "rawName": "mdHeading",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 99% 47%)",
+          "browserValue": "#8f6802",
+          "sourceLine": 42
+        },
+        "mdLink": {
+          "rawName": "mdLink",
+          "rawValue": "blue",
+          "resolvedValue": "okhsl(231 68% 47%)",
+          "browserValue": "#2f7899",
+          "sourceLine": 43
+        },
+        "mdLinkUrl": {
+          "rawName": "mdLinkUrl",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 44
+        },
+        "mdCode": {
+          "rawName": "mdCode",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 60% 46%)",
+          "browserValue": "#7459b4",
+          "sourceLine": 45
+        },
+        "mdCodeBlock": {
+          "rawName": "mdCodeBlock",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 75% 46%)",
+          "browserValue": "#337e58",
+          "sourceLine": 46
+        },
+        "mdCodeBlockBorder": {
+          "rawName": "mdCodeBlockBorder",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 47
+        },
+        "mdQuote": {
+          "rawName": "mdQuote",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 48
+        },
+        "mdQuoteBorder": {
+          "rawName": "mdQuoteBorder",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 49
+        },
+        "mdHr": {
+          "rawName": "mdHr",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 50
+        },
+        "mdListBullet": {
+          "rawName": "mdListBullet",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 60% 46%)",
+          "browserValue": "#7459b4",
+          "sourceLine": 51
+        },
+        "toolDiffAdded": {
+          "rawName": "toolDiffAdded",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 75% 46%)",
+          "browserValue": "#337e58",
+          "sourceLine": 52
+        },
+        "toolDiffRemoved": {
+          "rawName": "toolDiffRemoved",
+          "rawValue": "red",
+          "resolvedValue": "okhsl(20 91% 47%)",
+          "browserValue": "#c8253d",
+          "sourceLine": 53
+        },
+        "toolDiffContext": {
+          "rawName": "toolDiffContext",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 54
+        },
+        "syntaxComment": {
+          "rawName": "syntaxComment",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 55
+        },
+        "syntaxKeyword": {
+          "rawName": "syntaxKeyword",
+          "rawValue": "blue",
+          "resolvedValue": "okhsl(231 68% 47%)",
+          "browserValue": "#2f7899",
+          "sourceLine": 56
+        },
+        "syntaxFunction": {
+          "rawName": "syntaxFunction",
+          "rawValue": "yellow",
+          "resolvedValue": "okhsl(83 99% 47%)",
+          "browserValue": "#8f6802",
+          "sourceLine": 57
+        },
+        "syntaxVariable": {
+          "rawName": "syntaxVariable",
+          "rawValue": "okhsl(203 73% 46%)",
+          "resolvedValue": "okhsl(203 73% 46%)",
+          "browserValue": "#287a81",
+          "sourceLine": 58
+        },
+        "syntaxString": {
+          "rawName": "syntaxString",
+          "rawValue": "okhsl(52 84% 46%)",
+          "resolvedValue": "okhsl(52 84% 46%)",
+          "browserValue": "#a45417",
+          "sourceLine": 59
+        },
+        "syntaxNumber": {
+          "rawName": "syntaxNumber",
+          "rawValue": "green",
+          "resolvedValue": "okhsl(159 75% 46%)",
+          "browserValue": "#337e58",
+          "sourceLine": 60
+        },
+        "syntaxType": {
+          "rawName": "syntaxType",
+          "rawValue": "violet",
+          "resolvedValue": "okhsl(295 60% 46%)",
+          "browserValue": "#7459b4",
+          "sourceLine": 61
+        },
+        "syntaxOperator": {
+          "rawName": "syntaxOperator",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 62
+        },
+        "syntaxPunctuation": {
+          "rawName": "syntaxPunctuation",
+          "rawValue": "muted",
+          "resolvedValue": "okhsl(229 8% 47%)",
+          "browserValue": "#677176",
+          "sourceLine": 63
+        },
+        "thinkingOff": {
+          "rawName": "thinkingOff",
+          "rawValue": "okhsl(223 5% 80%)",
+          "resolvedValue": "okhsl(223 5% 80%)",
+          "browserValue": "#c2c8ca",
+          "sourceLine": 64
+        },
+        "thinkingMinimal": {
+          "rawName": "thinkingMinimal",
+          "rawValue": "okhsl(229 14% 78%)",
+          "resolvedValue": "okhsl(229 14% 78%)",
+          "browserValue": "#b5c4cb",
+          "sourceLine": 65
+        },
+        "thinkingLow": {
+          "rawName": "thinkingLow",
+          "rawValue": "okhsl(232 33% 76%)",
+          "resolvedValue": "okhsl(232 33% 76%)",
+          "browserValue": "#9fc2d5",
+          "sourceLine": 66
+        },
+        "thinkingMedium": {
+          "rawName": "thinkingMedium",
+          "rawValue": "okhsl(264 48% 74%)",
+          "resolvedValue": "okhsl(264 48% 74%)",
+          "browserValue": "#a2b7e0",
+          "sourceLine": 67
+        },
+        "thinkingHigh": {
+          "rawName": "thinkingHigh",
+          "rawValue": "okhsl(295 62% 72%)",
+          "resolvedValue": "okhsl(295 62% 72%)",
+          "browserValue": "#b5a5e8",
+          "sourceLine": 68
+        },
+        "thinkingXhigh": {
+          "rawName": "thinkingXhigh",
+          "rawValue": "okhsl(337 74% 70%)",
+          "resolvedValue": "okhsl(337 74% 70%)",
+          "browserValue": "#e585cd",
+          "sourceLine": 69
+        },
+        "thinkingMax": {
+          "rawName": "thinkingMax",
+          "rawValue": "okhsl(20 98% 68%)",
+          "resolvedValue": "okhsl(20 98% 68%)",
+          "browserValue": "#fe7479",
+          "sourceLine": 70
+        },
+        "bashMode": {
+          "rawName": "bashMode",
+          "rawValue": "okhsl(159 74% 55%)",
+          "resolvedValue": "okhsl(159 74% 55%)",
+          "browserValue": "#40976c",
+          "sourceLine": 71
+        },
+        "export.pageBg": {
+          "rawName": "export.pageBg",
+          "rawValue": "okhsl(17 3% 94%)",
+          "resolvedValue": "okhsl(17 3% 94%)",
+          "browserValue": "#efeeee",
+          "sourceLine": 74,
+          "scope": "html-export-only"
+        },
+        "export.cardBg": {
+          "rawName": "export.cardBg",
+          "rawValue": "okhsl(17 5% 97%)",
+          "resolvedValue": "okhsl(17 5% 97%)",
+          "browserValue": "#f7f6f6",
+          "sourceLine": 75,
+          "scope": "html-export-only"
+        },
+        "export.infoBg": {
+          "rawName": "export.infoBg",
+          "rawValue": "okhsl(56 22% 91%)",
+          "resolvedValue": "okhsl(56 22% 91%)",
+          "browserValue": "#ede3dd",
+          "sourceLine": 76,
+          "scope": "html-export-only"
+        }
+      }
+    }
+  }
+}

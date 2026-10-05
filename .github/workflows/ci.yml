@@ -1,0 +1,78 @@
+name: Build packages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', 'README.md', 'CONTRIBUTING.md']
+  pull_request:
+    paths-ignore: ['docs/**', 'README.md', 'CONTRIBUTING.md']
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omaa-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.23.0'
+      - name: Install locked OMAA build dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build presets and browser client
+        run: pnpm build
+      - name: Check settings, appearance ownership and Cursor rules
+        run: >-
+          node --test --test-concurrency=1
+          test/preferences.test.mjs
+          test/session-transfer.test.mjs
+          test/appearance-coordinator.test.mjs
+          test/preset-controls.test.mjs
+          test/cursor-rules.test.mjs
+      - name: Package OMAA for both hosts
+        run: |
+          node scripts/package.mjs --host-version 0.2.1-alpha.1
+          node scripts/package.mjs --host-version 0.2.0-rc.2
+      - name: Fetch fixed official alpha OMD baseline
+        uses: actions/checkout@v7
+        with:
+          repository: gulagala001/oh-my-dsh
+          ref: 95fbfc4428834e98a033fb4724b990a8796bd2d5
+          path: .cache/omd-official-alpha
+          persist-credentials: false
+      - name: Fetch fixed official rc.2 OMD baseline
+        uses: actions/checkout@v7
+        with:
+          repository: gulagala001/oh-my-dsh
+          ref: d29b75c98a0f6575af5880497c4d970125eeedf2
+          path: .cache/omd-official-rc2
+          persist-credentials: false
+      # The compatibility script imports esbuild from OMAA's installed lockfile.
+      # It retains each baseline's native lib/host and vendor, and rebuilds only
+      # browser/skin assets. Do not install or execute the OMD build-host script.
+      - name: Package compatible OMD for both hosts
+        run: |
+          node scripts/package-omd-compat.mjs --base .cache/omd-official-alpha --host-version 0.2.1-alpha.1
+          node scripts/package-omd-compat.mjs --base .cache/omd-official-rc2 --host-version 0.2.0-rc.2
+      - uses: actions/upload-artifact@v7
+        with:
+          name: omaa-release-packages
+          path: |
+            dist/*.tgz
+            dist/*.tgz.sha256
+            dist/*.tgz.metadata.json
+          if-no-files-found: error
+          retention-days: 14

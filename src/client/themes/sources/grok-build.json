@@ -1,0 +1,1236 @@
+{
+  "schemaVersion": 1,
+  "product": "grok",
+  "status": "source-verified",
+  "source": {
+    "repository": "https://github.com/xai-org/grok-build",
+    "commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+    "sourceRev": "559751fdcec02d413e4c57c8832ab275e4f44980",
+    "directory": "crates/codegen/xai-grok-pager-render/src/theme",
+    "license": "Apache-2.0",
+    "licenseFile": "licenses/grok-build-LICENSE.txt",
+    "noticesFile": "licenses/grok-build-THIRD-PARTY-NOTICES.txt",
+    "paletteCredit": "The upstream GrokNight source credits TokyoNight Night accent colors; GrokDay deepens that hue family. This extraction preserves the original notices and raw source comments."
+  },
+  "variants": {
+    "dark": {
+      "nativeName": "GrokNight",
+      "snapshot": "upstream/groknight.rs.txt",
+      "sourceSha256": "c58f35789fad4a1fec3d978673ba9dfd273e7c9e94fa731f975ca297527b5681",
+      "palette": {
+        "BG": {
+          "rawName": "BG",
+          "rawValue": "rgb(10, 10, 10)",
+          "browserValue": "#0a0a0a",
+          "sourceLine": 20
+        },
+        "BG_DARK": {
+          "rawName": "BG_DARK",
+          "rawValue": "rgb(12, 12, 12)",
+          "browserValue": "#0c0c0c",
+          "sourceLine": 21
+        },
+        "BG_STORM_DARK": {
+          "rawName": "BG_STORM_DARK",
+          "rawValue": "rgb(17, 17, 17)",
+          "browserValue": "#111111",
+          "sourceLine": 22
+        },
+        "BG_STORM": {
+          "rawName": "BG_STORM",
+          "rawValue": "rgb(20, 20, 20)",
+          "browserValue": "#141414",
+          "sourceLine": 23
+        },
+        "BG_HIGHLIGHT": {
+          "rawName": "BG_HIGHLIGHT",
+          "rawValue": "rgb(36, 36, 36)",
+          "browserValue": "#242424",
+          "sourceLine": 24
+        },
+        "FG": {
+          "rawName": "FG",
+          "rawValue": "rgb(225, 225, 225)",
+          "browserValue": "#e1e1e1",
+          "sourceLine": 27
+        },
+        "FG_DARK": {
+          "rawName": "FG_DARK",
+          "rawValue": "rgb(200, 200, 200)",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 28
+        },
+        "FG_GUTTER": {
+          "rawName": "FG_GUTTER",
+          "rawValue": "rgb(65, 65, 65)",
+          "browserValue": "#414141",
+          "sourceLine": 29
+        },
+        "COMMENT": {
+          "rawName": "COMMENT",
+          "rawValue": "rgb(108, 108, 108)",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 30
+        },
+        "DARK3": {
+          "rawName": "DARK3",
+          "rawValue": "rgb(90, 90, 90)",
+          "browserValue": "#5a5a5a",
+          "sourceLine": 31
+        },
+        "DARK5": {
+          "rawName": "DARK5",
+          "rawValue": "rgb(120, 120, 120)",
+          "browserValue": "#787878",
+          "sourceLine": 32
+        },
+        "BLUE": {
+          "rawName": "BLUE",
+          "rawValue": "rgb(122, 162, 247)",
+          "browserValue": "#7aa2f7",
+          "sourceLine": 35
+        },
+        "BLUE0": {
+          "rawName": "BLUE0",
+          "rawValue": "rgb(61, 89, 161)",
+          "browserValue": "#3d59a1",
+          "sourceLine": 36
+        },
+        "BLUE1": {
+          "rawName": "BLUE1",
+          "rawValue": "rgb(58, 149, 171)",
+          "browserValue": "#3a95ab",
+          "sourceLine": 37
+        },
+        "CYAN": {
+          "rawName": "CYAN",
+          "rawValue": "rgb(125, 207, 255)",
+          "browserValue": "#7dcfff",
+          "sourceLine": 38
+        },
+        "GREEN": {
+          "rawName": "GREEN",
+          "rawValue": "rgb(158, 206, 106)",
+          "browserValue": "#9ece6a",
+          "sourceLine": 39
+        },
+        "GREEN1": {
+          "rawName": "GREEN1",
+          "rawValue": "rgb(115, 218, 202)",
+          "browserValue": "#73daca",
+          "sourceLine": 40
+        },
+        "MAGENTA": {
+          "rawName": "MAGENTA",
+          "rawValue": "rgb(187, 154, 247)",
+          "browserValue": "#bb9af7",
+          "sourceLine": 41
+        },
+        "ORANGE": {
+          "rawName": "ORANGE",
+          "rawValue": "rgb(255, 158, 100)",
+          "browserValue": "#ff9e64",
+          "sourceLine": 42
+        },
+        "PURPLE": {
+          "rawName": "PURPLE",
+          "rawValue": "rgb(157, 124, 216)",
+          "browserValue": "#9d7cd8",
+          "sourceLine": 43
+        },
+        "RED": {
+          "rawName": "RED",
+          "rawValue": "rgb(247, 118, 142)",
+          "browserValue": "#f7768e",
+          "sourceLine": 44
+        },
+        "RED1": {
+          "rawName": "RED1",
+          "rawValue": "rgb(219, 75, 75)",
+          "browserValue": "#db4b4b",
+          "sourceLine": 45
+        },
+        "TEAL": {
+          "rawName": "TEAL",
+          "rawValue": "rgb(26, 188, 156)",
+          "browserValue": "#1abc9c",
+          "sourceLine": 46
+        },
+        "YELLOW": {
+          "rawName": "YELLOW",
+          "rawValue": "rgb(224, 175, 104)",
+          "browserValue": "#e0af68",
+          "sourceLine": 47
+        },
+        "RED_DARK": {
+          "rawName": "RED_DARK",
+          "rawValue": "rgb(66, 14, 20)",
+          "browserValue": "#420e14",
+          "sourceLine": 49
+        },
+        "GREEN_DARK": {
+          "rawName": "GREEN_DARK",
+          "rawValue": "rgb(6, 56, 6)",
+          "browserValue": "#063806",
+          "sourceLine": 50
+        }
+      },
+      "roles": {
+        "bg_base": {
+          "rawName": "bg_base",
+          "rawValue": "BG_STORM",
+          "browserValue": "#141414",
+          "sourceLine": 57,
+          "paletteReference": "BG_STORM"
+        },
+        "bg_light": {
+          "rawName": "bg_light",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#242424",
+          "sourceLine": 58,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "bg_dark": {
+          "rawName": "bg_dark",
+          "rawValue": "rgb(28, 28, 28)",
+          "browserValue": "#1c1c1c",
+          "sourceLine": 59,
+          "paletteReference": null
+        },
+        "bg_highlight": {
+          "rawName": "bg_highlight",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#242424",
+          "sourceLine": 60,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "bg_hover": {
+          "rawName": "bg_hover",
+          "rawValue": "rgb(44, 44, 44)",
+          "browserValue": "#2c2c2c",
+          "sourceLine": 61,
+          "paletteReference": null
+        },
+        "bg_terminal": {
+          "rawName": "bg_terminal",
+          "rawValue": "BG",
+          "browserValue": "#0a0a0a",
+          "sourceLine": 62,
+          "paletteReference": "BG"
+        },
+        "accent_user": {
+          "rawName": "accent_user",
+          "rawValue": "FG_DARK",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 64,
+          "paletteReference": "FG_DARK"
+        },
+        "accent_assistant": {
+          "rawName": "accent_assistant",
+          "rawValue": "MAGENTA",
+          "browserValue": "#bb9af7",
+          "sourceLine": 65,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_thinking": {
+          "rawName": "accent_thinking",
+          "rawValue": "MAGENTA",
+          "browserValue": "#bb9af7",
+          "sourceLine": 66,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_tool": {
+          "rawName": "accent_tool",
+          "rawValue": "DARK5",
+          "browserValue": "#787878",
+          "sourceLine": 67,
+          "paletteReference": "DARK5"
+        },
+        "accent_system": {
+          "rawName": "accent_system",
+          "rawValue": "BLUE",
+          "browserValue": "#7aa2f7",
+          "sourceLine": 68,
+          "paletteReference": "BLUE"
+        },
+        "accent_error": {
+          "rawName": "accent_error",
+          "rawValue": "RED",
+          "browserValue": "#f7768e",
+          "sourceLine": 69,
+          "paletteReference": "RED"
+        },
+        "accent_success": {
+          "rawName": "accent_success",
+          "rawValue": "GREEN",
+          "browserValue": "#9ece6a",
+          "sourceLine": 70,
+          "paletteReference": "GREEN"
+        },
+        "accent_running": {
+          "rawName": "accent_running",
+          "rawValue": "MAGENTA",
+          "browserValue": "#bb9af7",
+          "sourceLine": 71,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_skill": {
+          "rawName": "accent_skill",
+          "rawValue": "BLUE",
+          "browserValue": "#7aa2f7",
+          "sourceLine": 72,
+          "paletteReference": "BLUE"
+        },
+        "text_primary": {
+          "rawName": "text_primary",
+          "rawValue": "FG",
+          "browserValue": "#e1e1e1",
+          "sourceLine": 74,
+          "paletteReference": "FG"
+        },
+        "text_secondary": {
+          "rawName": "text_secondary",
+          "rawValue": "FG_DARK",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 75,
+          "paletteReference": "FG_DARK"
+        },
+        "gray_dim": {
+          "rawName": "gray_dim",
+          "rawValue": "rgb(88, 88, 88)",
+          "browserValue": "#585858",
+          "sourceLine": 77,
+          "paletteReference": null
+        },
+        "gray": {
+          "rawName": "gray",
+          "rawValue": "COMMENT",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 78,
+          "paletteReference": "COMMENT"
+        },
+        "gray_bright": {
+          "rawName": "gray_bright",
+          "rawValue": "DARK5",
+          "browserValue": "#787878",
+          "sourceLine": 79,
+          "paletteReference": "DARK5"
+        },
+        "command": {
+          "rawName": "command",
+          "rawValue": "YELLOW",
+          "browserValue": "#e0af68",
+          "sourceLine": 81,
+          "paletteReference": "YELLOW"
+        },
+        "path": {
+          "rawName": "path",
+          "rawValue": "ORANGE",
+          "browserValue": "#ff9e64",
+          "sourceLine": 82,
+          "paletteReference": "ORANGE"
+        },
+        "running": {
+          "rawName": "running",
+          "rawValue": "CYAN",
+          "browserValue": "#7dcfff",
+          "sourceLine": 83,
+          "paletteReference": "CYAN"
+        },
+        "warning": {
+          "rawName": "warning",
+          "rawValue": "YELLOW",
+          "browserValue": "#e0af68",
+          "sourceLine": 84,
+          "paletteReference": "YELLOW"
+        },
+        "fuzzy_accent": {
+          "rawName": "fuzzy_accent",
+          "rawValue": "BLUE",
+          "browserValue": "#7aa2f7",
+          "sourceLine": 86,
+          "paletteReference": "BLUE"
+        },
+        "accent_plan": {
+          "rawName": "accent_plan",
+          "rawValue": "rgb(255, 219, 141)",
+          "browserValue": "#ffdb8d",
+          "sourceLine": 88,
+          "paletteReference": null
+        },
+        "accent_verify": {
+          "rawName": "accent_verify",
+          "rawValue": "rgb(187, 154, 247)",
+          "browserValue": "#bb9af7",
+          "sourceLine": 90,
+          "paletteReference": null
+        },
+        "accent_remember": {
+          "rawName": "accent_remember",
+          "rawValue": "Color::Rgb(139, 195, 74)",
+          "browserValue": "#8bc34a",
+          "sourceLine": 92,
+          "paletteReference": null
+        },
+        "selection_border": {
+          "rawName": "selection_border",
+          "rawValue": "rgb(60, 60, 65)",
+          "browserValue": "#3c3c41",
+          "sourceLine": 94,
+          "paletteReference": null
+        },
+        "prompt_border": {
+          "rawName": "prompt_border",
+          "rawValue": "rgb(50, 50, 55)",
+          "browserValue": "#323237",
+          "sourceLine": 95,
+          "paletteReference": null
+        },
+        "prompt_border_active": {
+          "rawName": "prompt_border_active",
+          "rawValue": "rgb(80, 80, 88)",
+          "browserValue": "#505058",
+          "sourceLine": 96,
+          "paletteReference": null
+        },
+        "hover_border": {
+          "rawName": "hover_border",
+          "rawValue": "rgb(30, 30, 34)",
+          "browserValue": "#1e1e22",
+          "sourceLine": 97,
+          "paletteReference": null
+        },
+        "accent_model": {
+          "rawName": "accent_model",
+          "rawValue": "TEAL",
+          "browserValue": "#1abc9c",
+          "sourceLine": 99,
+          "paletteReference": "TEAL"
+        },
+        "scrollbar_bg": {
+          "rawName": "scrollbar_bg",
+          "rawValue": "BG_STORM_DARK",
+          "browserValue": "#111111",
+          "sourceLine": 101,
+          "paletteReference": "BG_STORM_DARK"
+        },
+        "scrollbar_fg": {
+          "rawName": "scrollbar_fg",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#242424",
+          "sourceLine": 102,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "diff_delete_bg": {
+          "rawName": "diff_delete_bg",
+          "rawValue": "RED_DARK",
+          "browserValue": "#420e14",
+          "sourceLine": 104,
+          "paletteReference": "RED_DARK"
+        },
+        "diff_delete_fg": {
+          "rawName": "diff_delete_fg",
+          "rawValue": "RED",
+          "browserValue": "#f7768e",
+          "sourceLine": 105,
+          "paletteReference": "RED"
+        },
+        "diff_insert_bg": {
+          "rawName": "diff_insert_bg",
+          "rawValue": "GREEN_DARK",
+          "browserValue": "#063806",
+          "sourceLine": 106,
+          "paletteReference": "GREEN_DARK"
+        },
+        "diff_insert_fg": {
+          "rawName": "diff_insert_fg",
+          "rawValue": "GREEN",
+          "browserValue": "#9ece6a",
+          "sourceLine": 107,
+          "paletteReference": "GREEN"
+        },
+        "diff_equal_fg": {
+          "rawName": "diff_equal_fg",
+          "rawValue": "COMMENT",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 108,
+          "paletteReference": "COMMENT"
+        },
+        "diff_gutter_fg": {
+          "rawName": "diff_gutter_fg",
+          "rawValue": "COMMENT",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 109,
+          "paletteReference": "COMMENT"
+        },
+        "bg_visual": {
+          "rawName": "bg_visual",
+          "rawValue": "rgb(54, 54, 54)",
+          "browserValue": "#363636",
+          "sourceLine": 111,
+          "paletteReference": null
+        },
+        "paste_bg": {
+          "rawName": "paste_bg",
+          "rawValue": "BG_STORM_DARK",
+          "browserValue": "#111111",
+          "sourceLine": 113,
+          "paletteReference": "BG_STORM_DARK"
+        },
+        "paste_fg": {
+          "rawName": "paste_fg",
+          "rawValue": "FG_DARK",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 114,
+          "paletteReference": "FG_DARK"
+        },
+        "paste_dim": {
+          "rawName": "paste_dim",
+          "rawValue": "FG_GUTTER",
+          "browserValue": "#414141",
+          "sourceLine": 115,
+          "paletteReference": "FG_GUTTER"
+        },
+        "md_heading_h1": {
+          "rawName": "md_heading_h1",
+          "rawValue": "TEAL",
+          "browserValue": "#1abc9c",
+          "sourceLine": 117,
+          "paletteReference": "TEAL"
+        },
+        "md_heading_h2": {
+          "rawName": "md_heading_h2",
+          "rawValue": "BLUE",
+          "browserValue": "#7aa2f7",
+          "sourceLine": 119,
+          "paletteReference": "BLUE"
+        },
+        "md_heading_h3": {
+          "rawName": "md_heading_h3",
+          "rawValue": "PURPLE",
+          "browserValue": "#9d7cd8",
+          "sourceLine": 121,
+          "paletteReference": "PURPLE"
+        },
+        "md_heading_h4": {
+          "rawName": "md_heading_h4",
+          "rawValue": "DARK5",
+          "browserValue": "#787878",
+          "sourceLine": 123,
+          "paletteReference": "DARK5"
+        },
+        "md_heading_h5": {
+          "rawName": "md_heading_h5",
+          "rawValue": "COMMENT",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 125,
+          "paletteReference": "COMMENT"
+        },
+        "md_heading_h6": {
+          "rawName": "md_heading_h6",
+          "rawValue": "DARK3",
+          "browserValue": "#5a5a5a",
+          "sourceLine": 127,
+          "paletteReference": "DARK3"
+        },
+        "md_code": {
+          "rawName": "md_code",
+          "rawValue": "BLUE1",
+          "browserValue": "#3a95ab",
+          "sourceLine": 129,
+          "paletteReference": "BLUE1"
+        },
+        "md_task_checked": {
+          "rawName": "md_task_checked",
+          "rawValue": "GREEN",
+          "browserValue": "#9ece6a",
+          "sourceLine": 130,
+          "paletteReference": "GREEN"
+        },
+        "md_task_unchecked": {
+          "rawName": "md_task_unchecked",
+          "rawValue": "FG_DARK",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 131,
+          "paletteReference": "FG_DARK"
+        },
+        "md_muted": {
+          "rawName": "md_muted",
+          "rawValue": "COMMENT",
+          "browserValue": "#6c6c6c",
+          "sourceLine": 132,
+          "paletteReference": "COMMENT"
+        },
+        "md_code_bg": {
+          "rawName": "md_code_bg",
+          "rawValue": "rgb(28, 28, 28)",
+          "browserValue": "#1c1c1c",
+          "sourceLine": 133,
+          "paletteReference": null
+        },
+        "md_text": {
+          "rawName": "md_text",
+          "rawValue": "FG_DARK",
+          "browserValue": "#c8c8c8",
+          "sourceLine": 134,
+          "paletteReference": "FG_DARK"
+        },
+        "link_fg": {
+          "rawName": "link_fg",
+          "rawValue": "rgb(122, 166, 218)",
+          "browserValue": "#7aa6da",
+          "sourceLine": 135,
+          "paletteReference": null
+        }
+      },
+      "modifiers": {
+        "md_heading_h1_mod": {
+          "rawName": "md_heading_h1_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 118
+        },
+        "md_heading_h2_mod": {
+          "rawName": "md_heading_h2_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 120
+        },
+        "md_heading_h3_mod": {
+          "rawName": "md_heading_h3_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 122
+        },
+        "md_heading_h4_mod": {
+          "rawName": "md_heading_h4_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 124
+        },
+        "md_heading_h5_mod": {
+          "rawName": "md_heading_h5_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 126
+        },
+        "md_heading_h6_mod": {
+          "rawName": "md_heading_h6_mod",
+          "rawValue": "Modifier::empty()",
+          "cssValue": "normal",
+          "sourceLine": 128
+        }
+      }
+    },
+    "light": {
+      "nativeName": "GrokDay",
+      "snapshot": "upstream/grokday.rs.txt",
+      "sourceSha256": "2a4bffc5c6bc49deb1c06761aa7a3e6372cc4b0225a3ffaf434ed77913a4d882",
+      "palette": {
+        "BG": {
+          "rawName": "BG",
+          "rawValue": "rgb(245, 245, 245)",
+          "browserValue": "#f5f5f5",
+          "sourceLine": 18
+        },
+        "BG_DARK": {
+          "rawName": "BG_DARK",
+          "rawValue": "rgb(240, 240, 240)",
+          "browserValue": "#f0f0f0",
+          "sourceLine": 19
+        },
+        "BG_STORM_DARK": {
+          "rawName": "BG_STORM_DARK",
+          "rawValue": "rgb(234, 234, 234)",
+          "browserValue": "#eaeaea",
+          "sourceLine": 20
+        },
+        "BG_STORM": {
+          "rawName": "BG_STORM",
+          "rawValue": "rgb(238, 238, 238)",
+          "browserValue": "#eeeeee",
+          "sourceLine": 21
+        },
+        "BG_HIGHLIGHT": {
+          "rawName": "BG_HIGHLIGHT",
+          "rawValue": "rgb(222, 222, 222)",
+          "browserValue": "#dedede",
+          "sourceLine": 22
+        },
+        "FG": {
+          "rawName": "FG",
+          "rawValue": "rgb(38, 38, 38)",
+          "browserValue": "#262626",
+          "sourceLine": 25
+        },
+        "FG_DARK": {
+          "rawName": "FG_DARK",
+          "rawValue": "rgb(68, 68, 68)",
+          "browserValue": "#444444",
+          "sourceLine": 26
+        },
+        "FG_GUTTER": {
+          "rawName": "FG_GUTTER",
+          "rawValue": "rgb(178, 178, 178)",
+          "browserValue": "#b2b2b2",
+          "sourceLine": 27
+        },
+        "COMMENT": {
+          "rawName": "COMMENT",
+          "rawValue": "rgb(118, 118, 118)",
+          "browserValue": "#767676",
+          "sourceLine": 28
+        },
+        "DARK3": {
+          "rawName": "DARK3",
+          "rawValue": "rgb(142, 142, 142)",
+          "browserValue": "#8e8e8e",
+          "sourceLine": 29
+        },
+        "DARK5": {
+          "rawName": "DARK5",
+          "rawValue": "rgb(98, 98, 98)",
+          "browserValue": "#626262",
+          "sourceLine": 30
+        },
+        "BLUE": {
+          "rawName": "BLUE",
+          "rawValue": "rgb(47, 100, 210)",
+          "browserValue": "#2f64d2",
+          "sourceLine": 33
+        },
+        "BLUE0": {
+          "rawName": "BLUE0",
+          "rawValue": "rgb(40, 68, 138)",
+          "browserValue": "#28448a",
+          "sourceLine": 34
+        },
+        "BLUE1": {
+          "rawName": "BLUE1",
+          "rawValue": "rgb(15, 135, 162)",
+          "browserValue": "#0f87a2",
+          "sourceLine": 35
+        },
+        "CYAN": {
+          "rawName": "CYAN",
+          "rawValue": "rgb(0, 130, 170)",
+          "browserValue": "#0082aa",
+          "sourceLine": 36
+        },
+        "GREEN": {
+          "rawName": "GREEN",
+          "rawValue": "rgb(55, 142, 35)",
+          "browserValue": "#378e23",
+          "sourceLine": 37
+        },
+        "GREEN1": {
+          "rawName": "GREEN1",
+          "rawValue": "rgb(12, 148, 124)",
+          "browserValue": "#0c947c",
+          "sourceLine": 38
+        },
+        "MAGENTA": {
+          "rawName": "MAGENTA",
+          "rawValue": "rgb(125, 75, 198)",
+          "browserValue": "#7d4bc6",
+          "sourceLine": 39
+        },
+        "ORANGE": {
+          "rawName": "ORANGE",
+          "rawValue": "rgb(195, 105, 30)",
+          "browserValue": "#c3691e",
+          "sourceLine": 40
+        },
+        "PURPLE": {
+          "rawName": "PURPLE",
+          "rawValue": "rgb(108, 62, 178)",
+          "browserValue": "#6c3eb2",
+          "sourceLine": 41
+        },
+        "RED": {
+          "rawName": "RED",
+          "rawValue": "rgb(205, 48, 72)",
+          "browserValue": "#cd3048",
+          "sourceLine": 42
+        },
+        "RED1": {
+          "rawName": "RED1",
+          "rawValue": "rgb(175, 35, 35)",
+          "browserValue": "#af2323",
+          "sourceLine": 43
+        },
+        "TEAL": {
+          "rawName": "TEAL",
+          "rawValue": "rgb(10, 142, 112)",
+          "browserValue": "#0a8e70",
+          "sourceLine": 44
+        },
+        "YELLOW": {
+          "rawName": "YELLOW",
+          "rawValue": "rgb(162, 118, 18)",
+          "browserValue": "#a27612",
+          "sourceLine": 45
+        },
+        "RED_LIGHT": {
+          "rawName": "RED_LIGHT",
+          "rawValue": "rgb(245, 218, 222)",
+          "browserValue": "#f5dade",
+          "sourceLine": 47
+        },
+        "GREEN_LIGHT": {
+          "rawName": "GREEN_LIGHT",
+          "rawValue": "rgb(218, 242, 220)",
+          "browserValue": "#daf2dc",
+          "sourceLine": 48
+        }
+      },
+      "roles": {
+        "bg_base": {
+          "rawName": "bg_base",
+          "rawValue": "BG_STORM",
+          "browserValue": "#eeeeee",
+          "sourceLine": 55,
+          "paletteReference": "BG_STORM"
+        },
+        "bg_light": {
+          "rawName": "bg_light",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#dedede",
+          "sourceLine": 56,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "bg_dark": {
+          "rawName": "bg_dark",
+          "rawValue": "rgb(228, 228, 228)",
+          "browserValue": "#e4e4e4",
+          "sourceLine": 57,
+          "paletteReference": null
+        },
+        "bg_highlight": {
+          "rawName": "bg_highlight",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#dedede",
+          "sourceLine": 58,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "bg_hover": {
+          "rawName": "bg_hover",
+          "rawValue": "rgb(208, 208, 208)",
+          "browserValue": "#d0d0d0",
+          "sourceLine": 59,
+          "paletteReference": null
+        },
+        "bg_terminal": {
+          "rawName": "bg_terminal",
+          "rawValue": "BG",
+          "browserValue": "#f5f5f5",
+          "sourceLine": 60,
+          "paletteReference": "BG"
+        },
+        "accent_user": {
+          "rawName": "accent_user",
+          "rawValue": "FG_DARK",
+          "browserValue": "#444444",
+          "sourceLine": 62,
+          "paletteReference": "FG_DARK"
+        },
+        "accent_assistant": {
+          "rawName": "accent_assistant",
+          "rawValue": "MAGENTA",
+          "browserValue": "#7d4bc6",
+          "sourceLine": 63,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_thinking": {
+          "rawName": "accent_thinking",
+          "rawValue": "MAGENTA",
+          "browserValue": "#7d4bc6",
+          "sourceLine": 64,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_tool": {
+          "rawName": "accent_tool",
+          "rawValue": "DARK5",
+          "browserValue": "#626262",
+          "sourceLine": 65,
+          "paletteReference": "DARK5"
+        },
+        "accent_system": {
+          "rawName": "accent_system",
+          "rawValue": "BLUE",
+          "browserValue": "#2f64d2",
+          "sourceLine": 66,
+          "paletteReference": "BLUE"
+        },
+        "accent_error": {
+          "rawName": "accent_error",
+          "rawValue": "RED",
+          "browserValue": "#cd3048",
+          "sourceLine": 67,
+          "paletteReference": "RED"
+        },
+        "accent_success": {
+          "rawName": "accent_success",
+          "rawValue": "GREEN",
+          "browserValue": "#378e23",
+          "sourceLine": 68,
+          "paletteReference": "GREEN"
+        },
+        "accent_running": {
+          "rawName": "accent_running",
+          "rawValue": "MAGENTA",
+          "browserValue": "#7d4bc6",
+          "sourceLine": 69,
+          "paletteReference": "MAGENTA"
+        },
+        "accent_skill": {
+          "rawName": "accent_skill",
+          "rawValue": "BLUE",
+          "browserValue": "#2f64d2",
+          "sourceLine": 70,
+          "paletteReference": "BLUE"
+        },
+        "text_primary": {
+          "rawName": "text_primary",
+          "rawValue": "FG",
+          "browserValue": "#262626",
+          "sourceLine": 72,
+          "paletteReference": "FG"
+        },
+        "text_secondary": {
+          "rawName": "text_secondary",
+          "rawValue": "FG_DARK",
+          "browserValue": "#444444",
+          "sourceLine": 73,
+          "paletteReference": "FG_DARK"
+        },
+        "gray_dim": {
+          "rawName": "gray_dim",
+          "rawValue": "rgb(165, 165, 165)",
+          "browserValue": "#a5a5a5",
+          "sourceLine": 75,
+          "paletteReference": null
+        },
+        "gray": {
+          "rawName": "gray",
+          "rawValue": "COMMENT",
+          "browserValue": "#767676",
+          "sourceLine": 76,
+          "paletteReference": "COMMENT"
+        },
+        "gray_bright": {
+          "rawName": "gray_bright",
+          "rawValue": "DARK5",
+          "browserValue": "#626262",
+          "sourceLine": 77,
+          "paletteReference": "DARK5"
+        },
+        "command": {
+          "rawName": "command",
+          "rawValue": "YELLOW",
+          "browserValue": "#a27612",
+          "sourceLine": 79,
+          "paletteReference": "YELLOW"
+        },
+        "path": {
+          "rawName": "path",
+          "rawValue": "ORANGE",
+          "browserValue": "#c3691e",
+          "sourceLine": 80,
+          "paletteReference": "ORANGE"
+        },
+        "running": {
+          "rawName": "running",
+          "rawValue": "CYAN",
+          "browserValue": "#0082aa",
+          "sourceLine": 81,
+          "paletteReference": "CYAN"
+        },
+        "warning": {
+          "rawName": "warning",
+          "rawValue": "YELLOW",
+          "browserValue": "#a27612",
+          "sourceLine": 82,
+          "paletteReference": "YELLOW"
+        },
+        "fuzzy_accent": {
+          "rawName": "fuzzy_accent",
+          "rawValue": "BLUE",
+          "browserValue": "#2f64d2",
+          "sourceLine": 84,
+          "paletteReference": "BLUE"
+        },
+        "accent_plan": {
+          "rawName": "accent_plan",
+          "rawValue": "rgb(168, 120, 10)",
+          "browserValue": "#a8780a",
+          "sourceLine": 86,
+          "paletteReference": null
+        },
+        "accent_verify": {
+          "rawName": "accent_verify",
+          "rawValue": "rgb(120, 80, 160)",
+          "browserValue": "#7850a0",
+          "sourceLine": 88,
+          "paletteReference": null
+        },
+        "accent_remember": {
+          "rawName": "accent_remember",
+          "rawValue": "rgb(76, 175, 80)",
+          "browserValue": "#4caf50",
+          "sourceLine": 90,
+          "paletteReference": null
+        },
+        "selection_border": {
+          "rawName": "selection_border",
+          "rawValue": "rgb(185, 185, 190)",
+          "browserValue": "#b9b9be",
+          "sourceLine": 92,
+          "paletteReference": null
+        },
+        "prompt_border": {
+          "rawName": "prompt_border",
+          "rawValue": "rgb(200, 200, 205)",
+          "browserValue": "#c8c8cd",
+          "sourceLine": 93,
+          "paletteReference": null
+        },
+        "prompt_border_active": {
+          "rawName": "prompt_border_active",
+          "rawValue": "rgb(165, 165, 175)",
+          "browserValue": "#a5a5af",
+          "sourceLine": 94,
+          "paletteReference": null
+        },
+        "hover_border": {
+          "rawName": "hover_border",
+          "rawValue": "rgb(212, 212, 216)",
+          "browserValue": "#d4d4d8",
+          "sourceLine": 95,
+          "paletteReference": null
+        },
+        "accent_model": {
+          "rawName": "accent_model",
+          "rawValue": "TEAL",
+          "browserValue": "#0a8e70",
+          "sourceLine": 97,
+          "paletteReference": "TEAL"
+        },
+        "scrollbar_bg": {
+          "rawName": "scrollbar_bg",
+          "rawValue": "BG_STORM_DARK",
+          "browserValue": "#eaeaea",
+          "sourceLine": 99,
+          "paletteReference": "BG_STORM_DARK"
+        },
+        "scrollbar_fg": {
+          "rawName": "scrollbar_fg",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#dedede",
+          "sourceLine": 100,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "diff_delete_bg": {
+          "rawName": "diff_delete_bg",
+          "rawValue": "RED_LIGHT",
+          "browserValue": "#f5dade",
+          "sourceLine": 102,
+          "paletteReference": "RED_LIGHT"
+        },
+        "diff_delete_fg": {
+          "rawName": "diff_delete_fg",
+          "rawValue": "RED",
+          "browserValue": "#cd3048",
+          "sourceLine": 103,
+          "paletteReference": "RED"
+        },
+        "diff_insert_bg": {
+          "rawName": "diff_insert_bg",
+          "rawValue": "GREEN_LIGHT",
+          "browserValue": "#daf2dc",
+          "sourceLine": 104,
+          "paletteReference": "GREEN_LIGHT"
+        },
+        "diff_insert_fg": {
+          "rawName": "diff_insert_fg",
+          "rawValue": "GREEN",
+          "browserValue": "#378e23",
+          "sourceLine": 105,
+          "paletteReference": "GREEN"
+        },
+        "diff_equal_fg": {
+          "rawName": "diff_equal_fg",
+          "rawValue": "COMMENT",
+          "browserValue": "#767676",
+          "sourceLine": 106,
+          "paletteReference": "COMMENT"
+        },
+        "diff_gutter_fg": {
+          "rawName": "diff_gutter_fg",
+          "rawValue": "COMMENT",
+          "browserValue": "#767676",
+          "sourceLine": 107,
+          "paletteReference": "COMMENT"
+        },
+        "bg_visual": {
+          "rawName": "bg_visual",
+          "rawValue": "rgb(198, 198, 198)",
+          "browserValue": "#c6c6c6",
+          "sourceLine": 109,
+          "paletteReference": null
+        },
+        "paste_bg": {
+          "rawName": "paste_bg",
+          "rawValue": "BG_HIGHLIGHT",
+          "browserValue": "#dedede",
+          "sourceLine": 111,
+          "paletteReference": "BG_HIGHLIGHT"
+        },
+        "paste_fg": {
+          "rawName": "paste_fg",
+          "rawValue": "FG_DARK",
+          "browserValue": "#444444",
+          "sourceLine": 112,
+          "paletteReference": "FG_DARK"
+        },
+        "paste_dim": {
+          "rawName": "paste_dim",
+          "rawValue": "FG_GUTTER",
+          "browserValue": "#b2b2b2",
+          "sourceLine": 113,
+          "paletteReference": "FG_GUTTER"
+        },
+        "md_heading_h1": {
+          "rawName": "md_heading_h1",
+          "rawValue": "TEAL",
+          "browserValue": "#0a8e70",
+          "sourceLine": 115,
+          "paletteReference": "TEAL"
+        },
+        "md_heading_h2": {
+          "rawName": "md_heading_h2",
+          "rawValue": "BLUE",
+          "browserValue": "#2f64d2",
+          "sourceLine": 117,
+          "paletteReference": "BLUE"
+        },
+        "md_heading_h3": {
+          "rawName": "md_heading_h3",
+          "rawValue": "PURPLE",
+          "browserValue": "#6c3eb2",
+          "sourceLine": 119,
+          "paletteReference": "PURPLE"
+        },
+        "md_heading_h4": {
+          "rawName": "md_heading_h4",
+          "rawValue": "DARK5",
+          "browserValue": "#626262",
+          "sourceLine": 121,
+          "paletteReference": "DARK5"
+        },
+        "md_heading_h5": {
+          "rawName": "md_heading_h5",
+          "rawValue": "COMMENT",
+          "browserValue": "#767676",
+          "sourceLine": 123,
+          "paletteReference": "COMMENT"
+        },
+        "md_heading_h6": {
+          "rawName": "md_heading_h6",
+          "rawValue": "DARK3",
+          "browserValue": "#8e8e8e",
+          "sourceLine": 125,
+          "paletteReference": "DARK3"
+        },
+        "md_code": {
+          "rawName": "md_code",
+          "rawValue": "BLUE1",
+          "browserValue": "#0f87a2",
+          "sourceLine": 127,
+          "paletteReference": "BLUE1"
+        },
+        "md_task_checked": {
+          "rawName": "md_task_checked",
+          "rawValue": "GREEN",
+          "browserValue": "#378e23",
+          "sourceLine": 128,
+          "paletteReference": "GREEN"
+        },
+        "md_task_unchecked": {
+          "rawName": "md_task_unchecked",
+          "rawValue": "FG_DARK",
+          "browserValue": "#444444",
+          "sourceLine": 129,
+          "paletteReference": "FG_DARK"
+        },
+        "md_muted": {
+          "rawName": "md_muted",
+          "rawValue": "COMMENT",
+          "browserValue": "#767676",
+          "sourceLine": 130,
+          "paletteReference": "COMMENT"
+        },
+        "md_code_bg": {
+          "rawName": "md_code_bg",
+          "rawValue": "rgb(228, 228, 228)",
+          "browserValue": "#e4e4e4",
+          "sourceLine": 131,
+          "paletteReference": null
+        },
+        "md_text": {
+          "rawName": "md_text",
+          "rawValue": "FG_DARK",
+          "browserValue": "#444444",
+          "sourceLine": 132,
+          "paletteReference": "FG_DARK"
+        },
+        "link_fg": {
+          "rawName": "link_fg",
+          "rawValue": "BLUE",
+          "browserValue": "#2f64d2",
+          "sourceLine": 133,
+          "paletteReference": "BLUE"
+        }
+      },
+      "modifiers": {
+        "md_heading_h1_mod": {
+          "rawName": "md_heading_h1_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 116
+        },
+        "md_heading_h2_mod": {
+          "rawName": "md_heading_h2_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 118
+        },
+        "md_heading_h3_mod": {
+          "rawName": "md_heading_h3_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 120
+        },
+        "md_heading_h4_mod": {
+          "rawName": "md_heading_h4_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 122
+        },
+        "md_heading_h5_mod": {
+          "rawName": "md_heading_h5_mod",
+          "rawValue": "Modifier::BOLD",
+          "cssValue": "bold",
+          "sourceLine": 124
+        },
+        "md_heading_h6_mod": {
+          "rawName": "md_heading_h6_mod",
+          "rawValue": "Modifier::empty()",
+          "cssValue": "normal",
+          "sourceLine": 126
+        }
+      }
+    }
+  },
+  "limitation": "Canonical truecolor values; terminal quantization and browser role mapping are not reproduced."
+}

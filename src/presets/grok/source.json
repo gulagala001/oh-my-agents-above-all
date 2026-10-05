@@ -1,0 +1,621 @@
+{
+  "id": "grok",
+  "repository": "https://github.com/xai-org/grok-build",
+  "commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+  "version": null,
+  "license": "Apache-2.0",
+  "retrievedAt": "2026-10-05",
+  "files": [
+    {
+      "path": "LICENSE",
+      "snapshot": "sources/LICENSE",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/LICENSE",
+      "sha256": "116f7778b9802e569b7fa3a532b17bd80eb13c67837def01eed093d4ea472f28",
+      "bytes": 11388,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "README.md",
+      "snapshot": "sources/README.md",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/README.md",
+      "sha256": "322066de9f5bc136295bd0ae4f1752cef3d8dcb1a8f9d88044609e7b6d7abcf7",
+      "bytes": 5757,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/templates/prompt.md",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/templates/prompt.md",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/templates/prompt.md",
+      "sha256": "f31b8827bf571d606221c734af7aee1c259c633956c9b81cf9c8dd02c2fdd14b",
+      "bytes": 12748,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/templates/apply_patch_prompt.md",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/templates/apply_patch_prompt.md",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/templates/apply_patch_prompt.md",
+      "sha256": "1645baba058e100a91f253e8c30b43b3698740d16822f32fb599f2ed5b2780bb",
+      "bytes": 21360,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/templates/subagent_prompt.md",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/templates/subagent_prompt.md",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/templates/subagent_prompt.md",
+      "sha256": "fa761565f8a33a6d5686159ad6859e6d2632e974bf1579ed7d2430ce9e07d9cb",
+      "bytes": 4918,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/src/prompt/context.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/src/prompt/context.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/src/prompt/context.rs",
+      "sha256": "c731fc0254e18add53fb2a9b3ce0e9f8d60f3bf5fa11468bc4477f0263642497",
+      "bytes": 45358,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/src/prompt/template.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/src/prompt/template.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/src/prompt/template.rs",
+      "sha256": "c6f83b02fb371bd5dc9b40d18dcbe89c347cd3186bb79a26e716c8d52fde0c88",
+      "bytes": 29562,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/src/prompt/user_message.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/src/prompt/user_message.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/src/prompt/user_message.rs",
+      "sha256": "1c684413071e64e691505860bffd81dddd6a3a7106f1e2fc141bccc1a4af7193",
+      "bytes": 20877,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-shell/src/session/plan_mode.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-shell/src/session/plan_mode.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-shell/src/session/plan_mode.rs",
+      "sha256": "063ed20a0525645e89d28873b53367ff2cedf19dac7b3c3f0be5f3091c76f49b",
+      "bytes": 44197,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-shell/src/session/prompt_queue.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-shell/src/session/prompt_queue.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-shell/src/session/prompt_queue.rs",
+      "sha256": "79bbffd28e8a82b9122cedaefbb9bc41759074999de186fa3a3a5f1f4ff0efe8",
+      "bytes": 3527,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-shell/src/session/user_message.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-shell/src/session/user_message.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-shell/src/session/user_message.rs",
+      "sha256": "054b2168828e1a492fe01aeb77843b2068f448743f73e6a6f0ae14cc4a826428",
+      "bytes": 2553,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-prompt-queue/src/lib.rs",
+      "snapshot": "sources/crates/codegen/xai-prompt-queue/src/lib.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-prompt-queue/src/lib.rs",
+      "sha256": "a70cc8c70a807f751795e439cb8e1bd23fe972f6aef7ff400a23b01463731dec",
+      "bytes": 400,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-prompt-queue/src/types.rs",
+      "snapshot": "sources/crates/codegen/xai-prompt-queue/src/types.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-prompt-queue/src/types.rs",
+      "sha256": "28e33dceb84af91d91d43e80554865e500f72f1e9dbe5eba76b3b67ad4fbafe3",
+      "bytes": 8884,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-prompt-queue/src/combine.rs",
+      "snapshot": "sources/crates/codegen/xai-prompt-queue/src/combine.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-prompt-queue/src/combine.rs",
+      "sha256": "834194769a65257148de3037c70bfb224569e4e9f2939268d7e3897ac2d778f0",
+      "bytes": 6977,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/types/description.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/types/description.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/types/description.rs",
+      "sha256": "fecd1a84207cecaf467d117411818626ee15b838b074ea2c3885d47d57da8816",
+      "bytes": 8967,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/types/template_renderer.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/types/template_renderer.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/types/template_renderer.rs",
+      "sha256": "81cbb1320aab65a9332fdedc7e8f6f3a5f51adc9b76f85671e62003ea536e145",
+      "bytes": 36239,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/types/output.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/types/output.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/types/output.rs",
+      "sha256": "68bca080b9787990cbb078927871025c4df8cfb075bfa5e2cb713cc391b2414e",
+      "bytes": 122090,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/reminders/task_completion.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/reminders/task_completion.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/reminders/task_completion.rs",
+      "sha256": "28e298b48e594f0b8c9ea1dff9ee408e0eec9c0f4b3d6d330b58ff84fdf0be05",
+      "bytes": 115497,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-pager/docs/user-guide/19-plan-mode.md",
+      "snapshot": "sources/crates/codegen/xai-grok-pager/docs/user-guide/19-plan-mode.md",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-pager/docs/user-guide/19-plan-mode.md",
+      "sha256": "768ac26bb78f22ac696674a2188856ce3ee90c2ae71fa04af10462dc0adb7105",
+      "bytes": 9309,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/read_file/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/read_file/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/read_file/mod.rs",
+      "sha256": "fca9dafd198fcd3398ad4c4cc95ef6760fe79b53619807a1a4bafed6afb4c57d",
+      "bytes": 129141,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/search_replace/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/search_replace/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/search_replace/mod.rs",
+      "sha256": "2a32a6d7daf014765fec78229f28d691235f770f2309530fedb42b33ffe89746",
+      "bytes": 110631,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/bash/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/bash/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/bash/mod.rs",
+      "sha256": "c22a50b8ef288534d08735d9a45a8d421223e4e6ba7cb218e570f3b124fecc35",
+      "bytes": 260944,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/grep/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/grep/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/grep/mod.rs",
+      "sha256": "fde93cba1d3f09c0be8b6fb853aeac0eea328a590f60b7ea689ab9dcf21b2556",
+      "bytes": 64025,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/list_dir/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/list_dir/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/list_dir/mod.rs",
+      "sha256": "2db2e1a4efa3ab9aee6006c2b51fd28c1184b1b15e2fdada09834853e5874daf",
+      "bytes": 61787,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/todo/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/todo/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/todo/mod.rs",
+      "sha256": "e121978a0489dd1110d773b5d4fa734fb842144e069e825caac0e8cad433dcd4",
+      "bytes": 34706,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/ask_user_question/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/ask_user_question/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/ask_user_question/mod.rs",
+      "sha256": "fbba23721ecb9b6396cf69b99453bd2eaebe6b9f4fefc8a0b5073aeb43240bd2",
+      "bytes": 45698,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/enter_plan_mode/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/enter_plan_mode/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/enter_plan_mode/mod.rs",
+      "sha256": "eec5e35ee3df73314d3d4096aa626a1441242eef8c1f9ff70a6ea75ffb795669",
+      "bytes": 25385,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/exit_plan_mode/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/exit_plan_mode/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/exit_plan_mode/mod.rs",
+      "sha256": "5f30aa668a962aba2b30aba93e93b62c3bb37a3eee4f442ada469a620cedd8c5",
+      "bytes": 14385,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/task/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/task/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/task/mod.rs",
+      "sha256": "4a4001591eda4e409d58b850e753fff6f6bd5b08535b237602f22f5f80773900",
+      "bytes": 136886,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/task_output/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/task_output/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/task_output/mod.rs",
+      "sha256": "3f7fd4a1109c6e51a1de160af882250ca5e512b0e0eed3b2a383d0cfa63636b5",
+      "bytes": 104675,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/kill_task/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/kill_task/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/kill_task/mod.rs",
+      "sha256": "65b134341d378ce9d92bca4a916602d4342896c34cf27e166f08c7b603f73c50",
+      "bytes": 30333,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/web_search/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/web_search/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/web_search/mod.rs",
+      "sha256": "83103e82eb4b210be37c0f318e808ce3a2042efc4dba38aae0833c212a0c34c1",
+      "bytes": 5271,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/web_fetch/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/web_fetch/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/web_fetch/mod.rs",
+      "sha256": "de7e7704307479cfc59540c7c62e8def4731aa5b5f01705fa57b093b0c637862",
+      "bytes": 8857,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/code_compaction/templates/full_replace_summary_prompt.txt",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/code_compaction/templates/full_replace_summary_prompt.txt",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/code_compaction/templates/full_replace_summary_prompt.txt",
+      "sha256": "af545a76abb3a853fa6df9ddd16019050b0f24ac5b32f8add61179e1fc97cf79",
+      "bytes": 4058,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/templates/intra_compaction_user.txt",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/templates/intra_compaction_user.txt",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/templates/intra_compaction_user.txt",
+      "sha256": "d1f38e1be9d7004675a9c0dfd915d4126bf1451bcb8720461a1696fe4fc5bdcd",
+      "bytes": 3310,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/templates/compaction_user_prompt.txt",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/templates/compaction_user_prompt.txt",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/templates/compaction_user_prompt.txt",
+      "sha256": "26ebedf3c411009840aa9e398a1f02ac23916c70ab3f57081c01d54937954746",
+      "bytes": 5791,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/templates/compaction_developer_prompt.txt",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/templates/compaction_developer_prompt.txt",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/templates/compaction_developer_prompt.txt",
+      "sha256": "26ebedf3c411009840aa9e398a1f02ac23916c70ab3f57081c01d54937954746",
+      "bytes": 5791,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/templates/intra_compaction_system.txt",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/templates/intra_compaction_system.txt",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/templates/intra_compaction_system.txt",
+      "sha256": "6a119a842633335ce4a2f3ddc92bc7345cb14a42143fe19720deac28e6a89d70",
+      "bytes": 443,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/code_compaction/assemble.rs",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/code_compaction/assemble.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/code_compaction/assemble.rs",
+      "sha256": "516f58faf21a23b56ced744b71f692a32f121f764d883cfaa1f82d880de2afcb",
+      "bytes": 7932,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/code_compaction/prompt.rs",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/code_compaction/prompt.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/code_compaction/prompt.rs",
+      "sha256": "e872d475779325792c36ff89b0492f743f5e06b7047d5efa233e39800d298e90",
+      "bytes": 6349,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-grok-compaction/src/steps/prompt.rs",
+      "snapshot": "sources/crates/common/xai-grok-compaction/src/steps/prompt.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-grok-compaction/src/steps/prompt.rs",
+      "sha256": "03897f25547fdda4eb2e91dacafa8b6c8b9ed2fba2d182d5bed003a4051cee77",
+      "bytes": 1122,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/common/xai-tool-types/src/task.rs",
+      "snapshot": "sources/crates/common/xai-tool-types/src/task.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/common/xai-tool-types/src/task.rs",
+      "sha256": "db560849287e3ef30153294b961cd3b39868ffe1198e3949f85b8ab948e257e6",
+      "bytes": 96555,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/tool.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/tool.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/tool.rs",
+      "sha256": "398319bf63370f4361829ef033c527e1d29105bf65f5c73a49ffad464edef50a",
+      "bytes": 26049,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/types.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/types.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/types.rs",
+      "sha256": "cc98d838b6b0e0ed905a424972e34edaca2dcf757d3438fea527d3a7d2b36cd8",
+      "bytes": 7712,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/event.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/event.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/event.rs",
+      "sha256": "0062a1c52d88ac6533fb3af830783d11baac3c641dec08b044e3f14f33a7084b",
+      "bytes": 7454,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/rate_limiter.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/rate_limiter.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/rate_limiter.rs",
+      "sha256": "aea0acca9423e8daef918f79b46f89e509c47c4242c6be45dafc721f7de21726",
+      "bytes": 9184,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-config-types/src/memory.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-config-types/src/memory.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-config-types/src/memory.rs",
+      "sha256": "fc24417c66318838b91f592db53aa65335d19a6977a320fed4b5f4402dd37557",
+      "bytes": 57349,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-config/src/memory_v2.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-config/src/memory_v2.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-config/src/memory_v2.rs",
+      "sha256": "80ec2ef8043bd52bb7866ef36f07f2bc33b40871cdd2517a901a47b6b7d4215b",
+      "bytes": 3211,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-agent/src/config.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-agent/src/config.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-agent/src/config.rs",
+      "sha256": "fa028b27c9544c2bda403a4b8623b94c2d9fb8d8d4a778530ae5a88d780ec912",
+      "bytes": 104715,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
+      "sha256": "592d33dc8963db4f2051575eefd69d96beab4cf06f70e13bf420c704b130d39a",
+      "bytes": 16117,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
+      "sha256": "90151932a5ae875a2d5b9391bc2cd39c07399bd422c9ccd2aac0e6cdc26b02ed",
+      "bytes": 4523,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/interval.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/interval.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/interval.rs",
+      "sha256": "29c8e3f0dcc297a0b42c7903b0a844bad85b7c6eda3bef4f2240de561e665047",
+      "bytes": 4804,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
+      "sha256": "c67a6fe0bc421fb31c6d19411b3a04b6d328a48a7f79335c65ce27ab58132f69",
+      "bytes": 17340,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/delete.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/delete.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/delete.rs",
+      "sha256": "a9afac98e7cef3c7c8f8b415b327e6b15ffe3a3c57f938e760af7dda7604506d",
+      "bytes": 4295,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal_tests.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal_tests.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal_tests.rs",
+      "sha256": "cce5ccf1a854f0812b69cd7a97aabf1bfd0150eb7732d0892876e14a4b398422",
+      "bytes": 14326,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/mod.rs",
+      "sha256": "7f2a7309e42ad364a6b380db9bdd935c68a81b31d7e672afaebf28042bc460e1",
+      "bytes": 633,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs",
+      "sha256": "408cbb7a3e9db0059b1b38c84ec45ee6ad75996b5ca04e215ec4e4e696ca45c8",
+      "bytes": 129007,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/occurrence_journal.rs",
+      "sha256": "60d3bff109d04b6fdaae236e0acb8ccf8cd1961ce15b6d691eb02141c2341604",
+      "bytes": 19809,
+      "license": "Apache-2.0"
+    }
+  ],
+  "activePromptEntry": "crates/codegen/xai-grok-agent/templates/prompt.md",
+  "sourcesAreData": true,
+  "runtime": "DSH model/API/tool loop/session; source files are reference data, never an external runtime",
+  "toolMapping": {
+    "read_file": "read",
+    "search_replace": "edit",
+    "grep": "grep",
+    "glob": "glob",
+    "run_terminal_command": "bash / pwsh",
+    "todo_write": "todo_write",
+    "ask_user_question": "ask_user_question",
+    "get_command_or_subagent_output": "job_output (background commands only)",
+    "kill_command_or_subagent": "job_kill (background commands only)",
+    "task": "subagent (only if registered)",
+    "enter_plan_mode": "enter_plan_mode (host planMode.set)",
+    "exit_plan_mode": "exit_plan_mode (native plan parameter, no upstream plan-file dependency)",
+    "search_replace with empty old_string (create file)": "write (file_path/content); DSH edit forbids empty old_string"
+  },
+  "adaptations": [
+    {
+      "source": "templates/prompt.md opening paragraph",
+      "original": "You are ${{ system_prompt_label }} released by xAI. / an interactive CLI tool / denoted within the <user_query> tag",
+      "adapted": "You are Grok Build, a coding assistant operating inside DSH. / an interactive coding assistant / in the current conversation",
+      "reason": "DSH harness identity and conversation envelope; retains remaining opening instructions"
+    },
+    {
+      "source": "templates/prompt.md <memory>",
+      "original": "Conditional filesystem memory v2 section",
+      "adapted": "Not mounted",
+      "reason": "DSH does not provide Grok topic/index/observation memory paths; optional OMD enhancement cannot be presented as native Grok memory"
+    },
+    {
+      "source": "templates/prompt.md <background_tasks>",
+      "original": "execute and monitor branches, optional automatic completion reminder",
+      "adapted": "Execute uses real bash/pwsh/jobs. Original monitor branch mounted only with the actual scoped monitor tool; automatic Grok reminder branch remains disabled.",
+      "reason": "Native guarded command dispatch and jobs provide execution, observation, cancellation and journal; monitor adapter supplies stdout lines, debounce and overload semantics."
+    },
+    {
+      "source": "templates/prompt.md <user_guide>",
+      "original": "~/.grok/docs/user-guide/",
+      "adapted": "Not mounted",
+      "reason": "Native Grok installation-owned docs are absent; documentation remains linked in docs/products/grok.md"
+    },
+    {
+      "source": "templates/prompt.md <browser_verification>",
+      "original": "Mandatory browser verification when available",
+      "adapted": "Not mounted",
+      "reason": "The specified tool contract has no browser automation tool; will only enable with actual host browser capability"
+    },
+    {
+      "source": "search_replace/mod.rs DESCRIPTION_FULL",
+      "original": "Read uses LINE_NUMBER→; edit can create via empty old_string",
+      "adapted": "Read line prefix is host supplied; use write for file creation, old_string exact match/replace_all paragraph retained",
+      "reason": "DSH read output and nonempty-old_string edit validation differ"
+    },
+    {
+      "source": "read_file/mod.rs DESCRIPTION_FULL",
+      "original": "PDF/PPTX/notebook/image reading; whole SKILL/AGENTS files; every tenth line anchors",
+      "adapted": "Host text read with file_path/offset/limit and continuation; image read separately via read_image only when registered",
+      "reason": "Upstream binary-format and special instruction-file read semantics are not supplied by DSH read"
+    },
+    {
+      "source": "ask_user_question/mod.rs description_template",
+      "original": "Every question automatically gets an Other choice; recommended first",
+      "adapted": "Recommended first retained; automatic Other promise omitted",
+      "reason": "Host schema/UI own questionnaire capabilities"
+    },
+    {
+      "source": "enter_plan_mode/exit_plan_mode and session/plan_mode.rs",
+      "original": "Plan-file-only edit gate; plan file path in reminders and upstream exit-plan schema",
+      "adapted": "Native DSH plan service; complete Markdown passed to exit_plan_mode.plan; only describe entry/exit when both tools registered",
+      "reason": "Host plan state/review is logged natively; no separate plan file or RPC state"
+    },
+    {
+      "source": "code_compaction/templates/full_replace_summary_prompt.txt",
+      "original": "Successor sees original query plus summary; full conversation in context",
+      "adapted": "Successor sees retained conversation plus summary; use only supplied summarization conversation",
+      "reason": "DSH keeps a recent context tail and owns compaction transaction boundaries"
+    }
+  ],
+  "compactionPrompt": {
+    "snapshot": "sources/crates/common/xai-grok-compaction/src/code_compaction/templates/full_replace_summary_prompt.txt",
+    "export": "buildCompactionPrompt",
+    "branch": "Structured, no user context",
+    "hostIntegration": "Replace only last user instructions on native purpose:compaction call; do not install upstream compaction execution"
+  },
+  "deferredBehaviors": [
+    "Upstream queue reorder/edit/send-now and interjection UI",
+    "Upstream disk memory and index generation",
+    "Binary-format read conversion",
+    "Grok subagent coordination beyond native host subagent",
+    "Grok interval scheduler cross-session durable, fire_immediately, interval changes preserving phase, seven-day TTL and scheduled subagent chain execution differ from native session reminders"
+  ],
+  "adaptedPrompt": {
+    "module": "prompt.mjs",
+    "sha256": "34dbd028b8fdc8e2a8001b281a5610cb8dca34de34ce6ee59d1d2ff24c67dfa9"
+  },
+  "monitorAdapter": {
+    "module": "monitor.mjs",
+    "source": [
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/tool.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/types.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/event.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/rate_limiter.rs"
+    ],
+    "hostIntegration": "Native tools.execute nested bash/pwsh passes guards/policy; same native jobs absolute readAt cursor and lifecycle; legal tool-jobs notice via native agent inject/followup. Existing job service alone reports completion.",
+    "adaptations": [
+      "Original descriptor conditional reminders enabled because actual notices exist; kill tool resolved to job_kill.",
+      "Original timeout_ms/persistent retained, original camelCase result taskId is the native job id; timeoutMs is the resolved deadline. One monitor-scoped timer cancels same job at timeout; native owner disposal cancels persistent jobs.",
+      "stdout only, trim empty lines, UTF-8 safe 500-byte line cap, 3000-byte batch cap, 1MiB partial buffer; native output ring can separately report a gap.",
+      "200ms batching, capacity10/refill1 every2000ms, suppression notices and auto-kill after continuous suppression exceeds30s.",
+      "Launch registered-event correlation uses AsyncLocalStorage and exact owner/call, including late cancellation. No competing scheduler, process runner, queue or session events."
+    ],
+    "sha256": "57082c442e2d3c1b0600f0763842714015ee90b0a0b052c04ba30f5851777450",
+    "verification": [
+      "test/installed-grok-monitor.test.mjs: actual guarded native launch, stdout notices exactly once, final partial line, unchanged model output cursor, explicit jobkill killed state and absence of delayed file side effect, deadline killed, Ask denial, Pi scope exclusion",
+      "test/grok-monitor.test.mjs: sustained-overload kill decision; late abort after job registration kills exact native job only once; persistent ignores deadline above10h"
+    ]
+  },
+  "memoryDefault": "Experimental opt-in; config-types/src/memory.rs resolves legacy flag with default(false). v2 requires its own enabled gate. Neither default-on memory nor Dream is claimed.",
+  "schedulerAdapter": {
+    "module": "scheduler.mjs",
+    "sha256": "bbfe17c4e4072355f83c2d6d5b9644ce60044970e72465474289670a41bcaead",
+    "source": [
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/delete.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/interval.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
+      "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs"
+    ],
+    "hostIntegration": "Public native ctx.schedule create/list/delete/update; same native domain, delivery runtime, journal and same-session persistence. No adapter timer or delivery source fabrication.",
+    "adaptations": [
+      "Official fixed contract is integer interval s/m/h/d, clamped to minimum60s, not cron. Reject overflow beyond native safe integer range.",
+      "Original create/list/delete descriptor text retained; replace only host-incompatible immediate/cross-session durability/phase/TTL/one-shot guidance.",
+      "Create/list/delete and same-interval prompt update map directly. Update uses expected complete native record, so concurrent changes return explicit conflict. Changed interval is refused because native would reset phase.",
+      "durable:true and fire_immediately:true explicitly refused on creation; as upstream they are ignored on update.",
+      "Original hidden recurring:false is rejected by upstream; explicit host-compatible recurring:false is supplied as native after_seconds one-shot, per authorized scope.",
+      "Native records remain active until deleted and resume with the same session across host restarts; Grok seven-day automatic expiry and cross-session durable registry are not emulated.",
+      "List exposes available real id/prompt/interval/next-fire/recurring fields, omits unavailable createdAt rather than inventing timestamps.",
+      "50-task cap is serialized across adapter creates for each session; separate native task controls remain host-owned."
+    ],
+    "verification": [
+      "test/installed-grok-scheduler.test.mjs: actual original CLI package install, native CRUD and catalog, same-interval prompt update keeps exact target, explicit unsupported-field refusal without mutation, cold restart preserves identity/target, real60s due reminder invokes native write with updated prompt, valid schedule source, native next target advances, delete removes task, native one-shot record, Pi excludes scheduler tools, child node --test executes its marker",
+      "test/grok-scheduler.test.mjs: original interval minimum/invalid/overflow and concurrent50-task cap"
+    ]
+  }
+}

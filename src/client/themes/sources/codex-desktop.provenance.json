@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "product": "codex",
+  "status": "local-asset-verified",
+  "asset": "codex-desktop.json",
+  "source": {
+    "path": "/Users/mac/Projects/trisoul_x/src/client/skins/bundled/codex-desktop.json",
+    "repositoryHead": "5fb70726d1a387cb2a330b2cf6bb48ef68f45220",
+    "sha256": "6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db",
+    "assetId": "codex-desktop",
+    "assetVersion": "1.0.1",
+    "license": null,
+    "licenseNote": "No LICENSE file or SPDX license found in the local OMD package; user explicitly authorized copying this local asset. No OpenAI source/license attribution is invented."
+  },
+  "limitation": "Existing OMD authored asset; not claimed as first-party OpenAI UI source or new native visual measurement."
+}

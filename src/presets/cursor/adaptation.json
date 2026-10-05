@@ -1,0 +1,71 @@
+{
+  "source": "sources/cursor-agent-sample.md",
+  "sourceSha256": "d0b29a77fd270b80562eaa91eb79a902658ba248188d07e27d54c1752cdc0ec5",
+  "renderedSha256": "247d4837080b0c58a4c5517a0a04a0ad7a117d8da45e039568dfb552a9041220",
+  "reviewConfiguration": {
+    "tools": [
+      "read",
+      "write",
+      "edit",
+      "read_image",
+      "glob",
+      "grep",
+      "bash",
+      "todo_write",
+      "ask_user_question",
+      "web_search",
+      "web_fetch",
+      "job_list",
+      "job_output",
+      "job_kill",
+      "enter_plan_mode",
+      "exit_plan_mode",
+      "subagent"
+    ],
+    "platform": "darwin",
+    "mode": "default"
+  },
+  "changes": [
+    {
+      "responsibility": "identity and context",
+      "reason": "Replace model/IDE/user_query placeholders and automatic editor-state claims with actual DSH model, user messages and supplied context."
+    },
+    {
+      "responsibility": "file access",
+      "reason": "Preserve specialist-file-tool preference and mandatory inspection; replace Read and tools with registered names and actual schemas."
+    },
+    {
+      "responsibility": "code citations",
+      "reason": "Replace Cursor-specific start:end:path rendering with verified host file links and standard fenced code. Preserve new-code example and formatting responsibilities."
+    },
+    {
+      "responsibility": "terminals",
+      "reason": "Replace Cursor terminals filesystem and stateful Shell/block_until_ms assumptions with actual DSH jobs and shell schemas."
+    },
+    {
+      "responsibility": "tasks",
+      "reason": "Map TodoWrite to actual todo_write; keep incomplete and blocked work accurate instead of claiming all tasks complete to end a turn."
+    },
+    {
+      "responsibility": "MCP",
+      "reason": "Replace private descriptor filesystem, auth placeholders and CallMcpTool with registered schema-aware tools; do not access user accounts."
+    },
+    {
+      "responsibility": "mode",
+      "reason": "Replace nonexistent SwitchMode with actual mode argument and conditionally registered enter_plan_mode/exit_plan_mode."
+    },
+    {
+      "responsibility": "tool descriptions",
+      "reason": "Remove unavailable SemanticSearch, image generation, notebook/delete, resource, branch and Cursor-specific subagent declarations; emit available DSH tool descriptions without legacy argument fields."
+    },
+    {
+      "responsibility": "git and skills",
+      "reason": "Preserve git safety and skill workflow; replace forced gh/commit-HEREDOC and nonexistent JSONL transcript access with actual host capabilities."
+    },
+    {
+      "responsibility": "summary",
+      "reason": "No trustworthy complete Cursor summary source; buildCompactionPrompt returns undefined."
+    }
+  ],
+  "runtime": "prompt.mjs reads the unchanged source and conditionally adapts it; adaptation.diff is review evidence, not a second runtime prompt."
+}

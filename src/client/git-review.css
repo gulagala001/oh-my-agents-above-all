@@ -1,0 +1,29 @@
+.omaa-git-review { margin:0 20px 20px; border-top:1px solid var(--dsw-alias-border-l2); padding-top:15px; font-size:12px; color:var(--dsw-alias-label-primary); }
+.omaa-git-review h3 { margin:0; font-size:14px; }
+.omaa-git-review header,.omaa-git-review form,.omaa-git-file,.omaa-git-hunk-header { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.omaa-git-review header { justify-content:space-between; margin-bottom:10px; }
+.omaa-git-review button,.omaa-git-review select,.omaa-git-review input,.omaa-git-review textarea { color:inherit; background:var(--dsw-alias-bg-layer-1); border:1px solid var(--dsw-alias-border-l2); border-radius:5px; padding:5px 7px; font:inherit; }
+.omaa-git-review button { cursor:pointer; }.omaa-git-review :disabled { opacity:.5; cursor:not-allowed; }
+.omaa-git-scope { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.omaa-git-review form { margin:10px 0; }.omaa-git-review input { min-width:80px; flex:1; }
+.omaa-git-caption { color:var(--dsw-alias-label-secondary); line-height:1.6; }
+.omaa-git-added { color:var(--dsw-alias-success-foreground,var(--dsw-alias-label-primary)); }.omaa-git-deleted { color:var(--dsw-alias-error-foreground,var(--dsw-alias-label-primary)); }
+.omaa-git-file { margin:7px 0; }.omaa-git-path { flex:1; min-width:90px; overflow-wrap:anywhere; text-align:left; }.omaa-git-counts { white-space:nowrap; color:var(--dsw-alias-label-secondary); }
+.omaa-git-diff { margin-top:14px; }.omaa-git-diff strong { flex:1; min-width:60px; overflow-wrap:anywhere; }
+.omaa-git-hunk { border:1px solid var(--dsw-alias-border-l2); margin:8px 0; border-radius:5px; overflow:hidden; }
+.omaa-git-hunk-header { padding:7px; background:var(--dsw-alias-bg-layer-1); }.omaa-git-hunk-header code { flex:1 0 100%; white-space:nowrap; }
+.omaa-git-lines { overflow:auto; }.omaa-git-line { display:grid; grid-template-columns:35px 35px minmax(max-content,1fr); min-height:24px; font-size:11px; }
+.omaa-git-line code { white-space:pre; padding:4px 6px; font-family:var(--dsw-font-mono,monospace); }
+.omaa-git-line .omaa-git-line-number { border:0; border-radius:0; padding:2px; background:transparent; color:var(--dsw-alias-label-secondary); font-size:10px; }
+.omaa-git-add { background:color-mix(in srgb,var(--dsw-static-green-500,#22c55e) 12%,transparent); }.omaa-git-del { background:color-mix(in srgb,var(--dsw-static-red-500,#ef4444) 12%,transparent); }
+.omaa-git-wrap .omaa-git-line { grid-template-columns:35px 35px minmax(0,1fr); }.omaa-git-wrap code { white-space:pre-wrap; overflow-wrap:anywhere; }
+.omaa-git-feedback label { width:100%; overflow-wrap:anywhere; }.omaa-git-feedback textarea { display:block; width:100%; min-height:70px; box-sizing:border-box; margin-top:6px; }
+.omaa-git-feedback label>small { display:block; margin-top:4px; }
+.omaa-git-drafts { margin-top:15px; border-top:1px solid var(--dsw-alias-border-l2); padding-top:12px; }.omaa-git-drafts h4 { margin:0; font-size:13px; }
+.omaa-git-draft { border:1px solid var(--dsw-alias-border-l2); border-radius:5px; margin:10px 0; padding:8px; }
+.omaa-git-draft strong,.omaa-git-draft small { display:block; overflow-wrap:anywhere; }.omaa-git-draft small { margin-top:5px; color:var(--dsw-alias-label-secondary); }
+.omaa-git-draft p { white-space:pre-wrap; overflow-wrap:anywhere; margin:8px 0; }.omaa-git-draft button { margin-right:6px; }
+
+.omaa-git-scope { flex-wrap:wrap; }
+.omaa-git-review select,.omaa-git-review input { box-sizing:border-box; min-width:0; max-width:100%; }
+.omaa-git-hunk-header code { white-space:normal; overflow-wrap:anywhere; }

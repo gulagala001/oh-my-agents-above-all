@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "status": "mapping-candidates-only",
+  "roles": {
+    "foreground": "text",
+    "secondaryForeground": "muted",
+    "accent": "accent",
+    "border": "border",
+    "focusBorder": "borderAccent",
+    "subtleBorder": "borderMuted",
+    "selectionBackground": "selectedBg",
+    "userBackground": "userMessageBg",
+    "userForeground": "userMessageText",
+    "reasoningForeground": "thinkingText",
+    "toolPendingBackground": "toolPendingBg",
+    "toolSuccessBackground": "toolSuccessBg",
+    "toolErrorBackground": "toolErrorBg",
+    "toolTitleForeground": "toolTitle",
+    "toolOutputForeground": "toolOutput",
+    "errorForeground": "error",
+    "successForeground": "success",
+    "warningForeground": "warning",
+    "diffAddedForeground": "toolDiffAdded",
+    "diffRemovedForeground": "toolDiffRemoved",
+    "diffContextForeground": "toolDiffContext",
+    "markdownLinkForeground": "mdLink",
+    "markdownCodeForeground": "mdCode",
+    "htmlPageBackground": "export.pageBg",
+    "htmlCardBackground": "export.cardBg",
+    "htmlInformationBackground": "export.infoBg"
+  },
+  "limits": {
+    "canvas": "The native terminal canvas inherits live terminal colors. export.* is the official HTML export palette, not proof of terminal canvas colors.",
+    "assistant": "Native assistant Markdown has no filled message background; do not infer an assistant bubble from userMessageBg.",
+    "geometry": "Native padding is terminal cells/rows. DSH pixels, sidebar, floating composer, file preview and tool card geometry remain host adaptations.",
+    "selection": "Pi defaults to dynamic system theme, while these extracted palettes are explicit fixed dark/light choices.",
+    "approval": "These candidate mappings do not register, activate or take theme ownership from OMD. Shared arbitration is outside this source asset."
+  },
+  "evidence": [
+    { "snapshot": "upstream/user-message.ts.txt", "lines": "20-60", "use": "userMessageText/userMessageBg; outputPad=1 and vertical padding 1" },
+    { "snapshot": "upstream/assistant-message.ts.txt", "lines": "108-119", "use": "assistant no background, paddingY=0" },
+    { "snapshot": "upstream/assistant-message.ts.txt", "lines": "145-198", "use": "thinkingText and error labels" },
+    { "snapshot": "upstream/tool-execution.ts.txt", "lines": "86-87,149-154,258-262,382", "use": "tool state backgrounds, output/title, bounded collapsed text" },
+    { "snapshot": "upstream/theme.ts.txt", "lines": "925-950", "use": "official HTML export resolves OKHSL to browser hex" },
+    { "snapshot": "upstream/theme-controller.ts.txt", "lines": "173-185", "use": "default is terminal system theme" }
+  ]
+}

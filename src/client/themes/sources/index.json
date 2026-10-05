@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "role": "source evidence only; no runtime theme registration",
+  "products": [
+    "codex",
+    "grok",
+    "cursor",
+    "pi",
+    "zcode"
+  ],
+  "excluded": [],
+  "assets": [
+    {
+      "path": "codex-desktop.json",
+      "bytes": 4687,
+      "sha256": "6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db"
+    },
+    {
+      "path": "codex-desktop.provenance.json",
+      "bytes": 768,
+      "sha256": "5e527a288571b1025ac52b73cb4a6671494b4a0f0a422872158ab7b86b7dbdfe"
+    },
+    {
+      "path": "cursor.json",
+      "bytes": 2037,
+      "sha256": "e1a9d2931a47304bd7c3a264bf959d566951e8edc2ad4d440322b81c63d65ebe"
+    },
+    {
+      "path": "extract.py",
+      "bytes": 6926,
+      "sha256": "eb908fcbc5d37f805d634930ad6ce4d8fa46f2c4f09bfbc6c1da7170a735b253"
+    },
+    {
+      "path": "grok-build.json",
+      "bytes": 36867,
+      "sha256": "9d40d2a8c6ad1535f0a06321c7035d668daa11d0f3eeb1460e6b15246a311694"
+    },
+    {
+      "path": "licenses/grok-build-LICENSE.txt",
+      "bytes": 11388,
+      "sha256": "116f7778b9802e569b7fa3a532b17bd80eb13c67837def01eed093d4ea472f28"
+    },
+    {
+      "path": "licenses/grok-build-THIRD-PARTY-NOTICES.txt",
+      "bytes": 763905,
+      "sha256": "dcbdd42b8fe45aa28f67a7b9e82d9feadec2b958c050158aeaac460eba651d07"
+    },
+    {
+      "path": "licenses/tailwindcss-LICENSE.txt",
+      "bytes": 1071,
+      "sha256": "60e0b68c0f35c078eef3a5d29419d0b03ff84ec1df9c3f9d6e39a519a5ae7985"
+    },
+    {
+      "path": "licenses/zcode-LICENSE.txt",
+      "bytes": 11344,
+      "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
+    },
+    {
+      "path": "pi/LICENSE",
+      "bytes": 1069,
+      "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48"
+    },
+    {
+      "path": "pi/palette.json",
+      "bytes": 28559,
+      "sha256": "12750a5e73e8f60be274d6db08db111eaa8deadcd8e2aa69ba6af311a76f2350"
+    },
+    {
+      "path": "pi/provenance.json",
+      "bytes": 3242,
+      "sha256": "97e11ed50f81cff1e41bd025eb5b5284075ad8344d8ca98dcb72c8a973dbff0e"
+    },
+    {
+      "path": "pi/role-candidates.json",
+      "bytes": 2663,
+      "sha256": "12e6a950398e84db94e5162fa57c1b328a765801bebbfd585091ba76768c7d9d"
+    },
+    {
+      "path": "pi/upstream/assistant-message.ts.txt",
+      "bytes": 6803,
+      "sha256": "f8a20228291816aec253d3f115fec5ba765807275bc14077780225117e5912cb"
+    },
+    {
+      "path": "pi/upstream/colors.ts.txt",
+      "bytes": 11501,
+      "sha256": "d4fe729c424d2c07bc64cf0c3edfdbf5642865cba395dfb37234c6c88d65f468"
+    },
+    {
+      "path": "pi/upstream/dark.json",
+      "bytes": 2334,
+      "sha256": "c11a588b714d35300293079b425fb09a3693d4b2d453585d211b08163c648b75"
+    },
+    {
+      "path": "pi/upstream/light.json",
+      "bytes": 2332,
+      "sha256": "f590c51c2bc8b238891efd0e983473ed2e2a6487b6692cc1d4b2845165e703f7"
+    },
+    {
+      "path": "pi/upstream/oklab.ts.txt",
+      "bytes": 10079,
+      "sha256": "45b067e6e3605b385f595adecd7c0216f1c6b6686680d5c73f661286de736be6"
+    },
+    {
+      "path": "pi/upstream/system-theme.ts.txt",
+      "bytes": 26390,
+      "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729"
+    },
+    {
+      "path": "pi/upstream/terminal-colors.ts.txt",
+      "bytes": 3082,
+      "sha256": "72d1ef298837bfe520bd8a060cb93ea27547dcbff04a167ace0f55b5183e550d"
+    },
+    {
+      "path": "pi/upstream/theme-controller.ts.txt",
+      "bytes": 9388,
+      "sha256": "b1ac907ac1ed5e1fbb754d93b42795605ca093cecdcfa3c661b3ed66f48a0d7f"
+    },
+    {
+      "path": "pi/upstream/theme-json.ts.txt",
+      "bytes": 5269,
+      "sha256": "48d2ba48735eafb24e4812cf7c0d9b5c7e26253e6731616432850154079b3545"
+    },
+    {
+      "path": "pi/upstream/theme-schema.json",
+      "bytes": 9905,
+      "sha256": "8787918132dbf7aaee1be2ab30ee6306c715dad609cd85e448df595bb02e2a56"
+    },
+    {
+      "path": "pi/upstream/theme.ts.txt",
+      "bytes": 38308,
+      "sha256": "082e9706529d468cfd3315f1d4c865a60ecd463e9fdd207b0b43607998a58ddc"
+    },
+    {
+      "path": "pi/upstream/tool-execution.ts.txt",
+      "bytes": 11823,
+      "sha256": "58681d42b077bb9dc177b3d284149579c8769f8979ef90308829dba097f4018b"
+    },
+    {
+      "path": "pi/upstream/user-message.ts.txt",
+      "bytes": 2025,
+      "sha256": "22ffba3a5c014bc5cb7284ad03c39bc77b1788df34ed98f5856d87cfd856ce3b"
+    },
+    {
+      "path": "upstream/grokday.rs.txt",
+      "bytes": 5371,
+      "sha256": "2a4bffc5c6bc49deb1c06761aa7a3e6372cc4b0225a3ffaf434ed77913a4d882"
+    },
+    {
+      "path": "upstream/groknight.rs.txt",
+      "bytes": 5680,
+      "sha256": "c58f35789fad4a1fec3d978673ba9dfd273e7c9e94fa731f975ca297527b5681"
+    },
+    {
+      "path": "upstream/tailwind-theme.css.txt",
+      "bytes": 19480,
+      "sha256": "ce91efc0ca2e741e56fe263662e5282dc0a16f19a8647f0c38b60fcc4e2119b1"
+    },
+    {
+      "path": "upstream/zcode-styles.css.txt",
+      "bytes": 70829,
+      "sha256": "22d5b58e44cdebdbe7154c418ee05fef6dde689e384f0dd590d4057739487be7"
+    },
+    {
+      "path": "upstream/zcode-useTheme.ts.txt",
+      "bytes": 3616,
+      "sha256": "a286aa3596dd05140184d60318f014ff1cea6637d0fae104137701fc2dd1ce0e"
+    },
+    {
+      "path": "zcode.json",
+      "bytes": 266813,
+      "sha256": "aa5e1f6393631da5ab1f93b9da3cb6b0c9773f32d018eb0b004e142db208e654"
+    },
+    {
+      "path": "cursor/agent-window.json",
+      "bytes": 4364,
+      "sha256": "a926aece3f4600da55e36bc372f094aa5b9977778e021dad7f960d0b4272e645"
+    }
+  ]
+}

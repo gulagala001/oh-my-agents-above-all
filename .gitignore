@@ -1,0 +1,32 @@
+node_modules/
+.cache/
+coverage/
+dist/
+*.tgz
+.DS_Store
+
+# Local build baselines, user state and maintenance records are not source releases.
+.host-source/
+.release-work/
+release-assets/
+*.tgz.sha256
+*.tgz.metadata.json
+*.log
+.env
+.env.*
+!.env.example
+credentials/
+profiles/
+AGENTS.md
+CLAUDE.md
+AI_README.md
+OMAA_HANDOFF.md
+COMPUTER_USE_HANDOFF.md
+COMPUTER_USE_BASELINE.md
+COMPUTER_USE_ASSESSMENT.md
+WINDOWS_HANDOFF.md
+PROMPT_MAINTENANCE.md
+PROMPT_CHANGES.md
+
+# This is a public task fixture, not the local repository work agreement.
+!test/fixtures/configured-project/project/AGENTS.md

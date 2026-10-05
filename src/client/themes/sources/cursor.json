@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "product": "cursor",
+  "status": "public-layout-observed-colors-unverified",
+  "source": {
+    "page": "https://cursor.com/cli",
+    "retrievedDate": "2026-10-05",
+    "license": null,
+    "usage": "References and factual public UI observations only. No proprietary bundle fragments, icons, screenshot pixels or webpage CSS copied."
+  },
+  "runtimeEvidence": {
+    "version": "2026.10.01-e373342",
+    "platform": "darwin",
+    "arch": "arm64",
+    "archiveUrl": "https://downloads.cursor.com/lab/2026.10.01-e373342/darwin/arm64/agent-cli-package.tar.gz",
+    "archiveSha256": "629e51de43a0b7fb3b86f5ebc7e579f7df7df941b39f29e82945cde750145afc",
+    "observedExecution": "Isolated --version and ACP initialize only; no authenticated interactive TUI color measurements."
+  },
+  "publicLayout": {
+    "surface": "Official CLI landing page interactive demonstration, not IDE Agents Window",
+    "regions": [
+      {
+        "role": "identity",
+        "observation": "Agent identity appears above project context."
+      },
+      {
+        "role": "workspace",
+        "observation": "Directory and Git branch share a context line."
+      },
+      {
+        "role": "prompt",
+        "observation": "Arrow-marked input follows the context line."
+      },
+      {
+        "role": "model",
+        "observation": "Model information is placed below the input."
+      },
+      {
+        "role": "affordances",
+        "observation": "Command, file mention and shell hints follow the model information."
+      }
+    ],
+    "pixelDimensions": null,
+    "observedColors": [],
+    "limitation": "Public demo background and site accent are not evidence of terminal theme tokens. No exact color or geometry sample has passed."
+  },
+  "variants": {
+    "light": {
+      "status": "unverified",
+      "tokens": {}
+    },
+    "dark": {
+      "status": "unverified",
+      "tokens": {}
+    }
+  },
+  "registration": "No palette is supplied; shared renderer must expose source status rather than label a guessed palette native."
+}
