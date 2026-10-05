@@ -66,6 +66,18 @@ const adaptedSessionSource = sessionSource
   .replace(/export \{\s*buildReferencedSessionContextReminderBody,\s*extractSessionReferences,\s*\} from "\.\/references.js";\n/, '');
 const generatedSession = await transform(adaptedSessionSource, { loader: 'ts', format: 'esm', target: 'es2022' });
 await writeFile(root + 'lib/zcode-session-material.mjs', '// Derived from fixed Apache-2.0 ZCode source; see THIRD_PARTY_NOTICES.md.\n' + generatedSession.code);
+// The saved workflow format/argument contract stays derived from its fixed
+// upstream source. Only Zod 3's record overload is adapted to host Zod 4.
+const savedRoot = root + 'src/presets/zcode/sources/upstream/apps/zcode-cli/packages/';
+for (const [input, output, adapt] of [
+  ['contracts/src/tools/saved-workflow.ts', 'zcode-saved-contract.mjs', text => text.replace('z.record(SavedWorkflowArgDeclarationSchema)', 'z.record(z.string(), SavedWorkflowArgDeclarationSchema)')],
+  ['core/src/tool/handlers/saved-workflows/args.ts', 'zcode-saved-args.mjs', text => text],
+  ['core/src/tool/handlers/saved-workflows/frontmatter.ts', 'zcode-saved-codec.mjs', text => text.replace('from "@zcode/contracts"', 'from "./zcode-saved-contract.mjs"')],
+  ['core/src/tool/handlers/save-workflow-description.ts', 'zcode-save-description.mjs', text => text.replace('import { DYNAMIC_WORKFLOW_SKILL_NAME } from "@zcode/contracts";', 'const DYNAMIC_WORKFLOW_SKILL_NAME = "zcode-workflows";')],
+]) {
+  const generated = await transform(adapt(await readFile(savedRoot + input, 'utf8')), { loader: 'ts', format: 'esm', target: 'es2022' });
+  await writeFile(root + 'lib/' + output, '// Derived from fixed Apache-2.0 ZCode source; see THIRD_PARTY_NOTICES.md.\n' + generated.code);
+}
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));

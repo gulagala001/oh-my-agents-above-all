@@ -1,6 +1,6 @@
 {
   "name": "oh-my-agents-above-all",
-  "version": "0.2.1-alpha.1.omaa.0.2.1",
+  "version": "0.2.1-alpha.1.omaa.0.3.0",
   "private": true,
   "type": "module",
   "description": "DSH 五产品深度预设：Codex、Grok Build、Cursor、Pi、ZCode，独立主题与可选 OMD 增强",
@@ -54,6 +54,7 @@
     "ignore": "7.0.8",
     "js-yaml": "4.1.0",
     "minimatch": "10.2.6",
+    "yaml": "2.9.0",
     "zod": "4.5.4"
   },
   "peerDependencies": {

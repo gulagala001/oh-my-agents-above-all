@@ -15,7 +15,8 @@ export function PiBranches({ settings, uiWorkspace, sessions, visible = true }) 
   }, [controller, id, enabled, visible, current.data?.running]);
   if (!enabled || !visible) return null;
   const data = state.sessionId === id && state.data?.sessionId === id ? state.data : null;
-  const busy = state.loading || state.saving, canFork = !busy && !current.loading && !current.saving && !current.error && !current.data.running && data?.canFork;
+  const busy = state.loading || state.saving, canFork = !busy && !state.result?.sessionId && !current.loading && !current.saving && !current.error && !current.data.running && data?.canFork;
+  const selectedPoint = point !== '' && data?.points.some(value => String(value.seq) === point) ? point : '';
   const run = operation => { setError(''); Promise.resolve().then(operation).catch(error => { if (settings.getSnapshot().sessionId === id) setError(error.message); }); };
   return <section className="omaa-pi-branches" aria-label="Pi 分支导航">
     <style>{css}</style>
@@ -29,8 +30,10 @@ export function PiBranches({ settings, uiWorkspace, sessions, visible = true }) 
         {branch.current && <small>当前</small>}{branch.running && <small>运行中</small>}
       </button>
     </li>)}</ul>}
-    <form onSubmit={event => { event.preventDefault(); run(() => controller.fork({ ...(point === '' ? {} : { atSeq: Number(point) }), withSummary }, id)); }}>
-      <label>分叉位置 <select aria-label="Pi 分叉位置" value={point} disabled={!canFork} onChange={event => setPoint(event.target.value)}>
+    {state.result?.sessionId && <p role="status">分支已创建。<button type="button" disabled={busy}
+      onClick={() => run(() => controller.open(state.result.sessionId, id))}>打开已创建分支</button></p>}
+    <form onSubmit={event => { event.preventDefault(); run(() => controller.fork({ ...(selectedPoint === '' ? {} : { atSeq: Number(selectedPoint) }), withSummary }, id)); }}>
+      <label>分叉位置 <select aria-label="Pi 分叉位置" value={selectedPoint} disabled={!canFork} onChange={event => setPoint(event.target.value)}>
         <option value="">当前已完成位置</option>
         {data?.points.slice().reverse().map(value => <option value={value.seq} key={value.seq}>{value.label || `回合 ${value.turn}`}</option>)}
       </select></label>

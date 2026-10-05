@@ -42,6 +42,8 @@ jobs:
           test/appearance-coordinator.test.mjs
           test/preset-controls.test.mjs
           test/cursor-rules.test.mjs
+          test/identity-compat.test.mjs
+          test/updates.test.mjs
       - name: Package OMAA for both hosts
         run: |
           node scripts/package.mjs --host-version 0.2.1-alpha.1

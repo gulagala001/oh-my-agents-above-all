@@ -11,7 +11,7 @@ OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、Z
 从 GitHub Releases 下载对应宿主的 OMAA 包与 SHA256；需要 OMD 增强或已有 OMD 的同 profile 安装，同时下载兼容 OMD 包。核对附件哈希后，通过正在使用的 DSH profile 原生插件入口安装，先安装兼容 OMD，再安装 OMAA。以下以 `web` 为例，路径替换为实际包位置：
 
 ```sh
-dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.7.1.tgz
+dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.8.0.tgz
 dsh plugin --profile web add file:/absolute/path/OMAA.tgz
 dsh web
 ```
@@ -21,13 +21,14 @@ dsh web
 在新会话中选择 `Codex · OMAA`、`Grok Build · OMAA`、`Cursor · OMAA`、`Pi Coding Agent · OMAA` 或 `ZCode · OMAA`。输入区预设按钮可打开右侧设置，通用设置中也有 OMAA 页面。
 
 - 工作模式：除 Pi 的精简默认模式外，支持执行、只读 Ask 和原生 Plan 审阅/批准流程。
+- 身份：与 OMD 共存时沿用其人格／身份设置，修改开头身份文字；默认、内置、自定义及关闭均生效，不依赖工具增强开关。产品行为与主题继续由所选预设负责。
 - 主题：跟随产品、指定另一套主题、恢复 DSH 外观或使用兼容 OMD 外观；明暗设置与宿主同步。
 - Cursor：加载适用的 MDC/项目规则，提供已记录文件变更的检查点查看与恢复。恢复会核对冲突并保留消息；它不是任意 shell 操作的全工作区快照。
 - Cursor 审阅：可针对本回合或单个文件“查找问题”，进入实际只读问答模式，由当前模型检查变更；切回执行模式后继续修复。
 - Codex：查看 Unstaged、Staged、Commit、Branch 和 Last turn；按文件或块暂存、取消暂存、撤回，选定代码行后立即发送反馈，或收集多文件批注一次提交。操作遵守宿主权限并拒绝过期比较。
 - Grok Build：实时 stdout 监控与原生 interval 定时任务，使用同一作业/会话生命周期。
 - Pi：加载 SYSTEM/APPEND、用户与项目规则、提示模板，以及项目/祖先 `.agents` 和深层技能资源；默认逐条 steer。Pi 分支面板可打开原生 parent 树、从已完成回合创建新会话，按需勾选离开分支摘要（默认关闭，使用当前模型）。分支共享目录，切换不回滚文件。
-- ZCode：用户明确点名工作流，或启用 Pro/Ultra 后，使用实际工作流与结构化子代理结果，仍先加载 `zcode-workflows` 技能；按用户引用的 session id 回查原生历史，可使用当前已配置模型提取上下文。
+- ZCode：项目／全局保存工作流、按名列举及复用、参数声明与默认值。用户明确点名工作流，或启用 Pro/Ultra 后，使用实际工作流与结构化子代理结果，仍先加载 `zcode-workflows` 技能；按用户引用的 session id 回查原生历史，可使用当前已配置模型提取上下文。
 - OMD 增强：默认关闭；基础增强提供 CodeGraph 和 Computer Use，可另选 Pro 或 Ultra 工作方式。高级方式复用 OMD 控制与持久化，使用当前模型最高可用 reasoning effort，保留 provider/model；开启高级方式自动开启增强，关闭增强同时关闭高级方式。Ask/Plan 暂停高级编排，恢复执行后可继续。主题选择独立。
 
 运行中的会话先使用原生停止入口，再修改预设设置。文件、diff、工具结果、附件和继续工作仍使用 DSH 的现有界面与生命周期。

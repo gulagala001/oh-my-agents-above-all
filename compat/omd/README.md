@@ -1,6 +1,6 @@
 # OMD 兼容附件
 
-此目录把 OMAA 所需的 OMD 接口维护为可审阅、可重复打包的最小补丁。输入为官方 OMD `0.6.1`，输出为对应宿主 `omd.0.7.1`（可用 `--omd-version` 指定后续三段版本）；OMAA 自身仍由 `scripts/package.mjs` 打包。发行附件交付 tgz、SHA256 和来源元数据，安装使用宿主原生插件入口。
+此目录把 OMAA 所需的 OMD 接口维护为可审阅、可重复打包的最小补丁。输入为官方 OMD `0.6.1`，输出为对应宿主 `omd.0.8.0`（可用 `--omd-version` 指定后续三段版本）；OMAA 自身仍由 `scripts/package.mjs` 打包。发行附件交付 tgz、SHA256 和来源元数据，安装使用宿主原生插件入口。
 
 | DSH 宿主 | 官方 OMD 基线 | 固定 commit | 补丁 |
 | --- | --- | --- | --- |
@@ -19,6 +19,6 @@ node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2-directory
 
 `*.json` 记录基线 manifest 与完整发行文件哈希、补丁哈希、修改后文件哈希；`*.patch` 只改桥接接线、Ultracode 装配状态、CodeGraph 挂载顺序、外观 ownership 和 OMAA 草稿设置迁移，`additions/` 保存 enhancement/coordinator 两个独立薄模块。原模型请求和工具说明沿用底稿。保留两端各自 projectless、native inject、transferOptimizer，以及 rc.2 的 legacy draft recovery。
 
-脚本只重建 browser client 与皮肤 JSON，构建前后核对 `lib/host`、`vendor`；不导入会连带执行 `build-host.mjs` 的官方 `build.mjs`。因此 rc.2 的原生 workflow factories 不会被 alpha 工厂覆盖。包内新增 `omaa-compat.json` 记录来源，package 版本与 release manifest 同步。
+脚本只重建 browser client 与皮肤 JSON，构建前后核对 `lib/host`、`vendor`；不导入会连带执行 `build-host.mjs` 的官方 `build.mjs`。因此 rc.2 的原生 workflow factories 不会被 alpha 工厂覆盖。包内新增 `omaa-compat.json` 记录来源，package 版本与 release manifest 同步。兼容 OMD 的版本检查／更新在 OMAA 启用时动态委托给同一配对发行服务；OMAA 禁用仍安装时暂停，卸载后恢复原独立更新路径。
 
 上游升级时，从固定新 commit/官方包开始，审阅当前补丁涉及的契约和上游差异，更新对应补丁、完整基线及修改后哈希，再运行打包和相关行为检查。未知版本、同版本内容漂移、新文件或冲突会指出文件并停止；不能改版本号绕过核对。此目录不保存用户配置、凭据、本地维护文件或缓存。

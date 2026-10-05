@@ -53,5 +53,43 @@ retain its returned identity, inspect output with `job_output`, stop it with
 `job_kill`, and wait for the native completion notice before declaring success.
 Stopping a run stops its native child work. To change a running script, stop
 that run and submit the revised script with a new identity; completed findings
-can be passed in args. Reusable scripts are ordinary user-owned project files,
-read and edited with the native file tools.
+can be passed in args.
+
+Check `list_saved_workflows` before rebuilding a reusable workflow. A definition
+lives in `.zcode/workflows/<name>.dwf.ts` in the project, or in the same directory
+under the user's home for `scope: "global"`. Project definitions win by name.
+`read_saved_workflow` returns the metadata and body without executing it;
+`run_saved_workflow` reads it once, validates declared JSON arguments, applies
+defaults and calls the same native `workflow` tool. Use `phases` when phase
+metadata is useful. Model/API, native jobs, cancellation and permissions remain
+those of the current session.
+
+Call `save_workflow` only when the user asks or agrees to save. Supply `name`,
+`scope`, `description`, optional `whenToUse` and argument declarations, plus
+exactly one body source: `script` or `script_path`. A saved draft file's metadata
+block is stripped and the supplied metadata is used. An inline script must be
+body only. Syntax errors are returned without writing. The actual write is
+performed by the native `write` tool, including its permission and stale-read
+checks; this tool does not execute the body while saving.
+
+The file begins with a YAML block comment, followed by the exact JavaScript body:
+
+```js
+/* zcode-workflow
+description: Review the selected module
+whenToUse: When this module needs a read-only review
+args:
+  path: { type: string, required: true }
+  limit: { type: number, default: 5 }
+*/
+const result = await agent('Read ' + args.path + ' and return concrete findings. Do not edit.');
+if (result === null) throw new Error('Review did not complete');
+return result;
+```
+
+Declared types are `string`, finite `number`, `boolean`, or `json` (any JSON
+value). Unknown or missing required arguments are reported together; defaults
+have the same type checks as supplied values. The `.dwf.ts` extension preserves
+the source product's file convention; the body uses the native JavaScript
+facade above, without TypeScript annotations. Read and edit user-owned
+workflow definitions with native file tools before resubmitting.

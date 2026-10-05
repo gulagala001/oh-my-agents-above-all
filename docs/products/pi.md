@@ -46,6 +46,8 @@ DSH edit 为单次 `file_path/old_string/new_string/replace_all`，Pi v1.0.2 原
 
 `branches.mjs` 与 Pi 分支面板使用原生 `sessionController.list/inspect/fork`，显示原生 parentSessionId 关系并打开所选会话。只能从已完成的 `turn/end` 位置分叉，要求当前会话空闲且 journal head 仍与界面观察一致；每个分支有不同 sessionId，父分支原始 journal 保留。各分支共享工作目录，切换或分叉不会撤销文件修改。它承载可用的分支导航，不等同 Pi `navigateTree` 在同一个 JSONL 树中移动 leaf。
 
+分叉位置随实际完成点列表校正：所选回合不再可用时回到「当前已完成位置」，不会提交隐藏的旧位置。分支创建成功但原生列表刷新失败时保留已创建 ID，提供直接打开入口，并暂停重复创建；明确刷新列表后可再次创建。导航仍调用原生 `uiWorkspace.openSession`。
+
 “附带离开分支摘要”默认关闭（`withSummary:false`）。显式开启且所选位置之后存在材料时，使用当前会话已配置的模型/API，以来源中的完整 `BRANCH_SUMMARY_PROMPT` 和 `SUMMARIZATION_SYSTEM_PROMPT` 摘要被离开的后缀。只收集用户文本、可见 assistant 文本和工具调用/结果，不收集隐藏 reasoning；工具结果每条最多 2000 字符，按事件片段从最新往前选取，文本预算 100000 字符。读/修改路径分别跟踪，修改过的路径不再列为只读路径。错误、取消、max-tokens、空或超过 32000 字符的摘要拒绝分叉；摘要期间源会话 head 或运行状态变化也拒绝提交。
 
 新摘要及继承摘要组成最多 60000 字符的派生 context capsule，保存在 `DSH_HOME/omaa/pi-branch-context` 的会话 hash 文件，通过原生 `systemPrompt.context` 与单次变量替换装配和入账，原话的花括号保持字面量，冷启动可读取。继续分叉会继承已有 capsule，即使没有请求新增摘要；没有新摘要时不额外调用模型。该资料是有界派生上下文，父 journal 与原生 fork 种子仍是历史依据，不是第二份执行日志。原生 fork 已完成但 capsule 保存失败时返回包含新 sessionId 的明确错误，允许从原生分支列表打开，不能假称跨文件/会话原子提交。

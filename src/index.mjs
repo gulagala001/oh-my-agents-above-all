@@ -5,6 +5,7 @@ import { createPreferencesStore, validatePreferences } from './host/preferences.
 import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
+import { createUpdates } from './updates.mjs';
 import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
 
 export const name = 'omaa';
@@ -82,6 +83,15 @@ function mount(ctx) {
   };
   const transferSession = createSessionTransfer({ store, hub, workControl: () => ctx.get('trisoulX')?.omaaWorkMode,
     flush: session => ctx.sessions.flush(session) });
+  hub.updates = createUpdates({ getManager: () => ctx.get('pluginManager'),
+    getOmdVersion: () => ctx.get('trisoulX')?.omaaInstalledVersion,
+    isRunning: () => {
+      const agents = ctx.agents.list(), jobs = ctx.get('jobs');
+      return agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length)
+        || [undefined, ...agents.map(agent => agent.id)].some(owner => jobs?.list(owner).some(job => ['running', 'stopping'].includes(job.status)));
+    } });
+  ctx.effect(() => () => hub.updates.close());
+  ctx.on('plugin-manager/install-state', progress => hub.updates.progress(progress), { global: true });
   ctx.provide('omaa', hub);
   const gitReview = createGitReview({ execution: session => ({ subprocess: ctx.get('subprocess'), sandbox: ctx.get('sandbox'),
     get policy() {
@@ -103,7 +113,19 @@ function mount(ctx) {
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (!['/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (!['/omaa/api/updates', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (url.pathname === '/omaa/api/updates') {
+          if (req.method === 'GET') {
+            await hub.updates.check(url.searchParams.get('refresh') === '1');
+            sendJson(res, 200, await hub.updates.status());
+          } else if (req.method === 'POST') {
+            const input = await readJson(req);
+            if (input.action !== 'install') throw new Error('更新操作无效');
+            void hub.updates.start(input.target, input.version);
+            sendJson(res, 202, await hub.updates.status());
+          } else sendJson(res, 405, { error: '不支持此方法' });
+          return;
+        }
         if (url.pathname === '/omaa/api/session-transfer') {
           if (req.method !== 'POST') { sendJson(res, 405, { error: '不支持此方法' }); return; }
           sendJson(res, 200, await transferSession(await readJson(req))); return;
@@ -148,7 +170,7 @@ function mount(ctx) {
         if (req.method === 'GET') sendJson(res, 200, (await hub.inspect(id)).value);
         else if (req.method === 'POST') sendJson(res, 200, await hub.update(id, await readJson(req)));
         else sendJson(res, 405, { error: '不支持此方法' });
-      } catch (error) { sendJson(res, error.code === 'revision-conflict' ? 409 : 400, { error: error.message, ...(error.code ? { code: error.code } : {}) }); }
+      } catch (error) { sendJson(res, error.statusCode ?? (error.code === 'revision-conflict' ? 409 : 400), { error: error.message, ...(error.code ? { code: error.code } : {}) }); }
     } }));
   });
 }

@@ -5,8 +5,9 @@ import { assertCheckpointSession, findCheckpointIssues, openCheckpointFile, open
 export function CheckpointControls({ settings, sidebarRight, sessions, visible = true }) {
   const session = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
   const id = session.sessionId, enabled = session.data?.product?.id === 'cursor';
-  const [state, setState] = useState({ data: null, error: '', busy: false });
+  const [state, setState] = useState({ data: null, error: '', busy: false, loading: false });
   const [turn, setTurn] = useState();
+  const [reload, setReload] = useState(0);
   const ticket = useRef(0);
   const api = async (query = '', patch, signal) => {
     const response = await fetch(`omaa/api/checkpoints?session=${encodeURIComponent(id)}${query}`, {
@@ -18,24 +19,26 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     return value;
   };
   useEffect(() => {
-    setState({ data: null, error: '', busy: false }); setTurn(undefined);
+    setState({ data: null, error: '', busy: false, loading: false }); setTurn(undefined);
   }, [id, enabled]);
   useEffect(() => {
     const controller = new AbortController(), revision = ++ticket.current;
-    if (enabled && visible && !session.data?.running) {
+    const reading = enabled && visible && !session.data?.running;
+    setState(previous => ({ ...previous, loading: reading, ...(reading ? { error: '' } : {}) }));
+    if (reading) {
       api('', undefined, controller.signal).then(data => {
         if (!controller.signal.aborted && ticket.current === revision && settings.getSnapshot().sessionId === id) {
-          setState({ data, error: '', busy: false });
+          setState({ data, error: '', busy: false, loading: false });
           setTurn(previous => data.checkpoints.some(row => row.turn === previous) ? previous : data.checkpoints.at(-1)?.turn);
         }
-      }).catch(error => { if (!controller.signal.aborted && ticket.current === revision && settings.getSnapshot().sessionId === id) setState(previous => ({ ...previous, error: error.message })); });
+      }).catch(error => { if (!controller.signal.aborted && ticket.current === revision && settings.getSnapshot().sessionId === id) setState(previous => ({ ...previous, loading: false, error: error.message })); });
     }
     return () => { controller.abort(); ++ticket.current; };
-  }, [id, enabled, visible, session.data?.running]);
+  }, [id, enabled, visible, session.data?.running, reload]);
   if (!enabled || !visible) return null;
   const data = state.data?.sessionId === id ? state.data : null;
   const selected = data?.checkpoints.find(row => row.turn === turn);
-  const busy = state.busy || Boolean(session.data?.running);
+  const busy = state.busy || state.loading || Boolean(session.data?.running);
   const stale = session.loading || session.saving || Boolean(session.error);
   const canRestore = !busy && !stale && !session.data?.pendingMode && session.data?.mode === 'default';
   const cannotFindIssues = busy || stale || session.data?.pendingMode || session.data?.mode === 'plan';
@@ -69,11 +72,12 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
   });
   return <section className="omaa-checkpoints" aria-label="Cursor 文件检查点">
     <style>{css}</style>
-    <h3>文件改动</h3>
+    <header><h3>文件改动</h3><button type="button" disabled={busy || session.loading || session.saving}
+      onClick={() => setReload(previous => previous + 1)}>{state.loading ? '正在读取…' : '刷新检查点'}</button></header>
     <p className="omaa-help">恢复会将选中文件还原到该回合修改前，保留对话。文件已被再次修改时会拒绝覆盖。</p>
     <label>检查点 <select aria-label="文件检查点" value={turn ?? ''} disabled={busy || !data?.checkpoints.length}
       onChange={event => { setTurn(Number(event.target.value)); setState(previous => ({ ...previous, error: '', result: undefined })); }}>
-      {!data?.checkpoints.length && <option value="">{session.data?.running ? '运行中，停止后加载检查点' : !data && !state.error ? '正在加载检查点…' : '暂无文件改动'}</option>}
+      {!data?.checkpoints.length && <option value="">{session.data?.running ? '运行中，停止后加载检查点' : state.error ? '读取失败，请刷新' : !data ? '正在加载检查点…' : '暂无文件改动'}</option>}
       {data?.checkpoints.slice().reverse().map(row => <option key={row.turn} value={row.turn}>回合 {row.turn}</option>)}
     </select></label>
     {selected?.files.map(file => <div className="omaa-checkpoint-file" key={file.path}>

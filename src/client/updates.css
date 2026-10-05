@@ -1,0 +1,3 @@
+.omaa-updates code { overflow-wrap:anywhere; font-size:12px; }
+.omaa-update-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.omaa-update-actions a { color:var(--dsw-alias-brand-primary); font-size:12px; }

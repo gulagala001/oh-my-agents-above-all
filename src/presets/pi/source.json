@@ -399,7 +399,7 @@
       "Project cwd.pi/settings.json and user agentDir/settings.json skills/prompts use their own base directories, absolute/tilde paths, native resource discovery and upstream minimatch@10.2.6 filter dimensions/order. Explicit project settings precede project auto roots, then explicit user settings, user auto roots, and package resources. Settings globs filter discovered plain entries; package manifest globs are enumerated through bounded native fs.",
       "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract."
     ],
-    "sha256": "5da98afcae0551512f41ade80ec86b57b40c47a7d3ccf8a75f8dfdd0e66ba4a8",
+    "sha256": "1cda1aca93cbbaf66892a7503484daa14fcc66d0033fa5d33b3fb54e0a09530f",
     "helpers": [
       { "module": "resource-ignore.mjs", "sha256": "b0d4adcc5e3b3fdce970574d0b5192ec98962d6bff1f1f3ff44738786c2d8204" },
       { "module": "resource-paths.mjs", "sha256": "868df4f12ba17ff32a14a201f1747dd78be8d4edd935c6eee5f1a21bfc276ecf" },

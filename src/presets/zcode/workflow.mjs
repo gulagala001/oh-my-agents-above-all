@@ -1,8 +1,9 @@
 import { FileSystemSkillProvider } from '@deepseek-ai/dsh-skill-filesystem';
 import { fileURLToPath } from 'node:url';
+import { installSavedWorkflowTools } from './saved-workflows.mjs';
 
 export const name = 'omaa-zcode-workflow';
-export const inject = ['skills', 'tools'];
+export const inject = ['skills', 'tools', 'fs'];
 export const workflowGuidance = `# Dynamic workflows
 Create and run a dynamic workflow: a JavaScript script that orchestrates multiple model-driven subagents with plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results. The script is syntax checked by the host runtime and runs under the selected permission mode. Start it in the background when the work can continue independently; you are notified with its final result when it settles. Runtime errors come back as diagnostics.
 
@@ -14,19 +15,25 @@ Before writing or revising a script, load the \`zcode-workflows\` skill with the
 
 Use the actual workflow schema: supply the plain JavaScript body in script and the name, description and phases in meta. A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit. To revise a running workflow, stop its actual job before submitting a revised script; preserve useful completed results and report the new run identity. Follow the user's existing authorization and the host permission mode.`;
 
-export function workflowGuidanceFor(mode = 'off') {
-  if (!['pro', 'ultracode'].includes(mode)) return workflowGuidance;
-  return workflowGuidance.replace('- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.',
+export function workflowGuidanceFor(mode = 'off', tools = new Set()) {
+  let guidance = workflowGuidance;
+  if (['list_saved_workflows', 'read_saved_workflow', 'save_workflow', 'run_saved_workflow'].every(name => tools.has(name))) {
+    guidance = guidance.replace('A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit.',
+      'Check list_saved_workflows before writing a workflow from scratch. Use run_saved_workflow to run a fitting saved definition by name through the same native workflow tool; pass actual JSON arguments matching its declarations. Project definitions shadow global definitions unless scope is specified. Use read_saved_workflow or read to inspect a definition before revising it. Save only when the user asks or agrees: save_workflow stores the plain JavaScript body and metadata in the selected project or global .zcode/workflows directory; pass script or script_path, never both.');
+  }
+  if (!['pro', 'ultracode'].includes(mode)) return guidance;
+  return guidance.replace('- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.',
     `- ${mode === 'pro' ? 'Pro' : 'Ultracode'} is enabled for this session and is the user's standing choice to use workflows for substantive work. Follow its workflow authoring reference; solo only on conversational or trivial turns. This standing choice supplies the explicit workflow authorization.`);
 }
 
 export function apply(ctx) {
+  installSavedWorkflowTools(ctx);
   let provider;
   ctx.skills.registerProvider(control => (provider = new FileSystemSkillProvider(ctx, control, { providerName: 'omaa-zcode', includeDefaultRoots: false,
     customSkillDirs: [fileURLToPath(new URL('./skills/', import.meta.url))], watch: false })));
   ctx.effect(() => () => provider?.dispose(), 'ZCode workflow skill');
   ctx.tools.guard(exec => {
-    if (exec.name !== 'workflow') return;
+    if (!['workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
     const events = exec.agent.session.snapshotEvents();
     const calls = new Set(events.filter(event => {
       if (event.type !== 'tool/call' || event.data.name !== 'skill') return false;
