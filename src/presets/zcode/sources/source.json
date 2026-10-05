@@ -1516,6 +1516,66 @@
       "kind": "official-source",
       "gitBlobSha1": "6824bd3be016676ab99ea36882718f6a50e78507",
       "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/bootstrap/src/app/workflow-world-read.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-world-read.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/bootstrap/src/app/workflow-world-read.ts",
+      "sha256": "c1a42bc4d99eef00ede55c9af512a75a7abe20030a3cec6eb3a1b94a7312ee54",
+      "bytes": 29293,
+      "kind": "official-source",
+      "gitBlobSha1": "63845f9f07b370b2c7b1a9aeb3691777f346fe8b",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/bootstrap/src/app/workflow-git-world-read.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-git-world-read.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/bootstrap/src/app/workflow-git-world-read.ts",
+      "sha256": "3bfcb47f30075cdc59c14fabc4a9b45a7228d4ec576d4d7678417f7e46cbbb61",
+      "bytes": 20948,
+      "kind": "official-source",
+      "gitBlobSha1": "8c15a3f87fa55ba350dc06092fce35f46fd5f79b",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "sha256": "39a29e2006350266d0cb86a7cd9b434825cba4b054dab9192ddd0125ed8bfad1",
+      "bytes": 7795,
+      "kind": "official-source",
+      "gitBlobSha1": "c2046370c2524607df72eea4a03533ac52a6376b",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/adapters/src/fs/index.ts",
+      "path": "apps/zcode-cli/packages/adapters/src/fs/index.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/adapters/src/fs/index.ts",
+      "sha256": "83292fa1b0aa694ebe411b11c06ddc541810e99f48ca6e72f04e27865524acb9",
+      "bytes": 54902,
+      "kind": "official-source",
+      "gitBlobSha1": "9c7d7aa6c5748cabcde37c065bfdcbe4dcb91f5b",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/adapters/src/fs/text-metadata.ts",
+      "path": "apps/zcode-cli/packages/adapters/src/fs/text-metadata.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/adapters/src/fs/text-metadata.ts",
+      "sha256": "cc5eba0243af11c3efe87ed361f1919d641b8da59f5f96c972c3c3bfd26f8b8e",
+      "bytes": 6155,
+      "kind": "official-source",
+      "gitBlobSha1": "3e181d8b332fc6fb623d1a268818edb9be5b8818",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/interfaces/file-system.port.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/interfaces/file-system.port.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/interfaces/file-system.port.ts",
+      "sha256": "e0a511572634c5291ff9f86c27339dc4a4e71676e388147a22259c7c64fa2fe3",
+      "bytes": 9283,
+      "kind": "official-source",
+      "gitBlobSha1": "c9b0750f95db6bcd77f4a863c5e4276b8c35d604",
+      "license": "Apache-2.0"
     }
   ],
   "adaptation": {
@@ -1523,7 +1583,7 @@
     "main": "Full default stable/dynamic section output, with explicit host-surface and live-tool replacements documented in docs/products/zcode.md.",
     "plan": "Full official Enter/Exit text only when both host plan tools exist; preserve prior user consent via actual ask_user_question (explicit Plan selection counts), entry itself has no second approval; exit uses plan with Markdown heading and native Approve/Keep planning.",
     "compaction": "buildCompactionPrompt is the full official default compact instruction adapted to summary-only output in the existing DSH compaction transaction.",
-    "excluded": "Official client/agent runtime, account/provider machinery, original workflow engine and Actor scheduler, second compaction pipeline, unimplemented code-comment renderer, world-read/artifact runtime, live graph UI and graph amendment. The fixed pure TypeScript compiler/facade/static analysis are retained and adapted separately."
+    "excluded": "Official client/agent runtime, account/provider machinery, original workflow engine and Actor scheduler, second compaction pipeline, unimplemented code-comment renderer, artifact registry, live graph UI and graph amendment. The fixed pure TypeScript compiler/facade/static analysis are retained and adapted separately."
   },
   "nativeWorkflow": {
     "module": "../workflow.mjs",
@@ -1535,7 +1595,7 @@
     "hostIntegration": "Actual native workflow-ptc, schema-checked child structured_output, native jobs/sandbox/permissions; skill gate uses actual successful native skill call. Explicit user workflow routing retained. No external client/account/second engine.",
     "differences": "The existing native JavaScript body/meta path remains available. Role-specific instructions use real native children without forcing a team. The original TypeScript Actor facade/typechecking/static graphs are implemented separately by typedWorkflowAdapter; original graph amendment and engine run-journal semantics are not supplied by the native JavaScript path.",
     "sha256": "9fb75714d07ea5c0df95a240c54ec4745d407e73e62e7742982bee0db669f277",
-    "skillSha256": "9760705437ef7bfe94706bf17de22bba06947aa2eab9def2a474f6e284aee056"
+    "skillSha256": "a4b3b8f966867fadd53c81cc69926d2d8d846769e026a51ee6d2cd121d08f6ed"
   },
   "nativeSessionContext": {
     "module": "../session-context.mjs",
@@ -1588,7 +1648,7 @@
       "apps/zcode-cli/packages/dynamic-workflow/src/facade/dts.ts",
       "apps/zcode-cli/packages/dynamic-workflow/scripts/generate-libs.mjs"
     ],
-    "compilation": "analyzeWorkflowScript gates type and authoring diagnostics. A shared WorkflowProgram/SiteTable then supplies synthesizeAskSchemas, buildAskSpecs and lowerWorkflow. The original lowerer emits an async function body with static site IDs and __host bindings; compilation does not execute the script.",
+    "compilation": "analyzeWorkflowScript gates type and authoring diagnostics. A shared WorkflowProgram/SiteTable then supplies synthesizeAskSchemas, buildAskSpecs, collectWorldRunCommands and lowerWorkflow. The original lowerer emits an async function body with static site IDs and __host bindings; compilation does not execute the script. Diagnostic9003 retains the command-literal contract and names actual native permissions instead of an unavailable original confirmation dialog.",
     "hostIntegration": "DSH isolated ptcRuntime transports compiled Actor operations to native subagents.startContinuable/sendMessage. The same Actor retains one native childId/session across FIFO repeated asks. Native children own model/API, working tools, sandbox permissions, inbox, transcript and activation; no temporary child is spawned for every ask.",
     "results": "Typed asks use their compiled per-site schema and the fixed original validate/formatViolations helper. submit_result stages a candidate; authoritative successful native tool results, including enclosing tool completion, commit it. Untyped asks use the completed native assistant text. A typed turn without a committed result fails explicitly. The original plain string type remains untyped: ask() and ask<string>() return final text.",
     "lifecycle": "Native jobs own background run status/cancellation. Native PTC cancellation and permission/mode changes abort the adapter; continuable children are interrupted and drained on completion, cancellation and scope disposal. Native child journals remain authoritative; original engine run-journal/replay/resume semantics are not transplanted. A successful top-level return cancels unfinished asks and waits for native cleanup, preserving caught ordinary-ask failures rather than replaying them through an unconditional Promise.all. Actor persona text is durable and literal on cold activation.",
@@ -1601,7 +1661,7 @@
     "limits": [
       "256 KiB script/definition input limit",
       "Explicit workflow request or active Pro/Ultra authorization and successful zcode-workflows skill gate remain required",
-      "world-read facade and artifact registry calls are diagnosed before execution; actors may use native working tools under native permissions",
+      "Artifact registry calls are diagnosed before execution; files/git/world.run are supplied by worldReadAdapter under native permissions.",
       "No graph amend, original client UI, original Actor scheduler or original durable workflow-engine journal"
     ],
     "verification": {
@@ -1609,8 +1669,8 @@
       "runtime": "test/installed-zcode-actors.test.mjs: native saved TypeScript facade, two committed structured results in one child, host stop/boot and human cold continuation preserving literal persona; background parent Ask switch stops and drains its native child.",
       "model": "One configured opencode-zen/space-bunny-free read/recall task completed two correct structured results in one Actor, native read occurred once; prior short attempt failed. No overall model/native-equivalence claim."
     },
-    "sha256": "74e8602c48c241d8168835ef88e908103e5d17f997ea5bc95407c90f14dbceb0",
-    "compilerAdapterSha256": "9082e8615566d1960737c0b01f87d2691ee06649dae771b5c012e6095eaf424d",
+    "sha256": "b85a66dd5bd439c51201c28871a80cb565cc61b5b7013c04914cc14e1d257d5b",
+    "compilerAdapterSha256": "7aecdb0e24577a30a405f46605afa1d04b2ed90e18877154711c3fec76e3b4d9",
     "actorAdapterSha256": "5f5d2539a0ee595baa5e293c64ea5b7e703a56e8fc8689a463a7ca81ba3faf97"
   },
   "savedWorkflowAdapter": {
@@ -1620,7 +1680,53 @@
     "format": "Original YAML block comment + native JavaScript or marked ZCode TypeScript body in .dwf.ts; project before global, scoped lookup/list. facade=zcode inserts // @omaa-workflow-facade: zcode when absent; the marker selects the matching execution entry on read/reuse.",
     "validation": "Original metadata and argument validation derived from source; Zod record overload adapted to host 4. Native definitions receive plain JavaScript syntax validation; ZCode definitions receive fixed TypeScript typecheck, analysis, schema synthesis and unsupported-facade checks before save. Defaults/types are validated before reuse, and each execution rechecks its script and current native permissions.",
     "limits": "256 KiB per definition, 256 directory entries/definitions, 1 MiB aggregate list reads",
-    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation and static graphs are implemented, while world-read/artifact runtime, graph amend and original graph UI remain unavailable. Saved metadata is a definition archive, not the original engine run journal.",
+    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation and static graphs are implemented, while artifact registry, graph amend and original graph UI remain unavailable; worldReadAdapter supplies source-derived file/Git/world.run contracts. Saved metadata is a definition archive, not the original engine run journal.",
     "sha256": "007a7edb44c09b3e2e5bfa2c86ece5607e4b8a7e9b3250e23876233617de3d62"
+  },
+  "worldReadAdapter": {
+    "status": "implemented",
+    "module": "../world.mjs",
+    "build": "scripts/build-zcode-world.mjs",
+    "sources": [
+      "apps/zcode-cli/packages/bootstrap/src/app/workflow-world-read.ts",
+      "apps/zcode-cli/packages/bootstrap/src/app/workflow-git-world-read.ts",
+      "apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "apps/zcode-cli/packages/adapters/src/fs/index.ts",
+      "apps/zcode-cli/packages/adapters/src/fs/text-metadata.ts",
+      "apps/zcode-cli/packages/contracts/src/interfaces/file-system.port.ts"
+    ],
+    "generated": [
+      "lib/zcode-world-read.mjs",
+      "lib/zcode-git-world-read.mjs",
+      "lib/zcode-world-shared.mjs",
+      "lib/zcode-fs-helpers.mjs",
+      "lib/zcode-text-metadata.mjs",
+      "lib/zcode-fs-contracts.mjs"
+    ],
+    "sourceContract": "Original executeWorldRead/executeGitWorldRead, argument validation, shapes/caps, fixed Git argv/NUL parsers and selected pure filesystem matcher/ripgrep/text-metadata declarations. Raw snapshots stay byte-identical; no NodeFs walker, original workflow engine or IO runtime enters generated modules.",
+    "nativeContract": "Native fs.resolve/stat/listDir/lstat/readBytes and fs/observed attributed to the actual create_workflow call. Public host-aligned dsh-tool-fs-search.resolveRgPath selects bundled ripgrep, including asar/unpacked and pkg sidecar; native subprocess owns execution and process range. Git/grep use read-only confinement; declared literal world.run uses the current session policy without escalation.",
+    "matching": "Glob includes hidden/ignored files, skips VCS directories, does not follow lexical symlinks and retains the original literal []/brace rules. Grep retains original rg/ignore flags, JSON parser, line text and path matcher; it does not add --no-ignore or --follow.",
+    "text": "Native bytes are decoded using original UTF8/UTF16LE/legacy-Chinese detection and iconv-lite0.7.2; BOM is retained, CRLF normalized and bare CR preserved. Read stat-size bound and native transport limits remain host differences.",
+    "execution": "Nonzero numeric exit without execution error returns original exitCode/stdout/stderr shape. Timeout/cancellation/spawn failures/incomplete observations reject; original error name/code is preserved through JSON bindings. Complete outputs are retained as prefix and rejected above each cap instead of using lossy native tail collection. Managed range and independently bounded caller-owned pipe drain settle on return, abort and observation failures.",
+    "limits": {
+      "globFiles": 2000,
+      "grepMatches": 2000,
+      "grepSerializedBytes": 262144,
+      "gitDiffBytes": 524288,
+      "gitLogDefault": 20,
+      "gitLogMax": 100,
+      "runStreamBytes": 262144,
+      "runDefaultTimeoutMs": 300000,
+      "otherGitPortBytes": 4194304
+    },
+    "differences": [
+      "No per-command native Bash approval path or permission escalation; current workflow tool boundary and native policy apply.",
+      "No original world journal/replay, artifact registry, graph amend or live graph/world UI.",
+      "Native transport/file-race/process-provider limits remain; no universal escaped-descendant guarantee."
+    ],
+    "verification": "test/installed-zcode-world.test.mjs single installed native fixture: original glob semantics, UTF16 BOM/CRLF, bundled search/Git, undefined positional args, relative argv, nonzero result/catchable caps, native workspace-write and parent Ask background cancellation. No five-preset matrix or cross-platform/native-equivalence claim.",
+    "sha256": "7751c42137757870bbab4e64a2adb1bda0190d51f777805dafdfe0f1d03aed0e",
+    "buildSha256": "854a909b8f3aee57234364ce125cb9ab7797eb04aedead6524b56c3ae3181ba9",
+    "modelVerification": "One configured opencode-zen/space-bunny-free task loaded the actual zcode-workflows skill and executed create_workflow to read/glob a native fact file, inspect native Git main branch and run a literal argv command; all returned values matched. This short task does not establish model-wide fidelity or stability."
   }
 }

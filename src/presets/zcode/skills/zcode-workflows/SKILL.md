@@ -32,9 +32,16 @@ The original compiler typechecks the script, validates facade sites, derives
 typed result schemas and lowers its control flow before admission. The script
 runs in the native process sandbox; child models, permissions, tools and
 transcripts remain DSH-owned. `phase`, `log`, `report` and `args` are available.
-The world-read and artifact-registry facade calls are not connected and receive
-diagnostics before execution; give those operations to an Actor using its
-native working tools. A background run is a native workflow job with actual
+Use `files.glob/read/grep` and `git.changedFiles/diff/status/log` for workspace
+observations. Globs include hidden and ignored files, skip VCS directories and
+do not follow symlinks; grep uses the original ignore rules. Results are complete
+or rejected at the original limits, never silently truncated. `world.run(cmd,
+argv?, opts?)` takes a literal command name checked by the compiler and runs a
+native confined process. Nonzero exit is a result; timeout, cancellation and
+incomplete observations reject with a catchable error code. It uses the current
+session permissions without escalation. Artifact-registry calls are not
+connected and receive diagnostics before execution. A background run is a
+native workflow job with actual
 stop/completion behavior. Read the returned job identity and wait for its final
 outcome when the user asks you to wait.
 

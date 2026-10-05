@@ -36,7 +36,9 @@ dsh web
 
 OMAA 0.6 提供 **ZCode TypeScript Actor 工作流**：固定原厂编译器、静态分析、schema 合成与 lowering 在执行前检查脚本，再交给 DSH 隔离 PTC 运行。`agent(name, persona)` 创建 Actor；同一 Actor 的多次 `ask<T>` 按 FIFO 复用持久原生 child，typed 结果通过 `submit_result` 校验，并在原生工具结果成功后提交。停止与收尾使用原生 jobs、取消及 child drain。保存时选择 `facade="zcode"`，复用时按保存的标记恢复该入口；已有 `facade="native"` JavaScript 工作流继续保留。
 
-该适配输出真实静态 graph/causality 数据；原厂动态图界面、graph amend、world-read facade 与 artifact registry 尚未接入，不支持的 facade 调用在执行前报告诊断。它使用 DSH 的模型、权限与会话，不运行原厂 Actor 引擎或客户端。
+该适配输出真实静态 graph/causality 数据。OMAA 0.7.0 接入 `files.glob/read/grep`、`git.changedFiles/diff/status/log` 与字面命令 `world.run`：参数、限制、Git argv/解析、匹配及文本编码算法来自固定 ZCode 原文；执行复用 DSH 原生文件、subprocess、sandbox、当前权限与会话。grep 使用对应宿主官方 bundled ripgrep，支持桌面 asar 路径，不依赖系统 `rg`。超限明确拒绝，不返回截断成功；`world.run` 非零退出码作为正常结果返回，错误的 `code` 可在脚本中 catch。
+
+一个隔离原版 DSH 的实际安装 fixture 已核对文件与 glob、UTF-16 BOM/CRLF、bundled grep、Git、相对命令路径、非零退出及上限拒绝、原生 workspace-write 和后台 Ask 取消；准确范围见 [ZCode 文档](docs/products/zcode.md)。它使用原生 workflow 工具权限边界，不提供 Bash 逐条命令审批、权限升级或原厂 workflow journal/replay。原厂动态图界面、graph amend 与 artifact registry 尚未接入，也未新增 World 用户界面；不支持的 facade 调用在执行前报告诊断。它不运行原厂 Actor 引擎或客户端。
 
 Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；开启 OMD 增强后可使用工作流支持。基础增强不强制工作流编排。安装或卸载 OMD 后需重载对应 profile，让预设重新选择工作流 engine；不支持无重载热切换。
 
@@ -48,7 +50,7 @@ Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；�
 | Grok Build | 官方条件主提示词、计划/提问/任务、实时监控、interval 调度、独立主题 | 原生作业/会话；无跨会话 durable、即时首 fire 或原厂七天 TTL |
 | Cursor | 完整公开样本适配、MDC 规则、Plan/Ask、文件检查点、IDE/Agent 对话布局 | 样本非官方公开源码；专有 Instant Grep、Composer、云代理与 IDE 上下文不等同于宿主能力 |
 | Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题；源码新增显式本地扩展桥 | 不加入默认计划/子代理；扩展仅支持已接入的 API，不运行完整 Pi 代理/TUI；不同原生 sessionId 共享目录，同树日志和更早取消边界仍有差异 |
-| ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图 | DSH 模型、隔离 PTC 与持久原生 child；world-read、artifact registry、graph amend 和原厂动态图界面尚未接入 |
+| ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图；0.7.0 接入文件/Git/world.run facade | DSH 模型、隔离 PTC 与持久原生 child；命令按当前原生权限执行，无原厂 journal/replay、逐条 Bash 审批；artifact registry、graph amend 和原厂动态图界面尚未接入 |
 
 来源原文与实际适配分开保存，详细依据见 [产品资料](docs/product-sources.md) 和 [产品文档](docs/products/)。Cursor 配色沿用当前 DSH，桌面布局参考官方公开界面；没有把 CLI 登录前颜色当作整个 Cursor 的主题。
 

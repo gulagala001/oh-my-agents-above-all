@@ -4,9 +4,10 @@ import { createActors, installLiteralActorPersona } from './actors.mjs';
 import { createSavedWorkflowStore } from './saved-workflows.mjs';
 import { validateWorkflowArgs } from '../../../lib/zcode-saved-args.mjs';
 import { REPORT_CAPS } from '../../../lib/zcode-workflow-compiler.mjs';
+import { createWorldReads } from './world.mjs';
 
 export const name = 'omaa-zcode-typed-workflow';
-export const inject = ['omaa', 'tools', 'fs', 'agents', 'subagents', 'jobs', 'ptcRuntime', 'sandboxPolicy'];
+export const inject = ['omaa', 'tools', 'fs', 'agents', 'subagents', 'jobs', 'ptcRuntime', 'sandboxPolicy', 'sandbox', 'subprocess'];
 // The original lowerer emits synchronous Actor construction and narration.
 // PTC only transports async JSON bindings, so this pure script-side shim
 // retains reference identity and drains queued narration. Native teardown
@@ -30,7 +31,15 @@ const __host = {
   log(message) { __append({type:'log',message}); },
   enterPhase(title) { __append({type:'phase',title}); },
   report(siteId,value,metric) { __append({type:'report',siteId,value,...metric===undefined?{}:{metric}}); },
-  worldRead() { throw new Error('World-read facade is not connected'); },
+  worldRead(siteId, op, args) {
+    const call = __narration.then(async () => {
+      const encodedArgs = args.map(value => value === undefined ? {omitted:true} : {value:JSON.parse(JSON.stringify(value))});
+      const result = await zcodeHost.world({siteId,op,arguments:encodedArgs});
+      if (result.ok) return result.value;
+      throw Object.assign(new Error(result.error.message), {name:result.error.name,code:result.error.code});
+    });
+    call.catch(() => {}); return call;
+  },
   publishArtifact() { throw new Error('Artifact registry is not connected'); },
   declareArtifact() { throw new Error('Artifact registry is not connected'); }
 };
@@ -44,7 +53,7 @@ try {
 export function apply(ctx) {
   installLiteralActorPersona(ctx);
   const runs = new Map();
-  function start(parent, prepared, options, job) {
+  function start(parent, prepared, options, job, exec) {
     const control = new AbortController(), signal = control.signal, runId = randomUUID(), reports = [];
     const policy = ctx.sandboxPolicy.resolve({ session: parent.session }), policyKey = JSON.stringify(policy);
     const record = { parent, control };
@@ -54,11 +63,13 @@ export function apply(ctx) {
     };
     const progress = event => job?.append(JSON.stringify(event) + '\n');
     const actors = createActors({ ctx, parent, sites: prepared.sites, askSpecs: prepared.askSpecs, signal, progress });
+    const world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec });
     runs.set(runId, record);
     let narration = Promise.resolve();
     const functions = {
       async init() { check(); return { args: options.args ?? {}, nonce: runId }; },
       async ask(args) { check(); return actors.ask(args); },
+      async world(args) { check(); return world.execute(args); },
       async narrate(data) {
         check();
         const action = async () => {
@@ -82,7 +93,11 @@ export function apply(ctx) {
         return { runId, ...outcome, reports, actors: actors.view() };
       } finally {
         control.abort(Error('Workflow execution ended.'));
-        try { await actors.close(); } finally { runs.delete(runId); }
+        try {
+          const closed = await Promise.allSettled([actors.close(), world.close()]);
+          const failures = closed.filter(value => value.status === 'rejected').map(value => value.reason);
+          if (failures.length) throw new AggregateError(failures, 'Native workflow resources could not be released.');
+        } finally { runs.delete(runId); }
       }
     })();
     record.result = result;
@@ -98,7 +113,7 @@ export function apply(ctx) {
     if (exec.name === 'create_workflow' && ctx.omaa.modeFor(exec.agent.session) !== 'default') return 'Execute workflows only in the default working mode.';
   });
   ctx.tools.register({ name: 'create_workflow',
-    description: 'Typecheck and execute a ZCode TypeScript workflow with the original Actor facade: agent(name, persona?) creates a persistent conversational Actor; await actor.ask<T>(instructions) synthesizes and validates structured result schemas, while ask() and ask<string>() return final assistant text. Repeated asks reuse the same native DSH child and queue FIFO. Load zcode-workflows first; use only when the user chooses a workflow or enables Pro/Ultra. Supply exactly one source: script, path, or saved. Models, API, permissions, jobs and child sessions remain DSH-owned. World-read and artifact registry calls are diagnosed before execution.',
+    description: 'Typecheck and execute a ZCode TypeScript workflow with the original Actor facade: agent(name, persona?) creates a persistent conversational Actor; await actor.ask<T>(instructions) synthesizes and validates structured result schemas, while ask() and ask<string>() return final assistant text. Repeated asks reuse the same native DSH child and queue FIFO. Load zcode-workflows first; use only when the user chooses a workflow or enables Pro/Ultra. Supply exactly one source: script, path, or saved. Models, API, permissions, jobs and child sessions remain DSH-owned. files and git observations use the workspace and original result contracts; world.run executes only the script\'s declared literal commands under current native permissions. Artifact registry calls are diagnosed before execution.',
     parameters: { type: 'object', properties: {
       script: { type: 'string' }, path: { type: 'string' }, saved: { type: 'object', properties: { name: { type: 'string' }, scope: { type: 'string', enum: ['project', 'global'] }, args: { type: 'object', additionalProperties: true } }, required: ['name'], additionalProperties: false },
       name: { type: 'string' }, args: { type: 'object', additionalProperties: true }, run_in_background: { type: 'boolean' },
@@ -121,13 +136,13 @@ export function apply(ctx) {
       if (args.run_in_background !== false) {
         let run;
         const jobId = ctx.jobs.start({ kind: 'workflow', label: info.name, owner: exec.agent.id, run(job) {
-          run = start(exec.agent, prepared, info, job);
+          run = start(exec.agent, prepared, info, job, exec);
           return { cancel: run.cancel, done: run.result.then(outcome => ({ status: outcome.error ? outcome.error.kind === 'abort' ? 'killed' : 'failed' : 'completed',
             ...(outcome.error ? { detail: outcome.error.message } : {}), result: JSON.stringify(outcome) }), error => ({ status: 'failed', detail: error.message })) };
         } });
         return { ok: true, status: 'backgrounded', jobId, runId: run.runId, ...graph, response: 'Workflow started as a native job. Its final outcome is delivered by the host when it settles.' };
       }
-      const run = start(exec.agent, prepared, info);
+      const run = start(exec.agent, prepared, info, undefined, exec);
       const abort = () => run.cancel('Native tool call canceled.'); exec.signal.addEventListener('abort', abort, { once: true });
       try { const outcome = await run.result; return { ok: !outcome.error, ...outcome, ...graph }; }
       finally { exec.signal.removeEventListener('abort', abort); }

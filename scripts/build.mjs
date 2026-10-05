@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
 import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
+import { buildZCodeWorldReads } from './build-zcode-world.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
@@ -81,6 +82,7 @@ for (const [input, output, adapt] of [
   await writeFile(root + 'lib/' + output, '// Derived from fixed Apache-2.0 ZCode source; see THIRD_PARTY_NOTICES.md.\n' + generated.code);
 }
 await buildZCodeWorkflowCompiler();
+await buildZCodeWorldReads();
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));

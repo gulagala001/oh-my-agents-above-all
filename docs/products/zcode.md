@@ -39,7 +39,21 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 `agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于原生 descriptor，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
 
-支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。world-read facade 与 artifact registry 尚未接入，相关调用在执行前诊断。自动专家/planner/critic 生成、同一运行的 graph amend、原厂 workflow 审批/动态图界面与原厂运行日志重放仍有差异。修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入，不冒充原位修图或原厂工作流重放。
+支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。OMAA 0.7.0 接入文件、Git 与字面命令 world facade（见下文），artifact registry 仍在执行前诊断。自动专家/planner/critic 生成、同一运行的 graph amend、原厂 workflow 审批/动态图界面与原厂运行日志重放仍有差异。修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入，不冒充原位修图或原厂工作流重放。
+
+### OMAA 0.7.0 的 world facade
+
+TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep(pattern, glob?)`，以及 `git.changedFiles(base?)`、`git.diff(base?, path?)`、`git.status()`、`git.log(count?)`、`world.run(cmd, args?, opts?)`。`world.run` 的 cmd 必须是原厂编译器可收集的字面命令；动态命令在编译时诊断，执行时再次核对已声明集合。args 是字符串数组，opts 可指定正整数 `timeoutMs`。命令直接按 argv 执行；非零退出返回 `{exitCode, stdout, stderr}`，超时、驱动失败和超限才抛出错误，脚本可 catch 其 `code`。
+
+来源与适配分开：新增六份固定原文来自同一 `29628c9`，来源清单现共 166 份。`scripts/build-zcode-world.mjs` 从 bootstrap 的两个 world-read 实现、纯 WorkflowError、filesystem port、FS matcher/search helpers 与 text-metadata 生成 `lib/zcode-*` 纯模块。参数元数、结果形状、caps、Git argv 和 NUL/porcelain-v2 解析、glob/grep 匹配、编码检测与 BOM/CRLF 处理保留原文算法。读取支持原版 UTF-8、UTF-16LE 及 GB2312/GBK/GB18030 检测，按原算法识别 BOM 并规范文本换行。中文旧编码解码依赖固定 MIT `iconv-lite 0.7.2`。
+
+`world.mjs` 接原生观测与执行端口：文件经 `ctx.fs` 读取，命令经 `ctx.subprocess`、`ctx.sandbox` 和当前 session policy 执行，停止及模式/权限变化沿用 native workflow 生命周期。Git 与 grep 使用只读 sandbox policy；`world.run` 使用当前原生权限。grep 通过对应宿主的公开 `resolveRgPath` 解析官方 bundled ripgrep，包括桌面 asar/unpacked 路径，不要求用户安装系统 `rg`。这里不运行原厂 NodeFs adapter、Actor engine、账户或第二套执行循环。
+
+原版限制明确拒绝而不截断成功结果：glob 最多 2000 文件；grep 最多 2000 条且序列化结果最多 256 KiB；Git diff 最多 512 KiB；Git log 默认 20 条、最多 100 条；world.run 的 stdout/stderr 各最多 256 KiB，默认超时 300000 ms，显式 timeout 不做上限钳制。Git 其它文本输出另受适配端口 4 MiB 限制。参数与越界错误保留 `DriverError`，结果超限使用 `WorldReadCapExceeded`；原生权限与沙箱负责实际访问边界，类型检查和词法路径校验本身不替代隔离。
+
+此路径使用原生 workflow 工具调用的权限边界与当前授权，不提供原厂 workflow journal/replay、Bash 逐条工具审批或 escalation。原厂 artifact registry、graph amend 与动态图 UI 仍未接入；本轮未新增 World 用户界面。既有 OMAA 0.6 与 Actor 验证记录保持原范围。
+
+`test/installed-zcode-world.test.mjs` 的一个隔离原版 DSH 安装 fixture 已实际通过，记录在本地 `.cache/zcode-world-installed-check.log`。它覆盖 native 文件观测与原厂 glob 语义、UTF-16 BOM/CRLF 读取、宿主 bundled ripgrep、Git、相对可执行路径、非零退出结果、超限拒绝、native workspace-write 与后台工作在父会话切换 Ask 后取消。这是单个 fixture 的执行证据，不证明全部模型、跨平台/asar 运行、原厂 workflow 全能力或动态图界面等价。
 
 `read_session_context` 读取用户明确引用的原生 session id，使用公开 `sessionController.inspect`，支持冷历史且不激活/修改原会话。原厂相关度评分、中文 query 拆词、tail/chunk 选择、上下文格式及预算函数来自固定完整 `session-context/read-session-context.ts`，在 build 时仅替换 native message/part 边界并编译，不概括重写算法。读取只收集可见用户/助手文本与实际工具结果，忽略系统注入和思维块；历史内容作为背景材料。默认使用当前已配置 DSH 模型做有界提取，大历史按原策略选择最多五块后合成；提取不可用返回有界原文，标明 fallback。原厂 lite 模型路线改为现有 DSH route，原生日志查询和历史层不替换。
 
@@ -58,7 +72,7 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 按名运行先读取一次对应文件，按原版声明检查全部未知／缺失／类型错误并应用默认值，再按保存的 facade 标记调用 `create_workflow` 或原有 native `workflow`。`string/number/boolean/json` 保留原版语义，number 要求有限值，default 与 caller value 共用检查。模型/API、权限、作业和子会话继续由宿主负责；native JavaScript 路径保留既有 run-start/run-end 记录，TypeScript 路径使用 native jobs 和子会话 journal，不生成原厂第二种执行日志。`phases` 的 title/detail/provider/model 信息用于 native JavaScript；Actor 的阶段写在脚本里，默认继承当前 DSH 模型配置。
 
-每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。world-read/artifact facade、graph amend 和专用保存管理界面仍有差异，不靠文件扩展名宣称等价。
+每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；artifact facade、graph amend 和专用保存管理界面仍有差异，不靠文件扩展名宣称等价。
 
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 
