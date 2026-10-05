@@ -66,3 +66,5 @@ ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。�
 公开版本仍为 OMAA 0.8.0。开发源码用严格固定 41 文件 closure 派生 `lib/zcode-run-projection.mjs`，仅包含三类 bounds 显示投影与原 workflowRuns reducer。真实 native site×ordinal、phase/birth、child accepted receipt、队列/dispatch/settled 事实由 `run-progress.mjs` 注入；未知 provider backoff 不推断。原版 Timeline/RunPhaseList 的 37 份 UI 代码、样式和中英 locale 完整保留，不是 ReactFlow，也不运行原 engine。最终 native fixture、浏览器实拍和发布均未据此宣称通过。
 
 Amend 尚未接线。原厂 Amend 以停止前驱、创建 successor 新 run 并继承缓存与精确 completed Actor transcript prefix 实现；同 run 仅并发 retune，resume 要求脚本字节相同。公开专用 continuity provider 可以提供精确前缀 seed，manager 保持新 parent/descriptor/权限，因此不必以修改宿主为前提；普通 stop/new 缺少缓存与转录继承，不能当作同等 Amend。
+
+图 CSS 与消息桥由 `scripts/build-zcode-graph-ui-assets.mjs` 可重复生成：默认 `--check` 只读核对，`--write` 重建，`--output-dir DIR` 可先生成到审阅目录。它固定核对 40 份原源与 commit、37 个 UI 代码依赖、原 Tailwind utility/wf 样式和实际消费 locale 键，明确保留 DSH 颜色/reset/Intl 桥。Tailwind 4.2.2 与 PostCSS 8.5.6 仅为锁定构建依赖，运行包没有这些依赖。主 build 使用相同 check 入口，三份产物已逐字节复现。

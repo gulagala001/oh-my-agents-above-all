@@ -6,6 +6,7 @@ import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
 import { buildZCodeArtifacts } from './build-zcode-artifacts.mjs';
 import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
+import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
@@ -87,6 +88,7 @@ await buildZCodeWorkflowCompiler();
 await buildZCodeWorldReads();
 await buildZCodeArtifacts();
 await buildZCodeRunProjection();
+await buildZCodeGraphUiAssets({ mode: 'check' });
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 const graphAliases = JSON.parse(await readFile(root + 'scripts/zcode-graph-ui-aliases.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
