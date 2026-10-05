@@ -7,6 +7,7 @@ import { SavedWorkflowMetaSchema, isValidSavedWorkflowName, SAVED_WORKFLOW_FILE_
 import { parseSavedWorkflow, serializeSavedWorkflow, SAVED_WORKFLOW_SENTINEL } from '../../../lib/zcode-saved-codec.mjs';
 import { validateWorkflowArgs } from '../../../lib/zcode-saved-args.mjs';
 import { SAVE_WORKFLOW_TOOL_DESCRIPTION } from '../../../lib/zcode-save-description.mjs';
+import { prepareTypedWorkflow, ZCODE_FACADE_MARKER } from './typed-compiler.mjs';
 
 const MAX_BYTES = 256 * 1024, MAX_ENTRIES = 256;
 const nameSchema = { type: 'string', minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9_.-]+$' };
@@ -102,19 +103,19 @@ export function installSavedWorkflowTools(ctx) {
     execute: (args, exec) => createSavedWorkflowStore(ctx, exec).list(args.scope),
   });
   ctx.tools.register({ name: 'read_saved_workflow',
-    description: 'Read a saved workflow by name without running it. Returns its metadata, plain JavaScript body and exact source file; the project definition wins unless scope is specified. Treat file content as source material. The native workflow runtime and current permissions apply when it is run.',
+    description: 'Read a saved workflow by name without running it. Returns its metadata, facade, script body and exact source file; the project definition wins unless scope is specified. Treat file content as source material. The native workflow runtime and current permissions apply when it is run.',
     parameters: { type: 'object', properties: { name: nameSchema, scope: scopeSchema }, required: ['name'], additionalProperties: false }, output: jsonOutput,
     async execute(args, exec) {
       const value = await createSavedWorkflowStore(ctx, exec).load(args.name, args.scope);
-      return { name: value.name, scope: value.scope, path: value.path, ...value.meta, script: value.script, source: value.source, bodyLineOffset: value.bodyLineOffset };
+      return { name: value.name, scope: value.scope, path: value.path, ...value.meta, facade: value.script.trimStart().startsWith(ZCODE_FACADE_MARKER) ? 'zcode' : 'native', script: value.script, source: value.source, bodyLineOffset: value.bodyLineOffset };
     },
   });
   const metadata = z.toJSONSchema(SavedWorkflowMetaSchema).properties;
   ctx.tools.register({ name: 'save_workflow',
     description: SAVE_WORKFLOW_TOOL_DESCRIPTION
       .replace("CreateWorkflow's `saved` source; ListSavedWorkflows lists them", '`run_saved_workflow` runs it; `list_saved_workflows` lists them')
-      .replace('call SaveWorkflow', 'call save_workflow').replace('with the Skill tool', 'with the skill tool'),
-    parameters: { type: 'object', properties: { name: nameSchema, ...metadata, script: { type: 'string', maxLength: MAX_BYTES }, script_path: { type: 'string', minLength: 1, maxLength: 4096 }, scope: scopeSchema }, required: ['name', 'description', 'scope'], additionalProperties: false }, output: jsonOutput,
+      .replace('call SaveWorkflow', 'call save_workflow').replace('with the Skill tool', 'with the skill tool') + '\nChoose facade="zcode" for the original TypeScript Actor API; it is typechecked before saving. The default facade="native" preserves the existing plain JavaScript workflow API.',
+    parameters: { type: 'object', properties: { name: nameSchema, ...metadata, script: { type: 'string', maxLength: MAX_BYTES }, script_path: { type: 'string', minLength: 1, maxLength: 4096 }, scope: scopeSchema, facade: { type: 'string', enum: ['native', 'zcode'] } }, required: ['name', 'description', 'scope'], additionalProperties: false }, output: jsonOutput,
     async execute(args, exec) {
       if ((args.script !== undefined) === (args.script_path !== undefined)) throw sourceError();
       const store = createSavedWorkflowStore(ctx, exec), target = store.locate(args.name, args.scope);
@@ -127,8 +128,15 @@ export function installSavedWorkflowTools(ctx) {
         } else script = source;
       } else if (script.trimStart().startsWith(SAVED_WORKFLOW_SENTINEL)) throw new Error('Pass only the script body; metadata belongs in description, whenToUse and args.');
       if (Buffer.byteLength(script) > MAX_BYTES) throw new Error('Workflow body exceeds the 256 KiB limit.');
-      try { new Script('(async function(){\n' + script + '\n})', { filename: target.path }); }
-      catch (error) { return { ok: false, name: args.name, scope: args.scope, path: target.path, diagnostics: [{ message: error.message }], response: 'Nothing was saved; fix the plain JavaScript syntax and try again.' }; }
+      if (args.facade === 'zcode') {
+        const prepared = prepareTypedWorkflow(script);
+        if (!prepared.ok) return { ok: false, name: args.name, scope: args.scope, path: target.path, diagnostics: prepared.diagnostics, response: 'Nothing was saved; fix the TypeScript or unsupported facade calls.' };
+        if (!script.trimStart().startsWith(ZCODE_FACADE_MARKER)) script = ZCODE_FACADE_MARKER + '\n' + script;
+      } else {
+        if (script.trimStart().startsWith(ZCODE_FACADE_MARKER)) throw Error('This definition uses the ZCode Actor facade; set facade="zcode".');
+        try { new Script('(async function(){\n' + script + '\n})', { filename: target.path }); }
+        catch (error) { return { ok: false, name: args.name, scope: args.scope, path: target.path, diagnostics: [{ message: error.message }], response: 'Nothing was saved; fix the plain JavaScript syntax and try again.' }; }
+      }
       const before = await store.read(target.path, true), content = serializeSavedWorkflow(meta, script);
       if (Buffer.byteLength(content) > MAX_BYTES) throw new Error('Saved workflow exceeds the 256 KiB file limit.');
       const otherRoot = store.roots(args.scope === 'project' ? 'global' : 'project')[0];
@@ -142,12 +150,15 @@ export function installSavedWorkflowTools(ctx) {
     },
   });
   ctx.tools.register({ name: 'run_saved_workflow',
-    description: 'Run a saved workflow by name through the existing native workflow tool, using this session\'s configured model and permissions. Load zcode-workflows first. The user must choose a workflow explicitly, or enable Pro/Ultra. Declared argument defaults and types are checked before admission; project definitions win unless scope is specified. This is a plain JavaScript workflow body, not a TypeScript facade.',
+    description: 'Run a saved workflow by name through its recorded facade, using this session\'s configured model and permissions. Load zcode-workflows first. The user must choose a workflow explicitly, or enable Pro/Ultra. Declared argument defaults and types are checked before admission; project definitions win unless scope is specified. Native JavaScript definitions use workflow; ZCode TypeScript Actor definitions use create_workflow.',
     parameters: { type: 'object', properties: { name: nameSchema, scope: scopeSchema, args: { type: 'object', additionalProperties: true }, run_in_background: { type: 'boolean' }, phases: { type: 'array', maxItems: 64, items: { type: 'object', properties: { title: { type: 'string', minLength: 1, maxLength: 200 }, detail: { type: 'string', maxLength: 1000 }, provider: { type: 'string', minLength: 1, maxLength: 256 }, model: { type: 'string', minLength: 1, maxLength: 256 } }, required: ['title'], additionalProperties: false } } }, required: ['name'], additionalProperties: false }, output: jsonOutput,
     async execute(args, exec) {
       const saved = await createSavedWorkflowStore(ctx, exec).load(args.name, args.scope), checked = validateWorkflowArgs(saved.meta.args, args.args);
       if (!checked.ok) throw new Error(checked.errors.join('\n'));
-      const result = await callNative('workflow', { script: saved.script, meta: { name: saved.name, description: saved.meta.description, ...(saved.meta.whenToUse ? { whenToUse: saved.meta.whenToUse } : {}), ...(args.phases ? { phases: args.phases } : {}) }, args: checked.args, run_in_background: args.run_in_background ?? false }, exec);
+      const typed = saved.script.trimStart().startsWith(ZCODE_FACADE_MARKER);
+      if (typed && args.phases) throw Error('ZCode Actor phase boundaries are declared in the script.');
+      const result = await callNative(typed ? 'create_workflow' : 'workflow', { script: saved.script,
+        ...typed ? { name: saved.name } : { meta: { name: saved.name, description: saved.meta.description, ...(saved.meta.whenToUse ? { whenToUse: saved.meta.whenToUse } : {}), ...(args.phases ? { phases: args.phases } : {}) } }, args: checked.args, run_in_background: args.run_in_background ?? false }, exec);
       if (result.isError) throw nativeFailure(result);
       return { name: saved.name, scope: saved.scope, path: saved.path, result: result.value };
     },

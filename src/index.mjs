@@ -79,6 +79,7 @@ function mount(ctx) {
         catch (error) { store.set(session.id, previous); throw error; }
       }
       await ctx.sessions.flush(session);
+      ctx.emit('omaa/preferences-updated', session);
       return (await hub.inspect(sessionId)).value;
     },
   };

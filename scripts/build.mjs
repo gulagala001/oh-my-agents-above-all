@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
 import { products } from '../src/shared/products.mjs';
+import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
@@ -38,7 +39,8 @@ const composition = product => [
   ], { group: true, isolate: { compaction: true } }),
   ...product.id === 'pi' ? [row('pi-extensions', 'oh-my-agents-above-all/pi-extensions'), row('pi-resources', 'oh-my-agents-above-all/pi-resources'), row('pi-steering', 'oh-my-agents-above-all/pi-steering'), row('pi-branches', 'oh-my-agents-above-all/pi-branches')] : [],
   ...product.id === 'grok' ? [row('grok-monitor', 'oh-my-agents-above-all/grok-monitor'), row('grok-scheduler', 'oh-my-agents-above-all/grok-scheduler')] : [],
-  ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow')] : [],
+  ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow'),
+    row('zcode-typed-workflow', 'cordis:group', [row('ptc-runtime', '@deepseek-ai/dsh-ptc-runtime-node'), row('zcode-actor-workflow', 'oh-my-agents-above-all/zcode-typed-workflow')], { group: true, isolate: { ptcRuntime: true } })] : [],
   ...product.id === 'cursor' ? [row('cursor-rules', 'oh-my-agents-above-all/cursor-rules'), row('cursor-checkpoints', 'oh-my-agents-above-all/checkpoints')] : [],
   row('omaa-preset', 'oh-my-agents-above-all/agent', { product: product.id }),
   row('omaa-enhancement', 'oh-my-agents-above-all/enhancement'),
@@ -78,6 +80,7 @@ for (const [input, output, adapt] of [
   const generated = await transform(adapt(await readFile(savedRoot + input, 'utf8')), { loader: 'ts', format: 'esm', target: 'es2022' });
   await writeFile(root + 'lib/' + output, '// Derived from fixed Apache-2.0 ZCode source; see THIRD_PARTY_NOTICES.md.\n' + generated.code);
 }
+await buildZCodeWorkflowCompiler();
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));

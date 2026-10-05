@@ -1,6 +1,6 @@
 {
   "name": "oh-my-agents-above-all",
-  "version": "0.2.1-alpha.1.omaa.0.5.0",
+  "version": "0.2.1-alpha.1.omaa.0.6.0",
   "private": true,
   "type": "module",
   "description": "DSH 五产品深度预设：Codex、Grok Build、Cursor、Pi、ZCode，独立主题与可选 OMD 增强",
@@ -49,7 +49,8 @@
     "./grok-scheduler": "./src/presets/grok/scheduler.mjs",
     "./zcode-session-context": "./src/presets/zcode/session-context.mjs",
     "./zcode-workflow": "./src/presets/zcode/workflow.mjs",
-    "./pi-extensions": "./src/presets/pi/extensions.mjs"
+    "./pi-extensions": "./src/presets/pi/extensions.mjs",
+    "./zcode-typed-workflow": "./src/presets/zcode/typed-workflow.mjs"
   },
   "dependencies": {
     "@sinclair/typebox": "0.34.41",
@@ -58,6 +59,7 @@
     "js-yaml": "4.1.0",
     "minimatch": "10.2.6",
     "typebox": "1.3.27",
+    "typescript": "5.9.3",
     "yaml": "2.9.0",
     "zod": "4.5.4"
   },
