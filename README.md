@@ -2,7 +2,7 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前宿主版本为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
+当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.9.0`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
 
 与 OMD 同 profile 使用时，需要提供 OMAA 兼容增强与外观协调接口的 OMD。官方 OMD `0.6.1` 尚无该接口；使用发行附件中的对应宿主兼容 OMD，或在独立 DSH profile 使用。支持 Web DSH `0.2.1-alpha.1` 与桌面 DSH `0.2.0-rc.2`，两端包必须与正在运行的宿主匹配。
 
@@ -40,9 +40,9 @@ OMAA 0.6 提供 **ZCode TypeScript Actor 工作流**：固定原厂编译器、�
 
 一个隔离原版 DSH 的实际安装 fixture 已核对文件与 glob、UTF-16 BOM/CRLF、bundled grep、Git、相对命令路径、非零退出及上限拒绝、原生 workspace-write 和后台 Ask 取消；准确范围见 [ZCode 文档](docs/products/zcode.md)。它使用原生 workflow 工具权限边界，不提供 Bash 逐条命令审批、权限升级或原厂 workflow journal/replay。它不运行原厂 Actor 引擎或客户端。
 
-OMAA 0.8.0 接入文件、Markdown 及 Chart/Table/Metrics/Board 工作流产物：内容与成功版本保存为 DSH 原生不可变附件，原厂校验、报告折叠和图表实现与宿主存储、权限及界面适配分开保留。独立右栏可从工具结果“查看产物”进入，按 run 浏览并调用原生停止；文件使用不可变快照的原生预览。一个最终原生 fixture 已核对快照、版本、冷重启、四种声明与分页/upsert、可 catch 失败、非法 spec 的父 run 失败及跨会话拒读。已配置 Space Bunny Free 的一个真实产物任务完成，原生 alpha Web UI 实点“查看产物”、两点 Chart、Table keyed upsert 和不可变 Markdown 原生预览已核对。UI 全面验收及 Desktop/Windows 产物 UI 仍未完成；公开 0.8 不包含下述开发源码的运行图／Amend；原厂 engine journal/replay 仍未实现。
+OMAA 0.8.0 接入文件、Markdown 及 Chart/Table/Metrics/Board 工作流产物：内容与成功版本保存为 DSH 原生不可变附件，原厂校验、报告折叠和图表实现与宿主存储、权限及界面适配分开保留。独立右栏可从工具结果“查看产物”进入，按 run 浏览并调用原生停止；文件使用不可变快照的原生预览。一个最终原生 fixture 已核对快照、版本、冷重启、四种声明与分页/upsert、可 catch 失败、非法 spec 的父 run 失败及跨会话拒读。已配置 Space Bunny Free 的一个真实产物任务完成，原生 alpha Web UI 实点“查看产物”、两点 Chart、Table keyed upsert 和不可变 Markdown 原生预览已核对。UI 全面验收及 Desktop/Windows 产物 UI 仍未完成；0.8 的产物验证不覆盖下述 0.9.0 运行图／Amend；原厂 engine journal/replay 仍未实现。
 
-未发布 0.9 开发源码新增原版 ZCode Timeline／PhaseList 与 `amend_workflow`：修订前预检，停止并等待前驱，再以完成结果缓存和精确 native Actor 前缀创建 successor；支持同 run 并发上限调整。一个原生 fixture 已核对缓存／前缀／重启／失败后继续、world 顺序且不重复效果及并发升降；Space Bunny Free 实际修订返回两个预期 marker 和正确 lineage。半转录续跑、精确工具 effect 分类与原厂 journal/replay 仍有差异，具体见 [ZCode 契约](docs/products/zcode.md)。
+OMAA 0.9.0 新增原版 ZCode Timeline／PhaseList 与 `amend_workflow`：修订前预检，停止并等待前驱，再以完成结果缓存和精确 native Actor 前缀创建 successor；支持同 run 并发上限调整，右栏可在同会话中打开前次／后续运行。一个原生 fixture 已核对缓存／前缀／重启／失败后继续、world 顺序且不重复效果及并发升降；Space Bunny Free 实际修订返回两个预期 marker 和正确 lineage。修订仅限当前会话；半转录续跑、精确工具 effect 分类、原模型 pin 继承与原厂 journal/replay 仍有差异，新任务使用当前 DSH 模型/API。无 phase 的 ask/world 传输错误已修复。具体见 [ZCode 契约](docs/products/zcode.md)。
 
 Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；开启 OMD 增强后可使用工作流支持。基础增强不强制工作流编排。安装或卸载 OMD 后需重载对应 profile，让预设重新选择工作流 engine；不支持无重载热切换。
 
@@ -54,7 +54,7 @@ Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；�
 | Grok Build | 官方条件主提示词、计划/提问/任务、实时监控、interval 调度、独立主题 | 原生作业/会话；无跨会话 durable、即时首 fire 或原厂七天 TTL |
 | Cursor | 完整公开样本适配、MDC 规则、Plan/Ask、文件检查点、IDE/Agent 对话布局 | 样本非官方公开源码；专有 Instant Grep、Composer、云代理与 IDE 上下文不等同于宿主能力 |
 | Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题；源码新增显式本地扩展桥 | 不加入默认计划/子代理；扩展仅支持已接入的 API，不运行完整 Pi 代理/TUI；不同原生 sessionId 共享目录，同树日志和更早取消边界仍有差异 |
-| ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图；文件/Git/world.run facade；0.8.0 提供不可变产物及独立右栏 | DSH 模型、隔离 PTC 与持久原生 child；命令按当前原生权限执行，无原厂 journal/replay、逐条 Bash 审批；graph 仅静态真实数据 JSON，live graph/amend 尚未接入 |
+| ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图；文件/Git/world.run facade；不可变产物及独立右栏；0.9.0 提供 Timeline/PhaseList 与 successor-run Amend、缓存和并发调整 | DSH 模型、隔离 PTC 与持久原生 child；命令按当前原生权限执行，无原厂 journal/replay、逐条 Bash 审批；新图只投影真实执行事实；不继承半转录或原模型 pin，不提供原厂 same-run journal/replay |
 
 来源原文与实际适配分开保存，详细依据见 [产品资料](docs/product-sources.md) 和 [产品文档](docs/products/)。Cursor 配色沿用当前 DSH，桌面布局参考官方公开界面；没有把 CLI 登录前颜色当作整个 Cursor 的主题。
 

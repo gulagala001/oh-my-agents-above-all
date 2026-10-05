@@ -21,3 +21,5 @@ DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行
 已补 ZCode 项目／全局保存与按名复用工作流，仍由 native write/workflow 和原生日志承载；新增配对 GitHub 更新入口，防止兼容 OMD 被普通 OMD 更新覆盖。
 
 Pi extension-only 回调桥已在源码实现：用户显式指定绝对 TS/JS 文件白名单，默认关闭、不自动运行项目发现文件；guest 由 native subprocess/sandbox 承载，没有另一套 Pi loop/model/账号。源码接入扩展工具与 commands（可在活动回调动态注册与替换）、input/tool_call/tool_result/session_start/session_shutdown、原生 questions/notify、typed/普通 JSON Schema 的固定上游 validator，以及原生附件桥。来源清单与 hash 由 `source.json` 维护。before_agent_start/context 替换、TUI/custom render、appendEntry 等仍明确不支持，具体边界见 [Pi 文档](products/pi.md)。OMAA 0.5 包含扩展入口及活动回调内动态工具、命令与事件注册；失败变更恢复上一份已接纳定义，隔离原生执行检查已通过；不能将源码实现标成安装交付成功，也不把部分 ABI 接入称为完整原版扩展运行时。
+
+OMAA 0.9.0 接入 ZCode 原版 Timeline／PhaseList、successor-run Amend、连续完成结果缓存、精确 native completed event prefix 和同 run 并发 retune；同时修复未声明 phase 的 ask/world 传输错误。修订保留前驱并在同会话中关联后继，不支持半转录继承、原模型 pin 或原厂 same-run journal/replay；effect 分类仍采用明确记录的保守边界。单个原生 fixture、Space Bunny Free 短任务与已有 alpha Web graph 点击各有有限证据，新的 Amend 卡片和前次／后续入口也已在隔离 alpha Web 实点。目标发行 tag 为 `v0.2.1-alpha.1.omaa.0.9.0`，配对兼容 OMD 保持 `0.8.1`；部署仍须按两宿主原生安装和重载流程保留现有用户配置与会话。五产品稳定日用目标及 Desktop/Windows 新图验收继续推进。

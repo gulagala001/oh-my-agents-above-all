@@ -9,6 +9,8 @@ OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。
 | 桌面 DSH `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.` | `trisoul_x-0.2.0-rc.2.omd.0.8.1.tgz` |
 | Web／源码 DSH `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.` | `trisoul_x-0.2.1-alpha.1.omd.0.8.1.tgz` |
 
+本次 0.9.0 tag 为 `v0.2.1-alpha.1.omaa.0.9.0`，配对兼容 OMD 仍为 `0.8.1`。选择当前宿主对应的 OMAA 附件更新，已有匹配的兼容 OMD 可以继续使用。
+
 发行主 tag 跟随源码 `package.json` 的完整版本（`v<DSH宿主>.omaa.<三段版本>`）；同一发行提供两个宿主附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
 
 下载后在附件所在目录核对哈希：

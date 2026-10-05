@@ -33,14 +33,14 @@ function argumentText(block, phase) {
   return Object.keys(values).length ? JSON.stringify(values, null, 2) : '';
 }
 
-/** Registered only at tool.call.toolview/key:create_workflow. */
+/** Native create/amend tool results share the same run navigation. */
 export function ZCodeWorkflowTool({ phase, block, useDisclosure, inspect, openArtifacts, callId }) {
   const { expanded, toggle } = useDisclosure();
   const [actionError, setActionError] = useState('');
   const result = phase === 'result' ? workflowToolResult(block) : {};
   const failed = phase === 'result' && (block.isError || result.value?.ok === false || result.status === 'failed');
   const stopped = phase === 'result' && (block.error?.code === 'interrupted' || result.value?.error?.kind === 'abort' || result.status === 'killed' || result.status === 'cancelled');
-  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : ({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' })[result.status] || '已完成';
+  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : ({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' })[result.status] || '已完成';
   const name = block.args?.textPrefix?.('name', 100) || block.args?.value?.('saved')?.name || block.args?.textPrefix?.('path', 100) || 'ZCode 工作流';
   const output = phase === 'result' ? resultText(block) : '';
   const input = expanded ? argumentText(block, phase) : '';
