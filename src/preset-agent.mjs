@@ -27,7 +27,7 @@ export function apply(ctx, config) {
   ctx.systemPrompt.section({ name: 'deployment:persona-prefix', order: 0, interpolate: false,
     text: ({ agent }) => {
       const child = agent?.session.header.origin === 'subagent';
-      const text = build({ tools: activeTools(agent), cwd: agent?.session.header.cwd ?? process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off' });
+      const text = build({ tools: activeTools(agent), cwd: agent?.session.header.cwd ?? process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
       return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx), { child });
     } });
   ctx.tools.guard(exec => {

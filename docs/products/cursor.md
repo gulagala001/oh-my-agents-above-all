@@ -42,7 +42,7 @@ Agent/Ask/Plan 权限、计划 Markdown 审阅、文件差异 review 和 [checkp
 
 [官方审阅流程](https://cursor.com/learn/reviewing-testing) 包含观察修改、停止并调整方向，以及任务完成后的 Review / Find Issues。OMAA 的检查点面板已直接打开 DSH 原生回合审阅器，提供文件选择、行号、并排/统一比较和长行折行；不再另画简化文本 diff。文件旁的「预览当前文件」打开原生文档预览，比较记录与当前文件明确分开；恢复删除的新文件不提供误导性的预览按钮。
 
-导航和恢复在执行时核对当前会话、Cursor 预设及运行状态，导航使用 `sidebarRight.openResourceIn` 的明确会话目标。切换会话后保留的旧回调会拒绝操作。历史比较失效时面板照实提示，恢复仍按已捕获字节及冲突检查执行。`test/checkpoint-browser.test.mjs` 已在实际打包安装的 DSH 验证：两文件审阅、文件选择、并排/统一和折行按钮、原生打开文件、当前预览、恢复后的磁盘字节和预览更新，以及切换到 Codex 后没有 Cursor 恢复控制。恢复后回合比较仍显示原回合记录，不伪装成当前内容。定向竞态回归另见 `test/checkpoint-navigation.test.mjs`。实拍在本地 `.cache/cursor-native-review.png`、`cursor-current-preview.png` 和 `cursor-restored-review.png`，不是发行资产。
+导航和恢复在执行时核对当前会话及 Cursor 预设，导航使用 `sidebarRight.openResourceIn` 的明确会话目标。运行中可选择已加载的完成回合、查看原生记录比较或预览当前文件；恢复和 Find Issues 仍须先停止。面板不增加轮询，不将旧回合比较称为实时编辑 diff。切换会话后保留的旧回调会拒绝操作。历史比较失效时面板照实提示，恢复仍按已捕获字节及冲突检查执行。`test/checkpoint-browser.test.mjs` 已在实际打包安装的 DSH 验证：两文件审阅、文件选择、并排/统一和折行按钮、原生打开文件、当前预览、恢复后的磁盘字节和预览更新，以及切换到 Codex 后没有 Cursor 恢复控制。恢复后回合比较仍显示原回合记录，不伪装成当前内容。定向竞态回归另见 `test/checkpoint-navigation.test.mjs`。实拍在本地 `.cache/cursor-native-review.png`、`cursor-current-preview.png` 和 `cursor-restored-review.png`，不是发行资产。
 
 检查点的「查找本回合问题」与「查找此文件问题」进入实际只读 Ask 模式，把所选回合、原生事件位置及文件目标经原生会话提交给当前模型。检查读取当前文件并参考本回合记录，明确文件可能已经变化；不直接把旧 diff 当作当前内容。检查后保持 Ask，用户切回执行模式可继续修复，停止/继续仍用宿主入口。迟到或跨会话回调拒绝提交，模式未真正生效时不发起检查。
 

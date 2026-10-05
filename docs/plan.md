@@ -18,4 +18,6 @@ DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行
 
 当前交付要求是在 GitHub 仓库及 Releases 提供可安装成品、来源补丁、两宿主包和维护流程。当前 UI 修复聚焦无项目 Pro/Ultra 首次发送、设置保存竞态、同 ID 切预设残留、主题过渡与窄侧栏。正在运行的用户任务应保持，桌面重载在空闲后进行。
 
-已补 ZCode 项目／全局保存与按名复用工作流，仍由 native write/workflow 和原生日志承载；新增配对 GitHub 更新入口，防止兼容 OMD 被普通 OMD 更新覆盖。Pi extension 已依据固定官方 ABI 与 native hook 研究出 extension-only sandbox callback bridge；尚未实现，下一步直接加载原版受用户配置允许的本地 TS/JS factory，不能拿普通宿主插件或格式改写冒充原版扩展支持。
+已补 ZCode 项目／全局保存与按名复用工作流，仍由 native write/workflow 和原生日志承载；新增配对 GitHub 更新入口，防止兼容 OMD 被普通 OMD 更新覆盖。
+
+Pi extension-only 回调桥已在源码实现：用户显式指定绝对 TS/JS 文件白名单，默认关闭、不自动运行项目发现文件；guest 由 native subprocess/sandbox 承载，没有另一套 Pi loop/model/账号。源码接入扩展工具与 commands、input/tool_call/tool_result/session_start/session_shutdown、原生 questions/notify、typed/普通 JSON Schema 的固定上游 validator，以及原生附件桥。来源清单与 hash 由 `source.json` 维护。动态注册、before_agent_start/context 替换、TUI/custom render、appendEntry 等仍明确不支持，具体边界见 [Pi 文档](products/pi.md)。OMAA 0.4 包含扩展入口，隔离原生执行检查已通过；不能将源码实现标成安装交付成功，也不把部分 ABI 接入称为完整原版扩展运行时。

@@ -25,9 +25,11 @@ const snippets = {
 function section(name, content) { return `<${name}>\n${content}\n</${name}>`; }
 function escapeContext(text) { return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
 
-export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default' } = {}) {
+export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', customTools = [] } = {}) {
   const active = new Set(tools);
-  const names = Object.keys(snippets).filter(name => active.has(name));
+  const custom = customTools.filter(tool => active.has(tool.name));
+  const toolSnippets = { ...snippets, ...Object.fromEntries(custom.filter(t => t.promptSnippet).map(t => [t.name, t.promptSnippet])) };
+  const names = Object.keys(toolSnippets).filter(name => active.has(name));
   const rules = [];
   if (active.has('bash') && active.has('pwsh')) rules.push('Use bash or PowerShell for file operations like listing, searching, and finding files');
   else if (active.has('pwsh')) rules.push('Use PowerShell for file operations like listing, searching, and finding files');
@@ -41,11 +43,14 @@ export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default'
   );
   if (active.has('write')) rules.push('Use write only for new files or complete rewrites.');
   if (active.has('read_image')) rules.push('Use read_image to examine images; read returns text file contents.');
+  for (const tool of custom) for (const rule of tool.promptGuidelines ?? []) {
+    const normalized = rule.trim(); if (normalized && !rules.includes(normalized)) rules.push(normalized);
+  }
   rules.push('Be concise in your responses', 'Show file paths clearly when working with files');
 
   const sections = [
     preamble.replace('operating inside pi, a coding agent harness', 'operating inside DSH with the Pi Coding Agent preset'),
-    section('tools', `${names.length ? names.map(name => `- ${name}: ${snippets[name]}`).join('\n') : '(none)'}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`),
+    section('tools', `${names.length ? names.map(name => `- ${name}: ${toolSnippets[name]}`).join('\n') : '(none)'}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`),
     section('rules', rules.map(rule => `- ${rule}`).join('\n')),
   ];
   // Upstream's installation-owned documentation paths have no equivalent in DSH.

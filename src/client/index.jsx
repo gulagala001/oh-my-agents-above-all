@@ -7,12 +7,14 @@ import { applyThemes } from './themes/index.jsx';
 import controlsCss from './preset-controls.css';
 import { Updates } from './updates.jsx';
 import updatesCss from './updates.css';
+import { PiExtensions, applyPiExtensionNotices } from './pi-extensions.jsx';
 
-export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace'];
+export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation'];
 
 export function apply(ctx) {
   let settings;
   ctx.effect(() => { settings = createSessionSettings(ctx); return () => settings.dispose(); });
+  applyPiExtensionNotices(ctx, settings);
   const getThemeRuntime = applyThemes(ctx, settings);
   const openPanel = () => ctx.sidebarRight.openTab('omaa-preset');
   const Controls = () => <PresetControls {...{ settings, getThemeRuntime }}/>
@@ -27,6 +29,7 @@ export function apply(ctx) {
   });
   ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-presets', order: 17, label: () => 'Oh My Agents Above All' }, Controls));
   ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-updates', order: 18, label: () => 'OMAA 更新' }, Updates));
+  ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-pi-extensions', order: 19, label: () => 'Pi 本地扩展' }, () => <PiExtensions settings={settings}/>));
   ctx.slots.inject('conversation.input.right', () => ctx.slots.register({ name: 'conversation.input.right', id: 'omaa-preset-chip', order: 75 }, Chip));
   const panelId = 'omaa/omaa-preset';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: panelId, kind: 'omaa-preset', title: () => '预设设置', guide: [] }));

@@ -36,7 +36,7 @@ const composition = product => [
     row('compaction-basic', '@deepseek-ai/dsh-compaction-basic', { headroomTokens: 8192, maxTokens: 8192 }),
     row('command-compact', '@deepseek-ai/dsh-command-compact'),
   ], { group: true, isolate: { compaction: true } }),
-  ...product.id === 'pi' ? [row('pi-resources', 'oh-my-agents-above-all/pi-resources'), row('pi-steering', 'oh-my-agents-above-all/pi-steering'), row('pi-branches', 'oh-my-agents-above-all/pi-branches')] : [],
+  ...product.id === 'pi' ? [row('pi-extensions', 'oh-my-agents-above-all/pi-extensions'), row('pi-resources', 'oh-my-agents-above-all/pi-resources'), row('pi-steering', 'oh-my-agents-above-all/pi-steering'), row('pi-branches', 'oh-my-agents-above-all/pi-branches')] : [],
   ...product.id === 'grok' ? [row('grok-monitor', 'oh-my-agents-above-all/grok-monitor'), row('grok-scheduler', 'oh-my-agents-above-all/grok-scheduler')] : [],
   ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow')] : [],
   ...product.id === 'cursor' ? [row('cursor-rules', 'oh-my-agents-above-all/cursor-rules'), row('cursor-checkpoints', 'oh-my-agents-above-all/checkpoints')] : [],
@@ -48,7 +48,7 @@ const patch = [{ insert: [row('omaa', 'oh-my-agents-above-all'), ...products.map
   plugins: [row('working', 'cordis:group', [
     row('working-policy', 'oh-my-agents-above-all/working-policy'),
     row('working-tools', 'oh-my-agents-above-all/working-tools', composition(product), { group: true }),
-  ], { group: true, isolate: { sandboxPolicy: true } })],
+  ], { group: true, isolate: { sandboxPolicy: true, ...product.id === 'pi' ? { omaaPiExtensions: true } : {} } })],
 }))] }];
 // JSON is a YAML subset; only the platform expressions need Cordis' JS tag.
 const yaml = JSON.stringify(patch, null, 2).replaceAll('"WINDOWS_DISABLED"', '!!js process.platform === \'win32\'').replaceAll('"UNIX_DISABLED"', '!!js process.platform !== \'win32\'');

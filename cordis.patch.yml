@@ -608,7 +608,8 @@
               "name": "cordis:group",
               "group": true,
               "isolate": {
-                "sandboxPolicy": true
+                "sandboxPolicy": true,
+                "omaaPiExtensions": true
               },
               "config": [
                 {
@@ -716,6 +717,10 @@
                           "name": "@deepseek-ai/dsh-command-compact"
                         }
                       ]
+                    },
+                    {
+                      "id": "pi-extensions",
+                      "name": "oh-my-agents-above-all/pi-extensions"
                     },
                     {
                       "id": "pi-resources",

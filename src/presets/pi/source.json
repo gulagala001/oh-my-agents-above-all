@@ -277,6 +277,78 @@
       "sha256": "5fe4a3009d7260fe1e2f54b64086fc3c8b4d678232bfa2dbc7e91fe588fc9ea5",
       "bytes": 6106,
       "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/extensions/loader.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/extensions/loader.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/loader.ts",
+      "sha256": "0177db97c7e35ea39cdab53124c04dbf6e045ac379670bcae0b4e1269002eb3a",
+      "bytes": 28124,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/extensions/runner.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/extensions/runner.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/runner.ts",
+      "sha256": "2a3bd7f81623928070eb956cdac37b861a787297046f9ce7af0522ff6d41a98a",
+      "bytes": 51725,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "sha256": "bae3cdd9f2aa21fb168ef42a47584f3b19536c0815ec14d94389af530eef9358",
+      "bytes": 2153,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/ai/src/utils/typebox-helpers.ts",
+      "snapshot": "sources/upstream/packages/ai/src/utils/typebox-helpers.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/src/utils/typebox-helpers.ts",
+      "sha256": "caf756258ce20c793dc8002cb8130a8efce18a7b5262ba0c54832b96f5a76e9f",
+      "bytes": 789,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/hello.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/hello.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/hello.ts",
+      "sha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934",
+      "bytes": 640,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/protected-paths.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/protected-paths.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/protected-paths.ts",
+      "sha256": "9ca66b1f3b1b9a61cc5ddc660f92cca2ea66c4264a1bdb6b00e0da5844399fe2",
+      "bytes": 808,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/examples/extensions/input-transform.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/input-transform.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/input-transform.ts",
+      "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
+      "bytes": 1444,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/ai/src/utils/validation.ts",
+      "snapshot": "sources/upstream/packages/ai/src/utils/validation.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/src/utils/validation.ts",
+      "sha256": "460786b57dead200e411b9afec916a5049c96ebcff4da082096456ac06d44fb7",
+      "bytes": 9902,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/ai/package.json",
+      "snapshot": "sources/upstream/packages/ai/package.json",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/package.json",
+      "sha256": "d7b35ad32c3172d9b71503fe59e42032f63cc3609d3fee070ea434b4f5fb2998",
+      "bytes": 2721,
+      "license": "MIT"
     }
   ],
   "activePromptEntry": "packages/coding-agent/src/core/system-prompt.ts",
@@ -361,9 +433,9 @@
   },
   "deferredBehaviors": [
     "Separate Pi steer/follow-up UI controls and exact pre-assembly cancellation semantics",
-    "Pi extensions API events and section-delta transcript updates",
+    "Pi extension events outside input/tool_call/tool_result/session_start/session_shutdown, broader extension API and section-delta transcript updates",
     "Pi output truncation artifact contracts",
-    "Remote npm/git package installation, Pi extension execution/API, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
+    "Remote npm/git package installation, full Pi extension API beyond the opt-in native guest profile, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
     "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately"
   ],
   "nativeAbsences": [
@@ -373,7 +445,7 @@
   ],
   "adaptedPrompt": {
     "module": "prompt.mjs",
-    "sha256": "6bf0b61dc15c26be16b7d3beee93de6dec38211425b42ad1e5af1d97bcdd2d21"
+    "sha256": "28e1c8c596b3f3d0292d9068e7c736a2156a0f397b59fbdab82b8fa0de6ec999"
   },
   "resourceAdapter": {
     "module": "resources.mjs",
@@ -399,11 +471,20 @@
       "Project cwd.pi/settings.json and user agentDir/settings.json skills/prompts use their own base directories, absolute/tilde paths, native resource discovery and upstream minimatch@10.2.6 filter dimensions/order. Explicit project settings precede project auto roots, then explicit user settings, user auto roots, and package resources. Settings globs filter discovered plain entries; package manifest globs are enumerated through bounded native fs.",
       "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract."
     ],
-    "sha256": "1cda1aca93cbbaf66892a7503484daa14fcc66d0033fa5d33b3fb54e0a09530f",
+    "sha256": "75c98e7aadb7a7937bcb4d3f089545d77fe578d885d71ec7286c22224dd8356e",
     "helpers": [
-      { "module": "resource-ignore.mjs", "sha256": "b0d4adcc5e3b3fdce970574d0b5192ec98962d6bff1f1f3ff44738786c2d8204" },
-      { "module": "resource-paths.mjs", "sha256": "868df4f12ba17ff32a14a201f1747dd78be8d4edd935c6eee5f1a21bfc276ecf" },
-      { "module": "skill-discovery.mjs", "sha256": "3ba5d88ac6226662b076760d3019c46acd816357295f379e902255bf52eda461" }
+      {
+        "module": "resource-ignore.mjs",
+        "sha256": "b0d4adcc5e3b3fdce970574d0b5192ec98962d6bff1f1f3ff44738786c2d8204"
+      },
+      {
+        "module": "resource-paths.mjs",
+        "sha256": "868df4f12ba17ff32a14a201f1747dd78be8d4edd935c6eee5f1a21bfc276ecf"
+      },
+      {
+        "module": "skill-discovery.mjs",
+        "sha256": "3ba5d88ac6226662b076760d3019c46acd816357295f379e902255bf52eda461"
+      }
     ],
     "verification": [
       "test/installed-pi-resources.test.mjs: actual CLI project-first template/skill collisions, nested SKILL lazy full body via native skill, ancestor agents catalog, nearest git root cutoff, no invented ancestor.pi, native workspace rule appears once, SYSTEM/APPEND and global rule precedence/fallback, template command/quoting/default/slice/nonrecursive/steer/queue, stock scope exclusion; real ignore hide/negation/external-version refresh and replacement catalog, settings/package skill catalogs and lazy package body, configured/package prompt expansion and native commands, extension file never executed",
@@ -420,6 +501,53 @@
         "toResolvedPaths2451-2475"
       ],
       "snapshot": "sources/upstream/packages/coding-agent/src/core/package-manager.ts"
+    }
+  },
+  "guestAdapter": {
+    "module": "extensions/guest.mjs",
+    "sha256": "f361a1a1d03ae8fd17e8afc54871fbce3a0ac51829d6c874c36190b3acc89f4d",
+    "helpers": [
+      {
+        "module": "extensions/pi-api.mjs",
+        "sha256": "150c80e3a290a765e7c2dcda999468498269c72076cc4d5c192c50561df47827"
+      },
+      {
+        "module": "extensions/validation.ts",
+        "sha256": "460786b57dead200e411b9afec916a5049c96ebcff4da082096456ac06d44fb7",
+        "source": "packages/ai/src/utils/validation.ts",
+        "originalBytes": true
+      }
+    ],
+    "source": [
+      "packages/coding-agent/src/core/extensions/types.ts",
+      "packages/coding-agent/src/core/extensions/loader.ts",
+      "packages/coding-agent/src/core/extensions/runner.ts",
+      "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "packages/ai/src/utils/typebox-helpers.ts",
+      "packages/coding-agent/examples/extensions/hello.ts",
+      "packages/coding-agent/examples/extensions/protected-paths.ts",
+      "packages/coding-agent/examples/extensions/input-transform.ts",
+      "packages/ai/src/utils/validation.ts",
+      "packages/ai/package.json"
+    ],
+    "runtime": "Extension factories/callbacks only in a separate Node process. No official Pi agent loop, model/account runtime, CLI or SDK executor. Native host owns opt-in module trust, subprocess sandbox, API guards and session/tool loop integration.",
+    "adaptations": [
+      "jiti@2.7.0 loads original TS/JS default factories with fsCache/moduleCache disabled. Original fixed typebox@1.3.27 modules and explicit pure Pi defineTool/typeguard/StringEnum helpers are virtual imports; @sinclair/typebox@0.34.41 remains a separate legacy module alias. Unsupported original runtime exports are absent.",
+      "Original validateToolArguments from packages/ai/src/utils/validation.ts is loaded byte-for-byte as a pure helper. It uses fixed typebox/compile Compile, Value.Convert, optional-null normalization and upstream plain JSON Schema coercion. StringEnum retains original Type.Unsafe. No private JSON schema matcher or Pi agent runtime is used. Native host schema/guard checks remain authoritative before guest invocation, so native argument acceptance may be narrower than the original coerced Pi contract.",
+      "All factories must succeed before a new registration batch commits. Tools expose original serialized parameters and callback IDs; unsupported prepareArguments/prepareLoadout are exposed as booleans and rejected by the native host. Registration and event subscription after loading are explicitly unsupported.",
+      "Supported first-profile events are input, tool_call, tool_result, session_start and session_shutdown. Unknown event subscriptions fail the factory. Registration order is retained; input transforms form a pipeline and handled stops it; tool_call block stops early and the final input is returned so the native host can reject argument mutations.",
+      "JSONL messages are bounded to 2 MiB, 32 modules, 64 active callbacks and 256 pending API calls. Reentrant stdin dispatch and AsyncLocalStorage isolate callback context; cancellation uses per-invocation AbortController. Console output uses stderr. Tool updates retain requestId.",
+      "ui.notify/select/confirm/input, exec, executeTool, sendUserMessage and setActiveTools request native host actions; void actions drain their host acknowledgements before callback completion. executeTool is restricted to tool callbacks. setActiveTools updates the callback snapshot immediately for known tools only.",
+      "Synchronous getters use only supplied native read-only snapshots; absent required fields and unsupported API properties fail immediately. ctx.model is a limited native id/provider route projection, possibly undefined, without provider credentials or SDK objects. ctx.isProjectTrusted requires an explicit native boolean; otherwise it is unsupported. No fake TUI, account API, transcript store or custom input queue is implemented."
+    ],
+    "verification": {
+      "status": "guest-fixture-passed",
+      "evidence": [
+        "One Node guest fixture loads the three fixed original official samples and executes hello, protected .env write block and ?quick input transform.",
+        "The same fixture verifies ping handled, void ui.notify API acknowledgement drain, a nested hello invoke while that acknowledgement is pending, and failed load without partial registration descriptors.",
+        "A focused guest validator fixture verifies plain JSON Schema, original string-to-number coercion, invalid enum rejection and unchanged official hello execution."
+      ],
+      "limits": "The guest fixture does not verify native host permissions, sandbox confinement, native message accounting, UI questions or installed tool-loop integration; those require the host acceptance checks."
     }
   },
   "steeringAdapter": {
@@ -475,5 +603,23 @@
       ],
       "limits": "Scripted provider verifies native contracts, not the real model quality of every generated branch summary."
     }
+  },
+  "extensionHostAdapter": {
+    "module": "extensions.mjs",
+    "sha256": "4193d28accebed696ca047660874414786f6e63c4b30aa2c4fe56d7329dc97f6",
+    "transport": {
+      "module": "extensions/transport.mjs",
+      "sha256": "d4a0a031056e70dba788f2fdb6472eaebddd8c4d9c7e8877667d841a5a662929"
+    },
+    "hostIntegration": "Explicit local entry allowlist; native scoped tools/commands, fs versions, subprocess/sandbox, userQuestions and attachments. Extension-only callback guest; native model/API, inbox and journal remain authoritative.",
+    "events": [
+      "session_start",
+      "session_shutdown",
+      "input",
+      "tool_call",
+      "tool_result"
+    ],
+    "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths.",
+    "differences": "No dynamic registration, before_agent_start/context mutation, TUI rendering or appendEntry. Tool input already logged stays immutable; native result state/details/structuredContent rewriting limited. Read-only session view bounded; callback-bound actions; no installation of dependencies."
   }
 }

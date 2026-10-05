@@ -56,7 +56,12 @@ test('packed Cursor checkpoints open native review and current preview without c
   await files.getByRole('button', { name: '审阅本回合 2 个文件', exact: true }).waitFor();
   const release = f.holdNextReply(); await f.send(cursor.sessionId, 'Hold current run');
   await until(async () => (await f.api(cursor.sessionId)).value.running);
-  await page.waitForFunction(() => { const buttons = [...document.querySelectorAll('.omaa-checkpoints button')]; return buttons.length > 0 && buttons.every(button => button.disabled); });
+  await page.waitForFunction(() => {
+    const buttons = [...document.querySelectorAll('.omaa-checkpoints button')];
+    const writes = buttons.filter(button => /恢复|查找/.test(button.textContent));
+    return writes.length > 0 && writes.every(button => button.disabled)
+      && buttons.some(button => button.textContent === '预览当前文件' && !button.disabled);
+  });
   await page.screenshot({ path: '.cache/cursor-checkpoint-running.png' });
   await page.getByText('Codex unchanged session', { exact: true }).first().click();
   await page.getByRole('button', { name: 'Codex 预设设置', exact: true }).click();

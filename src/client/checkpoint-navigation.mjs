@@ -13,21 +13,21 @@ export function checkpointFileAddress(sessionId, path) {
   return `dsh-resource://file/session/${encode(sessionId)}/${normalized.split('/').map(encode).join('/')}`;
 }
 
-export function assertCheckpointSession(settings, sessionId, sidebarRight) {
+export function assertCheckpointSession(settings, sessionId, sidebarRight, idle = true) {
   const current = settings.getSnapshot();
   if (current.sessionId !== sessionId || current.data?.product?.id !== 'cursor' ||
       (sidebarRight && sidebarRight.mounted.getSnapshot() !== sessionId)) throw new Error('会话已切换，请在当前会话重新操作。');
-  if (current.data.running) throw new Error('请先停止当前运行，再审阅或恢复检查点。');
+  if (idle && current.data.running) throw new Error('请先停止当前运行，再恢复或开始问题检查。');
 }
 
 export function openCheckpointReview(settings, sidebarRight, sessionId, checkpoint, index = 0) {
-  assertCheckpointSession(settings, sessionId, sidebarRight);
+  assertCheckpointSession(settings, sessionId, sidebarRight, false);
   if (!Number.isSafeInteger(index) || !checkpoint?.summary?.files?.[index]) throw new Error('该文件的宿主比较已不可用。');
   sidebarRight.openResourceIn(sessionId, checkpointReviewAddress(sessionId, checkpoint), { params: { index } });
 }
 
 export function openCheckpointFile(settings, sidebarRight, sessionId, file) {
-  assertCheckpointSession(settings, sessionId, sidebarRight);
+  assertCheckpointSession(settings, sessionId, sidebarRight, false);
   // A restored new file is absent again; avoid offering a misleading preview.
   if ((file.restored ? file.before : file.after)?.kind === 'absent') throw new Error('该文件当前已删除，仍可查看回合比较。');
   sidebarRight.openResourceIn(sessionId, checkpointFileAddress(sessionId, file.path));

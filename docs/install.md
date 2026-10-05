@@ -59,6 +59,16 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 若预设显示 broken 或提示缺少 OMD workflow，先检查实际宿主、两包版本与当前 profile 是否一致，并确认已重载。不要强行安装其他宿主的附件。提问时可提供版本、预设和报错，避免附上 API key、完整 profile 或未脱敏日志。
 
+## Pi 本地扩展
+
+此入口从 OMAA 0.4 开始提供，隔离原生执行检查已通过。旧版没有该入口时，请按前述流程安装与当前 DSH 宿主匹配的发行包。
+
+全局设置「Pi 本地扩展」的白名单默认空。每行填写一个本地 TS/JS 扩展文件的绝对路径，然后点击「保存并启用指定扩展」；配置最多允许 32 个入口。只有用户明确保存的文件会执行，不自动运行项目 `.pi` 或 package 发现的文件，也不安装 npm/git 包依赖。已有 Pi 任务运行时，先用原生入口停止，再修改白名单。
+
+保存采用 revision 冲突检查；配置已被其他窗口修改时先「重新读取」，未保存的输入会保留，再核对并提交。页面显示各 Pi 会话的加载状态、实际工具/命令与错误。点击「清空并停用」保存空白名单；扩展回调进程关闭并释放注册项。配置文件位于 `DSH_HOME/omaa/pi-extensions.json`。
+
+扩展仅通过当前 DSH 的 subprocess/sandbox 与权限执行回调，工具、问答、通知、附件和用户消息复用原生服务；不会另启 Pi 模型、工具循环或账号。动态注册、before_agent_start/context 替换、自定义 TUI/render、appendEntry 等未接入，完整边界见 [Pi 文档](products/pi.md)。
+
 ## 卸载
 
 Desktop 在原生插件管理器中移除 OMAA。Web／CLI 使用安装时的 profile：
@@ -67,4 +77,4 @@ Desktop 在原生插件管理器中移除 OMAA。Web／CLI 使用安装时的 pr
 dsh plugin --profile web remove oh-my-agents-above-all
 ```
 
-卸载不会删除 DSH 会话和工作区。插件偏好、文本检查点和 Pi 派生分支上下文位于 `DSH_HOME/omaa`，不会自动清空；原生会话 journal 仍由宿主管理。需要继续独立使用 OMD 时可保留它。
+卸载不会删除 DSH 会话和工作区。插件偏好、文本检查点、Pi 派生分支上下文及已保存的扩展白名单位于 `DSH_HOME/omaa`，不会自动清空；原生会话 journal 仍由宿主管理。需要继续独立使用 OMD 时可保留它。
