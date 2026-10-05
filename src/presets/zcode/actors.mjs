@@ -1,16 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { validate, formatViolations } from '../../../lib/zcode-workflow-compiler.mjs';
+import { CONTINUITY_PROVIDER_PREFIX, createActorContinuity } from './continuity.mjs';
+import { inputHash } from '../../../lib/zcode-import-cache.mjs';
 
 const textOf = parts => (parts ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const copy = value => structuredClone(value);
 export const ZCODE_ACTOR_LABEL_PREFIX = 'ZCode Actor · ';
+const nativeObservations = new Set(['read', 'glob', 'grep', 'read_image', 'skill']);
 
 export function installLiteralActorPersona(ctx) {
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     const assembly = await next();
-    const descriptor = context.agent?.session.snapshotEvents().find(event => event.type === 'subagent/descriptor')?.data;
-    if (descriptor?.mode !== 'continuable' || descriptor.provider !== 'spawn'
+    const session = context.agent?.session;
+    const descriptor = session?.snapshotEvents(session.inheritedEventCount).find(event => event.type === 'subagent/descriptor')?.data;
+    if (descriptor?.mode !== 'continuable' || descriptor.provider !== 'spawn' && !descriptor.provider?.startsWith(CONTINUITY_PROVIDER_PREFIX)
       || !descriptor.label?.startsWith(ZCODE_ACTOR_LABEL_PREFIX) || typeof descriptor.persona !== 'string') return assembly;
     // The native descriptor owns the durable persona. Its text must survive
     // cold activation without depending on a workflow's temporary variables.
@@ -21,8 +25,9 @@ export function installLiteralActorPersona(ctx) {
 
 // Only orchestration lives here. Native continuable children own their model,
 // permission checks, tools, inbox, transcript, idle state and cold activation.
-export function createActors({ ctx, parent, sites, askSpecs, signal, progress, runProgress }) {
+export function createActors({ ctx, parent, sites, askSpecs, signal, progress, runProgress, cache, imported, concurrency }) {
   const actors = new Map(), children = new Map(), disposers = [], staged = new WeakMap();
+  const continuity = imported ? createActorContinuity(ctx, parent) : undefined;
   const actorSites = new Set(sites.actors.map(site => site.id));
   if (!ctx.subagents.getProvider('spawn')?.prepareContinuable) throw Error('Native continuable spawn provider is unavailable.');
   const check = () => signal.throwIfAborted();
@@ -90,6 +95,18 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
       } else if (p.reservation === enclosed) p.reservation = undefined;
     }
   }, { global: true }));
+  disposers.push(ctx.on('tools/execute', async (exec, next) => {
+    const actor = exec.agent && children.get(exec.agent.id), p = actor?.pending;
+    if (!p || p.finished || exec.name === 'submit_result') return next();
+    // The native parent-coordination message is not a workspace tool. Other
+    // calls are counted at dispatch, including failed/denied bodies; native
+    // exposes no authoritative post-approval world-effect classification.
+    const target = exec.arguments?.agent_id;
+    if (exec.name === 'send_message' && target === parent.id) return next();
+    p.worldToolCalls++;
+    if (!nativeObservations.has(exec.name)) await cache?.close('unclassified-native-tool', { actorName: actor.reference.name, tool: exec.name });
+    return next();
+  }, { global: true }));
   disposers.push(ctx.on('session/event', (session, event) => {
     const actor = children.get(session.id), p = actor?.pending;
     if (!p || p.finished) return;
@@ -99,7 +116,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
       p.messages.add(message.id);
     }
     if (event.type === 'assistant/message') p.assistantText = textOf((event.data.message ?? event.data).content);
-    if (event.type === 'turn/end' && event.data.turn === p.turn) { p.end = event.data; finish(actor); }
+    if (event.type === 'turn/end' && event.data.turn === p.turn) { p.end = event.data; p.eventCount = event.seq + 1; finish(actor); }
   }, { global: true }));
   const interrupted = () => {
     for (const id of children.keys()) {
@@ -117,7 +134,8 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
     let actor = actors.get(reference.handle);
     if (actor) { if (!isDeepStrictEqual(reference, actor.reference)) throw Error('An Actor identity cannot be changed.'); return actor; }
     if (reference.name && [...actors.values()].some(a => a.reference.name === reference.name)) throw Error('Duplicate Actor name: ' + reference.name);
-    actor = { reference: copy(reference), childId: randomUUID(), created: false, tail: Promise.resolve(), pending: undefined, agent: undefined };
+    actor = { reference: copy(reference), childId: randomUUID(), created: false, tail: Promise.resolve(), pending: undefined, agent: undefined,
+      seq: 0, imported: cache?.attachActor(reference) };
     actors.set(reference.handle, actor); children.set(actor.childId, actor);
     return actor;
   }
@@ -125,33 +143,52 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
     view: () => [...actors.values()].map(actor => ({ name: actor.reference.name, childId: actor.childId, created: actor.created })),
     async declare(reference) {
       const actor = actorFor(reference);
+      if (!actor.declared) { await cache?.declareActor(reference); actor.declared = true; }
       await runProgress?.created(reference, actor.childId);
     },
     async ask({ siteId, actor: reference, instructions, phaseName }) {
       check();
       if (typeof instructions !== 'string' || !askSpecs.has(siteId)) throw Error('Invalid compiled ask.');
       const actor = actorFor(reference), spec = askSpecs.get(siteId);
+      const seq = actor.seq++;
+      const candidate = actor.imported?.candidate.entries[seq];
+      if (candidate && (spec.typed ? validate(spec.schema, candidate.result).length !== 0 : typeof candidate.result !== 'string'))
+        actor.imported.reconcileRecorded(seq, inputHash(instructions), true, false);
+      const cached = cache?.takeActor(actor.imported, seq, instructions);
       const observation = runProgress?.node(siteId, 'ask', {
         actor: runProgress.actor(reference, actor.childId), phaseName, instructions });
       observation?.catch(() => {});
       const work = actor.tail.then(async () => {
         const node = await observation;
+        if (cached) {
+          check();
+          await cache.actorResult(reference, seq, instructions, cached.result,
+            { sessionId: actor.imported.candidate.transcriptSourceSessionId, eventCount: cached.messageBoundary }, cached.stats, true);
+          await node?.settled(undefined, { cached: true });
+          return copy(cached.result);
+        }
         const result = Promise.withResolvers();
         result.promise.catch(() => {});
         // A synchronous delivery may start/finish before its RPC returns. Keep
         // actual message IDs and terminal events, then correlate after receipt.
-        const pending = { spec, result, messages: new Set(), enclosed: new Map(), finished: false, node };
+        const pending = { spec, result, messages: new Set(), enclosed: new Map(), finished: false, node, worldToolCalls: 0 };
         actor.pending = pending;
         const instructionsWithResult = spec.typed ? instructions + '\n\nReturn the final value by calling submit_result; its declared schema is the required task result.' : instructions;
         const prompt = [{ type: 'text', text: instructionsWithResult }];
         progress?.({ type: 'actor-start', siteId, name: reference.name, childId: actor.childId });
+        let release;
         try {
           check();
+          release = await concurrency?.acquire(); check();
           await node?.dispatched();
           if (!actor.created) {
             const persona = typeof reference.persona === 'string' ? reference.persona : reference.persona?.system;
-            const receipt = await ctx.subagents.startContinuable({ provider: 'spawn', label: ZCODE_ACTOR_LABEL_PREFIX + (reference.name || 'Actor'), childId: actor.childId,
-              request: { parent, prompt, ...(persona === undefined ? {} : { persona }) }, signal });
+            const seed = actor.imported?.seed();
+            const detach = seed && continuity.attach(actor.childId, { sessionId: seed.sourceSessionId, eventCount: seed.messageCount, persona });
+            let receipt;
+            try { receipt = await ctx.subagents.startContinuable({ provider: seed ? continuity.name : 'spawn', label: ZCODE_ACTOR_LABEL_PREFIX + (reference.name || 'Actor'), childId: actor.childId,
+              request: { parent, prompt, ...(persona === undefined ? {} : { persona }) }, signal }); }
+            finally { detach?.(); }
             actor.created = true; pending.messageId = receipt.messageId;
           } else {
             const agent = ctx.get('agents')?.get(actor.childId); if (agent) install(agent, actor);
@@ -162,6 +199,9 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           const value = await result.promise;
           const agent = ctx.get('agents')?.get(actor.childId);
           if (agent) await agent.whenIdle(signal);
+          if (!Number.isSafeInteger(pending.eventCount)) throw Error('The native completed task boundary is missing.');
+          await cache?.actorResult(reference, seq, instructions, value, { sessionId: actor.childId, eventCount: pending.eventCount },
+            { worldToolCalls: pending.worldToolCalls, observation: 'native-tool-dispatch' }, false);
           // The native continuation manager decides when an idle activation
           // can be released. Do not kill an actor's background work merely to
           // force cold activation for its next question.
@@ -169,9 +209,11 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           await node?.settled();
           return value;
         } catch (error) {
+          await cache?.stopActor(reference, seq);
           await node?.settled(error);
           throw error;
         } finally {
+          release?.();
           if (actor.pending === pending) actor.pending = undefined;
           actor.toolDispose?.(); actor.toolDispose = undefined; actor.toolPending = undefined;
         }
@@ -187,6 +229,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
       await ctx.subagents.drainContinuableChildren(parent, [...children.keys()]);
       for (const actor of actors.values()) actor.toolDispose?.();
       for (const dispose of disposers.reverse()) dispose();
+      continuity?.dispose();
     },
   };
 }

@@ -59,12 +59,14 @@ OMAA 自身继续使用 `scripts/package.mjs` 从同一源码绑定 rc.2／alpha
 OMD 人格／初始身份兼容与工具增强独立。每次装配读取同一 OMD `personalityText(config)`，只替换五套默认 persona 的开头身份，不复制设置或修改原厂来源文件；字符串按字面插入。空身份移除预设内建身份文字，子代理保留各自职责。Pi 自定义 SYSTEM.md 原文保留，OMD 身份放在它之前；未安装 OMD 时保持独立预设原文。原生系统消息位置和更新生命周期继续由 DSH 管理。
 
 
-ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。脚本先经原厂 analyze/typecheck、site table、schema 合成和 lowering，再由隔离 native ptcRuntime 运行；没有原厂引擎、provider 或独立模型循环。Actor 以 native continuable childId 持久存在，重复 ask 排队且每次声明实际 submit_result，成功结果和关联回合结束共同决定提交。原生 descriptor 保存 literal persona，长期装配 hook 保证冷恢复；脚本正常返回会取消遗留 ask 并等待 drain。背景执行和停止通过原生 jobs，父权限/Ask/Plan 变化会主动取消。定义档的 facade marker 决定 TypeScript 或既有 JavaScript 路由；静态图是纯分析输出，不等同于原厂动态图、amend 或运行日志重放。
+ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。脚本先经原厂 analyze/typecheck、site table、schema 合成和 lowering，再由隔离 native ptcRuntime 运行；没有原厂引擎、provider 或独立模型循环。Actor 以 native continuable childId 持久存在，重复 ask 排队且每次声明实际 submit_result，成功结果和关联回合结束共同决定提交。原生 descriptor 保存 literal persona，长期装配 hook 保证冷恢复；脚本正常返回会取消遗留 ask 并等待 drain。背景执行和停止通过原生 jobs，父权限/Ask/Plan 变化会主动取消。定义档的 facade marker 决定 TypeScript 或既有 JavaScript 路由；运行图是独立显示投影，不冒充原厂 journal/replay；修订缓存的执行事实见下文。
 
 ## 未发布的 ZCode 运行投影
 
-公开版本仍为 OMAA 0.8.0。开发源码用严格固定 41 文件 closure 派生 `lib/zcode-run-projection.mjs`，仅包含三类 bounds 显示投影与原 workflowRuns reducer。真实 native site×ordinal、phase/birth、child accepted receipt、队列/dispatch/settled 事实由 `run-progress.mjs` 注入；未知 provider backoff 不推断。原版 Timeline/RunPhaseList 的 37 份 UI 代码、样式和中英 locale 完整保留，不是 ReactFlow，也不运行原 engine。最终 native fixture、浏览器实拍和发布均未据此宣称通过。
+公开版本仍为 OMAA 0.8.0。开发源码用严格固定 41 文件 closure 派生 `lib/zcode-run-projection.mjs`，仅包含三类 bounds 显示投影与原 workflowRuns reducer。真实 native site×ordinal、phase/birth、child accepted receipt、队列/dispatch/settled 事实由 `run-progress.mjs` 注入；未知 provider backoff 不推断。原版 Timeline/RunPhaseList 的 37 份 UI 代码、样式和中英 locale 完整保留，不是 ReactFlow，也不运行原 engine。单个 native graph fixture 与 alpha Web 点击已通过；不据此宣称所有平台或 0.9 发布通过。
 
-Amend 尚未接线。原厂 Amend 以停止前驱、创建 successor 新 run 并继承缓存与精确 completed Actor transcript prefix 实现；同 run 仅并发 retune，resume 要求脚本字节相同。公开专用 continuity provider 可以提供精确前缀 seed，manager 保持新 parent/descriptor/权限，因此不必以修改宿主为前提；普通 stop/new 缺少缓存与转录继承，不能当作同等 Amend。
+开发源码已接 `amend_workflow`：先编译及核对归属／可读缓存，再停止并等待前驱结算，创建带 `resumedFrom`／`supersededBy` 的 successor。原 `ImportedActorState`、`ImportedWorldQueue`、persona/hash 算法从固定原文构建；完整结果存 native immutable attachment，metadata 保存连续 Actor 完成前缀、native canonical event offset、world 准入序号及关闭事实，独立于有界 display。首次 live 分歧通过专用 continuity provider 继承旧 Actor 的精确 completed event prefix；native manager 追加新 descriptor、真实 parent、当前委派权限并负责冷恢复。失败 ask 封住可导入前缀，不阻断脚本 catch 后的后续 live ask。
+
+`run_id + max_concurrency` 调整同一 live run，上限仅限制 live ask，Actor FIFO 与 native 容量分别生效；降低上限不取消已接受任务。重复 world 按准入顺序匹配，cached world.run 不再次执行效果；live world.run 关闭导入窗口，native 文件观察只记 dispatch，缺少真实 effect 分类的工具在进入管线时保守关闭。这不冒充原厂精确按入参的 mutating-tool 分类。在飞半转录续跑、same-run journal/replay 与原模型 pin 继承仍有差异；新任务使用当前 DSH 模型/API。旧 0.8 metadata 没有任务缓存，预检拒绝并保留旧 run。单个原生 fixture 已核对重启、复用、分歧前缀／poison 排除、world 顺序／不重放、失败后继续、跨 session 拒绝、cold continuation 与并发升降。
 
 图 CSS 与消息桥由 `scripts/build-zcode-graph-ui-assets.mjs` 可重复生成：默认 `--check` 只读核对，`--write` 重建，`--output-dir DIR` 可先生成到审阅目录。它固定核对 40 份原源与 commit、37 个 UI 代码依赖、原 Tailwind utility/wf 样式和实际消费 locale 键，明确保留 DSH 颜色/reset/Intl 桥。Tailwind 4.2.2 与 PostCSS 8.5.6 仅为锁定构建依赖，运行包没有这些依赖。主 build 使用相同 check 入口，三份产物已逐字节复现。

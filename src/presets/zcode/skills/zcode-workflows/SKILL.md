@@ -155,3 +155,24 @@ have the same type checks as supplied values. The `.dwf.ts` extension preserves
 the source product's file convention; choose the matching facade when saving
 and use that facade's API in the body. Read and edit user-owned
 workflow definitions with native file tools before resubmitting.
+
+Use `amend_workflow` when an existing ZCode run needs a correction or another
+stage. Pass its `run_id` and a revised `script` or `path`, never both. Do not
+stop the predecessor first: the tool typechecks before stopping it, waits for
+its native tasks to settle, and starts a successor linked to the original.
+Omitted source, name, args and max_concurrency retain their archived values.
+Only `run_id` plus `max_concurrency` retunes a live run in place; lowering the
+limit does not cancel asks already accepted by native children.
+
+Completed results are matched by unique Actor name, unchanged persona and the
+contiguous sequence of instruction hashes. The first changed or new ask is
+live and inherits the exact native transcript through the last cached completed
+task. Anonymous or changed-persona Actors start fresh. Repeated world operations
+match by operation, arguments and occurrence order; a cached `world.run` returns
+its prior observation without executing the effect again. Live world commands
+close this import window. Native tools without an authoritative effect
+classification close it conservatively; after closure only cached asks with no
+world tool dispatches remain reusable. Pending predecessor asks are canceled,
+not continued from half-finished transcripts. This path does not provide
+same-run journal replay. Runs created before task-prefix metadata was added
+must be recreated before they can be amended.

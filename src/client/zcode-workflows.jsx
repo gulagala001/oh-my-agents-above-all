@@ -222,13 +222,17 @@ export function ZCodeWorkflows({ settings, sidebarRight, visible = true, request
   if (!enabled || !visible || state.sessionId !== current.sessionId) return null;
   const detail = state.detail?.sessionId === current.sessionId && state.detail?.runId === state.runId ? state.detail : null;
   const artifacts = artifactOrder(detail?.artifacts || []), artifact = artifacts.find(value => value.id === state.artifactId);
+  const relatedRuns = detail ? [['resumedFrom', '← 前次运行'], ['supersededBy', '后续运行 →']].flatMap(([field, label]) => {
+    const run = state.runs.find(value => value.runId === detail[field] && value.runId !== state.runId);
+    return run ? [{ field, label, run }] : [];
+  }) : [];
   return <section className="omaa-zcode-workflows" aria-label="ZCode 工作流产物">
     <style>{css}</style><header className="omaa-zcode-toolbar"><h3>工作流</h3><button type="button" onClick={() => { void controller.refresh(); }} disabled={state.loading}>刷新</button></header>
     {state.loading && <p className="omaa-zcode-help" role="status">正在读取工作流…</p>}
     {state.error && <p role="alert" className="omaa-error">{state.error}</p>}
     {!state.runs.length && !state.loading && !state.error && <p className="omaa-zcode-empty">本会话还没有工作流运行。</p>}
     {state.runs.length > 0 && <label className="omaa-zcode-run-select">运行<select aria-label="工作流运行" value={state.runId} onChange={event => controller.selectRun(event.target.value)}>{state.runs.map(run => <option key={run.runId} value={run.runId}>{run.name || '未命名工作流'} · {statusLabel(run.status)}{run.startedAt ? ` · ${new Date(run.startedAt).toLocaleString()}` : ''}</option>)}</select></label>}
-    {detail && <><div className="omaa-zcode-run-status"><span className="omaa-zcode-status" data-status={detail.status}>{statusLabel(detail.status)}</span>{detail.phase && <span>{typeof detail.phase === 'string' ? detail.phase : detail.phase.name || detail.phase.id || ''}</span>}<small>{detail.artifacts.length} 个产物 · {detail.reportCount ?? detail.reports?.length ?? 0} 条报告</small>{!terminalStatuses.has(detail.status) && <button type="button" disabled={state.stopping || state.stopRequested} onClick={() => { void controller.stop(); }}>{state.stopping ? '正在请求停止…' : state.stopRequested ? '停止已请求' : '停止运行'}</button>}</div>
+    {detail && <>{relatedRuns.length > 0 && <nav className="omaa-zcode-run-lineage" aria-label="工作流修订运行">{relatedRuns.map(({ field, label, run }) => <button type="button" key={field} title={run.name || '未命名工作流'} onClick={() => controller.selectRun(run.runId)}>{label}</button>)}</nav>}<div className="omaa-zcode-run-status"><span className="omaa-zcode-status" data-status={detail.status}>{statusLabel(detail.status)}</span>{detail.phase && <span>{typeof detail.phase === 'string' ? detail.phase : detail.phase.name || detail.phase.id || ''}</span>}<small>{detail.artifacts.length} 个产物 · {detail.reportCount ?? detail.reports?.length ?? 0} 条报告</small>{!terminalStatuses.has(detail.status) && <button type="button" disabled={state.stopping || state.stopRequested} onClick={() => { void controller.stop(); }}>{state.stopping ? '正在请求停止…' : state.stopRequested ? '停止已请求' : '停止运行'}</button>}</div>
       {detail.error && <p className="omaa-error" role="alert">{typeof detail.error === 'string' ? detail.error : detail.error.message || detail.error.reason || JSON.stringify(detail.error)}</p>}
       {detail.displayGraph && <ZCodeWorkflowGraph graph={detail.displayGraph} run={detail.runtime}
         onOpenActor={onOpenActor} onOpenWorkspace={onOpenWorkspace}/>}

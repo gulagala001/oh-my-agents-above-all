@@ -2360,6 +2360,96 @@
       "kind": "official-source",
       "gitBlobSha1": "b36051c3906d8b90576487c9dc37eb8b987a6114",
       "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "sha256": "775a419c91870ad59015f73567490309663ea1a93ff3f787519a591e15bb5604",
+      "bytes": 11433,
+      "kind": "official-source",
+      "gitBlobSha1": "d687fb82a1c3294c504a87f8da11e7910a3919b3",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "sha256": "f558bccaef46114ce5477b449e76d91f33ad8635419104a569763b90617b3d74",
+      "bytes": 38242,
+      "kind": "official-source",
+      "gitBlobSha1": "ff74c30e229a340fdbf68610217580d55ba6625d",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-retune.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-retune.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-retune.ts",
+      "sha256": "e43cf1bbf05d1efcf7b09c92b43c5f1b08c416810308dd01ff472c919b877737",
+      "bytes": 11924,
+      "kind": "official-source",
+      "gitBlobSha1": "94766bcf209d07589b6375356b44b0dc10da3f56",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-source.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-source.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-source.ts",
+      "sha256": "3f650f414c09c69c0d25affab00ebaac4e25ba6307b0445f86c6bbdd0a77bcb2",
+      "bytes": 12218,
+      "kind": "official-source",
+      "gitBlobSha1": "41c461d81cd99a354c74f157bb8879f3acc500c7",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-resolve.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-resolve.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/tool/handlers/amend-workflow-resolve.ts",
+      "sha256": "baef927526f40c0adce03828067622483ff9ef2744e4c437215d52c18c60925a",
+      "bytes": 10514,
+      "kind": "official-source",
+      "gitBlobSha1": "eb5b8400d8ab91c8edd88df362efebbd978bf234",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/tools/amend-workflow.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/amend-workflow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/tools/amend-workflow.ts",
+      "sha256": "40aa4a319ec00338c13bc729167b8228b1c32352f4fd42c0714c1707453eda18",
+      "bytes": 7294,
+      "kind": "official-source",
+      "gitBlobSha1": "4d607e3b4db3e371bb351d7c40d3127eb66e073c",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/contracts/src/interfaces/dynamic-workflow-run.port.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/interfaces/dynamic-workflow-run.port.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/contracts/src/interfaces/dynamic-workflow-run.port.ts",
+      "sha256": "aeecaa6d7d7b67dc29c5fa5c2f888bbe53612e9ba780eeec4308fec8eeba089c",
+      "bytes": 54731,
+      "kind": "official-source",
+      "gitBlobSha1": "5687e832069252bcf399dd6461b3896d428d0925",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-import.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-import.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-import.ts",
+      "sha256": "ba63b9ec493994b16d1c8fc3985f2e6b73564759f69235cd9ef27c814d4d39e6",
+      "bytes": 28184,
+      "kind": "official-source",
+      "gitBlobSha1": "c11a8d95e3a226458f834889bb92ff95ada7c459",
+      "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-run-submit.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-run-submit.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-run-submit.ts",
+      "sha256": "3f94053bd62946d93ac43c6089c1db30ba9293563e25696390cc29cec81fdb6f",
+      "bytes": 35858,
+      "kind": "official-source",
+      "gitBlobSha1": "ff8ad42fb6fb2a23d8a6ada495f58b1b26e8565f",
+      "license": "Apache-2.0"
     }
   ],
   "adaptation": {
