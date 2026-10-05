@@ -21,4 +21,6 @@
 
 UI 修复：无项目草稿的设置迁移先启用增强再调用既有 OMD 模式控制器，保留主题、Ask/Plan 和源草稿；原版 Web 的 Pi Pro 源→目标会话迁移已真实执行，目标仍启用 Pro、增强且保持 DSH 外观，未发送模型任务。桌面匹配包经原生安装器更新并重启，原会话和模型已恢复，设置面板实际可打开。保存竞态、同 ID 切预设、主题过渡及窄侧栏通过单个隔离浏览器 fixture 核对；文件恢复／Git 操作／Pi 分叉的失效状态限制及目标迁移失败补偿仅跑了对应模块检查，没有重做五预设长任务矩阵。Pi 本地 settings/package 资源、忽略规则及 native 懒加载完成了同一安装回归。
 
-OMAA 0.6 的 ZCode Actor 增量仅做两项针对性 native 检查：保存后双提问及整个宿主重启后的人类冷续问；后台任务在父会话切换 Ask 后实际停止和子会话收束。真实配置 `opencode-zen/space-bunny-free` 的同一 Actor 读取/回忆短任务已返回正确结构结果。第一次真实尝试返回运行异常，后续一次实际成功；不从该短任务推导稳定率或五预设整体完成。原厂 world-read、artifact registry、graph amendment 和动态图界面仍未接入。
+OMAA 0.6 的 ZCode Actor 增量仅做两项针对性 native 检查：保存后双提问及整个宿主重启后的人类冷续问；后台任务在父会话切换 Ask 后实际停止和子会话收束。真实配置 `opencode-zen/space-bunny-free` 的同一 Actor 读取/回忆短任务已返回正确结构结果。第一次真实尝试返回运行异常，后续一次实际成功；不从该短任务推导稳定率或五预设整体完成。
+
+OMAA 0.7 的 world facade 使用一个 `installed-zcode-world` 原生安装 fixture，覆盖文件/glob、UTF-16 BOM/CRLF、宿主 bundled grep、Git、相对命令路径、非零退出、错误码及超限、workspace-write 和后台 Ask 取消。文件/Git/命令契约已接入；artifact registry、graph amendment 和动态图界面仍未接入。另一个简短真实任务使用已配置 `opencode-zen/space-bunny-free`，实际加载技能并调用 `create_workflow`，正确返回文件内容、glob、Git 分支与 argv 命令结果。此检查不证明所有平台或模型等价；详见 [ZCode 文档](products/zcode.md)。

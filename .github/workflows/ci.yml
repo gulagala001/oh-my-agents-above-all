@@ -69,12 +69,11 @@ jobs:
         run: |
           node scripts/package-omd-compat.mjs --base .cache/omd-official-alpha --host-version 0.2.1-alpha.1
           node scripts/package-omd-compat.mjs --base .cache/omd-official-rc2 --host-version 0.2.0-rc.2
+      - name: Prepare verified paired release assets
+        run: node scripts/release-assets.mjs --omd-version 0.8.1
       - uses: actions/upload-artifact@v7
         with:
           name: omaa-release-packages
-          path: |
-            dist/*.tgz
-            dist/*.tgz.sha256
-            dist/*.tgz.metadata.json
+          path: dist/release-assets/*
           if-no-files-found: error
           retention-days: 14

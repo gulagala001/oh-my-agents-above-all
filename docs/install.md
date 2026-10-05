@@ -67,7 +67,17 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 保存采用 revision 冲突检查；配置已被其他窗口修改时先「重新读取」，未保存的输入会保留，再核对并提交。页面显示各 Pi 会话的加载状态、实际工具/命令与错误。点击「清空并停用」保存空白名单；扩展回调进程关闭并释放注册项。配置文件位于 `DSH_HOME/omaa/pi-extensions.json`。
 
-扩展仅通过当前 DSH 的 subprocess/sandbox 与权限执行回调，工具、问答、通知、附件和用户消息复用原生服务；不会另启 Pi 模型、工具循环或账号。动态注册、before_agent_start/context 替换、自定义 TUI/render、appendEntry 等未接入，完整边界见 [Pi 文档](products/pi.md)。
+扩展仅通过当前 DSH 的 subprocess/sandbox 与权限执行回调，工具、问答、通知、附件和用户消息复用原生服务；活动回调可动态注册工具、命令与事件。不会另启 Pi 模型、工具循环或账号。before_agent_start/context 替换、自定义 TUI/render、appendEntry 等未接入，完整边界见 [Pi 文档](products/pi.md)。
+
+## 维护发行附件
+
+构建和两宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。完成 OMAA 与兼容 OMD 打包后，运行：
+
+```sh
+node scripts/release-assets.mjs --omd-version 0.8.1
+```
+
+脚本从当前源码版本和宿主清单选择四个包，核对包内版本、宿主、SHA256 与元数据，将十二份附件准备到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
 
 ## 卸载
 
