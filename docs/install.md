@@ -79,6 +79,9 @@ node scripts/release-assets.mjs --omd-version 0.8.1
 
 脚本从当前源码版本和宿主清单选择四个包，核对包内版本、宿主、SHA256 与元数据，将十二份附件准备到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
 
+
+已有同 tag 的 release 时，`.github/workflows/release.yml` 调用 `scripts/verify-release.mjs` 做幂等核对：tag 必须对应相同源码 commit，十二份资产 inventory、四个 tgz SHA 和 checksum 必须一致，metadata 只允许顶层 `createdAt` 不同。全部一致才成功；任何差异拒绝，流程不会 overwrite 现有 release 附件。
+
 ## 卸载
 
 Desktop 在原生插件管理器中移除 OMAA。Web／CLI 使用安装时的 profile：

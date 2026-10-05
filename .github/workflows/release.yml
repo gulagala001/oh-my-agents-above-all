@@ -49,14 +49,14 @@ jobs:
       - name: Verify tarball checksums
         working-directory: release-assets
         run: sha256sum --check --strict *.tgz.sha256
-      - name: Create a draft with both host packages
+      - name: Verify an existing release or create a draft with both host packages
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "Release ${RELEASE_TAG} already exists; refusing to overwrite published assets." >&2
-            exit 1
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            node scripts/verify-release.mjs --repo "$GH_REPO" --tag "$RELEASE_TAG" --assets release-assets
+            exit 0
           fi
           gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --title "OMAA ${RELEASE_TAG#v}" --generate-notes

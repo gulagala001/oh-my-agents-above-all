@@ -36,7 +36,7 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
   const redact = value => protectedValues.filter(value => typeof value === 'string' && value.length).sort((a, b) => b.length - a.length).reduce((text, secret) => text.replaceAll(secret, '[redacted]'), sanitize(value));
   const liveProviderId = liveSettings?.providerId ?? 'configured-dsh';
   const liveModel = liveSettings?.modelDefinition ?? { id: liveSettings?.model, name: liveSettings?.model, contextWindow: liveSettings?.contextWindow || 128000, maxTokens: liveSettings?.maxTokens || 8192, input: ['text'] };
-  let child, origin, cookie, log = '', responder, gate;
+  let child, origin, cookie, loginUrl, log = '', responder, gate;
   const requests = [], errors = [];
   const provider = createServer(async (req, res) => {
     try {
@@ -103,6 +103,7 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
     }, 45000).catch(error => { throw new Error(error.message + '\n' + redact(log)); });
     origin = new URL(url).origin;
     const login = await fetch(url, { redirect: 'manual' });
+    loginUrl = url;
     cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
     await until(async () => (await call('llm/listProviders', {})).some(value => value.id === (liveSettings ? liveProviderId : 'fixture')));
   };
@@ -123,7 +124,7 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
     }, timeout);
   };
   return {
-    get origin() { return origin; }, get cookie() { return cookie; },
+    get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
     root, home, workspace, piAgentDir, requests, errors, install, boot, stop, call, rpc, api, snapshot, prompt, send,
     uninstall: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'oh-my-agents-above-all']),
     create: agentPreset => rpc('session/create', { cwd: workspace, agentPreset }),

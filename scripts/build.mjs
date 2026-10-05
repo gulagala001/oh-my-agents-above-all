@@ -4,6 +4,7 @@ import { build, transform } from 'esbuild';
 import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
+import { buildZCodeArtifacts } from './build-zcode-artifacts.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
@@ -83,13 +84,23 @@ for (const [input, output, adapt] of [
 }
 await buildZCodeWorkflowCompiler();
 await buildZCodeWorldReads();
+await buildZCodeArtifacts();
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));
 }
 await build({ entryPoints: [root + 'src/client/index.jsx'], outfile: root + 'lib/client.js', bundle: true,
-  platform: 'browser', format: 'cjs', target: 'es2022', external: ['react', 'react-dom', 'react/jsx-runtime', '@deepseek-ai/dsh-client-ui-primitives'],
+  platform: 'browser', format: 'cjs', target: 'es2022', jsx: 'automatic', external: ['react', 'react-dom', 'react/jsx-runtime', '@deepseek-ai/dsh-client-ui-primitives'],
+  alias: Object.fromEntries([
+    ['@/ErrorBoundary.js', 'src/client/zcode-artifact-primitives.jsx'],
+    ['@/components/lib/utils.js', 'src/presets/zcode/sources/upstream/packages/ui/src/components/lib/utils.ts'],
+    ['@/components/ui/chart.js', 'src/presets/zcode/sources/upstream/packages/ui/src/components/ui/chart.tsx'],
+    ...['apply', 'spec', 'palette', 'parts'].map(name => ['@/app-shell/workflow-artifacts/presets/' + name + '.js', 'src/presets/zcode/sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/' + name + (name === 'parts' ? '.tsx' : '.ts')]),
+  ].map(([name, path]) => [name, root + path])),
   minifySyntax: true, minifyWhitespace: true,
+  // Escaped string literals retain dependency text without embedding trailing
+  // whitespace/newlines in the generated source's template literals.
+  supported: { 'template-literal': false },
   banner: { js: 'window.__ModuleLoader__.load({id:"oh-my-agents-above-all",factory:(require)=>{var module={exports:{}};var exports=module.exports;' },
   footer: { js: 'return module.exports;}});' },
   plugins: [{ name: 'css-text', setup(builder) { builder.onLoad({ filter: /\.css$/ }, async args => ({ contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`, loader: 'js' })); } }],

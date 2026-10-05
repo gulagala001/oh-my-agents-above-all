@@ -39,9 +39,26 @@ or rejected at the original limits, never silently truncated. `world.run(cmd,
 argv?, opts?)` takes a literal command name checked by the compiler and runs a
 native confined process. Nonzero exit is a result; timeout, cancellation and
 incomplete observations reject with a catchable error code. It uses the current
-session permissions without escalation. Artifact-registry calls are not
-connected and receive diagnostics before execution. A background run is a
-native workflow job with actual
+session permissions without escalation. `artifact.file(id, path, opts?)` and
+`artifact.markdown(id, content, opts?)` copy content into immutable native
+versions and return `{id, version}`. File sources must resolve inside the
+workspace, including their real paths. Publication failures can be caught and
+corrected; a later successful publication mints the next version. Use
+`{primary:true}` on the one deliverable that should lead the run's artifact view.
+
+Declare `artifact.chart/table/metrics/board(id, spec)` at the top level, then
+feed a declared dashboard with `report(item, id)`. Field selectors are objects
+such as `{field:"score", label:"Score", unit:"ms"}`. Charts use `x` and `y`;
+tables use `columns` and an optional row `key`; metrics use `metrics`; boards
+use `key`, `status`, `columns` and optional `cardTitle`/`detail`. Repeating an
+identical declaration is a no-op. A conflicting or invalid declaration, an
+undeclared report tag, or an invalid/over-budget report fails the run; these
+synchronous declarations and reports are not catchable publication effects.
+Content limits are 32 IDs per run, 16 successful versions per ID, 20 MiB per
+file and 256 KiB per Markdown. Reports retain the 256-item/32-KiB-per-item
+budget. Published versions remain available after workspace files change.
+
+A background run is a native workflow job with actual
 stop/completion behavior. Read the returned job identity and wait for its final
 outcome when the user asks you to wait.
 

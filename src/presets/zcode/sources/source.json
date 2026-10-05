@@ -1576,6 +1576,159 @@
       "kind": "official-source",
       "gitBlobSha1": "c9b0750f95db6bcd77f4a863c5e4276b8c35d604",
       "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/bootstrap/src/app/workflow-artifact-publish.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-artifact-publish.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/bootstrap/src/app/workflow-artifact-publish.ts",
+      "sha256": "ad1f946f6d126296af3e3b402e90fb46da1755a502bd32a7d0c67130dfffdb63",
+      "bytes": 25027,
+      "kind": "official-source",
+      "gitBlobSha1": "b20e28b240d910519a04be5779cbeabf7151bfd0"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/artifact-spec.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/artifact-spec.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/artifact-spec.ts",
+      "sha256": "ab16b674bbcd7e6ea0e49b9bc8af66e87cb76a099971b1d217fc304e31b1fa8e",
+      "bytes": 7929,
+      "kind": "official-source",
+      "gitBlobSha1": "3c360a878a619f7cc689fddfcdb6ef9fbee5759c"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "sha256": "1987bf40f7e6808172886dbbc086dd2ce970ccd2345916b3c887788cf4a53ec8",
+      "bytes": 1614,
+      "kind": "official-source",
+      "gitBlobSha1": "bf8f58d269bd912c3a603fe1621acbf775fcee35"
+    },
+    {
+      "file": "sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "sha256": "9f254e041ca748342b7e891971cfcb9a6d59feda7e160b1368d6e7f5835708b1",
+      "bytes": 51221,
+      "kind": "official-source",
+      "gitBlobSha1": "adb86ecaef629127088155c6c583ace2d1996fd5"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/spec.ts",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/spec.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/spec.ts",
+      "sha256": "f1c186a4d47f9b2b4075d87f8e93d10d556a874d0c368e7ec0b8c79335f68369",
+      "bytes": 7993,
+      "kind": "official-source",
+      "gitBlobSha1": "4284544fb3d6b4a54bd4d3e25d7bdbfd22797796"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/apply.ts",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/apply.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/apply.ts",
+      "sha256": "8e79182be516d50793de31d7654a4d150d2f31d403d104202111138611eb1070",
+      "bytes": 14216,
+      "kind": "official-source",
+      "gitBlobSha1": "6ef8ad3b19a1a694a44b6bd670b853f681b29530"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/palette.ts",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/palette.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/palette.ts",
+      "sha256": "3d33cc78767282fbb4d81ffbf154802c37b33e4c65fa635d570602eab2eae4f4",
+      "bytes": 2077,
+      "kind": "official-source",
+      "gitBlobSha1": "275c4fd6f72f574da48241f11b1ea4b51d089cd0"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/parts.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/parts.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/parts.tsx",
+      "sha256": "c862dc2b8c8c060914fd246e16e1ff9a722e5652be245a287d5dbc7286a62cf9",
+      "bytes": 3025,
+      "kind": "official-source",
+      "gitBlobSha1": "8305ef4c3ac61ed4cba9e4c2b0ce8f93e7d0a4b2"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactTable.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactTable.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactTable.tsx",
+      "sha256": "0678c5fab9446c2aa54fe1f58e873a85675f5f4f4ce03cb65938884b7668cb79",
+      "bytes": 4602,
+      "kind": "official-source",
+      "gitBlobSha1": "355c7269502c07c8b4a57513c082ef384cebe5b4"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactMetrics.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactMetrics.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactMetrics.tsx",
+      "sha256": "7ea717fbd7fe16a727b28ce73ce011006ce7db8f0190f8abe4741ee2b9844528",
+      "bytes": 3803,
+      "kind": "official-source",
+      "gitBlobSha1": "4f83ecff3ad6678f78314b87a044cb7ff1b45abc"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactBoard.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactBoard.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactBoard.tsx",
+      "sha256": "471d30f4cb507f41514eada2c7109fc8044ef631c2985168bf190e740f778e95",
+      "bytes": 5176,
+      "kind": "official-source",
+      "gitBlobSha1": "8304012857d46fe0d40975a49d44103129942f4f"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChart.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChart.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChart.tsx",
+      "sha256": "cf16b945cc46a5a6afcb4d4e0676817a154b180cf2531c53e3caeb928aab9d74",
+      "bytes": 2538,
+      "kind": "official-source",
+      "gitBlobSha1": "8a2d46c7c358dfc002a2c025646a424e5a09bb81"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChartView.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChartView.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChartView.tsx",
+      "sha256": "13e8da1a2d359fff9b252434c7eb29cb414b30b5b2b85cd5f671adef229c47c6",
+      "bytes": 12907,
+      "kind": "official-source",
+      "gitBlobSha1": "ef7071c517935418627d85d3041e4230da68e711"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/app-shell/workflow-artifacts/ArtifactPresetBody.tsx",
+      "path": "packages/ui/src/app-shell/workflow-artifacts/ArtifactPresetBody.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/app-shell/workflow-artifacts/ArtifactPresetBody.tsx",
+      "sha256": "c83a89a25be7e6ffcce7103ae9ce45d1e1ec67736ea6c189834056e21be41d96",
+      "bytes": 3567,
+      "kind": "official-source",
+      "gitBlobSha1": "9e3ae455d45663dc305a9a86d58a3d823ee5f6c3"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/components/ui/chart.tsx",
+      "path": "packages/ui/src/components/ui/chart.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/components/ui/chart.tsx",
+      "sha256": "272efec5aa60d34665104b45341d9f2b8cad4480070bca91e9d5409713b6fecd",
+      "bytes": 10685,
+      "kind": "official-source",
+      "gitBlobSha1": "7339de0820822a0cf48508b33944e1b31f02aec1"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/components/lib/utils.ts",
+      "path": "packages/ui/src/components/lib/utils.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/components/lib/utils.ts",
+      "sha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "bytes": 604,
+      "kind": "official-source",
+      "gitBlobSha1": "0f05a8e7a8462cf02b3c7aa29e3043783a4ef599"
+    },
+    {
+      "file": "sources/upstream/packages/ui/src/ErrorBoundary.tsx",
+      "path": "packages/ui/src/ErrorBoundary.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/packages/ui/src/ErrorBoundary.tsx",
+      "sha256": "2c6fa359534fad8bd27d74ec8086833531a7a338b8bb1abcc6efcf2a9f2911ed",
+      "bytes": 15329,
+      "kind": "official-source",
+      "gitBlobSha1": "290264436d5963d6d30412f75c65ceb902175a20"
     }
   ],
   "adaptation": {
@@ -1583,7 +1736,7 @@
     "main": "Full default stable/dynamic section output, with explicit host-surface and live-tool replacements documented in docs/products/zcode.md.",
     "plan": "Full official Enter/Exit text only when both host plan tools exist; preserve prior user consent via actual ask_user_question (explicit Plan selection counts), entry itself has no second approval; exit uses plan with Markdown heading and native Approve/Keep planning.",
     "compaction": "buildCompactionPrompt is the full official default compact instruction adapted to summary-only output in the existing DSH compaction transaction.",
-    "excluded": "Official client/agent runtime, account/provider machinery, original workflow engine and Actor scheduler, second compaction pipeline, unimplemented code-comment renderer, artifact registry, live graph UI and graph amendment. The fixed pure TypeScript compiler/facade/static analysis are retained and adapted separately."
+    "excluded": "Official client/agent runtime, account/provider machinery, original workflow engine and Actor scheduler, second compaction pipeline, unimplemented code-comment renderer, live graph UI and graph amendment. Fixed pure TypeScript compiler/facade/static analysis, world contracts and artifact validators/preset/chart presentation are retained and adapted separately."
   },
   "nativeWorkflow": {
     "module": "../workflow.mjs",
@@ -1595,7 +1748,7 @@
     "hostIntegration": "Actual native workflow-ptc, schema-checked child structured_output, native jobs/sandbox/permissions; skill gate uses actual successful native skill call. Explicit user workflow routing retained. No external client/account/second engine.",
     "differences": "The existing native JavaScript body/meta path remains available. Role-specific instructions use real native children without forcing a team. The original TypeScript Actor facade/typechecking/static graphs are implemented separately by typedWorkflowAdapter; original graph amendment and engine run-journal semantics are not supplied by the native JavaScript path.",
     "sha256": "9fb75714d07ea5c0df95a240c54ec4745d407e73e62e7742982bee0db669f277",
-    "skillSha256": "a4b3b8f966867fadd53c81cc69926d2d8d846769e026a51ee6d2cd121d08f6ed"
+    "skillSha256": "51106aa6e4c37022aea9ab4594375a00a3ad09be2db6b49c9bee7e15568db16e"
   },
   "nativeSessionContext": {
     "module": "../session-context.mjs",
@@ -1657,11 +1810,11 @@
       "marker": "// @omaa-workflow-facade: zcode",
       "dispatch": "run_saved_workflow selects create_workflow for marked definitions, workflow for native definitions; metadata argument defaults/types remain source-derived."
     },
-    "presentation": "create_workflow returns fixed static graph and causalityGraph data. Progress, phase/log/report narration and results use native jobs/tool outputs; this is not the original live graph UI.",
+    "presentation": "create_workflow returns fixed static graph and causalityGraph data and a native run identity. Progress, phase/log/report narration and results use native jobs/tool outputs; artifactAdapter supplies immutable content versions and a separate run/artifact panel. Static graph data is shown as JSON, not an original live graph UI.",
     "limits": [
       "256 KiB script/definition input limit",
       "Explicit workflow request or active Pro/Ultra authorization and successful zcode-workflows skill gate remain required",
-      "Artifact registry calls are diagnosed before execution; files/git/world.run are supplied by worldReadAdapter under native permissions.",
+      "Files/git/world.run are supplied by worldReadAdapter under native permissions; artifactAdapter supplies file/markdown and preset artifact contracts with original validators and native attachments.",
       "No graph amend, original client UI, original Actor scheduler or original durable workflow-engine journal"
     ],
     "verification": {
@@ -1669,8 +1822,8 @@
       "runtime": "test/installed-zcode-actors.test.mjs: native saved TypeScript facade, two committed structured results in one child, host stop/boot and human cold continuation preserving literal persona; background parent Ask switch stops and drains its native child.",
       "model": "One configured opencode-zen/space-bunny-free read/recall task completed two correct structured results in one Actor, native read occurred once; prior short attempt failed. No overall model/native-equivalence claim."
     },
-    "sha256": "b85a66dd5bd439c51201c28871a80cb565cc61b5b7013c04914cc14e1d257d5b",
-    "compilerAdapterSha256": "7aecdb0e24577a30a405f46605afa1d04b2ed90e18877154711c3fec76e3b4d9",
+    "sha256": "77febf806ed1e0732ceb795a38f17db252e14214c63b1c366ead088b4b29dbc2",
+    "compilerAdapterSha256": "24abccf19431d8415a3c7b60b692e589ff1698b215b42ba2899379d3028d6f6a",
     "actorAdapterSha256": "5f5d2539a0ee595baa5e293c64ea5b7e703a56e8fc8689a463a7ca81ba3faf97"
   },
   "savedWorkflowAdapter": {
@@ -1680,7 +1833,7 @@
     "format": "Original YAML block comment + native JavaScript or marked ZCode TypeScript body in .dwf.ts; project before global, scoped lookup/list. facade=zcode inserts // @omaa-workflow-facade: zcode when absent; the marker selects the matching execution entry on read/reuse.",
     "validation": "Original metadata and argument validation derived from source; Zod record overload adapted to host 4. Native definitions receive plain JavaScript syntax validation; ZCode definitions receive fixed TypeScript typecheck, analysis, schema synthesis and unsupported-facade checks before save. Defaults/types are validated before reuse, and each execution rechecks its script and current native permissions.",
     "limits": "256 KiB per definition, 256 directory entries/definitions, 1 MiB aggregate list reads",
-    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation and static graphs are implemented, while artifact registry, graph amend and original graph UI remain unavailable; worldReadAdapter supplies source-derived file/Git/world.run contracts. Saved metadata is a definition archive, not the original engine run journal.",
+    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation/static graphs, world contracts and artifact contracts/presentation are implemented through native adapters; graph amend, original live graph UI and dedicated saved-definition manager remain unavailable. Saved metadata is a definition archive, not the original engine run journal.",
     "sha256": "007a7edb44c09b3e2e5bfa2c86ece5607e4b8a7e9b3250e23876233617de3d62"
   },
   "worldReadAdapter": {
@@ -1721,12 +1874,115 @@
     },
     "differences": [
       "No per-command native Bash approval path or permission escalation; current workflow tool boundary and native policy apply.",
-      "No original world journal/replay, artifact registry, graph amend or live graph/world UI.",
+      "No original world journal/replay, graph amend or live graph/world UI; artifactAdapter separately supplies artifact contracts and native presentation.",
       "Native transport/file-race/process-provider limits remain; no universal escaped-descendant guarantee."
     ],
     "verification": "test/installed-zcode-world.test.mjs single installed native fixture: original glob semantics, UTF16 BOM/CRLF, bundled search/Git, undefined positional args, relative argv, nonzero result/catchable caps, native workspace-write and parent Ask background cancellation. No five-preset matrix or cross-platform/native-equivalence claim.",
     "sha256": "7751c42137757870bbab4e64a2adb1bda0190d51f777805dafdfe0f1d03aed0e",
     "buildSha256": "854a909b8f3aee57234364ce125cb9ab7797eb04aedead6524b56c3ae3181ba9",
     "modelVerification": "One configured opencode-zen/space-bunny-free task loaded the actual zcode-workflows skill and executed create_workflow to read/glob a native fact file, inspect native Git main branch and run a literal argv command; all returned values matched. This short task does not establish model-wide fidelity or stability."
+  },
+  "artifactAdapter": {
+    "status": "implemented in OMAA 0.8.0",
+    "module": "../artifacts.mjs",
+    "build": "scripts/build-zcode-artifacts.mjs",
+    "sources": [
+      "apps/zcode-cli/packages/bootstrap/src/app/workflow-artifact-publish.ts",
+      "apps/zcode-cli/packages/dynamic-workflow/src/engine/artifact-spec.ts",
+      "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/spec.ts",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/apply.ts",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/palette.ts",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/parts.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactTable.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactMetrics.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactBoard.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChart.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/presets/ArtifactChartView.tsx",
+      "packages/ui/src/app-shell/workflow-artifacts/ArtifactPresetBody.tsx",
+      "packages/ui/src/components/ui/chart.tsx",
+      "packages/ui/src/components/lib/utils.ts",
+      "packages/ui/src/ErrorBoundary.tsx"
+    ],
+    "retainedSourceFiles": 17,
+    "generated": [
+      "lib/zcode-artifact-shared.mjs",
+      "lib/zcode-artifact-publish.mjs",
+      "lib/zcode-artifact-spec.mjs",
+      "lib/zcode-artifact-primary.mjs",
+      "lib/zcode-artifact-ui-spec.mjs",
+      "lib/zcode-artifact-ui-apply.mjs",
+      "lib/zcode-artifact-palette.mjs"
+    ],
+    "sourceContract": "Fixed 29628c9 original-byte publish/spec/primary contracts, caps, JSON probe/hash, parse/fold/palette and complete ChartView/chart leaves. Builder extracts named pure declarations and adapts import tokens only; no WorkflowEngine, scheduler, provider/account runtime or original blob/journal backend is bundled.",
+    "content": "await artifact.file/markdown publishes immutable snapshots and returns {id,version}. Native root/realpath containment applies to file inputs. Missing/outside/oversize/primary publication failures preserve catchable original error codes; successful versions survive later workspace changes and whole-host cold restart. Primary is sticky under the original validator.",
+    "presets": "Top-level artifact.chart/table/metrics/board declarations snapshot the spec at call time; later caller mutation does not alter it. Tagged report(item,id) uses original JSON probe and budgets. Invalid declarations or reports fail the parent run even if the script catches a local error. Original parse/fold/palette supports paginated reports and table key upsert.",
+    "storage": "Native storage Domain omaa_zcode_workflows v1 retains only small per-run summaries. Full metadata, content versions and report items are native content-addressed file attachment refs; no separate blob store or native journal format change. Reads authorize session/run/version, reject cross-session access, and cold-inspect without activating or appending to the native session journal.",
+    "presentation": "Separate workflow artifact sidebar, tool-result View artifacts entry, per-run navigation and actual native Stop. Visible-only reads use singleflight, pending reread and stale-response filtering. Exact upstream ChartView uses pinned Recharts 3.8.0 via lazy loading and local error boundary; Table/Metrics/Board presentation adapts DSH CSS. Native attachments.fileHostPath selects immutable snapshots for native Text/Markdown/document previews. Graph/causality are actual static JSON only.",
+    "limits": {
+      "maxArtifactIdsPerRun": 32,
+      "maxSuccessfulVersionsPerArtifact": 16,
+      "fileBytes": 20971520,
+      "markdownBytes": 262144,
+      "maxReportItemsPerRun": 256,
+      "maxReportItemSerializedBytes": 32768
+    },
+    "dependencies": [
+      {
+        "name": "recharts",
+        "version": "3.8.0",
+        "license": "MIT",
+        "notice": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "name": "clsx",
+        "version": "2.1.1",
+        "license": "MIT",
+        "notice": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "name": "tailwind-merge",
+        "version": "3.5.0",
+        "license": "MIT",
+        "notice": "THIRD_PARTY_NOTICES.md"
+      }
+    ],
+    "differences": [
+      "No original engine journal/replay/resume, original scheduler or account/client runtime.",
+      "No live graph or graph amend; static graph/causality JSON is not an original dynamic graph UI.",
+      "Native Domain/attachments/session authorization and DSH presentation replace original storage/host integrations.",
+      "One real-model artifact task and alpha Web chart/table/native preview clicks were observed. Full UI, Desktop/Windows artifact UI and model-wide fidelity remain unverified; no five-preset matrix or complete-equivalence claim."
+    ],
+    "verification": {
+      "fixture": "test/installed-zcode-artifacts.test.mjs",
+      "log": ".cache/zcode-artifacts-installed-check.log",
+      "status": "One final installed-native fixture passed",
+      "scope": "Spec post-call mutation retains snapshots; two successful versions and workspace edits/whole-host cold restart retain content; four preset declarations and report pagination/table upsert; catchable large/escaped/missing/primary file publication failures; cross-session reads rejected; invalid spec fails parent run; reads do not append native events.",
+      "model": "One configured opencode-zen/space-bunny-free task loaded the actual zcode-workflows skill and executed create_workflow to declare chart/table, emit four tagged reports and publish immutable primary Markdown. Actual outcome completed, two chart data rows and the expected snapshot matched. No five-preset matrix or model-wide fidelity claim.",
+      "ui": "Actual alpha native web UI: completed create_workflow result View artifacts opened its requested run; original ChartView displayed the two-point chart, original table keyed replacement displayed one row/value3, and Open native preview loaded immutable published delivery.md from native attachment storage. One task and narrow-width interface observation only; rc2/Windows artifact UI not separately exercised."
+    },
+    "sha256": "c60a7eb82140813ca1917a246fe136add59352e44deff11250e68b928e267b16",
+    "hostAdapter": "src/host/zcode-artifacts.mjs",
+    "hostAdapterSha256": "6681a33b295668a7d79a6bf58b19a3fe748b5d4858acf16d2fef5b19041bd55e",
+    "buildSha256": "4da0fc9681463b76509bfc4bc6ff161166ad309266a1caaeae63e5f54006051a",
+    "adapterHashes": {
+      "src/presets/zcode/artifacts.mjs": "c60a7eb82140813ca1917a246fe136add59352e44deff11250e68b928e267b16",
+      "src/host/zcode-artifacts.mjs": "6681a33b295668a7d79a6bf58b19a3fe748b5d4858acf16d2fef5b19041bd55e",
+      "src/client/zcode-workflows.jsx": "20e186d69192399f82c0ba9f43062781cd5187e6672b5e1465aaf340268e3778",
+      "src/client/zcode-workflows.css": "2f37c762924a978ce1cd195f0d006855ecb3cfd95e9500aafe04f41ef679f7dc",
+      "src/client/zcode-workflow-tool.jsx": "04af8cb91aef231c6b81388e018e9736fc0e56126ec2a9cfb4b636a847c45c13",
+      "src/client/zcode-artifact-chart.jsx": "52b2e8363ea5193161ae35bb17926e44c6b09a1c4da1d9bc7f9e8c1229ff96bf",
+      "src/client/zcode-artifact-primitives.jsx": "ba77f8a2f5348e1e5dcd5e32425b8be9a56af9f093e285cdef2196a89c2311e4"
+    },
+    "generatedHashes": {
+      "lib/zcode-artifact-shared.mjs": "97ba7f8a1b41071f6aa72b4641105cf721a9c2dbb459c61a189f29320a857b45",
+      "lib/zcode-artifact-publish.mjs": "5c41cd108172f4a5bcc63a5e1666776249c4806dfa4db0231e0442b01ef8557a",
+      "lib/zcode-artifact-spec.mjs": "f1f39d63b93f27704522b298a9d8170bb7bd36a9848dd6cf7b8038ce23ae56df",
+      "lib/zcode-artifact-primary.mjs": "8933c2261dd299d9c68106f8886edecd4e2d9125176ed23a779c91a56a88fdad",
+      "lib/zcode-artifact-ui-spec.mjs": "bfb0ebffba79ee19869c1ebd127c009c16b8c7e4ee0063f552bee06c355304e7",
+      "lib/zcode-artifact-ui-apply.mjs": "86410a265afc5e34561f66805c788858ee16f41aec24c9b5cd00bc648eb50a2f",
+      "lib/zcode-artifact-palette.mjs": "811c34a6509f2de93f58c25d531e558b181f4460bf03aff8f0b19c0b52c99f0e"
+    }
   }
 }

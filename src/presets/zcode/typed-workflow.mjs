@@ -3,8 +3,9 @@ import { prepareTypedWorkflow } from './typed-compiler.mjs';
 import { createActors, installLiteralActorPersona } from './actors.mjs';
 import { createSavedWorkflowStore } from './saved-workflows.mjs';
 import { validateWorkflowArgs } from '../../../lib/zcode-saved-args.mjs';
-import { REPORT_CAPS } from '../../../lib/zcode-workflow-compiler.mjs';
 import { createWorldReads } from './world.mjs';
+import { createArtifacts } from './artifacts.mjs';
+import { WorkflowError } from '../../../lib/zcode-artifact-shared.mjs';
 
 export const name = 'omaa-zcode-typed-workflow';
 export const inject = ['omaa', 'tools', 'fs', 'agents', 'subagents', 'jobs', 'ptcRuntime', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -30,18 +31,40 @@ const __host = {
   },
   log(message) { __append({type:'log',message}); },
   enterPhase(title) { __append({type:'phase',title}); },
-  report(siteId,value,metric) { __append({type:'report',siteId,value,...metric===undefined?{}:{metric}}); },
+  report(siteId, value, artifactId) {
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized === undefined) throw new Error('The report value cannot be represented as JSON.');
+      __append({type:'report',siteId,serialized,...artifactId===undefined?{}:{artifactId}});
+    } catch (error) { __append({type:'report-error',message:error.message}); }
+  },
   worldRead(siteId, op, args) {
+    let encodedArgs;
+    try { encodedArgs = args.map(value => value === undefined ? {omitted:true} : {value:JSON.parse(JSON.stringify(value))}); }
+    catch (error) { return Promise.reject(Object.assign(error,{code:'DriverError'})); }
     const call = __narration.then(async () => {
-      const encodedArgs = args.map(value => value === undefined ? {omitted:true} : {value:JSON.parse(JSON.stringify(value))});
       const result = await zcodeHost.world({siteId,op,arguments:encodedArgs});
       if (result.ok) return result.value;
       throw Object.assign(new Error(result.error.message), {name:result.error.name,code:result.error.code});
     });
     call.catch(() => {}); return call;
   },
-  publishArtifact() { throw new Error('Artifact registry is not connected'); },
-  declareArtifact() { throw new Error('Artifact registry is not connected'); }
+  publishArtifact(siteId, op, args) {
+    let encodedArgs;
+    try { encodedArgs = args.map(value => value === undefined ? {omitted:true} : {value:JSON.parse(JSON.stringify(value))}); }
+    catch (error) { return Promise.reject(Object.assign(error,{code:'DriverError'})); }
+    const call = __narration.then(async () => {
+      const result = await zcodeHost.publishArtifact({siteId,op,arguments:encodedArgs});
+      if (result.ok) return result.value;
+      throw Object.assign(new Error(result.error.message), {name:result.error.name,code:result.error.code});
+    });
+    call.catch(() => {}); return call;
+  },
+  declareArtifact(siteId, op, args) {
+    try {
+      __append({type:'declare',siteId,op,arguments:args.map(value=>value===undefined?{omitted:true}:{value:JSON.parse(JSON.stringify(value))})});
+    } catch(error) { __append({type:'report-error',message:error.message}); }
+  }
 };
 try {
   const value = await (async () => {\n${lowered.code}\n})();
@@ -56,29 +79,36 @@ export function apply(ctx) {
   function start(parent, prepared, options, job, exec) {
     const control = new AbortController(), signal = control.signal, runId = randomUUID(), reports = [];
     const policy = ctx.sandboxPolicy.resolve({ session: parent.session }), policyKey = JSON.stringify(policy);
-    const record = { parent, control };
+    const record = { parent, control }; let fatalError;
+    const fatal = error => { if (!fatalError) { fatalError = error; control.abort(error); } };
     const check = () => {
+      if (fatalError) throw fatalError;
       signal.throwIfAborted();
       if (ctx.agents.get(parent.id) !== parent || JSON.stringify(ctx.sandboxPolicy.resolve({ session: parent.session })) !== policyKey) { control.abort(Error('The native parent or workflow permission changed.')); signal.throwIfAborted(); }
     };
     const progress = event => job?.append(JSON.stringify(event) + '\n');
     const actors = createActors({ ctx, parent, sites: prepared.sites, askSpecs: prepared.askSpecs, signal, progress });
     const world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec });
+    const artifacts = createArtifacts({ ctx, parent, prepared, runId, store: ctx.omaa.workflowArtifacts, signal, check, fatal, actor: exec });
     runs.set(runId, record);
     let narration = Promise.resolve();
     const functions = {
       async init() { check(); return { args: options.args ?? {}, nonce: runId }; },
       async ask(args) { check(); return actors.ask(args); },
       async world(args) { check(); return world.execute(args); },
+      async publishArtifact(args) { check(); return artifacts.publish(args); },
       async narrate(data) {
         check();
         const action = async () => {
-          if (data.type === 'phase') { if (typeof data.title !== 'string') throw Error('Phase title must be text.'); job?.updateProgress(data.title); }
+          if (data.type === 'phase') { if (typeof data.title !== 'string') throw Error('Phase title must be text.'); job?.updateProgress(data.title); await ctx.omaa.workflowArtifacts.mutate(parent.id, runId, value => { value.phase = data.title; }); }
           else if (data.type === 'log') { if (typeof data.message !== 'string') throw Error('Log message must be text.'); job?.append(data.message + '\n'); }
           else if (data.type === 'report') {
-            if (reports.length >= REPORT_CAPS.maxItemsPerRun || Buffer.byteLength(JSON.stringify(data.value)) > REPORT_CAPS.maxItemSerializedBytes) throw Error('Report exceeded the original ZCode report budget.');
-            reports.push(data); job?.append(JSON.stringify(data) + '\n');
+            const value = await artifacts.report(data);
+            const event = { type: 'report', siteId: data.siteId, value, ...(data.artifactId === undefined ? {} : { artifactId: data.artifactId }) };
+            reports.push(event); job?.append(JSON.stringify(event) + '\n');
           }
+          else if (data.type === 'declare') await artifacts.declare(data);
+          else if (data.type === 'report-error') { const error = new WorkflowError('DriverError', data.message); fatal(error); throw error; }
           else throw Error('Unknown workflow narration.');
           return null;
         };
@@ -86,21 +116,34 @@ export function apply(ctx) {
       },
     };
     const result = (async () => {
+      let outcome, began = false;
+      const errorValue = (error, kind = signal.aborted && !fatalError ? 'abort' : 'exception') => ({ kind, name: error.name,
+        message: error.message, ...(error.code ? { code: error.code } : {}) });
       try {
-        const outcome = await ctx.ptcRuntime.run(ctx.ptcRuntime.resolve({ program: programFor(prepared.lowered), bindings: [{ global: 'zcodeHost', functions }],
+        await ctx.omaa.workflowArtifacts.begin({ runId, sessionId: parent.id, name: options.name,
+          graph: prepared.graph, causalityGraph: prepared.causalityGraph, jobId: job?.id }, () => {
+          if (job) ctx.jobs.kill(job.id, parent.id, 'Workflow stopped from its artifact panel.');
+          else control.abort(Error('Workflow stopped from its artifact panel.'));
+        }); began = true; check();
+        outcome = await ctx.ptcRuntime.run(ctx.ptcRuntime.resolve({ program: programFor(prepared.lowered), bindings: [{ global: 'zcodeHost', functions }],
           cwd: parent.session.header.cwd, sandboxPolicy: policy, signal, timeoutMs: null }));
         await narration;
-        return { runId, ...outcome, reports, actors: actors.view() };
+        if (fatalError) outcome = { ...outcome, error: errorValue(fatalError) };
+      } catch (error) {
+        outcome = { error: errorValue(fatalError ?? error) };
       } finally {
         control.abort(Error('Workflow execution ended.'));
         try {
-          const closed = await Promise.allSettled([actors.close(), world.close()]);
+          const closed = await Promise.allSettled([actors.close(), world.close(), artifacts.close()]);
           const failures = closed.filter(value => value.status === 'rejected').map(value => value.reason);
-          if (failures.length) throw new AggregateError(failures, 'Native workflow resources could not be released.');
+          if (failures.length) outcome.error ??= errorValue(new AggregateError(failures, 'Native workflow resources could not be released.'), 'exception');
+          if (began) await ctx.omaa.workflowArtifacts.finish(parent.id, runId, outcome);
         } finally { runs.delete(runId); }
       }
+      return { runId, ...outcome, reports, actors: actors.view() };
     })();
     record.result = result;
+    ctx.omaa.workflowArtifacts.trackRun(runId, result, () => control.abort(Error('Workflow storage scope disposed.')));
     return { runId, result, cancel: reason => control.abort(Error(reason || 'Workflow canceled.')) };
   }
   ctx.on('session/event', (session, event) => {
@@ -113,12 +156,18 @@ export function apply(ctx) {
     if (exec.name === 'create_workflow' && ctx.omaa.modeFor(exec.agent.session) !== 'default') return 'Execute workflows only in the default working mode.';
   });
   ctx.tools.register({ name: 'create_workflow',
-    description: 'Typecheck and execute a ZCode TypeScript workflow with the original Actor facade: agent(name, persona?) creates a persistent conversational Actor; await actor.ask<T>(instructions) synthesizes and validates structured result schemas, while ask() and ask<string>() return final assistant text. Repeated asks reuse the same native DSH child and queue FIFO. Load zcode-workflows first; use only when the user chooses a workflow or enables Pro/Ultra. Supply exactly one source: script, path, or saved. Models, API, permissions, jobs and child sessions remain DSH-owned. files and git observations use the workspace and original result contracts; world.run executes only the script\'s declared literal commands under current native permissions. Artifact registry calls are diagnosed before execution.',
+    output: {
+      schema: { type: 'object' },
+      render: (_args, value) => [{ type: 'text', text: JSON.stringify(value, null, 2) }],
+      presentationMeta: (_args, value) => ({ ...(typeof value.runId === 'string' ? { runId: value.runId } : {}),
+        status: value.status === 'backgrounded' ? 'backgrounded' : value.error || value.ok === false ? 'failed' : 'completed',
+        ...(typeof value.jobId === 'string' ? { jobId: value.jobId } : {}) }),
+    },
+    description: 'Typecheck and execute a ZCode TypeScript workflow with the original Actor facade: agent(name, persona?) creates a persistent conversational Actor; await actor.ask<T>(instructions) synthesizes and validates structured result schemas, while ask() and ask<string>() return final assistant text. Repeated asks reuse the same native DSH child and queue FIFO. Load zcode-workflows first; use only when the user chooses a workflow or enables Pro/Ultra. Supply exactly one source: script, path, or saved. Models, API, permissions, jobs and child sessions remain DSH-owned. files and git observations use the workspace and original result contracts; world.run executes only the script\'s declared literal commands under current native permissions. artifact.file and artifact.markdown publish immutable content versions and return {id,version}; top-level artifact.chart/table/metrics/board declarations receive tagged report(item,id) data. Content publication failures are catchable; invalid declarations or reports fail the run. Use the returned run identity to view its published artifacts.',
     parameters: { type: 'object', properties: {
       script: { type: 'string' }, path: { type: 'string' }, saved: { type: 'object', properties: { name: { type: 'string' }, scope: { type: 'string', enum: ['project', 'global'] }, args: { type: 'object', additionalProperties: true } }, required: ['name'], additionalProperties: false },
       name: { type: 'string' }, args: { type: 'object', additionalProperties: true }, run_in_background: { type: 'boolean' },
     }, additionalProperties: false },
-    output: { schema: { type: 'object' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value, null, 2) }] },
     async execute(args, exec) {
       if ([args.script, args.path, args.saved].filter(value => value !== undefined).length !== 1) throw Error('Provide exactly one workflow source: script, path, or saved.');
       const store = createSavedWorkflowStore(ctx, exec); let script = args.script, name = args.name, values = args.args ?? {};

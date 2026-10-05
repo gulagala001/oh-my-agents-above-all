@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { createSessionSettings, PresetControls } from './preset-controls.jsx';
 import { CheckpointControls } from './checkpoint-controls.jsx';
 import { GitReview } from './git-review.jsx';
@@ -8,6 +8,8 @@ import controlsCss from './preset-controls.css';
 import { Updates } from './updates.jsx';
 import updatesCss from './updates.css';
 import { PiExtensions, applyPiExtensionNotices } from './pi-extensions.jsx';
+import { ZCodeWorkflows } from './zcode-workflows.jsx';
+import { ZCodeWorkflowTool } from './zcode-workflow-tool.jsx';
 
 export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation'];
 
@@ -20,7 +22,13 @@ export function apply(ctx) {
   const Controls = () => <PresetControls {...{ settings, getThemeRuntime }}/>
   function PanelControls(props) {
     const { tab } = props.useTabInfo();
-    return <><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/><CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></>;
+    const current = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
+    return <><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/>{current.data?.product?.id === 'zcode' && <button type="button" onClick={() => ctx.sidebarRight.openTab('omaa-zcode-workflows')}>查看工作流产物</button>}<CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></>;
+  }
+  function WorkflowPanel(props) {
+    const { tab } = props.useTabInfo();
+    return <ZCodeWorkflows settings={settings} sidebarRight={ctx.sidebarRight} visible={tab.visible}
+      requestedRunId={typeof tab.navigation?.params?.runId === 'string' ? tab.navigation.params.runId : undefined}/>;
   }
   const Chip = () => <PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/>
   ctx.effect(() => {
@@ -34,4 +42,10 @@ export function apply(ctx) {
   const panelId = 'omaa/omaa-preset';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: panelId, kind: 'omaa-preset', title: () => '预设设置', guide: [] }));
   ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: panelId }, PanelControls));
+  const workflowPanelId = 'omaa/omaa-zcode-workflows';
+  ctx.effect(() => ctx.sidebarRightTabs.register({ id: workflowPanelId, kind: 'omaa-zcode-workflows', title: () => '工作流产物', guide: [] }));
+  ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: workflowPanelId }, WorkflowPanel));
+  ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key: 'create_workflow',
+    inject: sessionId => ({ openArtifacts: runId => ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } }) }),
+  }, ZCodeWorkflowTool));
 }
