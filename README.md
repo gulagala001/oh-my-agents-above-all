@@ -34,6 +34,10 @@ dsh web
 
 运行中的会话先使用原生停止入口，再修改预设设置。文件、diff、工具结果、附件和继续工作仍使用 DSH 的现有界面与生命周期。
 
+OMAA 0.6 提供 **ZCode TypeScript Actor 工作流**：固定原厂编译器、静态分析、schema 合成与 lowering 在执行前检查脚本，再交给 DSH 隔离 PTC 运行。`agent(name, persona)` 创建 Actor；同一 Actor 的多次 `ask<T>` 按 FIFO 复用持久原生 child，typed 结果通过 `submit_result` 校验，并在原生工具结果成功后提交。停止与收尾使用原生 jobs、取消及 child drain。保存时选择 `facade="zcode"`，复用时按保存的标记恢复该入口；已有 `facade="native"` JavaScript 工作流继续保留。
+
+该适配输出真实静态 graph/causality 数据；原厂动态图界面、graph amend、world-read facade 与 artifact registry 尚未接入，不支持的 facade 调用在执行前报告诊断。它使用 DSH 的模型、权限与会话，不运行原厂 Actor 引擎或客户端。
+
 Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；开启 OMD 增强后可使用工作流支持。基础增强不强制工作流编排。安装或卸载 OMD 后需重载对应 profile，让预设重新选择工作流 engine；不支持无重载热切换。
 
 ## 五个预设的差异
@@ -44,7 +48,7 @@ Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；�
 | Grok Build | 官方条件主提示词、计划/提问/任务、实时监控、interval 调度、独立主题 | 原生作业/会话；无跨会话 durable、即时首 fire 或原厂七天 TTL |
 | Cursor | 完整公开样本适配、MDC 规则、Plan/Ask、文件检查点、IDE/Agent 对话布局 | 样本非官方公开源码；专有 Instant Grep、Composer、云代理与 IDE 上下文不等同于宿主能力 |
 | Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题；源码新增显式本地扩展桥 | 不加入默认计划/子代理；扩展仅支持已接入的 API，不运行完整 Pi 代理/TUI；不同原生 sessionId 共享目录，同树日志和更早取消边界仍有差异 |
-| ZCode | 完整上下文、原生计划、实际工作流/结构化子代理、冷历史回查与主题 | JS/meta 和当前 DSH 模型；原厂 TS facade、graph amend、服务及界面有差异 |
+| ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图 | DSH 模型、隔离 PTC 与持久原生 child；world-read、artifact registry、graph amend 和原厂动态图界面尚未接入 |
 
 来源原文与实际适配分开保存，详细依据见 [产品资料](docs/product-sources.md) 和 [产品文档](docs/products/)。Cursor 配色沿用当前 DSH，桌面布局参考官方公开界面；没有把 CLI 登录前颜色当作整个 Cursor 的主题。
 
@@ -56,7 +60,7 @@ pnpm build
 node scripts/package.mjs
 ```
 
-`pnpm build` 生成预设注册清单和 Web 客户端；`node scripts/package.mjs` 在 `dist` 生成当前宿主版本的 `.tgz`、SHA256 和元数据。桌面 DSH `0.2.0-rc.2` 使用 `node scripts/package.mjs --host-version 0.2.0-rc.2`；Web DSH `0.2.1-alpha.1` 可显式使用 `--host-version 0.2.1-alpha.1`。打包只复制发行白名单到独立 staging，并在副本内绑定对应宿主 SDK 和 loader，不改变源码 `package.json`；应先完成源码构建。卸载使用安装时的 profile：
+`pnpm build` 生成预设注册清单、Web 客户端和 ZCode 纯编译器 bundle；TypeScript `5.9.3` 的 57 份 ES2022 标准库声明在构建时嵌入，编译脚本不读取工作区文件。`node scripts/package.mjs` 在 `dist` 生成当前宿主版本的 `.tgz`、SHA256 和元数据。桌面 DSH `0.2.0-rc.2` 使用 `node scripts/package.mjs --host-version 0.2.0-rc.2`；Web DSH `0.2.1-alpha.1` 可显式使用 `--host-version 0.2.1-alpha.1`。打包只复制发行白名单到独立 staging，并在副本内绑定对应宿主 SDK 和 loader，不改变源码 `package.json`；应先完成源码构建。卸载使用安装时的 profile：
 
 ```sh
 dsh plugin --profile web remove oh-my-agents-above-all

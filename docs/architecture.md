@@ -57,3 +57,6 @@ OMAA 自身继续使用 `scripts/package.mjs` 从同一源码绑定 rc.2／alpha
 无项目草稿进入原生工作区时，由兼容 OMD 调用 OMAA 的设置迁移接口。后端从源会话读取增强、主题和工作模式，先启用增强再调用既有 OMD Pro/Ultra 模型控制器，并恢复 Ask/Plan；原生模型、权限与草稿提交仍由宿主负责。仅空闲未发送的目标可接收迁移；目标手动修改后拒绝覆盖，失败保留源草稿，重复请求通过私有迁移收据识别。新建草稿也可继承已有源会话设置，不复制消息或执行日志。
 
 OMD 人格／初始身份兼容与工具增强独立。每次装配读取同一 OMD `personalityText(config)`，只替换五套默认 persona 的开头身份，不复制设置或修改原厂来源文件；字符串按字面插入。空身份移除预设内建身份文字，子代理保留各自职责。Pi 自定义 SYSTEM.md 原文保留，OMD 身份放在它之前；未安装 OMD 时保持独立预设原文。原生系统消息位置和更新生命周期继续由 DSH 管理。
+
+
+ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。脚本先经原厂 analyze/typecheck、site table、schema 合成和 lowering，再由隔离 native ptcRuntime 运行；没有原厂引擎、provider 或独立模型循环。Actor 以 native continuable childId 持久存在，重复 ask 排队且每次声明实际 submit_result，成功结果和关联回合结束共同决定提交。原生 descriptor 保存 literal persona，长期装配 hook 保证冷恢复；脚本正常返回会取消遗留 ask 并等待 drain。背景执行和停止通过原生 jobs，父权限/Ask/Plan 变化会主动取消。定义档的 facade marker 决定 TypeScript 或既有 JavaScript 路由；静态图是纯分析输出，不等同于原厂动态图、amend 或运行日志重放。

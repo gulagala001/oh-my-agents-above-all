@@ -17,9 +17,15 @@ Use the actual workflow schema: supply the plain JavaScript body in script and t
 
 export function workflowGuidanceFor(mode = 'off', tools = new Set()) {
   let guidance = workflowGuidance;
+  if (tools.has('create_workflow')) {
+    guidance = guidance.replace('Create and run a dynamic workflow: a JavaScript script that orchestrates multiple model-driven subagents with plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results.',
+      'Create and run a dynamic workflow with create_workflow: a TypeScript script using the ZCode Actor facade, plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results. agent(name, persona?) creates an Actor; await actor.ask<T>(instructions) reuses that Actor\'s native child context and executes its tasks FIFO.');
+    guidance = guidance.replace('Use the actual workflow schema: supply the plain JavaScript body in script and the name, description and phases in meta.',
+      'Use the actual create_workflow schema: supply the TypeScript body in script, or use path or saved as the sole source. Put phase boundaries in phase(title). The host typechecks and lowers the script before execution. The workflow tool remains available for the native JavaScript facade described by the skill; do not mix those two agent APIs.');
+  }
   if (['list_saved_workflows', 'read_saved_workflow', 'save_workflow', 'run_saved_workflow'].every(name => tools.has(name))) {
     guidance = guidance.replace('A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit.',
-      'Check list_saved_workflows before writing a workflow from scratch. Use run_saved_workflow to run a fitting saved definition by name through the same native workflow tool; pass actual JSON arguments matching its declarations. Project definitions shadow global definitions unless scope is specified. Use read_saved_workflow or read to inspect a definition before revising it. Save only when the user asks or agrees: save_workflow stores the plain JavaScript body and metadata in the selected project or global .zcode/workflows directory; pass script or script_path, never both.');
+      'Check list_saved_workflows before writing a workflow from scratch. Use run_saved_workflow to run a fitting saved definition by name through its recorded facade; pass actual JSON arguments matching its declarations. Project definitions shadow global definitions unless scope is specified. Use read_saved_workflow or read to inspect a definition before revising it. Save only when the user asks or agrees: save_workflow stores the body and metadata in the selected project or global .zcode/workflows directory; choose facade="zcode" for TypeScript Actors or the default facade="native" for JavaScript, and pass script or script_path, never both.');
   }
   if (!['pro', 'ultracode'].includes(mode)) return guidance;
   return guidance.replace('- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.',
@@ -33,7 +39,7 @@ export function apply(ctx) {
     customSkillDirs: [fileURLToPath(new URL('./skills/', import.meta.url))], watch: false })));
   ctx.effect(() => () => provider?.dispose(), 'ZCode workflow skill');
   ctx.tools.guard(exec => {
-    if (!['workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
+    if (!['workflow', 'create_workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
     const events = exec.agent.session.snapshotEvents();
     const calls = new Set(events.filter(event => {
       if (event.type !== 'tool/call' || event.data.name !== 'skill') return false;

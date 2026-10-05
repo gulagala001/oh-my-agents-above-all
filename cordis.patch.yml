@@ -934,6 +934,24 @@
                       "name": "oh-my-agents-above-all/zcode-workflow"
                     },
                     {
+                      "id": "zcode-typed-workflow",
+                      "name": "cordis:group",
+                      "group": true,
+                      "isolate": {
+                        "ptcRuntime": true
+                      },
+                      "config": [
+                        {
+                          "id": "ptc-runtime",
+                          "name": "@deepseek-ai/dsh-ptc-runtime-node"
+                        },
+                        {
+                          "id": "zcode-actor-workflow",
+                          "name": "oh-my-agents-above-all/zcode-typed-workflow"
+                        }
+                      ]
+                    },
+                    {
                       "id": "omaa-preset",
                       "name": "oh-my-agents-above-all/agent",
                       "config": {

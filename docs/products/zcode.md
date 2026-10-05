@@ -35,7 +35,11 @@
 
 ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/作业生命周期。保留用户明确点名才启动、任务很小也尊重其工具选择的原要求；不在普通任务自动套固定团队。先用真实 `skill` 加载随包的 `zcode-workflows`，工具 guard 根据原生成功调用拒绝未加载时的脚本。脚本支持原生 JavaScript 控制流、独立并发、阶段、日志和 schema 中间结果；子代理以实际 `structured_output` 返回值，父代理收到真实值或失败，不用文本假报成功。子代理身份和证据段按真实读者/工具契约适配。复用 DSH 模型/API、沙箱与唯一执行器，没有另建官方账户或 workflow engine。
 
-原厂 TypeScript facade/typecheck、自动专家/planner/critic 生成过程、命名工作流注册表、同一运行中的 graph amend 和原厂 workflow 审批/节点界面仍有差异。可复用脚本是用户项目文件，经原生 read/write/edit 管理；修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入。此行为明确是宿主适配，不冒充同一个原厂运行原位修图。
+`create_workflow` 接入固定原厂 TypeScript compiler、facade、静态分析、类型结果 schema 合成与 lowering。保留的 69 份纯来源文件与 TypeScript 5.9.3 的 57 份虚拟 ES2022 声明参与构建；不加载原厂 Actor 引擎、模型供应商或客户端。编译器检查脚本及静态调用点，再将控制流交给原生隔离 PTC。执行权限来自宿主沙箱和子代理委派策略，TypeScript 检查本身不是安全隔离。
+
+`agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于原生 descriptor，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
+
+支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。world-read facade 与 artifact registry 尚未接入，相关调用在执行前诊断。自动专家/planner/critic 生成、同一运行的 graph amend、原厂 workflow 审批/动态图界面与原厂运行日志重放仍有差异。修改正在执行的脚本时先停止实际 job，再按修订脚本启动新 run，原有结果可作为 args 传入，不冒充原位修图或原厂工作流重放。
 
 `read_session_context` 读取用户明确引用的原生 session id，使用公开 `sessionController.inspect`，支持冷历史且不激活/修改原会话。原厂相关度评分、中文 query 拆词、tail/chunk 选择、上下文格式及预算函数来自固定完整 `session-context/read-session-context.ts`，在 build 时仅替换 native message/part 边界并编译，不概括重写算法。读取只收集可见用户/助手文本与实际工具结果，忽略系统注入和思维块；历史内容作为背景材料。默认使用当前已配置 DSH 模型做有界提取，大历史按原策略选择最多五块后合成；提取不可用返回有界原文，标明 fallback。原厂 lite 模型路线改为现有 DSH route，原生日志查询和历史层不替换。
 
@@ -50,10 +54,12 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 `list_saved_workflows`、`read_saved_workflow`、`save_workflow`、`run_saved_workflow` 接入固定官方保存定义契约。项目档在 `cwd/.zcode/workflows/<name>.dwf.ts`，全局档在 `~/.zcode/workflows/<name>.dwf.ts`；同名项目优先，指定 scope 可查另一档。列表只扫描一层，报告坏文件并保留其余定义。名字按原版 1–64 字符与字符集限制；metadata 是原版严格 YAML block comment，正文逐字保留。原版 codec 与参数校验由固定源码生成，metadata 的 Zod 3 record 调用仅适配到宿主 Zod 4。
 
-保存前要求已实际加载 `zcode-workflows` 技能，且用户主动提出或同意保存。inline body 与 script_path 恰好给一个；后者若是保存定义，剥离旧 metadata，采用本次传入 metadata。只检查当前宿主 JavaScript body 的语法，不执行脚本，不声称运行原厂 TS facade 编译器。实际保存由同一个 native `write` 执行，保留原生权限、取消、文件观察与 stale-read/CAS；Ask/Plan 不允许保存或运行。读取和列举允许在只读模式下使用。
+保存前要求已实际加载 `zcode-workflows` 技能，且用户主动提出或同意保存。inline body 与 script_path 恰好给一个；后者若是保存定义，剥离旧 metadata，采用本次传入 metadata。`facade="zcode"` 使用真实 TypeScript 编译检查并加入 `// @omaa-workflow-facade: zcode` 注释，默认 `facade="native"` 保持原有 JavaScript 语法检查；保存不执行正文。实际保存由同一个 native `write` 执行，保留原生权限、取消、文件观察与 stale-read/CAS；Ask/Plan 不允许保存或运行。读取和列举允许在只读模式下使用。
 
-按名运行先读取一次对应文件，按原版声明检查全部未知／缺失／类型错误并应用默认值，再调用当前已安装的 native `workflow`。`string/number/boolean/json` 保留原版语义，number 要求有限值，default 与 caller value 共用检查。前后台、model/API、phase、子代理、停止和原生运行日志继续由宿主负责；named wrapper 使用 top-level native workflow action，保留既有 run-start/run-end 记录，未生成第二种执行日志。`phases` 可传原生 title/detail/provider/model 信息，当前 DSH 的模型配置仍是执行来源。
+按名运行先读取一次对应文件，按原版声明检查全部未知／缺失／类型错误并应用默认值，再按保存的 facade 标记调用 `create_workflow` 或原有 native `workflow`。`string/number/boolean/json` 保留原版语义，number 要求有限值，default 与 caller value 共用检查。模型/API、权限、作业和子会话继续由宿主负责；native JavaScript 路径保留既有 run-start/run-end 记录，TypeScript 路径使用 native jobs 和子会话 journal，不生成原厂第二种执行日志。`phases` 的 title/detail/provider/model 信息用于 native JavaScript；Actor 的阶段写在脚本里，默认继承当前 DSH 模型配置。
 
-每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。原厂 TS 类型检查、完整 dwf facade、graph amend 和专用保存管理器仍有差异，不靠文件扩展名宣称等价。
+每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。world-read/artifact facade、graph amend 和专用保存管理界面仍有差异，不靠文件扩展名宣称等价。
 
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
+
+TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已实际核对 typed 保存/按名运行、两次真实 submit_result、同一原生日志、整宿主重启后的字面角色续问；另一个短用例核对后台运行在父会话切到 Ask 后停止并等待 child drain。已配置 Space Bunny Free 的短任务实际读取一次 fact.txt，再在同一 Actor 中只凭历史返回第二个类型化结果，两次正确；它不证明所有模型或复杂编排质量。
