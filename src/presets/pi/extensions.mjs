@@ -86,9 +86,15 @@ export function apply(ctx) {
     const { agent, state, exec } = context; signal.throwIfAborted(); assertPolicy(agent, state);
     if (Array.isArray(args)) {
       const fields = { 'ui.notify': ['text', 'type'], 'ui.select': ['title', 'options', 'dialogOptions'], 'ui.confirm': ['title', 'message', 'dialogOptions'], 'ui.input': ['title', 'placeholder', 'dialogOptions'],
-        sendUserMessage: ['content', 'options'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'] }[method];
+        sendUserMessage: ['content', 'options'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'] }[method];
       if (!fields) throw Error('未支持 Pi API 参数: ' + method);
       args = Object.fromEntries(fields.map((key, i) => [key, args[i]]));
+    }
+    if (method === 'syncRegistrations') {
+      if (state.status !== 'ready' || state.disposal && context.eventName !== 'session_shutdown') throw Error('扩展注册仅可在当前已加载的回调中更改');
+      syncRegistrations(agent, state, args.descriptors);
+      const { allTools, activeTools, commands } = snapshot(agent, state);
+      return { allTools, activeTools, commands };
     }
     if (method === 'ui.notify') { settings.notify(agent, args.text ?? args.message, args.type); return; }
     if (['ui.select', 'ui.confirm', 'ui.input'].includes(method)) {
@@ -146,8 +152,80 @@ export function apply(ctx) {
     }
     throw Error('尚未适配 Pi API: ' + method);
   }
+  function toolRegistration(agent, state, tool) {
+    return agent.ctx.get('tools').register({ name: tool.name, description: tool.description, parameters: tool.parameters,
+      output: { schema: { type: 'object', properties: { content: { type: 'array', items: { type: 'object' } }, details: {}, structuredContent: tool.outputSchema ?? {} }, required: ['content', ...(tool.outputSchema ? ['structuredContent'] : [])], additionalProperties: false },
+        render: (_args, value) => content(value.content), presentationMeta: (_args, value) => ({ piExtension: { details: value.details ?? {}, toolName: tool.name } }) },
+      async execute(params, exec) {
+        assertPolicy(agent, state);
+        // A native invocation may already have captured this definition when a
+        // later callback replaces it. Keep its original guest callback ID.
+        const value = await invoke(agent, state, { kind: 'tool', callbackId: tool.callbackId, callId: exec.callId, params }, exec.signal, exec);
+        if (value.isError) throw Error(textOf(value.content) || 'Pi extension tool failed');
+        const admitted = await admitContent(value.content, exec.signal);
+        return { content: admitted, ...(value.details !== undefined ? { details: value.details } : {}), ...(value.structuredContent !== undefined ? { structuredContent: value.structuredContent } : {}) };
+      } });
+  }
+  function commandRegistration(agent, state, command) {
+    return agent.ctx.get('commands').register({ name: command.name, description: command.description,
+      async handler(input) {
+        await ensure(agent, input.signal);
+        const callbackId = state.descriptors?.commands.find(c => c.name === command.name)?.callbackId;
+        if (!callbackId) throw Error('Pi 扩展命令已移除，请刷新');
+        await invoke(agent, state, { kind: 'command', callbackId, args: input.rawInput.trimStart() }, input.signal);
+        return { kind: 'success', text: '/' + command.name };
+      } });
+  }
+  function syncRegistrations(agent, state, descriptors) {
+    if (!descriptors || !Array.isArray(descriptors.tools) || !Array.isArray(descriptors.commands) || !Array.isArray(descriptors.events) || descriptors.tools.length > 128 || descriptors.commands.length > 128 || descriptors.events.some(e => !supportedEvents.has(e))) throw Error('扩展注册内容包含未支持的接口或超过上限');
+    const names = new Set(), commandNames = new Set();
+    for (const tool of descriptors.tools) {
+      if (!tool || typeof tool.name !== 'string' || !/^[A-Za-z0-9_]{1,64}$/.test(tool.name) || names.has(tool.name) || !state.toolRegistrations.has(tool.name) && ctx.tools.get(tool.name, agent)) throw Error('扩展工具名称无效、重复或与原生工具冲突: ' + tool?.name);
+      if (typeof tool.callbackId !== 'string' || !tool.callbackId || typeof tool.description !== 'string' || !tool.parameters || typeof tool.parameters !== 'object' || Array.isArray(tool.parameters)) throw Error('Pi 扩展工具定义无效: ' + tool.name);
+      if (tool.prepareArguments || tool.prepareLoadout || tool.exposure && !['direct', 'model-only'].includes(tool.exposure)) throw Error('尚未适配扩展工具的 prepare/exposure 接口');
+      if (tool.constrainedSampling !== undefined || tool.renderShell !== undefined) throw Error('尚未适配扩展工具的 constrainedSampling/renderShell 接口');
+      if (tool.promptSnippet !== undefined && typeof tool.promptSnippet !== 'string' || tool.promptGuidelines !== undefined && (!Array.isArray(tool.promptGuidelines) || tool.promptGuidelines.length > 64 || tool.promptGuidelines.some(rule => typeof rule !== 'string'))) throw Error('Pi 扩展工具的 promptSnippet/promptGuidelines 无效');
+      names.add(tool.name);
+    }
+    const nativeCommands = new Set(ctx.commands.list(agent).map(c => c.name));
+    for (const command of descriptors.commands) {
+      if (!command || typeof command.name !== 'string' || !/^[a-z][a-z0-9_-]{0,63}$/.test(command.name) || commandNames.has(command.name) || !state.commandRegistrations.has(command.name) && nativeCommands.has(command.name)) throw Error('扩展命令名称无效、重复或与原生命令冲突: ' + command?.name);
+      if (typeof command.callbackId !== 'string' || !command.callbackId || typeof command.description !== 'string' || !command.description.trim()) throw Error('Pi 扩展命令定义无效: ' + command.name);
+      commandNames.add(command.name);
+    }
+    const changes = [], additions = [];
+    for (const [kind, registry, definitions] of [['tool', state.toolRegistrations, descriptors.tools], ['command', state.commandRegistrations, descriptors.commands]]) {
+      const next = new Map(definitions.map(d => [d.name, d]));
+      for (const [name, registration] of registry) if (!isDeepStrictEqual(registration.descriptor, next.get(name))) changes.push({ kind, registry, name, registration });
+      for (const descriptor of definitions) if (!isDeepStrictEqual(registry.get(descriptor.name)?.descriptor, descriptor)) additions.push({ kind, registry, descriptor });
+    }
+    const register = (kind, definition) => kind === 'tool' ? toolRegistration(agent, state, definition) : commandRegistration(agent, state, definition);
+    const installed = [];
+    // Native scoped registries forbid same-name duplicates. Replace in one
+    // synchronous transaction, without yielding a partly changed registry.
+    try {
+      for (const change of changes) change.registration.dispose();
+      for (const addition of additions) installed.push({ ...addition, dispose: register(addition.kind, addition.descriptor) });
+    } catch (error) {
+      for (const item of installed.reverse()) item.dispose();
+      for (const change of changes) change.registration.dispose = register(change.kind, change.registration.descriptor);
+      throw error;
+    }
+    const previouslyActivated = new Set((state.descriptors?.tools ?? []).filter(t => t.defaultActive !== false).map(t => t.name));
+    for (const change of changes) change.registry.delete(change.name);
+    for (const item of installed) item.registry.set(item.descriptor.name, { descriptor: item.descriptor, dispose: item.dispose });
+    const known = new Set(ctx.tools.schemas(agent).map(t => t.name));
+    if (state.active) {
+      state.active = new Set([...state.active].filter(name => known.has(name)));
+      for (const tool of descriptors.tools) if (tool.defaultActive !== false && !previouslyActivated.has(tool.name)) state.active.add(tool.name);
+    } else if (descriptors.tools.some(t => t.defaultActive === false)) {
+      const inactive = new Set(descriptors.tools.filter(t => t.defaultActive === false).map(t => t.name));
+      state.active = new Set([...known].filter(name => !inactive.has(name)));
+    }
+    state.descriptors = descriptors; state.events = new Set(descriptors.events);
+  }
   function makeState(agent) {
-    const state = { status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), disposers: [], events: new Set(), guest: null, key: null, policyKey: null,
+    const state = { status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
       busy: () => Boolean(state.loading || state.calls || state.disposal),
       view: () => ({ status: state.status, ...(state.error ? { error: state.error } : {}), tools: state.descriptors?.tools.map(t => t.name) ?? [], commands: state.descriptors?.commands.map(c => c.name) ?? [] }),
       async dispose({ shutdown = true } = {}) {
@@ -157,10 +235,10 @@ export function apply(ctx) {
         const guest = state.guest;
         if (shutdown && guest && !guest.stopped && state.status === 'ready' && state.events.has('session_shutdown')) {
           try { await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: snapshot(agent, state) },
-            { context: { agent, state }, signal: AbortSignal.timeout(2000), timeoutMs: 2000 }); }
+            { context: { agent, state, eventName: 'session_shutdown' }, signal: AbortSignal.timeout(2000), timeoutMs: 2000 }); }
           catch (error) { ctx.logger.warn('Pi extension shutdown: ' + error.message); }
         }
-        for (const dispose of state.disposers.splice(0).reverse()) dispose();
+        for (const registry of [state.toolRegistrations, state.commandRegistrations]) { for (const entry of registry.values()) entry.dispose(); registry.clear(); }
         state.guest = null; state.key = null; state.active = null; state.events.clear(); state.descriptors = null; state.status = 'disabled';
         if (guest) await guest.close();
         })().then(disposal.resolve, disposal.reject);
@@ -189,41 +267,7 @@ export function apply(ctx) {
       try {
         state.guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd: agent.session.header.cwd, signal, api });
         const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: snapshot(agent, state) }, { signal, timeoutMs: 30000 });
-        if (!Array.isArray(descriptors.tools) || !Array.isArray(descriptors.commands) || !Array.isArray(descriptors.events) || descriptors.tools.length > 128 || descriptors.commands.length > 128 || descriptors.events.some(e => !supportedEvents.has(e))) throw Error('扩展注册内容包含未支持的接口或超过上限');
-        state.descriptors = descriptors; state.events = new Set(descriptors.events);
-        const names = new Set();
-        for (const tool of descriptors.tools) {
-          if (typeof tool.name !== 'string' || !/^[A-Za-z0-9_]{1,64}$/.test(tool.name) || names.has(tool.name) || ctx.tools.get(tool.name, agent)) throw Error('扩展工具名称无效、重复或与原生工具冲突: ' + tool.name);
-          if (tool.prepareArguments || tool.prepareLoadout || tool.exposure && !['direct', 'model-only'].includes(tool.exposure)) throw Error('尚未适配扩展工具的 prepare/exposure 接口');
-          if (tool.promptSnippet !== undefined && typeof tool.promptSnippet !== 'string' || tool.promptGuidelines !== undefined && (!Array.isArray(tool.promptGuidelines) || tool.promptGuidelines.length > 64 || tool.promptGuidelines.some(rule => typeof rule !== 'string'))) throw Error('Pi 扩展工具的 promptSnippet/promptGuidelines 无效');
-          names.add(tool.name);
-          state.disposers.push(agent.ctx.get('tools').register({ name: tool.name, description: tool.description, parameters: tool.parameters,
-            output: { schema: { type: 'object', properties: { content: { type: 'array', items: { type: 'object' } }, details: {}, structuredContent: tool.outputSchema ?? {} }, required: ['content', ...(tool.outputSchema ? ['structuredContent'] : [])], additionalProperties: false },
-              render: (_args, value) => content(value.content), presentationMeta: (_args, value) => ({ piExtension: { details: value.details ?? {}, toolName: tool.name } }) },
-            async execute(params, exec) {
-              assertPolicy(agent, state);
-              const value = await invoke(agent, state, { kind: 'tool', callbackId: tool.callbackId, callId: exec.callId, params }, exec.signal, exec);
-              if (value.isError) throw Error(textOf(value.content) || 'Pi extension tool failed');
-              const admitted = await admitContent(value.content, exec.signal);
-              return { content: admitted, ...(value.details !== undefined ? { details: value.details } : {}), ...(value.structuredContent !== undefined ? { structuredContent: value.structuredContent } : {}) };
-            } }));
-        }
-        const commandNames = new Set();
-        for (const command of descriptors.commands) {
-          if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(command.name) || commandNames.has(command.name)) throw Error('扩展命令名称无效或重复');
-          commandNames.add(command.name);
-          state.disposers.push(agent.ctx.get('commands').register({ name: command.name, description: command.description ?? '',
-            async handler(input) {
-              await ensure(agent, input.signal);
-              const callbackId = state.descriptors?.commands.find(c => c.name === command.name)?.callbackId;
-              if (!callbackId) throw Error('Pi 扩展命令已移除，请刷新');
-              await invoke(agent, state, { kind: 'command', callbackId, args: input.rawInput.trimStart() }, input.signal);
-              return { kind: 'success', text: '/' + command.name };
-            } }));
-        }
-        // defaultActive is a real per-tool loadout choice, including cold start.
-        const inactive = descriptors.tools.filter(t => t.defaultActive === false).map(t => t.name);
-        if (inactive.length) state.active = new Set(ctx.tools.schemas(agent).map(t => t.name).filter(n => !inactive.includes(n)));
+        syncRegistrations(agent, state, descriptors);
         state.status = 'ready';
         if (state.events.has('session_start')) await invoke(agent, state, { kind: 'event', eventName: 'session_start', event: { type: 'session_start' } }, signal);
       } catch (error) { await state.dispose(); state.status = 'error'; state.error = error.message; settings.notify(agent, 'Pi 扩展加载失败：' + error.message, 'error'); throw error; }
@@ -235,7 +279,7 @@ export function apply(ctx) {
     if (!state.guest || state.guest.stopped) throw Error('Pi 扩展进程未运行');
     assertPolicy(agent, state);
     state.calls++;
-    try { return await state.guest.call({ type: 'invoke', ...call, snapshot: snapshot(agent, state) }, { context: { agent, state, exec }, signal }); }
+    try { return await state.guest.call({ type: 'invoke', ...call, snapshot: snapshot(agent, state) }, { context: { agent, state, exec, eventName: call.eventName }, signal }); }
     finally { state.calls--; }
   }
   const controller = {

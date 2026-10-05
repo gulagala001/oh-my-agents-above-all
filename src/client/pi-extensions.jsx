@@ -5,6 +5,14 @@ const endpoint = 'omaa/api/pi-extensions';
 const statusLabels = { ready: '已加载', loaded: '已加载', enabled: '已启用', disabled: '已停用', error: '加载失败', loading: '正在加载', pending: '等待加载' };
 const pathsOf = text => [...new Set(text.split(/\r?\n/).map(line => line.trim()).filter(Boolean))];
 const namesOf = value => Array.isArray(value) ? value.join('、') : String(value);
+const labelText = value => typeof value === 'string' ? value.trim() : '';
+const sessionNameOf = row => {
+  const title = labelText(row.title) || labelText(row.displayTitle);
+  if (title && title !== row.sessionId) return title;
+  const cwd = labelText(row.cwd);
+  const separators = /^(?:[a-z]:[\\/]|\\\\)/i.test(cwd) ? /[\\/]+/ : /\/+/;
+  return cwd.split(separators).filter(Boolean).at(-1) || cwd || '未命名 Pi 会话';
+};
 
 async function configuration(signal, patch) {
   const response = await fetch(endpoint, { credentials: 'same-origin', signal,
@@ -78,7 +86,7 @@ export function PiExtensions({ settings } = {}) {
     {state.data && <p className="omaa-pi-extension-help">已保存 {state.data.files.length} 个扩展文件。重新读取会保留尚未保存的输入。</p>}
     {state.data?.states?.length > 0 && <ul className="omaa-pi-extension-states" aria-label="Pi 会话扩展状态">
       {state.data.states.map(row => <li key={row.sessionId}>
-        <div><code title={row.sessionId}>{row.sessionId}</code><span>{statusLabels[row.status] || row.status}</span></div>
+        <div><span className="omaa-pi-extension-session-name" title={[labelText(row.cwd), `会话 ID：${row.sessionId}`].filter(Boolean).join('\n')}>{sessionNameOf(row)}</span><span>{statusLabels[row.status] || row.status}</span></div>
         {row.error && <p className="omaa-pi-extension-error">{row.error}</p>}
         {row.tools !== undefined && <small>工具：{namesOf(row.tools) || '无'}</small>}
         {row.commands !== undefined && <small>命令：{namesOf(row.commands) || '无'}</small>}

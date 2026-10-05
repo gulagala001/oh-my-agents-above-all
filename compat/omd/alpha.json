@@ -5,7 +5,7 @@
   "sourceCommit": "95fbfc4428834e98a033fb4724b990a8796bd2d5",
   "sourceTag": "v0.2.1-alpha.1.omd.0.6.1",
   "patch": "alpha.patch",
-  "patchSha256": "05830b7676725c7718ad3f6157206f63f989011c601b402b53dba864d63206ae",
+  "patchSha256": "4d6afc55a1f4e43232e43f6bfb85333eb80af20085bc19da6d41a844332944b6",
   "basePackageSha256": "adcdde858438698a87af2853a17ef00d0db3c09e5b3d2f2c9da9714365b4e76e",
   "files": {
     "CHANGELOG.md": "b85058796a58645fbac8928ec6894c0136cf0f4beedc061c544e5b0c2c42ea31",
@@ -870,7 +870,7 @@
     "src/ultracode.mjs": "c496fb6ca70fd5d333ea89cce82992ee72fc54a29621d52b8233538bc24e8e74",
     "src/codegraph-agent.mjs": "49d264727612c0c5c238f81b739150b87e72607352fc1037825ba6a7cb7c8075",
     "src/client/appearance-brand.jsx": "7dc3cb11d7d6d6437face667414a2d7130c46bfb9b3b4874179d54da10357ef2",
-    "src/client/index.jsx": "c374d8421e36bdffc7d54c2f89450b257e6f53ab37bb5c97c74d628dfbf35640",
+    "src/client/index.jsx": "88fd7b5cf98ac5e148b92c81569fa70f0d3bd3dad98bda849f11591e5c7f2a0b",
     "src/client/skins/runtime.mjs": "7971bd0fe71e98897c0e5df2005ab5a32dadbd41f476f24af4679786f5dc050b",
     "src/client/skins/background.mjs": "bd2457c507efbf725febaecd92d0ffbeffde0b289d1bb2f07a1199cca70f1855",
     "src/client/skins/claude-cli-terminal/presentation.jsx": "2349525cfed387fcad5b12db99863d9c7da69d0f034d38055b245b8b2d977ed0",

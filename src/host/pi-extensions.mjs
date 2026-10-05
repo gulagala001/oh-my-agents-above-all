@@ -1,7 +1,16 @@
 import { readFileSync, writeFileSync, mkdirSync, renameSync, rmSync } from 'node:fs';
-import { dirname, join, isAbsolute } from 'node:path';
+import { basename, dirname, join, isAbsolute, win32 } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+
+// Match native list presentation without resolving/activating a Session.
+export function piExtensionSessionNames({ title, cwd } = {}) {
+  title = typeof title === 'string' ? title.trim() : '';
+  cwd = typeof cwd === 'string' ? cwd.trim() : '';
+  const windows = /^(?:[a-z]:[\\/]|\\\\)/i.test(cwd);
+  const directory = cwd && ((windows ? win32.basename(cwd) : basename(cwd)) || cwd.replace(/[\\/]+$/, '') || cwd);
+  return { ...(title ? { title } : {}), ...(cwd ? { cwd } : {}), displayTitle: title || directory || '未命名 Pi 会话' };
+}
 
 // This is the explicit executable-file allowlist, not Pi's resource discovery.
 // Merely finding a project settings/package file never authorizes its JS/TS.
