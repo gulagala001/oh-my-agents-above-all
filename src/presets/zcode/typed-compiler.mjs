@@ -11,10 +11,7 @@ export function prepareTypedWorkflow(script) {
   const analysis = analyzeWorkflowScript(script);
   if (!analysis.ok) return { ok: false, diagnostics: hostDiagnostics(analysis.diagnostics) };
   const program = createWorkflowProgram(script), sites = collectSites(program), schemas = synthesizeAskSchemas(program, sites), worldRun = collectWorldRunCommands(program, sites);
-  const unsupported = [
-    ...(analysis.declaredArtifacts?.length ? [{ code: 9005, line: 1, column: 1, message: 'The original artifact registry is not connected to this DSH adapter.' }] : []),
-  ];
-  if (schemas.diagnostics.length || worldRun.diagnostics.length || unsupported.length) return { ok: false, diagnostics: hostDiagnostics([...schemas.diagnostics, ...worldRun.diagnostics, ...unsupported]) };
+  if (schemas.diagnostics.length || worldRun.diagnostics.length) return { ok: false, diagnostics: hostDiagnostics([...schemas.diagnostics, ...worldRun.diagnostics]) };
   return { ok: true, diagnostics: [], sites, askSpecs: buildAskSpecs(sites, schemas.schemas),
     lowered: lowerWorkflow(program, sites), declaredRunCommands: new Set(worldRun.commands), graph: analysis.graph, causalityGraph: analysis.causality };
 }

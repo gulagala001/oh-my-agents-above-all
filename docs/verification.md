@@ -23,4 +23,8 @@ UI 修复：无项目草稿的设置迁移先启用增强再调用既有 OMD 模
 
 OMAA 0.6 的 ZCode Actor 增量仅做两项针对性 native 检查：保存后双提问及整个宿主重启后的人类冷续问；后台任务在父会话切换 Ask 后实际停止和子会话收束。真实配置 `opencode-zen/space-bunny-free` 的同一 Actor 读取/回忆短任务已返回正确结构结果。第一次真实尝试返回运行异常，后续一次实际成功；不从该短任务推导稳定率或五预设整体完成。
 
-OMAA 0.7 的 world facade 使用一个 `installed-zcode-world` 原生安装 fixture，覆盖文件/glob、UTF-16 BOM/CRLF、宿主 bundled grep、Git、相对命令路径、非零退出、错误码及超限、workspace-write 和后台 Ask 取消。文件/Git/命令契约已接入；artifact registry、graph amendment 和动态图界面仍未接入。另一个简短真实任务使用已配置 `opencode-zen/space-bunny-free`，实际加载技能并调用 `create_workflow`，正确返回文件内容、glob、Git 分支与 argv 命令结果。此检查不证明所有平台或模型等价；详见 [ZCode 文档](products/zcode.md)。
+OMAA 0.7 的 world facade 使用一个 `installed-zcode-world` 原生安装 fixture，覆盖文件/glob、UTF-16 BOM/CRLF、宿主 bundled grep、Git、相对命令路径、非零退出、错误码及超限、workspace-write 和后台 Ask 取消。文件/Git/命令契约已接入；当时 artifact registry、graph amendment 和动态图界面尚未接入。另一个简短真实任务使用已配置 `opencode-zen/space-bunny-free`，实际加载技能并调用 `create_workflow`，正确返回文件内容、glob、Git 分支与 argv 命令结果。此检查不证明所有平台或模型等价；详见 [ZCode 文档](products/zcode.md)。
+
+OMAA 0.8.0 的产物接入由一个最终 `installed-zcode-artifacts` 原生 fixture 核对，本地日志为 `.cache/zcode-artifacts-installed-check.log`。实际覆盖 spec 快照、两个成功版本、工作区后改与整个宿主冷重启后内容不变、四种声明、分页/table upsert、文件过大/逃逸/缺失/primary 的可 catch 失败、跨 session 拒读、非法 spec 的父 run 失败，以及只读查询不追加 native 事件。原生 Domain 只存小 summary，完整数据使用 native content-addressed 附件 refs；没有另建 blob 或改变 journal。此次没有五预设长任务矩阵；graph 只提供静态真实数据 JSON，不据此宣称原厂 live graph/amend 或 engine journal/replay 等价。
+
+已配置 `opencode-zen/space-bunny-free` 的一个真实产物任务实际加载技能、执行 `create_workflow`，完成 Chart/Table/primary Markdown 发布；本地 `.cache/zcode-artifacts-live-result.json` 的 `outcome` 保存实际结果。原生 alpha Web UI 实点“查看产物”打开指定 run，原版 ChartView 显示两点图，Table keyed row 折叠为一行/value 3；“打开原生预览”实际读取 native `attachments/v1` 的不可变 `delivery.md`。实拍为 `.cache/zcode-artifact-chart.jpg`、`.cache/zcode-artifact-preview.jpg`。该项仅证明这个模型任务与对应 Web 流程；UI 全面验收和 Desktop/Windows 产物 UI 尚未全面验证，不推定所有模型或原厂客户端等价。

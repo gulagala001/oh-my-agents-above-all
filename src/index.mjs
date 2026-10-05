@@ -8,9 +8,10 @@ import { createSessionTransfer } from './host/session-transfer.mjs';
 import { createUpdates } from './updates.mjs';
 import { createPiExtensionSettings, piExtensionSessionNames } from './host/pi-extensions.mjs';
 import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
+import { createZCodeArtifactStore } from './host/zcode-artifacts.mjs';
 
 export const name = 'omaa';
-export const inject = ['loader', 'agents', 'sessions', 'sessionProjections', 'systemPrompt'];
+export const inject = ['loader', 'agents', 'sessions', 'sessionProjections', 'systemPrompt', 'storageDomain', 'attachments'];
 export function apply(ctx) {
   // Presets load eagerly. A configured OMD must finish its real provider Fiber
   // before working groups choose a workflow implementation, regardless of row
@@ -20,11 +21,14 @@ export function apply(ctx) {
   if (configuredOmd) return ctx.inject(['trisoulX'], () => { if (!mounted) { mounted = true; return mount(ctx); } });
   return mount(ctx);
 }
-function mount(ctx) {
-  const store = createPreferencesStore(join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa')); 
+async function mount(ctx) {
+  const store = createPreferencesStore(join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa'));
+  const workflowArtifacts = await createZCodeArtifactStore(ctx);
+  ctx.effect(() => () => workflowArtifacts.close());
   const presetOf = session => ctx.sessionProjections.stateOf(session, 'agentPreset') ?? session.header.agentPreset;
   const preferences = session => store.get(session.id);
   const hub = {
+    workflowArtifacts,
     checkpointDirectory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'checkpoints'),
     sandboxPolicy: () => ctx.get('sandboxPolicy'),
     products, preferences, planController: agent => ctx.get('agentPresets')?.serviceFor(agent, 'planMode') ?? agent?.ctx.get('planMode'), product: session => productForPreset(presetOf(session)),
@@ -146,7 +150,7 @@ function mount(ctx) {
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/updates', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/updates', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches', '/omaa/api/zcode-workflows', '/omaa/api/zcode-workflow', '/omaa/api/zcode-artifact-data', '/omaa/api/zcode-artifact-content', '/omaa/api/zcode-artifact-preview'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
         if (url.pathname === '/omaa/api/pi-extensions') {
           if (req.method === 'GET') sendJson(res, 200, hub.piExtensions.describe());
           else if (req.method === 'POST') { const data = await readJson(req); sendJson(res, 200, await hub.piExtensions.update(data.files, data.revision)); }
@@ -177,6 +181,36 @@ function mount(ctx) {
         }
         const id = url.searchParams.get('session');
         if (!id) { sendJson(res, 400, { error: '请选择会话' }); return; }
+        if (url.pathname.startsWith('/omaa/api/zcode-')) {
+          // Archived reads only inspect domain-owned records and native blobs;
+          // they never activate a cold agent or append to its session journal.
+          const runId = url.searchParams.get('run'), artifactId = url.searchParams.get('id');
+          if (url.pathname === '/omaa/api/zcode-workflow' && req.method === 'POST') {
+            const input = await readJson(req);
+            if (input.action !== 'stop') throw Error('工作流操作无效');
+            sendJson(res, 202, await workflowArtifacts.stop(id, runId)); return;
+          }
+          if (req.method !== 'GET') { sendJson(res, 405, { error: '不支持此方法' }); return; }
+          const number = (key, fallback) => {
+            const text = url.searchParams.get(key);
+            if (text === null && fallback !== undefined) return fallback;
+            if (!/^(0|[1-9]\d*)$/.test(text ?? '')) throw Error('工作流数字参数无效');
+            const value = Number(text); if (!Number.isSafeInteger(value)) throw Error('工作流数字参数越界'); return value;
+          };
+          if (url.pathname === '/omaa/api/zcode-workflows') sendJson(res, 200, workflowArtifacts.list(id));
+          else if (url.pathname === '/omaa/api/zcode-workflow') sendJson(res, 200, await workflowArtifacts.inspect(id, runId));
+          else if (url.pathname === '/omaa/api/zcode-artifact-data') sendJson(res, 200, await workflowArtifacts.data(id, runId, artifactId, number('after', 0), number('limit', 200)));
+          else if (url.pathname === '/omaa/api/zcode-artifact-preview') sendJson(res, 200, await workflowArtifacts.preview(id, runId, artifactId, number('version')));
+          else {
+            const { entry, bytes } = await workflowArtifacts.content(id, runId, artifactId, number('version'));
+            const content = await bytes();
+            res.writeHead(200, { 'content-type': entry.contentType || 'application/octet-stream', 'cache-control': 'no-store',
+              'x-content-type-options': 'nosniff', 'content-length': content.length,
+              'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(entry.ref.name)}` });
+            res.end(content);
+          }
+          return;
+        }
         if (url.pathname === '/omaa/api/pi-branches') {
           if (!hub.piBranches) throw new Error('Pi 分支服务尚未启用');
           const cancel = new AbortController();
