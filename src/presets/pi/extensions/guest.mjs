@@ -52,17 +52,118 @@ async function drain(context) {
   if (context.voidErrors.length) throw context.voidErrors[0];
 }
 function newRuntime() {
-  return { active: true, generation: ++generation, extensions: [], callbacks: new Map(), request: apiRequest,
+  const current = { active: true, generation: ++generation, extensions: [], callbacks: new Map(), request: apiRequest,
+    descriptor, committed: [], jobs: [], syncTail: Promise.resolve(),
     callbackId: kind => kind + ':' + generation + ':' + ++callbackCounter };
+  current.refreshRegistrations = (context, extension, apply) => refreshRegistrations(current, context, extension, apply);
+  current.waitForRegistrations = async context => {
+    await current.syncTail;
+    context.controller.signal.throwIfAborted();
+    if (context.voidErrors.length) throw context.voidErrors[0];
+  };
+  current.afterRegistrations = (context, method, args) => {
+    const work = current.waitForRegistrations(context).then(() => apiRequest(context, method, args, true));
+    trackWork(context, work);
+  };
+  return current;
 }
 function descriptor(definition, callbackId) {
   const result = { name: definition.name, label: definition.label ?? definition.name, description: definition.description,
     parameters: JSON.parse(JSON.stringify(definition.parameters)), callbackId,
     prepareArguments: definition.prepareArguments !== undefined, prepareLoadout: definition.prepareLoadout !== undefined };
-  for (const key of ['promptSnippet', 'promptGuidelines', 'exposure', 'namespace', 'annotations', 'defaultActive', 'executionMode', 'outputSchema']) {
+  for (const key of ['promptSnippet', 'promptGuidelines', 'exposure', 'namespace', 'annotations', 'defaultActive', 'executionMode', 'outputSchema', 'constrainedSampling', 'renderShell']) {
     if (definition[key] !== undefined) result[key] = JSON.parse(JSON.stringify(definition[key]));
   }
   return result;
+}
+function copyRegistrations(states) {
+  return states.map(state => ({ tools: new Map(state.tools), commands: new Map(state.commands),
+    events: new Map([...state.events].map(([name, handlers]) => [name, handlers.slice()])), handlerCount: state.handlerCount }));
+}
+function registrations(current, states = current.extensions) {
+  const tools = new Map(), commands = new Map(), events = new Set();
+  for (const state of states) {
+    for (const [name, tool] of state.tools) {
+      current.callbacks.set(tool.callbackId, { kind: 'tool', definition: tool.definition });
+      if (!tools.has(name)) tools.set(name, current.descriptor(tool.definition, tool.callbackId));
+    }
+    for (const [name, command] of state.commands) {
+      current.callbacks.set(command.callbackId, { kind: 'command', definition: command });
+      if (!commands.has(name)) commands.set(name, { name, description: command.description, callbackId: command.callbackId });
+    }
+    for (const name of state.events.keys()) events.add(name);
+  }
+  const value = { tools: [...tools.values()], commands: [...commands.values()], events: [...events] };
+  if (Buffer.byteLength(JSON.stringify(value)) > MAX_JSON_BYTES - 1024) throw new Error('Pi extension registration exceeds its protocol budget');
+  return value;
+}
+function initializeRegistrationSnapshot(current, context) {
+  if (context.registrationBase) return;
+  context.registrationBase = structuredClone({ allTools: context.snapshot.allTools ?? [],
+    activeTools: context.snapshot.activeTools ?? [], commands: context.snapshot.commands ?? [] });
+  context.registrationTools = new Set(registrations(current, current.committed).tools.map(tool => tool.name));
+  context.registrationCommands = new Set(registrations(current, current.committed).commands.map(command => command.name));
+}
+function projectRegistrationSnapshots(current) {
+  const value = registrations(current), ownNames = new Set(value.tools.map(tool => tool.name));
+  for (const context of active.values()) {
+    if (context.runtime !== current || context.phase !== 'invoke' || context.finished) continue;
+    initializeRegistrationSnapshot(current, context);
+    const base = context.registrationBase;
+    context.snapshot.allTools = [...base.allTools.filter(tool => !context.registrationTools.has(tool.name) && !ownNames.has(tool.name)), ...value.tools];
+    const known = new Set(context.snapshot.allTools.map(tool => tool.name));
+    const selected = new Set((context.activeToolsOverride?.names ?? base.activeTools).filter(name => known.has(name)));
+    for (const tool of value.tools) if (!context.registrationTools.has(tool.name) && tool.defaultActive !== false
+      && (!context.activeToolsOverride || !context.activeToolsOverride.known.has(tool.name))
+      && (!tool.exposure || ['direct', 'model-only'].includes(tool.exposure))) selected.add(tool.name);
+    context.snapshot.activeTools = [...selected];
+    const commandNames = new Set(value.commands.map(command => command.name));
+    context.snapshot.commands = [...base.commands.filter(command => !context.registrationCommands.has(command.name) && !commandNames.has(command.name)), ...value.commands];
+  }
+}
+function rebuildRegistrations(current) {
+  const states = copyRegistrations(current.committed);
+  for (const job of current.jobs) job.apply(states[job.index]);
+  states.forEach((state, index) => Object.assign(current.extensions[index], state));
+  projectRegistrationSnapshots(current);
+}
+function trackWork(context, work) {
+  context.pending.add(work);
+  work.then(() => context.pending.delete(work), error => {
+    context.voidErrors.push(error); context.pending.delete(work);
+  });
+}
+function refreshRegistrations(current, context, extension, apply) {
+  if (current.jobs.length >= 256) throw new Error('Pi extension exceeds 256 pending registration changes');
+  const index = current.extensions.indexOf(extension);
+  if (index < 0) throw new Error('Unknown Pi extension registration owner');
+  const optimistic = copyRegistrations(current.extensions); apply(optimistic[index]);
+  // Serialization/budget failures happen before publishing even the local mirror.
+  registrations(current, optimistic);
+  const job = { context, index, apply };
+  current.jobs.push(job);
+  optimistic.forEach((state, position) => Object.assign(current.extensions[position], state));
+  projectRegistrationSnapshots(current);
+  const work = current.syncTail.then(async () => {
+    const candidate = copyRegistrations(current.committed); apply(candidate[index]);
+    try {
+      const value = registrations(current, candidate);
+      const ack = await apiRequest(context, 'syncRegistrations', [value], true);
+      current.committed = candidate;
+      if (ack && Array.isArray(ack.allTools) && Array.isArray(ack.activeTools) && Array.isArray(ack.commands)) {
+        const toolNames = new Set(value.tools.map(tool => tool.name)), commandNames = new Set(value.commands.map(command => command.name));
+        for (const callback of active.values()) if (callback.runtime === current && callback.phase === 'invoke') {
+          callback.registrationBase = structuredClone({ allTools: ack.allTools, activeTools: ack.activeTools, commands: ack.commands });
+          callback.registrationTools = new Set(toolNames); callback.registrationCommands = new Set(commandNames);
+        }
+      }
+    } finally {
+      current.jobs.splice(current.jobs.indexOf(job), 1);
+      rebuildRegistrations(current);
+    }
+  });
+  current.syncTail = work.catch(() => {});
+  trackWork(context, work);
 }
 async function load(frame, context) {
   if (loading || [...active.values()].some(item => item !== context)) throw new Error('Cannot reload Pi extensions while callbacks are active');
@@ -86,20 +187,8 @@ async function load(frame, context) {
       context.controller.signal.throwIfAborted();
       candidate.extensions.push(extension);
     }
-    const tools = new Map(), commands = new Map(), events = new Set();
-    for (const extension of candidate.extensions) {
-      for (const [name, tool] of extension.tools) if (!tools.has(name)) {
-        tools.set(name, descriptor(tool.definition, tool.callbackId));
-        candidate.callbacks.set(tool.callbackId, { kind: 'tool', definition: tool.definition });
-      }
-      for (const [name, command] of extension.commands) if (!commands.has(name)) {
-        commands.set(name, { name, description: command.description, callbackId: command.callbackId });
-        candidate.callbacks.set(command.callbackId, { kind: 'command', definition: command });
-      }
-      for (const eventName of extension.events.keys()) events.add(eventName);
-    }
-    const value = { tools: [...tools.values()], commands: [...commands.values()], events: [...events] };
-    if (Buffer.byteLength(JSON.stringify(value)) > MAX_JSON_BYTES - 1024) throw new Error('Pi extension registration exceeds its protocol budget');
+    const value = registrations(candidate);
+    candidate.committed = copyRegistrations(candidate.extensions);
     if (runtime) runtime.active = false;
     runtime = candidate;
     return value;
@@ -150,6 +239,8 @@ async function dispatchEvent(frame, context) {
 async function invoke(frame, context) {
   if (loading || !runtime?.active) throw new Error('Pi extensions are not loaded');
   context.runtime = runtime; context.kind = frame.kind;
+  initializeRegistrationSnapshot(runtime, context);
+  projectRegistrationSnapshots(runtime);
   const ctx = createCallbackContext(runtime);
   if (frame.kind === 'event') return dispatchEvent(frame, context);
   const callback = runtime.callbacks.get(frame.callbackId);

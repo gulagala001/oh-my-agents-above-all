@@ -94,9 +94,10 @@ export function createCallbackContext(runtime) {
     },
     hasPendingMessages: () => snapshot(runtime, 'hasPendingMessages'),
     getSystemPrompt: () => snapshot(runtime, 'systemPrompt'),
-    executeTool(name, params, options) {
+    async executeTool(name, params, options) {
       const current = live(runtime);
       if (current.kind !== 'tool') unsupported('ctx.executeTool outside tool callback');
+      await runtime.waitForRegistrations(current);
       return request(runtime, 'executeTool', [name, params, optionsFor(current, options)]);
     },
   };
@@ -105,19 +106,30 @@ export function createCallbackContext(runtime) {
 
 export function createPiAPI(runtime, extension) {
   const register = () => live(runtime, false);
+  const change = (context, apply) => {
+    if (context.phase === 'load') apply(extension);
+    else runtime.refreshRegistrations(context, extension, apply);
+  };
   return proxyMethods({
     on(eventName, handler) {
       const context = register();
       if (!supportedEvents.has(eventName)) unsupported('event ' + eventName);
       if (typeof handler !== 'function') throw new Error('Pi event handler must be a function');
-      if (context.phase !== 'load') unsupported('event registration after loading');
       if (extension.handlerCount >= 256) throw new Error('Pi extension exceeds 256 event handlers');
-      const registration = { handler }; extension.handlerCount++;
-      const handlers = extension.events.get(eventName) ?? []; handlers.push(registration); extension.events.set(eventName, handlers);
+      const registration = { handler };
+      change(context, current => {
+        const handlers = current.events.get(eventName) ?? [];
+        handlers.push(registration); current.events.set(eventName, handlers); current.handlerCount++;
+      });
       return () => {
-        const index = handlers.indexOf(registration);
-        if (index < 0) return; handlers.splice(index, 1); extension.handlerCount--;
-        if (!handlers.length) extension.events.delete(eventName);
+        const current = register();
+        if (!extension.events.get(eventName)?.includes(registration)) return;
+        change(current, state => {
+          const handlers = state.events.get(eventName), index = handlers?.indexOf(registration) ?? -1;
+          if (index < 0) return;
+          handlers.splice(index, 1); state.handlerCount--;
+          if (!handlers.length) state.events.delete(eventName);
+        });
       };
     },
     registerTool(definition) {
@@ -125,18 +137,17 @@ export function createPiAPI(runtime, extension) {
       if (!definition || typeof definition.name !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(definition.name)
         || typeof definition.description !== 'string' || typeof definition.execute !== 'function'
         || !definition.parameters || typeof definition.parameters !== 'object' || Array.isArray(definition.parameters)) throw new Error('Invalid Pi tool definition');
-      if (context.phase !== 'load') unsupported('registerTool after loading');
       if (!extension.tools.has(definition.name) && extension.tools.size >= 128) throw new Error('Pi extension exceeds 128 tools');
       const callbackId = runtime.callbackId('tool');
-      extension.tools.set(definition.name, { definition, callbackId });
+      change(context, current => current.tools.set(definition.name, { definition, callbackId }));
     },
     registerCommand(name, definition) {
       const context = register();
       if (typeof name !== 'string' || !/^[a-z][a-z0-9_-]{0,127}$/.test(name) || typeof definition?.handler !== 'function'
         || typeof definition.description !== 'string') throw new Error('Invalid Pi command definition');
-      if (context.phase !== 'load') unsupported('registerCommand after loading');
       if (!extension.commands.has(name) && extension.commands.size >= 128) throw new Error('Pi extension exceeds 128 commands');
-      extension.commands.set(name, { ...definition, name, callbackId: runtime.callbackId('command') });
+      const command = { ...definition, name, callbackId: runtime.callbackId('command') };
+      change(context, current => current.commands.set(name, command));
     },
     getActiveTools: () => clone(snapshot(runtime, 'activeTools')),
     setActiveTools(names) {
@@ -144,8 +155,10 @@ export function createPiAPI(runtime, extension) {
       if (!Array.isArray(names) || names.some(name => typeof name !== 'string')) throw new Error('Pi setActiveTools requires string names');
       const known = new Set(snapshot(runtime, 'allTools').map(tool => tool.name));
       const next = [...new Set(names.filter(name => known.has(name)))];
-      request(runtime, 'setActiveTools', [names], true);
+      runtime.afterRegistrations(context, 'setActiveTools', [names]);
       context.snapshot.activeTools = next;
+      context.activeToolsOverride = { names: next, known };
+      if (context.registrationBase) context.registrationBase.activeTools = next;
     },
     getAllTools: () => clone(snapshot(runtime, 'allTools')),
     getCommands: () => clone(snapshot(runtime, 'commands')),

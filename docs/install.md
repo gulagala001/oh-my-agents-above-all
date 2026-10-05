@@ -6,8 +6,8 @@ OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。
 
 | 当前宿主 | OMAA 附件文件名前缀 | 兼容 OMD 附件 |
 | --- | --- | --- |
-| 桌面 DSH `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.` | `trisoul_x-0.2.0-rc.2.omd.0.8.0.tgz` |
-| Web／源码 DSH `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.` | `trisoul_x-0.2.1-alpha.1.omd.0.8.0.tgz` |
+| 桌面 DSH `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.` | `trisoul_x-0.2.0-rc.2.omd.0.8.1.tgz` |
+| Web／源码 DSH `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.` | `trisoul_x-0.2.1-alpha.1.omd.0.8.1.tgz` |
 
 发行主 tag 跟随源码 `package.json` 的完整版本（`v<DSH宿主>.omaa.<三段版本>`）；同一发行提供两个宿主附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
 
@@ -37,7 +37,7 @@ Windows 可使用 PowerShell 的 `Get-FileHash .\包名.tgz -Algorithm SHA256`�
 
 ```sh
 # 已安装 OMD 或需要增强时先安装兼容 OMD；独立使用 OMAA 可跳过这一行。
-dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.8.0.tgz
+dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.8.1.tgz
 dsh plugin --profile web add file:/absolute/path/OMAA.tgz
 dsh web
 ```

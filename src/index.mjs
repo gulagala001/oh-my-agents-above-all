@@ -6,7 +6,7 @@ import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
 import { createUpdates } from './updates.mjs';
-import { createPiExtensionSettings } from './host/pi-extensions.mjs';
+import { createPiExtensionSettings, piExtensionSessionNames } from './host/pi-extensions.mjs';
 import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
 
 export const name = 'omaa';
@@ -98,7 +98,11 @@ function mount(ctx) {
       const notices = (extensionNotices.get(sessionId) ?? []).filter(n => n.id > after);
       return { enabled: extensionSettings.read().files.length > 0, cursor: Math.max(after, ...notices.map(n => n.id)), notices };
     },
-    describe: () => ({ ...extensionSettings.read(), states: [...extensionStates].map(([sessionId, state]) => ({ sessionId, ...state.view() })) }),
+    describe: () => ({ ...extensionSettings.read(), states: [...extensionStates].map(([sessionId, state]) => {
+      const session = ctx.agents.get(sessionId)?.session ?? ctx.sessions.get(sessionId);
+      const title = session && ctx.sessionProjections.stateOf(session, 'title');
+      return { sessionId, ...piExtensionSessionNames({ title, cwd: session?.header.cwd }), ...state.view() };
+    }) }),
     async update(files, revision) {
       const agents = ctx.agents.list().filter(agent => hub.product(agent.session)?.id === 'pi');
       if ([...extensionStates.values()].some(state => state.busy()) || agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length || ctx.get('jobs')?.list(agent.id).some(job => ['running', 'stopping'].includes(job.status)))) throw Error('请先停止 Pi 任务，再更改执行扩展');

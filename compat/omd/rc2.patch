@@ -173,7 +173,20 @@
        if (brand.logo === 'native') { icon?.remove(); icon = undefined; }
 --- a/src/client/index.jsx
 +++ b/src/client/index.jsx
-@@ -283,12 +283,14 @@
+@@ -37,7 +37,11 @@
+ const kindName = { main: '主执行', subagent: '子代理', compactFull: '全量压缩', prepare: '上下文预处理', coordinate: '上下文替换', background: '记忆消化（历史）', recall: '记忆检索（历史）', state: '状态提炼（历史）', curation: '记忆整理（历史）', surgeon: '上下文整理（历史）', probeAsk: '探针出题（历史）', probeAnswer: '探针作答（历史）' };
+ const componentEntries = kinds => [...new Set(kinds)].map(kind => [kind, kindName[kind] || kind]);
+ kindName.promptOptimizer = '提示词优化';
+-function BetterTodoChip({ sessionId, useSessionStatus }) {
++function BetterTodoChip(props) {
++  const preset = props.useSessions(s => s.byId[props.sessionId]?.projectionValues?.agentPreset);
++  return ['trisoul-x', 'omd-ptc'].includes(preset) ? <BetterTodoSessionChip {...props}/> : null;
++}
++function BetterTodoSessionChip({ sessionId, useSessionStatus }) {
+   const [state, setState] = useState(null), [open, setOpen] = useState(false), [saving, setSaving] = useState(false), [error, setError] = useState('');
+   const [notice, setNotice] = useState(false), dialog = useRef(null), noticeId = useId();
+   const running = useSessionStatus(s => s.get(sessionId)?.running), active = useRef(sessionId), revision = useRef(0), writing = useRef(null); active.current = sessionId;
+@@ -283,12 +287,14 @@
      useEffect(() => { setUsageOpen(true); }, [props.sessionId]);
      return <div className="tx-composer-dock" data-session-id={props.sessionId} data-omd-running={running ? '' : undefined} data-omd-usage-expanded={usageOpen ? '' : undefined}><div className="tx-composer-tools"><button type="button" className="tx-workbench-entry" aria-label="打开工作台" onClick={() => openPanel('tasks')}><Icon name="context" size={15}/><span>工作台</span></button><ComputerEntry {...props}/></div><button type="button" className="tx-usage-toggle" aria-label="用量详情" aria-expanded={usageOpen} onClick={() => setUsageOpen(value => !value)}><Icon name="monitor" size={14}/><span>用量</span><Icon name="chevron" size={12}/></button><StatsLine {...props} onOpen={() => openPanel('monitor')}/></div>;
    }

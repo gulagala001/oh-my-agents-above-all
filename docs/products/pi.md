@@ -38,16 +38,16 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 
 源码已接入的范围：
 
-- 加载阶段的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`。斜杠命令注册在当前 Pi 的原生命令服务中；加载阶段结束后拒绝动态注册。
+- 加载阶段及活动回调内的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`。斜杠命令注册在当前 Pi 的原生命令服务中；活动回调中的动态变更等待宿主 ACK 后完成；同一文件同名工具或命令替换，跨文件同名取第一个扩展。订阅返回的取消函数也可在活动回调内使用。注册表通过原生工具和命令服务更新，当前请求已经装配的工具声明不追改；新声明、snippets 和 guidelines 在后续原生装配中生效。宿主拒绝某次变更时恢复上一份已接纳定义，发起回调明确失败。
 - TypeBox typed schema 与普通 JSON Schema 的工具参数使用固定上游的完整 `validateToolArguments` 校验，保留其转换和错误行为；validator 原文和来源由 `source.json` 维护，不导入 Pi 模型或代理运行时。
 - `input` 支持 continue/handled/transform，保留原生消息身份和附件；`tool_call` 可阻止工具，不能改写已经入账的工具参数或模拟整批 terminate。`tool_result` 可替换受支持的 text/image 内容，不任意改写错误状态、details 或 structuredContent。
 - `ctx.ui.select`、`confirm`、`input` 接入原生 userQuestions；`notify` 经活动 Pi 输入区的原生通知展示，按会话 cursor/ID 去重，未启用扩展时暂停读取，不伪造 assistant 消息。
 - `getActiveTools` / `setActiveTools`、只读工具/命令目录和有界会话视图，以及回调内的 `sendUserMessage`、`exec` 和工具回调中的 `ctx.executeTool`。消息继续使用原生 steer/follow-up；`executeTool` 不作为任意回调中的额外执行入口。
 - native attachment 桥将 Pi image 的 data/mimeType 转为原生已接纳附件，反向读取原生图片供回调使用；工具结果、输入变换和扩展投递复用附件服务，输入变换保留未改动的原生文件附件。
 
-尚不支持加载后的动态注册、`before_agent_start`、`context` / `context_with_system` 替换、自定义 TUI/组件渲染、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、未接入的 exposure、`sendUserMessage` 的命令/技能模板分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
+尚不支持 `before_agent_start`、`context` / `context_with_system` 替换、自定义 TUI/组件渲染、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的命令/技能模板分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
 
-OMAA 0.4 包含此扩展入口，隔离原生执行检查已通过。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
+OMAA 0.5 包含此扩展入口及动态注册，隔离原生执行检查已通过。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
 
 ## 行为与宿主边界
 
@@ -90,3 +90,5 @@ Pi 模型/provider 登录、账号、安装器、独立代理 RPC、原厂 JSONL
 `test/installed-pi-branches.test.mjs` 已核对真实安装的前缀分叉、仅所选位置之后的摘要材料、当前模型、源 journal 不变、摘要冷读取及原话中的字面量花括号。`test/pi-branches-browser.test.mjs` 实点分叉、原生 child 导航、保留父分支和切回，默认关闭摘要不额外调用模型。主模型看过分支树实拍。脚本化 provider 验证接线与生命周期，不证明所有真实模型都能生成同等质量的摘要。
 
 `test/installed-pi-extensions.test.mjs` 在一个隔离的官方 Web DSH 中载入原版 hello、protected-paths、input-transform 文件，核对实际工具内容/details 入账、.env 拒写、嵌套原生 read、原生图片附件、输入转换/handled、斜杠命令、完全权限切换为 workspace-write 后的直接文件写入约束、冷恢复、其它预设隔离与清空停用。没有调用外部模型或改用户现场配置；这证明所测契约，不覆盖所有 Pi 扩展 API 或桌面全部执行分支。问答复用已核对的两宿主原生 schema；基本超时可取消问答，尚没有原厂 TUI 倒计时。执行白名单只作用于 Pi 根会话，增强生成的子代理不加载这些扩展。
+
+`test/installed-pi-dynamic-extensions.test.mjs` 定向核对原生首次装配前的启动回调注册、工具同名替换和增补、动态斜杠命令、输入事件取消订阅，以及原生 output schema 拒绝后的工具/回调恢复。会话设置显示原生标题或工作目录名，内部 session ID 仅在悬停信息中显示。
