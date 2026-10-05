@@ -28,7 +28,12 @@ export function apply(ctx) {
   function WorkflowPanel(props) {
     const { tab } = props.useTabInfo();
     return <ZCodeWorkflows settings={settings} sidebarRight={ctx.sidebarRight} visible={tab.visible}
-      requestedRunId={typeof tab.navigation?.params?.runId === 'string' ? tab.navigation.params.runId : undefined}/>;
+      requestedRunId={typeof tab.navigation?.params?.runId === 'string' ? tab.navigation.params.runId : undefined}
+      onOpenActor={actor => {
+        const current = settings.getSnapshot();
+        if (!current.sessionId || current.data?.product?.id !== 'zcode' || typeof actor.sessionId !== 'string') return;
+        ctx.uiWorkspace.openSession({ parentSessionId: current.sessionId, childSessionId: actor.sessionId, mode: 'continuable' });
+      }}/>
   }
   const Chip = () => <PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/>
   ctx.effect(() => {

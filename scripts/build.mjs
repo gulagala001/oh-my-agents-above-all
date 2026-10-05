@@ -5,6 +5,7 @@ import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
 import { buildZCodeArtifacts } from './build-zcode-artifacts.mjs';
+import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
@@ -85,7 +86,9 @@ for (const [input, output, adapt] of [
 await buildZCodeWorkflowCompiler();
 await buildZCodeWorldReads();
 await buildZCodeArtifacts();
+await buildZCodeRunProjection();
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
+const graphAliases = JSON.parse(await readFile(root + 'scripts/zcode-graph-ui-aliases.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));
 }
@@ -96,6 +99,7 @@ await build({ entryPoints: [root + 'src/client/index.jsx'], outfile: root + 'lib
     ['@/components/lib/utils.js', 'src/presets/zcode/sources/upstream/packages/ui/src/components/lib/utils.ts'],
     ['@/components/ui/chart.js', 'src/presets/zcode/sources/upstream/packages/ui/src/components/ui/chart.tsx'],
     ...['apply', 'spec', 'palette', 'parts'].map(name => ['@/app-shell/workflow-artifacts/presets/' + name + '.js', 'src/presets/zcode/sources/upstream/packages/ui/src/app-shell/workflow-artifacts/presets/' + name + (name === 'parts' ? '.tsx' : '.ts')]),
+    ...Object.entries(graphAliases),
   ].map(([name, path]) => [name, root + path])),
   minifySyntax: true, minifyWhitespace: true,
   // Escaped string literals retain dependency text without embedding trailing

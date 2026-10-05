@@ -21,7 +21,7 @@ export function installLiteralActorPersona(ctx) {
 
 // Only orchestration lives here. Native continuable children own their model,
 // permission checks, tools, inbox, transcript, idle state and cold activation.
-export function createActors({ ctx, parent, sites, askSpecs, signal, progress }) {
+export function createActors({ ctx, parent, sites, askSpecs, signal, progress, runProgress }) {
   const actors = new Map(), children = new Map(), disposers = [], staged = new WeakMap();
   const actorSites = new Set(sites.actors.map(site => site.id));
   if (!ctx.subagents.getProvider('spawn')?.prepareContinuable) throw Error('Native continuable spawn provider is unavailable.');
@@ -110,7 +110,8 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress })
   signal.addEventListener('abort', interrupted, { once: true });
   function actorFor(reference) {
     check();
-    if (!reference || typeof reference.handle !== 'string' || !actorSites.has(reference.siteId) || reference.name !== null && typeof reference.name !== 'string') throw Error('Invalid compiled Actor reference.');
+    if (!reference || typeof reference.handle !== 'string' || !actorSites.has(reference.siteId)
+      || !Number.isInteger(reference.ordinal) || reference.ordinal < 1 || reference.name !== null && typeof reference.name !== 'string') throw Error('Invalid compiled Actor reference.');
     const persona = reference.persona;
     if (persona !== null && typeof persona !== 'string' && (!persona || typeof persona.system !== 'string' || Object.keys(persona).some(key => key !== 'system'))) throw Error('Invalid Actor persona.');
     let actor = actors.get(reference.handle);
@@ -122,22 +123,31 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress })
   }
   return {
     view: () => [...actors.values()].map(actor => ({ name: actor.reference.name, childId: actor.childId, created: actor.created })),
-    async ask({ siteId, actor: reference, instructions }) {
+    async declare(reference) {
+      const actor = actorFor(reference);
+      await runProgress?.created(reference, actor.childId);
+    },
+    async ask({ siteId, actor: reference, instructions, phaseName }) {
       check();
       if (typeof instructions !== 'string' || !askSpecs.has(siteId)) throw Error('Invalid compiled ask.');
       const actor = actorFor(reference), spec = askSpecs.get(siteId);
+      const observation = runProgress?.node(siteId, 'ask', {
+        actor: runProgress.actor(reference, actor.childId), phaseName, instructions });
+      observation?.catch(() => {});
       const work = actor.tail.then(async () => {
-        check();
+        const node = await observation;
         const result = Promise.withResolvers();
         result.promise.catch(() => {});
         // A synchronous delivery may start/finish before its RPC returns. Keep
         // actual message IDs and terminal events, then correlate after receipt.
-        const pending = { spec, result, messages: new Set(), enclosed: new Map(), finished: false };
+        const pending = { spec, result, messages: new Set(), enclosed: new Map(), finished: false, node };
         actor.pending = pending;
         const instructionsWithResult = spec.typed ? instructions + '\n\nReturn the final value by calling submit_result; its declared schema is the required task result.' : instructions;
         const prompt = [{ type: 'text', text: instructionsWithResult }];
         progress?.({ type: 'actor-start', siteId, name: reference.name, childId: actor.childId });
         try {
+          check();
+          await node?.dispatched();
           if (!actor.created) {
             const persona = typeof reference.persona === 'string' ? reference.persona : reference.persona?.system;
             const receipt = await ctx.subagents.startContinuable({ provider: 'spawn', label: ZCODE_ACTOR_LABEL_PREFIX + (reference.name || 'Actor'), childId: actor.childId,
@@ -147,6 +157,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress })
             const agent = ctx.get('agents')?.get(actor.childId); if (agent) install(agent, actor);
             pending.messageId = await ctx.subagents.sendMessage(parent, actor.childId, prompt, { signal });
           }
+          await node?.materialized();
           finish(actor);
           const value = await result.promise;
           const agent = ctx.get('agents')?.get(actor.childId);
@@ -155,7 +166,11 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress })
           // can be released. Do not kill an actor's background work merely to
           // force cold activation for its next question.
           progress?.({ type: 'actor-end', siteId, name: reference.name, childId: actor.childId });
+          await node?.settled();
           return value;
+        } catch (error) {
+          await node?.settled(error);
+          throw error;
         } finally {
           if (actor.pending === pending) actor.pending = undefined;
           actor.toolDispose?.(); actor.toolDispose = undefined; actor.toolPending = undefined;

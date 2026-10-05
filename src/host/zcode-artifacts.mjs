@@ -1,5 +1,6 @@
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain';
 import { z } from 'zod';
+import { reduceWorkflowRunsState } from '../../lib/zcode-run-projection.mjs';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const keyOf = id => {
@@ -66,10 +67,10 @@ export async function createZCodeArtifactStore(ctx) {
       lifecycles.set(runId, { result, stop });
       result.finally(() => lifecycles.delete(runId)).catch(() => {});
     },
-    async begin({ runId, sessionId, name, graph, causalityGraph, jobId }, stop) {
+    async begin({ runId, sessionId, name, graph, causalityGraph, displayGraph, jobId }, stop) {
       if (table.get(keyOf(runId)) !== undefined) throw Error('工作流标识已存在');
       const record = { runId, sessionId, name, status: 'running', startedAt: Date.now(), revision: 1,
-        graph, causalityGraph, artifacts: [], reports: [], ...(jobId ? { jobId } : {}) };
+        graph, causalityGraph, displayGraph, artifacts: [], reports: [], ...(jobId ? { jobId } : {}) };
       active.set(runId, record); controls.set(runId, stop);
       try { await persist(record); } catch (error) { active.delete(runId); controls.delete(runId); throw error; }
     },
@@ -101,9 +102,13 @@ export async function createZCodeArtifactStore(ctx) {
       }).sort((a, b) => Number(Boolean(b.primary)) - Number(Boolean(a.primary)));
       const reports = await Promise.all(record.reports.filter(report => report.artifactId === undefined)
         .map(async ({ ref, ...report }) => ({ ...report, item: await readJson(ref) })));
+      const interrupted = record.status === 'running' && !active.has(runId);
+      const runtime = interrupted && record.runtime ? reduceWorkflowRunsState({ revision: record.runtimeRevision ?? 0, runs: [record.runtime] },
+        { runId, sequence: (record.progressSequence ?? 0) + 1, eventType: 'run-settled', payload: { status: 'stopped', stopReason: 'interrupted' } })?.runs.find(run => run.runId === runId) ?? record.runtime : record.runtime;
       return { sessionId, runId, name: record.name, startedAt: record.startedAt, completedAt: record.completedAt,
         status: record.status === 'running' && !active.has(runId) ? 'interrupted' : record.status,
         revision: record.revision, phase: record.phase, error: record.error, graph: record.graph,
+        displayGraph: record.displayGraph, runtime,
         causalityGraph: record.causalityGraph, artifacts, reports, reportCount: record.reports.length };
     },
     async data(sessionId, runId, id, after = 0, limit = 200) {

@@ -6,6 +6,7 @@ import { validateWorkflowArgs } from '../../../lib/zcode-saved-args.mjs';
 import { createWorldReads } from './world.mjs';
 import { createArtifacts } from './artifacts.mjs';
 import { WorkflowError } from '../../../lib/zcode-artifact-shared.mjs';
+import { createRunProgress } from './run-progress.mjs';
 
 export const name = 'omaa-zcode-typed-workflow';
 export const inject = ['omaa', 'tools', 'fs', 'agents', 'subagents', 'jobs', 'ptcRuntime', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -15,7 +16,7 @@ export const inject = ['omaa', 'tools', 'fs', 'agents', 'subagents', 'jobs', 'pt
 // cancels unfinished asks after the script returns, as the original engine does.
 function programFor(lowered) {
   return `const __init = await zcodeHost.init(null);
-const __names = new Set(); let __ordinal = 0, __narration = Promise.resolve();
+const __names = new Set(), __actorOrdinals = new Map(); let __ordinal = 0, __narration = Promise.resolve(), __phase;
 const __append = data => { __narration = __narration.then(() => zcodeHost.narrate(data)); __narration.catch(() => {}); };
 const __host = {
   args: __init.args,
@@ -23,14 +24,17 @@ const __host = {
     if (name !== undefined && typeof name !== 'string') throw new Error('Actor name must be a string');
     if (name && __names.has(name)) throw new Error('Duplicate Actor name: ' + name);
     if (name) __names.add(name);
-    return Object.freeze({ handle: __init.nonce + ':' + (++__ordinal), siteId, name: name ?? null, persona: persona ?? null });
+    const ordinal = (__actorOrdinals.get(siteId) ?? 0) + 1; __actorOrdinals.set(siteId, ordinal);
+    const reference = Object.freeze({ handle: __init.nonce + ':' + (++__ordinal), siteId, ordinal, name: name ?? null, persona: persona ?? null, phaseName: __phase ?? null });
+    __append({type:'actor-created',reference}); return reference;
   },
   ask(siteId, actor, instructions) {
-    const task = __narration.then(() => zcodeHost.ask({siteId, actor, instructions}));
+    const phaseName = __phase;
+    const task = __narration.then(() => zcodeHost.ask({siteId, actor, instructions, phaseName}));
     task.catch(() => {}); return task;
   },
   log(message) { __append({type:'log',message}); },
-  enterPhase(title) { __append({type:'phase',title}); },
+  enterPhase(title) { __phase = title; __append({type:'phase',title}); },
   report(siteId, value, artifactId) {
     try {
       const serialized = JSON.stringify(value);
@@ -39,11 +43,12 @@ const __host = {
     } catch (error) { __append({type:'report-error',message:error.message}); }
   },
   worldRead(siteId, op, args) {
+    const phaseName = __phase;
     let encodedArgs;
     try { encodedArgs = args.map(value => value === undefined ? {omitted:true} : {value:JSON.parse(JSON.stringify(value))}); }
     catch (error) { return Promise.reject(Object.assign(error,{code:'DriverError'})); }
     const call = __narration.then(async () => {
-      const result = await zcodeHost.world({siteId,op,arguments:encodedArgs});
+      const result = await zcodeHost.world({siteId,op,arguments:encodedArgs,phaseName});
       if (result.ok) return result.value;
       throw Object.assign(new Error(result.error.message), {name:result.error.name,code:result.error.code});
     });
@@ -87,7 +92,8 @@ export function apply(ctx) {
       if (ctx.agents.get(parent.id) !== parent || JSON.stringify(ctx.sandboxPolicy.resolve({ session: parent.session })) !== policyKey) { control.abort(Error('The native parent or workflow permission changed.')); signal.throwIfAborted(); }
     };
     const progress = event => job?.append(JSON.stringify(event) + '\n');
-    const actors = createActors({ ctx, parent, sites: prepared.sites, askSpecs: prepared.askSpecs, signal, progress });
+    const runProgress = createRunProgress({ store: ctx.omaa.workflowArtifacts, parent, runId, signal, stopReason: () => record.stopReason });
+    const actors = createActors({ ctx, parent, sites: prepared.sites, askSpecs: prepared.askSpecs, signal, progress, runProgress });
     const world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec });
     const artifacts = createArtifacts({ ctx, parent, prepared, runId, store: ctx.omaa.workflowArtifacts, signal, check, fatal, actor: exec });
     runs.set(runId, record);
@@ -95,12 +101,21 @@ export function apply(ctx) {
     const functions = {
       async init() { check(); return { args: options.args ?? {}, nonce: runId }; },
       async ask(args) { check(); return actors.ask(args); },
-      async world(args) { check(); return world.execute(args); },
+      async world(args) {
+        check();
+        const node = await runProgress.node(args.siteId, 'world-read', { phaseName: args.phaseName });
+        try {
+          await node.dispatched();
+          const value = await world.execute(args);
+          await node.settled(value.ok ? undefined : Error(value.error.message));
+          return value;
+        } catch (error) { await node.settled(error); throw error; }
+      },
       async publishArtifact(args) { check(); return artifacts.publish(args); },
       async narrate(data) {
         check();
         const action = async () => {
-          if (data.type === 'phase') { if (typeof data.title !== 'string') throw Error('Phase title must be text.'); job?.updateProgress(data.title); await ctx.omaa.workflowArtifacts.mutate(parent.id, runId, value => { value.phase = data.title; }); }
+          if (data.type === 'phase') { if (typeof data.title !== 'string') throw Error('Phase title must be text.'); job?.updateProgress(data.title); await ctx.omaa.workflowArtifacts.mutate(parent.id, runId, value => { value.phase = data.title; }); await runProgress.phase(data.title); }
           else if (data.type === 'log') { if (typeof data.message !== 'string') throw Error('Log message must be text.'); job?.append(data.message + '\n'); }
           else if (data.type === 'report') {
             const value = await artifacts.report(data);
@@ -108,6 +123,7 @@ export function apply(ctx) {
             reports.push(event); job?.append(JSON.stringify(event) + '\n');
           }
           else if (data.type === 'declare') await artifacts.declare(data);
+          else if (data.type === 'actor-created') await actors.declare(data.reference);
           else if (data.type === 'report-error') { const error = new WorkflowError('DriverError', data.message); fatal(error); throw error; }
           else throw Error('Unknown workflow narration.');
           return null;
@@ -121,10 +137,11 @@ export function apply(ctx) {
         message: error.message, ...(error.code ? { code: error.code } : {}) });
       try {
         await ctx.omaa.workflowArtifacts.begin({ runId, sessionId: parent.id, name: options.name,
-          graph: prepared.graph, causalityGraph: prepared.causalityGraph, jobId: job?.id }, () => {
+          graph: prepared.graph, causalityGraph: prepared.causalityGraph, displayGraph: prepared.displayGraph, jobId: job?.id }, () => {
+          record.stopReason = 'user';
           if (job) ctx.jobs.kill(job.id, parent.id, 'Workflow stopped from its artifact panel.');
           else control.abort(Error('Workflow stopped from its artifact panel.'));
-        }); began = true; check();
+        }); began = true; await runProgress.start(); check();
         outcome = await ctx.ptcRuntime.run(ctx.ptcRuntime.resolve({ program: programFor(prepared.lowered), bindings: [{ global: 'zcodeHost', functions }],
           cwd: parent.session.header.cwd, sandboxPolicy: policy, signal, timeoutMs: null }));
         await narration;
@@ -137,14 +154,18 @@ export function apply(ctx) {
           const closed = await Promise.allSettled([actors.close(), world.close(), artifacts.close()]);
           const failures = closed.filter(value => value.status === 'rejected').map(value => value.reason);
           if (failures.length) outcome.error ??= errorValue(new AggregateError(failures, 'Native workflow resources could not be released.'), 'exception');
-          if (began) await ctx.omaa.workflowArtifacts.finish(parent.id, runId, outcome);
+        if (began) { await runProgress.finish(outcome); await runProgress.flush(); await ctx.omaa.workflowArtifacts.finish(parent.id, runId, outcome); }
         } finally { runs.delete(runId); }
       }
       return { runId, ...outcome, reports, actors: actors.view() };
     })();
     record.result = result;
     ctx.omaa.workflowArtifacts.trackRun(runId, result, () => control.abort(Error('Workflow storage scope disposed.')));
-    return { runId, result, cancel: reason => control.abort(Error(reason || 'Workflow canceled.')) };
+    return { runId, result, cancel: reason => {
+      if (reason?.kind === 'user') record.stopReason = 'user';
+      control.abort(reason instanceof Error ? reason : Object.assign(Error(typeof reason === 'string' ? reason : 'Workflow canceled.'),
+        { nativeReason: reason }));
+    } };
   }
   ctx.on('session/event', (session, event) => {
     if (['sandbox/mode', 'plan/mode'].includes(event.type)) for (const run of runs.values()) if (run.parent.id === session.id) run.control.abort(Error('Workflow permissions or working mode changed.'));
@@ -192,7 +213,7 @@ export function apply(ctx) {
         return { ok: true, status: 'backgrounded', jobId, runId: run.runId, ...graph, response: 'Workflow started as a native job. Its final outcome is delivered by the host when it settles.' };
       }
       const run = start(exec.agent, prepared, info, undefined, exec);
-      const abort = () => run.cancel('Native tool call canceled.'); exec.signal.addEventListener('abort', abort, { once: true });
+      const abort = () => run.cancel(exec.signal.reason); exec.signal.addEventListener('abort', abort, { once: true });
       try { const outcome = await run.result; return { ok: !outcome.error, ...outcome, ...graph }; }
       finally { exec.signal.removeEventListener('abort', abort); }
     },
