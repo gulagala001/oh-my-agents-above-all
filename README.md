@@ -40,7 +40,9 @@ OMAA 0.6 提供 **ZCode TypeScript Actor 工作流**：固定原厂编译器、�
 
 一个隔离原版 DSH 的实际安装 fixture 已核对文件与 glob、UTF-16 BOM/CRLF、bundled grep、Git、相对命令路径、非零退出及上限拒绝、原生 workspace-write 和后台 Ask 取消；准确范围见 [ZCode 文档](docs/products/zcode.md)。它使用原生 workflow 工具权限边界，不提供 Bash 逐条命令审批、权限升级或原厂 workflow journal/replay。它不运行原厂 Actor 引擎或客户端。
 
-OMAA 0.8.0 接入文件、Markdown 及 Chart/Table/Metrics/Board 工作流产物：内容与成功版本保存为 DSH 原生不可变附件，原厂校验、报告折叠和图表实现与宿主存储、权限及界面适配分开保留。独立右栏可从工具结果“查看产物”进入，按 run 浏览并调用原生停止；文件使用不可变快照的原生预览。一个最终原生 fixture 已核对快照、版本、冷重启、四种声明与分页/upsert、可 catch 失败、非法 spec 的父 run 失败及跨会话拒读。已配置 Space Bunny Free 的一个真实产物任务完成，原生 alpha Web UI 实点“查看产物”、两点 Chart、Table keyed upsert 和不可变 Markdown 原生预览已核对。UI 全面验收及 Desktop/Windows 产物 UI 仍未完成；live graph、graph amend 与原厂 engine journal/replay 仍未接入。
+OMAA 0.8.0 接入文件、Markdown 及 Chart/Table/Metrics/Board 工作流产物：内容与成功版本保存为 DSH 原生不可变附件，原厂校验、报告折叠和图表实现与宿主存储、权限及界面适配分开保留。独立右栏可从工具结果“查看产物”进入，按 run 浏览并调用原生停止；文件使用不可变快照的原生预览。一个最终原生 fixture 已核对快照、版本、冷重启、四种声明与分页/upsert、可 catch 失败、非法 spec 的父 run 失败及跨会话拒读。已配置 Space Bunny Free 的一个真实产物任务完成，原生 alpha Web UI 实点“查看产物”、两点 Chart、Table keyed upsert 和不可变 Markdown 原生预览已核对。UI 全面验收及 Desktop/Windows 产物 UI 仍未完成；公开 0.8 不包含下述开发源码的运行图／Amend；原厂 engine journal/replay 仍未实现。
+
+未发布 0.9 开发源码新增原版 ZCode Timeline／PhaseList 与 `amend_workflow`：修订前预检，停止并等待前驱，再以完成结果缓存和精确 native Actor 前缀创建 successor；支持同 run 并发上限调整。一个原生 fixture 已核对缓存／前缀／重启／失败后继续、world 顺序且不重复效果及并发升降；Space Bunny Free 实际修订返回两个预期 marker 和正确 lineage。半转录续跑、精确工具 effect 分类与原厂 journal/replay 仍有差异，具体见 [ZCode 契约](docs/products/zcode.md)。
 
 Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；开启 OMD 增强后可使用工作流支持。基础增强不强制工作流编排。安装或卸载 OMD 后需重载对应 profile，让预设重新选择工作流 engine；不支持无重载热切换。
 

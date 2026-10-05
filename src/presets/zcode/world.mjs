@@ -173,15 +173,19 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor }
     },
   };
   const deps = { cwd, fileSystemPort, declaredRunCommands: prepared.declaredRunCommands };
-  return {
-    async execute({ siteId, op, arguments: wrapped }) {
+  function argumentsFor({ siteId, op, arguments: wrapped }) {
       assert();
       if (sites.get(siteId) !== op || !Array.isArray(wrapped)) throw new WorkflowError('DriverError', 'Invalid compiled world-read site.');
-      const args = wrapped.map(item => {
+      return wrapped.map(item => {
         if (item?.omitted === true && Object.keys(item).length === 1) return undefined;
         if (item && Object.hasOwn(item, 'value') && Object.keys(item).length === 1) return item.value;
         throw new WorkflowError('DriverError', 'Invalid world-read argument transport.');
       });
+  }
+  return {
+    argumentsFor,
+    async execute(request) {
+      const args = argumentsFor(request), op = request.op;
       const call = executeWorldRead({ ...deps, executionPort: { run: request => run(request, { readOnly: op !== 'run' }) } }, op, args); calls.add(call);
       try { return { ok: true, value: await call }; }
       catch (error) { return { ok: false, error: { name: error.name || 'Error', code: error.code || 'DriverError', message: error.message } }; }

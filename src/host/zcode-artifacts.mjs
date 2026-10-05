@@ -11,7 +11,8 @@ const fileRef = z.object({ attachmentId: z.string(), name: z.string(), bytes: z.
 const summarySchema = z.object({ runId: z.string().regex(uuid), sessionId: z.string(), name: z.string(),
   status: z.enum(['running', 'completed', 'failed', 'killed']), startedAt: z.number(), completedAt: z.number().optional(),
   phase: z.string().optional(), revision: z.number().int().positive(), artifactCount: z.number().int().nonnegative(),
-  reportCount: z.number().int().nonnegative(), jobId: z.string().optional(), ref: fileRef });
+  reportCount: z.number().int().nonnegative(), jobId: z.string().optional(), resumedFrom: z.string().optional(),
+  supersededBy: z.string().optional(), ref: fileRef });
 export const NO_ARTIFACT_CHANGE = Symbol('unchanged artifact declaration');
 
 // Domain.open eagerly loads records. Keep only small run summaries there; the
@@ -44,11 +45,11 @@ export async function createZCodeArtifactStore(ctx) {
   const persist = async record => {
     if (closed) throw Error('工作流存储已关闭');
     const ref = await saveJson(record);
-    const { runId, sessionId, name, status, startedAt, completedAt, phase, revision, jobId } = record;
+    const { runId, sessionId, name, status, startedAt, completedAt, phase, revision, jobId, resumedFrom, supersededBy } = record;
     await table.put(keyOf(runId), { runId, sessionId, name, status, startedAt, revision, ref,
       artifactCount: record.artifacts.length, reportCount: record.reports.length,
       ...(completedAt === undefined ? {} : { completedAt }), ...(phase === undefined ? {} : { phase }),
-      ...(jobId === undefined ? {} : { jobId }) });
+      ...(jobId === undefined ? {} : { jobId }), ...(resumedFrom ? { resumedFrom } : {}), ...(supersededBy ? { supersededBy } : {}) });
     if (active.has(runId)) active.set(runId, record);
   };
   const mutate = (sessionId, runId, fn) => {
@@ -67,10 +68,10 @@ export async function createZCodeArtifactStore(ctx) {
       lifecycles.set(runId, { result, stop });
       result.finally(() => lifecycles.delete(runId)).catch(() => {});
     },
-    async begin({ runId, sessionId, name, graph, causalityGraph, displayGraph, jobId }, stop) {
+    async begin({ runId, sessionId, name, graph, causalityGraph, displayGraph, jobId, execution, resumedFrom }, stop) {
       if (table.get(keyOf(runId)) !== undefined) throw Error('工作流标识已存在');
       const record = { runId, sessionId, name, status: 'running', startedAt: Date.now(), revision: 1,
-        graph, causalityGraph, displayGraph, artifacts: [], reports: [], ...(jobId ? { jobId } : {}) };
+        graph, causalityGraph, displayGraph, execution, artifacts: [], reports: [], ...(jobId ? { jobId } : {}), ...(resumedFrom ? { resumedFrom } : {}) };
       active.set(runId, record); controls.set(runId, stop);
       try { await persist(record); } catch (error) { active.delete(runId); controls.delete(runId); throw error; }
     },
@@ -108,7 +109,7 @@ export async function createZCodeArtifactStore(ctx) {
       return { sessionId, runId, name: record.name, startedAt: record.startedAt, completedAt: record.completedAt,
         status: record.status === 'running' && !active.has(runId) ? 'interrupted' : record.status,
         revision: record.revision, phase: record.phase, error: record.error, graph: record.graph,
-        displayGraph: record.displayGraph, runtime,
+        displayGraph: record.displayGraph, runtime, resumedFrom: record.resumedFrom, supersededBy: record.supersededBy,
         causalityGraph: record.causalityGraph, artifacts, reports, reportCount: record.reports.length };
     },
     async data(sessionId, runId, id, after = 0, limit = 200) {
@@ -141,7 +142,17 @@ export async function createZCodeArtifactStore(ctx) {
       const stop = controls.get(runId); if (!stop) throw Error('该运行已经结束或因重启中断');
       stop(); return { sessionId, runId, requested: true };
     },
+    async stopAndWait(sessionId, runId) {
+      const record = await current(sessionId, runId);
+      const stop = controls.get(runId), run = lifecycles.get(runId);
+      if (stop) stop();
+      if (run) await run.result;
+      else if (record.status === 'running') await api.finish(sessionId, runId,
+        { error: { kind: 'abort', name: 'Interrupted', message: 'The native workflow was interrupted before this host activation.' } });
+      return current(sessionId, runId);
+    },
     saveItem: value => ctx.attachments.saveFile({ data: Buffer.from(JSON.stringify(value)), name: 'report.json' }),
+    readItem: (ref, signal) => bytesOf(ref, signal).then(bytes => JSON.parse(bytes.toString('utf8'))),
     saveContent: (bytes, name, signal) => ctx.attachments.saveFileStream({
       data: (async function* () { yield bytes; })(), name, signal }),
     async close() {

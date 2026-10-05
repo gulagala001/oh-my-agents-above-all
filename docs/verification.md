@@ -17,7 +17,7 @@
 
 `pnpm test` 包含来源回归与已安装宿主测试，实际模型任务需要明确配置才运行。未运行或跳过的测试不计为通过；脚本化 provider 可验证接线与生命周期，不能证明真实模型代码质量。
 
-本轮 Web 与宿主执行来自 macOS。Windows 文本装配分支有检查，Windows 运行、其他模型/provider、原厂客户端及专有服务没有据此宣称通过。OMAA 包含完整来源、主题与许可，不含 DSH 和原厂运行时；最终大小以实际 `.tgz` 为准。兼容 OMD 约 8.2 MB（解包约 18 MB），由固定官方源码及入库补丁构建，保留宿主工厂并排除本地维护文件。当前 OMAA 0.2.0／兼容 OMD 0.7.1 已实际安装到 Web alpha.1 与桌面 rc.2；旧的安装初版记录不代表后续任务质量已全部达成。
+本轮 Web 与宿主执行来自 macOS。Windows 文本装配分支有检查，Windows 运行、其他模型/provider、原厂客户端及专有服务没有据此宣称通过。OMAA 包含完整来源、主题与许可，不含 DSH 和原厂运行时；最终大小以实际 `.tgz` 为准。兼容 OMD 约 8.2 MB（解包约 18 MB），由固定官方源码及入库补丁构建，保留宿主工厂并排除本地维护文件。当前 OMAA 0.8.0／兼容 OMD 0.8.1 已实际安装到 Web alpha.1 与桌面 rc.2；旧的安装初版记录不代表后续任务质量已全部达成。
 
 UI 修复：无项目草稿的设置迁移先启用增强再调用既有 OMD 模式控制器，保留主题、Ask/Plan 和源草稿；原版 Web 的 Pi Pro 源→目标会话迁移已真实执行，目标仍启用 Pro、增强且保持 DSH 外观，未发送模型任务。桌面匹配包经原生安装器更新并重启，原会话和模型已恢复，设置面板实际可打开。保存竞态、同 ID 切预设、主题过渡及窄侧栏通过单个隔离浏览器 fixture 核对；文件恢复／Git 操作／Pi 分叉的失效状态限制及目标迁移失败补偿仅跑了对应模块检查，没有重做五预设长任务矩阵。Pi 本地 settings/package 资源、忽略规则及 native 懒加载完成了同一安装回归。
 
@@ -28,3 +28,7 @@ OMAA 0.7 的 world facade 使用一个 `installed-zcode-world` 原生安装 fixt
 OMAA 0.8.0 的产物接入由一个最终 `installed-zcode-artifacts` 原生 fixture 核对，本地日志为 `.cache/zcode-artifacts-installed-check.log`。实际覆盖 spec 快照、两个成功版本、工作区后改与整个宿主冷重启后内容不变、四种声明、分页/table upsert、文件过大/逃逸/缺失/primary 的可 catch 失败、跨 session 拒读、非法 spec 的父 run 失败，以及只读查询不追加 native 事件。原生 Domain 只存小 summary，完整数据使用 native content-addressed 附件 refs；没有另建 blob 或改变 journal。此次没有五预设长任务矩阵；graph 只提供静态真实数据 JSON，不据此宣称原厂 live graph/amend 或 engine journal/replay 等价。
 
 已配置 `opencode-zen/space-bunny-free` 的一个真实产物任务实际加载技能、执行 `create_workflow`，完成 Chart/Table/primary Markdown 发布；本地 `.cache/zcode-artifacts-live-result.json` 的 `outcome` 保存实际结果。原生 alpha Web UI 实点“查看产物”打开指定 run，原版 ChartView 显示两点图，Table keyed row 折叠为一行/value 3；“打开原生预览”实际读取 native `attachments/v1` 的不可变 `delivery.md`。实拍为 `.cache/zcode-artifact-chart.jpg`、`.cache/zcode-artifact-preview.jpg`。该项仅证明这个模型任务与对应 Web 流程；UI 全面验收和 Desktop/Windows 产物 UI 尚未全面验证，不推定所有模型或原厂客户端等价。
+
+未发布 0.9 的 `installed-zcode-amend` 单个原生安装 fixture 已通过：整个宿主冷重启后，第一 ask 复用缓存，分歧任务只调用一次 native 模型且新 child 不含旧 poison 后缀；并发相同 world.run 的结果保持准入次序，工作区计数器没有二次效果；ask 失败可 catch 后继续；lineage、跨 session 拒绝、子会话 cold continuation、max_concurrency 升降／不取消在执行 ask 均已实际核对。同时修复未声明 phase 的 ask/world 原生 lossless JSON 传输错误。日志 `.cache/zcode-amend-native-check.log`。原厂完整 journal/replay、半转录续跑、精确工具 effect 分类与所有模型／平台不在这项证据范围内。
+
+同一已配置 Space Bunny Free 的一次真实 create→amend 任务实际返回 OMAA_AMEND_SEED／OMAA_AMEND_LIVE，API 显示一条 cached node 与正确 resumedFrom／supersededBy。证据 `.cache/zcode-amend-live-verification.json`；原 helper 错把直连模型当成本地 mock server 可捕获请求，判据已明确纠正，不把该不可测请求数当证据。此次未完成新的 lineage UI 实点。

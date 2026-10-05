@@ -39,7 +39,8 @@ export function apply(ctx) {
     customSkillDirs: [fileURLToPath(new URL('./skills/', import.meta.url))], watch: false })));
   ctx.effect(() => () => provider?.dispose(), 'ZCode workflow skill');
   ctx.tools.guard(exec => {
-    if (!['workflow', 'create_workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
+    if (!['workflow', 'create_workflow', 'amend_workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
+    if (exec.name === 'amend_workflow' && exec.arguments.script === undefined && exec.arguments.path === undefined) return;
     const events = exec.agent.session.snapshotEvents();
     const calls = new Set(events.filter(event => {
       if (event.type !== 'tool/call' || event.data.name !== 'skill') return false;

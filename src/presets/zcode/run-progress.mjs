@@ -66,7 +66,7 @@ export function createRunProgress({ store, parent, runId, signal, stopReason }) 
         },
         progress: (turn, toolCalls, lastTool) => emit('node-progress', { instance: payload.instance, turn, toolCalls,
           ...(lastTool === undefined ? {} : { lastTool }) }),
-        settled: (error) => emit('node-settled', { ...payload, outcome: error ? signal?.aborted ? 'cancelled' : 'failed' : 'ok',
+        settled: (error, { cached = false } = {}) => emit('node-settled', { ...payload, ...(cached ? { cached: true } : {}), outcome: error ? signal?.aborted ? 'cancelled' : 'failed' : 'ok',
           ...(error ? { error: String(error.message ?? error) } : {}) }, actor?.ready ? actor.childId : undefined),
       };
     },

@@ -5,6 +5,7 @@ import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
 import { buildZCodeArtifacts } from './build-zcode-artifacts.mjs';
+import { buildZCodeImportCache } from './build-zcode-import-cache.mjs';
 import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
 import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
 
@@ -87,6 +88,7 @@ for (const [input, output, adapt] of [
 await buildZCodeWorkflowCompiler();
 await buildZCodeWorldReads();
 await buildZCodeArtifacts();
+await buildZCodeImportCache();
 await buildZCodeRunProjection();
 await buildZCodeGraphUiAssets({ mode: 'check' });
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));

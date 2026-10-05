@@ -13,7 +13,7 @@ export function prepareTypedWorkflow(script) {
   if (!analysis.ok) return { ok: false, diagnostics: hostDiagnostics(analysis.diagnostics) };
   const program = createWorkflowProgram(script), sites = collectSites(program), schemas = synthesizeAskSchemas(program, sites), worldRun = collectWorldRunCommands(program, sites);
   if (schemas.diagnostics.length || worldRun.diagnostics.length) return { ok: false, diagnostics: hostDiagnostics([...schemas.diagnostics, ...worldRun.diagnostics]) };
-  return { ok: true, diagnostics: [], sites, askSpecs: buildAskSpecs(sites, schemas.schemas),
+  return { ok: true, script, diagnostics: [], sites, askSpecs: buildAskSpecs(sites, schemas.schemas),
     lowered: lowerWorkflow(program, sites), declaredRunCommands: new Set(worldRun.commands), graph: analysis.graph,
     causalityGraph: analysis.causality, displayGraph: analysis.causality ? boundCausalityGraph(analysis.causality, analysis.flow, analysis.handoff) : undefined };
 }
