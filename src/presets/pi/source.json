@@ -349,6 +349,22 @@
       "sha256": "d7b35ad32c3172d9b71503fe59e42032f63cc3609d3fee070ea434b4f5fb2998",
       "bytes": 2721,
       "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/core/messages.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/core/messages.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/messages.ts",
+      "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
+      "bytes": 5206,
+      "license": "MIT"
+    },
+    {
+      "path": "packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "snapshot": "sources/upstream/packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "sha256": "321af8afdff8da4924a7dbf5623b5637eb160ea7d73a70e6662d8125249bde9b",
+      "bytes": 3099,
+      "license": "MIT"
     }
   ],
   "activePromptEntry": "packages/coding-agent/src/core/system-prompt.ts",
@@ -621,7 +637,7 @@
       "tool_result"
     ],
     "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback. test/installed-pi-start.test.mjs covers awaited input before template/assembly, chained mutable options/getSystemPrompt, forced leading prompt transitions, custom native source metadata, dynamic add/replace/loadout, one-at-a-time steer, queued follow-up and durable cold queued literal input.",
-    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata; display does not reproduce original TUI. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, TUI rendering or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent."
+    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, custom TUI renderer, sendMessage or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent."
   },
   "beforeAgentStartAdapter": {
     "modules": [
@@ -667,6 +683,38 @@
     },
     "hostIntegration": "Native claimed events -> shared steering selection -> awaited input -> nonrecursive templates -> awaited start hook -> native pre-step admission. source.pi.input retains source/template/streaming choices. source.pi.runPrompt retains force presence for cold head cleanup; no second prompt history or queue.",
     "lifecycle": "Once per fresh user run, not per tool/steer/queued streaming follow-up; options and forced text survive that native activity and reset at idle. Fresh or cleared force uses startsRequestSeries; normal in-history updates preserve native semantics.",
-    "limits": "Original force is request-only; native DSH logs effective prompt admission. Custom role maps to native user/context with metadata. Full-history transforms, original TUI/display, remaining lifecycle APIs and JSONL tree runtime are not present."
+    "limits": "Original force is request-only; native DSH logs effective prompt admission. Custom role maps to native user/context with metadata. Default custom-message display is adapted through native uiConversation; full-history transforms, custom TUI renderers, remaining lifecycle APIs and JSONL tree runtime are not present."
+  },
+  "customMessageDisplayAdapter": {
+    "version": "0.11.0",
+    "modules": [
+      {
+        "module": "../../client/pi-extension-messages.mjs",
+        "sha256": "234a3bd3f623bad6a58b7ee527bc7c7e7f6ff1c4e9cfe1c882d64d40e686bd32"
+      },
+      {
+        "module": "../../client/pi-extension-messages.jsx",
+        "sha256": "255513b779ec191a0bec2edec74026566f0d959a016edc60be51b346516aae1c"
+      }
+    ],
+    "source": [
+      "packages/coding-agent/src/core/messages.ts",
+      "packages/coding-agent/src/modes/interactive/components/custom-message.ts"
+    ],
+    "hostIntegration": "Native uiConversation Event definition and keyed conversation.chat.node renderer. Only append-origin native user/message with source.kind pi-extension, string customType and boolean display are claimed. Native process grouping and collapse remain authoritative.",
+    "adaptations": [
+      "Pinned upstream convertToLlm maps custom messages to user without checking display. Hidden presentation leaves native journal, model context, message identity and accepted-batch ordering unchanged. No new wakeup inbox or queue.",
+      "Default [customType] label and native Markdown use fixed Pi light/dark palette customMessageBg, customMessageText and customMessageLabel. String content is direct; array content extracts text only with newline joins. Images and details are not displayed, matching upstream default rendering.",
+      "display:false creates a hidden native view node. Replacement-origin model projections are excluded to avoid duplicate transcript display. Event match uses the function contract supported by rc.2 and alpha.1; alpha-only match tables are not used."
+    ],
+    "limits": "Only accepted before_agent_start batches. Native DSH process layout may collapse these messages; this is not Pi TUI standalone rows. No registerMessageRenderer/custom Component, expanded/outputPad renderer callbacks, sendMessage, account runtime or original TUI executor.",
+    "verification": {
+      "status": "native-alpha-display-passed",
+      "evidence": [
+        ".cache/pi-display-native-evidence.json: actual native append events and provider user messages retain display:false text and image attachment, while append-only view projection selects hidden/visible",
+        ".cache/pi-display-ui-result.json: actual native Chat process expansion and Pi type label/Markdown heading/list/code with light/dark screenshots"
+      ],
+      "limits": "One isolated official alpha Web host and scripted provider. Actual rc.2 ASAR APIs inspected; not a full Desktop/Windows UI check, original independent TUI row, custom renderer or sendMessage."
+    }
   }
 }

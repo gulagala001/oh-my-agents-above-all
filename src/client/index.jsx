@@ -8,15 +8,17 @@ import controlsCss from './preset-controls.css';
 import { Updates } from './updates.jsx';
 import updatesCss from './updates.css';
 import { PiExtensions, applyPiExtensionNotices } from './pi-extensions.jsx';
+import { applyPiExtensionMessages } from './pi-extension-messages.jsx';
 import { ZCodeWorkflows } from './zcode-workflows.jsx';
 import { ZCodeWorkflowTool } from './zcode-workflow-tool.jsx';
 
-export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation'];
+export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation', 'uiConversation'];
 
 export function apply(ctx) {
   let settings;
   ctx.effect(() => { settings = createSessionSettings(ctx); return () => settings.dispose(); });
   applyPiExtensionNotices(ctx, settings);
+  applyPiExtensionMessages(ctx);
   const getThemeRuntime = applyThemes(ctx, settings);
   const openPanel = () => ctx.sidebarRight.openTab('omaa-preset');
   const Controls = () => <PresetControls {...{ settings, getThemeRuntime }}/>
