@@ -23,7 +23,7 @@ async function configuration(signal, patch) {
   return value;
 }
 
-export function PiExtensions({ settings } = {}) {
+export function PiExtensions({ settings, embedded = false } = {}) {
   const [state, setState] = useState({ data: null, loading: false, saving: false, error: '', message: '' });
   const [text, setText] = useState('');
   const lifetime = useRef({ alive: false, revision: 0, controller: undefined, busy: false, dirty: false });
@@ -67,7 +67,7 @@ export function PiExtensions({ settings } = {}) {
   const busy = state.loading || state.saving;
   return <section className="omaa-pi-extensions" aria-label="Pi 扩展设置">
     <style>{css}</style>
-    <header><h2>Pi 本地扩展</h2><button type="button" disabled={busy} onClick={() => { void load(); }}>重新读取</button></header>
+    <header>{!embedded && <h2>Pi 本地扩展</h2>}<button type="button" disabled={busy} onClick={() => { void load(); }}>重新读取</button></header>
     <p>每行填写一个本地 TS / JS 文件的绝对路径。仅加载你明确保存的扩展，不自动执行项目中发现的文件。</p>
     <p className="omaa-pi-extension-help">应用于 Pi 会话，后续请求加载指定文件；更改或清空列表会释放旧扩展。</p>
     <p className="omaa-pi-extension-help">扩展沿用当前 DSH 文件权限；原生工具调用继续使用宿主批准流程。运行中的 Pi 任务会拒绝切换扩展，请先停止后再保存。</p>

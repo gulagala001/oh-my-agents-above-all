@@ -2,7 +2,7 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.12.0`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
+当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.12.1`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
 
 与 OMD 同 profile 使用时，需要提供 OMAA 兼容增强与外观协调接口的 OMD。官方 OMD `0.6.1` 尚无该接口；使用发行附件中的对应宿主兼容 OMD，或在独立 DSH profile 使用。支持 Web DSH `0.2.1-alpha.1` 与桌面 DSH `0.2.0-rc.2`，两端包必须与正在运行的宿主匹配。
 
@@ -18,7 +18,7 @@ dsh web
 
 已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，应在桌面原生插件管理器中安装 rc.2 附件，不能用上述 CLI 命令直接修改。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
 
-在新会话中选择 `Codex · OMAA`、`Grok Build · OMAA`、`Cursor · OMAA`、`Pi Coding Agent · OMAA` 或 `ZCode · OMAA`。输入区预设按钮可打开右侧设置，通用设置中也有 OMAA 页面。
+在新会话中选择 `Codex · OMAA`、`Grok Build · OMAA`、`Cursor · OMAA`、`Pi Coding Agent · OMAA` 或 `ZCode · OMAA`。输入区预设按钮可打开右侧设置，通用设置中只保留一个「Oh My Agents Above All」入口，版本更新与 Pi 本地扩展在该页折叠区。
 
 - 工作模式：除 Pi 的精简默认模式外，支持执行、只读 Ask 和原生 Plan 审阅/批准流程。
 - 身份：与 OMD 共存时沿用其人格／身份设置，修改开头身份文字；默认、内置、自定义及关闭均生效，不依赖工具增强开关。产品行为与主题继续由所选预设负责。

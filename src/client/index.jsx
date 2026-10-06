@@ -5,9 +5,9 @@ import { GitReview } from './git-review.jsx';
 import { PiBranches } from './pi-branches.jsx';
 import { applyThemes } from './themes/index.jsx';
 import controlsCss from './preset-controls.css';
-import { Updates } from './updates.jsx';
+import { SettingsPage } from './settings-page.jsx';
 import updatesCss from './updates.css';
-import { PiExtensions, applyPiExtensionNotices } from './pi-extensions.jsx';
+import { applyPiExtensionNotices } from './pi-extensions.jsx';
 import { applyPiExtensionMessages } from './pi-extension-messages.jsx';
 import { ZCodeWorkflows } from './zcode-workflows.jsx';
 import { ZCodeWorkflowTool } from './zcode-workflow-tool.jsx';
@@ -21,7 +21,7 @@ export function apply(ctx) {
   applyPiExtensionMessages(ctx);
   const getThemeRuntime = applyThemes(ctx, settings);
   const openPanel = () => ctx.sidebarRight.openTab('omaa-preset');
-  const Controls = () => <PresetControls {...{ settings, getThemeRuntime }}/>
+  const Settings = () => <SettingsPage {...{ settings, getThemeRuntime }}/>
   function PanelControls(props) {
     const { tab } = props.useTabInfo();
     const current = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
@@ -42,9 +42,7 @@ export function apply(ctx) {
     const tag = document.createElement('style'); tag.dataset.omaaControls = ''; tag.textContent = controlsCss + '\n' + updatesCss;
     document.head.append(tag); return () => tag.remove();
   });
-  ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-presets', order: 17, label: () => 'Oh My Agents Above All' }, Controls));
-  ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-updates', order: 18, label: () => 'OMAA 更新' }, Updates));
-  ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-pi-extensions', order: 19, label: () => 'Pi 本地扩展' }, () => <PiExtensions settings={settings}/>));
+  ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-presets', order: 17, label: () => 'Oh My Agents Above All' }, Settings));
   ctx.slots.inject('conversation.input.right', () => ctx.slots.register({ name: 'conversation.input.right', id: 'omaa-preset-chip', order: 75 }, Chip));
   const panelId = 'omaa/omaa-preset';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: panelId, kind: 'omaa-preset', title: () => '预设设置', guide: [] }));
