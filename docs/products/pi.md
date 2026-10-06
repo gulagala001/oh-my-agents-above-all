@@ -45,11 +45,15 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 - `getActiveTools` / `setActiveTools`、只读工具/命令目录和有界会话视图，以及回调内的 `sendUserMessage`、`exec` 和工具回调中的 `ctx.executeTool`。消息继续使用原生 steer/follow-up；`sendUserMessage` 的输入来源、streaming 和默认关闭的 `expandPromptTemplates` 保存到原生 `source.pi.input`，排队及冷恢复保留输入来源与展开选择。`executeTool` 不作为任意回调中的额外执行入口。
 - native attachment 桥将 Pi image 的 data/mimeType 转为原生已接纳附件，反向读取原生图片供回调使用；工具结果、输入变换和扩展投递复用附件服务，输入变换保留未改动的原生文件附件。
 
-`before_agent_start` 对当前订阅快照按顺序等待回调，暴露可变 `systemPromptOptions` 和反映前序改动的 `ctx.getSystemPrompt()`；支持返回自定义消息及完整 `systemPrompt`。回调显式编辑 `selectedTools` 时使用该列表，否则采用最新 `setActiveTools`，同步新工具 snippets/guidelines。每次运行只触发一次，系统选项及 force 在后续工具步骤、steer 和排队 follow-up 中保持，回到 idle 后清空。自定义消息以原生 user/context 消息入账，`source.kind` 为 `pi-extension`，保留 `customType`、`display` 和 `details`；`display` 仅是元数据，尚未复刻 Pi TUI 显示。
+`before_agent_start` 对当前订阅快照按顺序等待回调，暴露可变 `systemPromptOptions` 和反映前序改动的 `ctx.getSystemPrompt()`；支持返回自定义消息及完整 `systemPrompt`。回调显式编辑 `selectedTools` 时使用该列表，否则采用最新 `setActiveTools`，同步新工具 snippets/guidelines。每次运行只触发一次，系统选项及 force 在后续工具步骤、steer 和排队 follow-up 中保持，回到 idle 后清空。自定义消息以原生 user/context 消息入账，`source.kind` 为 `pi-extension`，保留 `customType`、`display` 和 `details`。OMAA 0.11.0 新增该已接纳批次的默认消息展示，具体范围见下文。
+
+默认自定义消息展示依据固定原版 [`core/messages.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/messages.ts) 和 [`components/custom-message.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/modes/interactive/components/custom-message.ts)。原版 `convertToLlm` 将 custom 消息投影为 user，**不检查 `display`**；`display:false` 是显示选择，仍进入模型上下文。OMAA 使用原生 `uiConversation` 自有 Event 与 keyed Chat renderer，显示 `[customType]` 和原生 Markdown，采用固定 Pi palette 的明暗 `customMessageBg/Text/Label` 颜色。内容数组只提取 text 并以换行拼接，与原版默认组件一致，不展示 image blocks 或 `details`；字符串直接作为 Markdown。`display:false` 将该展示节点隐藏，原生 journal 和模型消息不变；只接管 append-origin 消息，模型替换投影不会重复显示。
+
+消息沿用 DSH 过程分组，可随原生过程折叠；位置不等同原版 TUI 的独立消息行。Event 的 match 使用 rc.2 与 alpha.1 共用的函数形式，因为 rc.2 不支持 alpha 的 match table。该适配仅覆盖 `before_agent_start` 返回的已接纳批次，未增加唤醒 inbox 或 `sendMessage`，也不支持 `registerMessageRenderer` / 自定义 TUI 组件。原版 renderer 可获得完整 message、expanded/outputPad 和 theme，返回自有组件或回退默认展示；此接口没有移植。已在一个隔离的原生 alpha Web 会话中实际展开过程，核对类型标签、Markdown 标题/列表/代码、隐藏材料不显示，以及明暗主题切换。实际 provider 请求与原生事件仍保留隐藏文本和图片附件。桌面 rc.2 已只读核对同一事件与 renderer 接口，不据此宣称完整桌面或 Windows UI 验收。
 
 完整 force 经 DSH 原生 journal 和 `startsRequestSeries` 首条系统消息归一化进入实际请求；原版 Pi force 仅作请求投影、不记入 transcript，两者记录语义不同。
 
-尚不支持 `context` / `context_with_system` 完整历史替换、自定义 TUI/组件渲染、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
+尚不支持 `context` / `context_with_system` 完整历史替换、自定义 TUI/组件渲染、`sendMessage`、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
 
 OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已通过。before_agent_start 与异步输入链从 0.10.0 起提供，旧版本安装不包含它们。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
 

@@ -40,3 +40,5 @@ OMAA 0.9.0 的 `installed-zcode-amend` 单个原生安装 fixture 已通过：�
 一个最终 `installed-pi-start` 原生 alpha fixture 已通过：异步 input 后模板展开、handler 快照串行、可变 options/getSystemPrompt、字面完整 force 的进入/连续替换/退出、自定义消息原生来源、动态工具新增/同名替换/显式 loadout/setActiveTools、逐条 steer 和排队 follow-up 的单次启动、handled 零模型请求、输入/启动回调异常继续，以及原生队列持久后故障冷恢复的字面扩展输入。独立原生资源用例检查 SYSTEM/APPEND、技能、模板和 native inbox 接线；普通 Pi 四种工具配置的提示词字节与前版一致。构建及身份/会话设置快速回归通过。
 
 用例采用脚本 provider，不代替真实模型长期任务；未新增 Desktop/Windows 扩展 UI 全面验收。Pi 的工作模式改为静态“执行（Pi 默认模式）”，不暴露未实现的模式选择。force 由 DSH 原生日志和请求序列首条归一化承载，区别于原厂请求投影；custom display 仅保留 metadata，完整历史 context/TUI/JSONL 扩展仍有差异。
+
+Pi 自定义消息展示在单个隔离 alpha Web 会话中完成实际点击和明暗实拍：类型标签、Markdown 标题/列表/代码均可见；display:false、details 和 image blocks 不进入默认展示；原生 provider 请求及事件保留隐藏文本与图片。证据 `.cache/pi-display-native-evidence.json`、`.cache/pi-display-ui-result.json` 与明暗截图。过程折叠仍由 DSH 管理，rc.2 本轮只有实际 ASAR 接口核对，未扩桌面/Windows 或五产品矩阵。

@@ -25,3 +25,5 @@ Pi extension-only 回调桥已在源码实现：用户显式指定绝对 TS/JS �
 OMAA 0.9.0 接入 ZCode 原版 Timeline／PhaseList、successor-run Amend、连续完成结果缓存、精确 native completed event prefix 和同 run 并发 retune；同时修复未声明 phase 的 ask/world 传输错误。修订保留前驱并在同会话中关联后继，不支持半转录继承、原模型 pin 或原厂 same-run journal/replay；effect 分类仍采用明确记录的保守边界。单个原生 fixture、Space Bunny Free 短任务与已有 alpha Web graph 点击各有有限证据，新的 Amend 卡片和前次／后续入口也已在隔离 alpha Web 实点。当前公开发行 tag 为 `v0.2.1-alpha.1.omaa.0.9.0`，配对兼容 OMD 保持 `0.8.1`；部署仍须按两宿主原生安装和重载流程保留现有用户配置与会话。五产品稳定日用目标及 Desktop/Windows 新图验收继续推进。
 
 OMAA 0.10.0 源码包含 Pi 异步输入链和 before_agent_start；实际安装需使用匹配宿主的新版包，不将源码版本视为用户已安装版本。`test/installed-pi-start.test.mjs` 定向覆盖回调顺序、系统快照/force 生命周期、自定义消息、动态工具选择及扩展输入冷恢复，一个最终原生 alpha 用例已通过，未扩五产品任务矩阵。完整 force 与自定义消息由 DSH 原生日志承载，区别于原版 Pi force 仅投影和 TUI display 行为。
+
+OMAA 0.11.0 补齐 Pi before_agent_start 自定义消息的默认显示/隐藏；类型标签、Markdown 与原版明暗颜色已在单个真实原生 Web 界面核对，隐藏文本和图片仍保留在原生模型请求/日志。原生过程分组折叠、自定义 TUI renderer、sendMessage 和完整历史替换仍是后续工作，不把本次展示适配视为 Pi 整体完成。
