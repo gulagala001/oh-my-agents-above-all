@@ -3,7 +3,7 @@ import { Type } from 'typebox';
 
 export { Type };
 export const callbackContext = new AsyncLocalStorage();
-export const supportedEvents = new Set(['input', 'before_agent_start', 'tool_call', 'tool_result', 'session_start', 'session_shutdown']);
+export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown']);
 
 // Pure helpers from Pi cd32f77 extensions/types.ts and ai/typebox-helpers.ts.
 export const defineTool = tool => tool;
@@ -82,7 +82,7 @@ export function createCallbackContext(runtime) {
     get mode() { const mode = live(runtime, false).snapshot.mode ?? 'print'; if (!['print', 'rpc', 'json'].includes(mode)) unsupported('TUI mode'); return mode; },
     get hasUI() { return Boolean(live(runtime, false).snapshot.hasUI); },
     get ui() { live(runtime); return ui; },
-    get signal() { return live(runtime).controller.signal; },
+    get signal() { const current = live(runtime); return current.notificationSignal ?? current.controller.signal; },
     get sessionManager() { live(runtime); return sessionManager; },
     get tools() { return clone(snapshot(runtime, 'allTools')); },
     get model() { return clone(live(runtime, false).snapshot.model); },

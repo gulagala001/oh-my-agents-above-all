@@ -2,7 +2,7 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.11.0`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
+当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.12.0`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
 
 与 OMD 同 profile 使用时，需要提供 OMAA 兼容增强与外观协调接口的 OMD。官方 OMD `0.6.1` 尚无该接口；使用发行附件中的对应宿主兼容 OMD，或在独立 DSH profile 使用。支持 Web DSH `0.2.1-alpha.1` 与桌面 DSH `0.2.0-rc.2`，两端包必须与正在运行的宿主匹配。
 
@@ -28,7 +28,7 @@ dsh web
 - Codex：查看 Unstaged、Staged、Commit、Branch 和 Last turn；按文件或块暂存、取消暂存、撤回，选定代码行后立即发送反馈，或收集多文件批注一次提交。操作遵守宿主权限并拒绝过期比较。
 - Grok Build：实时 stdout 监控与原生 interval 定时任务，使用同一作业/会话生命周期。
 - Pi：加载 SYSTEM/APPEND、用户与项目规则、提示模板，以及项目/祖先 `.agents` 和深层技能资源；默认逐条 steer。Pi 分支面板可打开原生 parent 树、从已完成回合创建新会话，按需勾选离开分支摘要（默认关闭，使用当前模型）。分支共享目录，切换不回滚文件。
-- Pi 本地扩展：源码已实现用户明确指定绝对 TS/JS 文件的执行白名单，默认空、不自动运行项目发现文件。只在 DSH 原生 subprocess/sandbox 中运行扩展 factory 与回调，接入工具、命令、异步输入/工具事件、原生问答、通知及附件；0.10.0 补齐输入后模板展开与 `before_agent_start`，支持可变系统选项、串行回调、自定义消息及运行内 force；0.11.0 补齐自定义消息的类型、Markdown、明暗颜色和隐藏显示。模型、工具循环与账号仍由 DSH 负责。OMAA 0.5 提供该扩展入口及活动回调内的动态工具、命令、事件注册；隔离原生执行检查已通过，使用方法与未支持 API 见 [Pi 文档](docs/products/pi.md)。
+- Pi 本地扩展：源码已实现用户明确指定绝对 TS/JS 文件的执行白名单，默认空、不自动运行项目发现文件。只在 DSH 原生 subprocess/sandbox 中运行扩展 factory 与回调，接入工具、命令、异步输入/工具事件、原生问答、通知及附件；0.10.0 补齐输入后模板展开与 `before_agent_start`，支持可变系统选项、串行回调、自定义消息及运行内 force；0.11.0 补齐自定义消息的类型、Markdown、明暗颜色和隐藏显示；0.12.0 增加串行 `agent_start` / `turn_start` / `agent_end` 通知、完整结束消息及严格分帧，并修复取消通知和人工新输入的 force 边界。模型、工具循环与账号仍由 DSH 负责。OMAA 0.5 提供该扩展入口及活动回调内的动态工具、命令、事件注册；隔离原生执行检查已通过，使用方法与未支持 API 见 [Pi 文档](docs/products/pi.md)。
 - ZCode：项目／全局保存工作流、按名列举及复用、参数声明与默认值。用户明确点名工作流，或启用 Pro/Ultra 后，使用实际工作流与结构化子代理结果，仍先加载 `zcode-workflows` 技能；按用户引用的 session id 回查原生历史，可使用当前已配置模型提取上下文。
 - OMD 增强：默认关闭；基础增强提供 CodeGraph 和 Computer Use，可另选 Pro 或 Ultra 工作方式。高级方式复用 OMD 控制与持久化，使用当前模型最高可用 reasoning effort，保留 provider/model；开启高级方式自动开启增强，关闭增强同时关闭高级方式。Ask/Plan 暂停高级编排，恢复执行后可继续。主题选择独立。
 
@@ -53,7 +53,7 @@ Pi 普通会话保持精简工具，不显示或允许调用 delegation/jobs；�
 | Codex | 官方完整指令/压缩、连续推进、真实 Git 范围与块操作、行反馈、桌面布局 | DSH 选择实际模型；未启用官方 persistent/cloud/app 专有运行层 |
 | Grok Build | 官方条件主提示词、计划/提问/任务、实时监控、interval 调度、独立主题 | 原生作业/会话；无跨会话 durable、即时首 fire 或原厂七天 TTL |
 | Cursor | 完整公开样本适配、MDC 规则、Plan/Ask、文件检查点、IDE/Agent 对话布局 | 样本非官方公开源码；专有 Instant Grep、Composer、云代理与 IDE 上下文不等同于宿主能力 |
-| Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题；显式本地扩展桥，before_agent_start 与自定义消息默认展示 | 不加入默认计划/子代理；扩展仅支持已接入的 API，不运行完整 Pi 代理/TUI；不同原生 sessionId 共享目录，同树日志和更早取消边界仍有差异 |
+| Pi | 完整默认 preamble、精简工具、SYSTEM/模板/规则/深层技能、逐条 steer、原生分支导航/可选离开摘要与主题；显式本地扩展桥，before_agent_start、自定义消息默认展示及三个生命周期通知 | 不加入默认计划/子代理；扩展仅支持已接入的 API，可编辑 turn_end/agent_before_settle 与完整历史变换仍未接入，不运行完整 Pi 代理/TUI；不同原生 sessionId 共享目录，同树日志和更早取消边界仍有差异 |
 | ZCode | 完整上下文、原生计划、保存/复用工作流、冷历史回查与主题；原厂 TS 编译/Actor facade及静态图；文件/Git/world.run facade；不可变产物及独立右栏；0.9.0 提供 Timeline/PhaseList 与 successor-run Amend、缓存和并发调整 | DSH 模型、隔离 PTC 与持久原生 child；命令按当前原生权限执行，无原厂 journal/replay、逐条 Bash 审批；新图只投影真实执行事实；不继承半转录或原模型 pin，不提供原厂 same-run journal/replay |
 
 来源原文与实际适配分开保存，详细依据见 [产品资料](docs/product-sources.md) 和 [产品文档](docs/products/)。Cursor 配色沿用当前 DSH，桌面布局参考官方公开界面；没有把 CLI 登录前颜色当作整个 Cursor 的主题。

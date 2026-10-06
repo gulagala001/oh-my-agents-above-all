@@ -6,7 +6,7 @@ import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
-const supportedEvents = new Set(['session_start', 'session_shutdown', 'input', 'before_agent_start', 'tool_call', 'tool_result']);
+const supportedEvents = new Set(['session_start', 'session_shutdown', 'input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result']);
 const textOf = blocks => (blocks ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const json = value => JSON.parse(JSON.stringify(value));
 const catalogEdits = (before, after) => ({
@@ -63,13 +63,16 @@ function nativeBranch(agent) {
 
 export function apply(ctx) {
   const settings = ctx.omaa.piExtensions, states = new Map();
+  // Registry service access can return a traced Agent face. Resolve journal
+  // observations by the stable native session identity, not proxy identity.
+  const sessionState = session => [...states].find(([agent]) => agent.session.id === session.id) ?? [];
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
   const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!enhanced(tool.name) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
   const snapshot = (agent, state) => {
     const tools = visible(agent, state), branch = nativeBranch(agent);
     const model = typeof agent.options?.model === 'string' ? { id: agent.options.model, provider: agent.options.provider } : undefined;
     return { cwd: agent.session.header.cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
-      isIdle: agent.status === 'idle', hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
+      isIdle: agent.status === 'idle' && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
       sessionId: agent.session.id, sessionHeader: { ...agent.session.header }, sessionBranch: branch, sessionEntries: branch,
       activeTools: tools.map(t => t.name), allTools: ctx.tools.schemas(agent).map(t => ({ ...t, label: t.name })),
       commands: ctx.commands.list(agent).map(c => ({ name: c.name, description: c.description ?? '' })), flags: {},
@@ -97,6 +100,8 @@ export function apply(ctx) {
   async function api(method, args, context, signal) {
     if (!context?.agent) throw Error('扩展 API 需要当前原生调用上下文');
     const { agent, state, exec } = context; signal.throwIfAborted(); assertPolicy(agent, state);
+    if (context.eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted'
+      && ['exec', 'executeTool', 'sendUserMessage', 'ui.select', 'ui.confirm', 'ui.input'].includes(method)) throw Error('原生活动已取消，结束通知不能继续执行或唤醒任务');
     if (Array.isArray(args)) {
       const fields = { 'ui.notify': ['text', 'type'], 'ui.select': ['title', 'options', 'dialogOptions'], 'ui.confirm': ['title', 'message', 'dialogOptions'], 'ui.input': ['title', 'placeholder', 'dialogOptions'],
         sendUserMessage: ['content', 'options'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'] }[method];
@@ -130,8 +135,9 @@ export function apply(ctx) {
       if (options.expandPromptTemplates !== undefined && typeof options.expandPromptTemplates !== 'boolean') throw Error('Pi expandPromptTemplates 必须为布尔值');
       if (options.deliverAs !== undefined && !['steer', 'followUp'].includes(options.deliverAs)) throw Error('无效的 Pi 输入投递方式');
       const blocks = typeof args.content === 'string' ? [{ type: 'text', text: args.content }] : await admitContent(args.content, signal);
+      const streaming = agent.status === 'running' || Boolean(state.lifecycleRun?.ending);
       const input = { source: 'extension', expandPromptTemplates: options.expandPromptTemplates ?? false,
-        streaming: agent.status === 'running', ...(agent.status === 'running' ? { streamingBehavior: options.deliverAs ?? 'followUp' } : {}) };
+        streaming, ...(streaming ? { streamingBehavior: options.deliverAs ?? 'followUp' } : {}) };
       const message = createUserMessage({ content: blocks, source: { kind: 'user', pi: { input } } });
       state.inputOrigins.set(message.id, input);
       if (options.deliverAs === 'steer') agent.steer(message);
@@ -244,7 +250,7 @@ export function apply(ctx) {
     const previous = agent.session.snapshotEvents().findLast(event => event.type === 'user/message' && event.data.source?.pi?.runPrompt)?.data.source.pi.runPrompt;
     const state = { status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
       forceAdmitted: previous?.force === true,
-      busy: () => Boolean(state.loading || state.calls || state.disposal),
+      busy: () => Boolean(state.loading || state.calls || state.disposal || state.lifecycleRun?.ending),
       view: () => ({ status: state.status, ...(state.error ? { error: state.error } : {}), tools: state.descriptors?.tools.map(t => t.name) ?? [], commands: state.descriptors?.commands.map(c => c.name) ?? [] }),
       async dispose({ shutdown = true } = {}) {
         if (state.disposal) return state.disposal;
@@ -252,13 +258,15 @@ export function apply(ctx) {
         void (async () => {
         const guest = state.guest;
         if (shutdown && guest && !guest.stopped && state.status === 'ready' && state.events.has('session_shutdown')) {
-          try { await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: snapshot(agent, state) },
-            { context: { agent, state, eventName: 'session_shutdown' }, signal: AbortSignal.timeout(2000), timeoutMs: 2000 }); }
+          try { const response = await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: snapshot(agent, state) },
+            { context: { agent, state, eventName: 'session_shutdown' }, signal: AbortSignal.timeout(2000), timeoutMs: 2000 });
+            for (const error of response?.errors ?? []) ctx.logger.warn('Pi extension shutdown: ' + error.error); }
           catch (error) { ctx.logger.warn('Pi extension shutdown: ' + error.message); }
         }
         for (const registry of [state.toolRegistrations, state.commandRegistrations]) { for (const entry of registry.values()) entry.dispose(); registry.clear(); }
         state.guest = null; state.key = null; state.active = null; state.events.clear(); state.descriptors = null; state.status = 'disabled';
         state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; state.inputOrigins.clear();
+        state.lifecycleRun = undefined; state.lifecycleCompletion = undefined;
         if (guest) await guest.close();
         })().then(disposal.resolve, disposal.reject);
         try { await disposal.promise; } finally { state.disposal = null; }
@@ -288,7 +296,7 @@ export function apply(ctx) {
         const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: snapshot(agent, state) }, { signal, timeoutMs: 30000 });
         syncRegistrations(agent, state, descriptors);
         state.status = 'ready';
-        if (state.events.has('session_start')) await invoke(agent, state, { kind: 'event', eventName: 'session_start', event: { type: 'session_start' } }, signal);
+        await notifyEvent(agent, state, 'session_start', {}, signal);
       } catch (error) { await state.dispose(); state.status = 'error'; state.error = error.message; settings.notify(agent, 'Pi 扩展加载失败：' + error.message, 'error'); throw error; }
     };
     state.loading = load();
@@ -301,6 +309,85 @@ export function apply(ctx) {
     try { return await state.guest.call({ type: 'invoke', ...call, snapshot: snapshot(agent, state) }, { context: { agent, state, exec, eventName: call.eventName }, signal }); }
     finally { state.calls--; }
   }
+  async function notifyEvent(agent, state, eventName, event, signal) {
+    if (!state.events.has(eventName)) return;
+    const response = await invoke(agent, state, { kind: 'event', eventName, event: { type: eventName, ...event },
+      ...(eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted' ? { callbackAbortReason: state.lifecycleRun.endReason.reason } : {}) }, signal);
+    for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 ' + eventName + '：' + error.error, 'error');
+  }
+  async function runMessages(agent, run, signal) {
+    const calls = new Map(), messages = [];
+    for (const event of agent.session.snapshotEvents(run.firstSeq + 1)) {
+      if (event.seq > run.endSeq) break;
+      if (event.type === 'tool/call') { calls.set(event.data.callId, event.data.name); continue; }
+      if (event.surfaceOp !== 'append' || !['user/message', 'assistant/message', 'tool/result'].includes(event.type)) continue;
+      const source = event.data.message ?? event.data;
+      const blocks = [];
+      for (const part of source.content ?? []) {
+        if (part.type === 'text' || part.type === 'image') blocks.push(...(await piContent([part], signal)).map(value => ({ ...part, ...value })));
+        else if (part.type === 'reasoning') blocks.push({ ...part, type: 'thinking', thinking: part.text });
+        else if (part.type === 'tool-call') {
+          let argumentsValue = part.arguments;
+          try { argumentsValue = JSON.parse(argumentsValue); } catch {}
+          if (argumentsValue && typeof argumentsValue === 'object' && !Array.isArray(argumentsValue)) argumentsValue = piArguments({ name: part.name, arguments: argumentsValue });
+          blocks.push({ ...part, type: 'toolCall', arguments: argumentsValue });
+        } else blocks.push(json(part)); // Preserve native-only attachments/blocks.
+      }
+      const timestamp = event.time;
+      if (event.type === 'user/message') messages.push(source.source?.kind === 'pi-extension'
+        ? { role: 'custom', customType: source.source.customType, display: source.source.display, details: source.source.details, content: blocks, timestamp: source.source.timestamp ?? timestamp }
+        : { role: 'user', content: blocks, timestamp });
+      else if (event.type === 'tool/result') messages.push({ role: 'toolResult', toolCallId: source.toolCallId,
+        toolName: event.data.name ?? calls.get(source.toolCallId), content: blocks, isError: Boolean(source.isError),
+        details: event.data.meta?.piExtension?.details ?? {}, timestamp });
+      else {
+        const response = source.source?.replayState?.response;
+        const finish = event.data.stream?.findLast(item => item.chunk?.type === 'finish')?.chunk.reason;
+        const usage = event.data.usage;
+        messages.push({ role: 'assistant', content: blocks, timestamp,
+          api: response?.kind === 'pi-ai' ? response.api : 'dsh', provider: source.source?.provider, model: source.source?.model,
+          stopReason: response?.kind === 'pi-ai' ? response.stopReason : ({ 'tool-calls': 'toolUse', 'max-tokens': 'length', error: 'error', aborted: 'aborted', completed: 'stop' })[finish?.kind],
+          ...(usage ? { usage: { ...usage, input: usage.inputTokens, output: usage.outputTokens, totalTokens: usage.totalTokens } } : {}) });
+      }
+    }
+    return messages;
+  }
+  const clearRunPrompt = state => { state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; };
+  async function beginLifecycle(agent, state, signal) {
+    const run = state.lifecycleRun ??= { firstSeq: state.pendingLifecycleSeq ?? -1, turnIndex: 0, lastStep: null };
+    if (!run.started) { run.started = true; await notifyEvent(agent, state, 'agent_start', {}, signal); }
+    return run;
+  }
+  async function beginTurn(agent, state, turn, step, signal) {
+    const run = await beginLifecycle(agent, state, signal), key = turn + ':' + step;
+    run.activitySignal = signal;
+    if (key !== run.lastStep) {
+      run.lastStep = key;
+      await notifyEvent(agent, state, 'turn_start', { turnIndex: run.turnIndex++, timestamp: Date.now() }, signal);
+    }
+  }
+  async function finishLifecycle(agent, state, signal) {
+    const run = state.lifecycleRun;
+    if (!run?.ending) return;
+    try { await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, signal) }, signal); }
+    finally {
+      if (state.lifecycleRun === run) {
+        state.lifecycleRun = undefined;
+        // Messages supplied by an end callback continue the accepted activity's
+        // prompt. A quiet end releases its override for the next human input.
+        if (!agent.inbox.nextTurn.length && !agent.inbox.nextStep.length) clearRunPrompt(state);
+      }
+    }
+  }
+  ctx.on('agent/request', async (info, next) => {
+    if (!owns(info.agent)) return next();
+    const state = states.get(info.agent);
+    if (!state?.guest || state.guest.stopped) return next();
+    if (state.lifecycleCompletion) await state.lifecycleCompletion;
+    if (state.lifecycleRun?.ending) await finishLifecycle(info.agent, state, info.signal);
+    await beginTurn(info.agent, state, info.turn, info.step, info.signal);
+    return next();
+  });
   const controller = {
     inputMetadata: (agent, id) => states.get(agent)?.inputOrigins.get(id),
     promptTools(agent) {
@@ -340,10 +427,19 @@ export function apply(ctx) {
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     if (!context.agent || !owns(context.agent)) return next();
     const state = await ensure(context.agent, context.signal);
+    if (state.lifecycleCompletion) await state.lifecycleCompletion;
+    if (state.lifecycleRun?.ending) await finishLifecycle(context.agent, state, context.signal);
+    // A queued input can be handled without a provider request. Its current
+    // native signal still owns cancellation until the activity becomes idle.
+    if (context.signal && state.lifecycleRun) state.lifecycleRun.activitySignal = context.signal;
     const resources = ctx.get('omaaPiResources');
     const boundary = await resources.prepare(context.agent, context.signal, () => {
       state.prompt = promptFrameText(resources.frame(context.agent, _initial, visible(context.agent, state)));
     });
+    // An end callback may keep a continuation prompt while maintenance parks
+    // a newly typed human input. Its explicit new-run origin releases that
+    // override before the next before_agent_start, even with other queued work.
+    if (boundary.startsRun) clearRunPrompt(state);
     const assembly = await next();
     let frame = resources.frame(context.agent, assembly, visible(context.agent, state));
     state.prompt = promptFrameText(frame);
@@ -377,6 +473,16 @@ export function apply(ctx) {
     if (state.runOptions) state.runOptions = { ...state.runOptions, selectedTools: frame.options.selectedTools,
       toolSnippets: applyCatalogEdits(frame.options.toolSnippets, state.runCatalogEdits?.snippets),
       toolGuidelines: applyCatalogEdits(frame.options.toolGuidelines, state.runCatalogEdits?.guidelines) };
+    if (context.signal && (boundary.messages.length || state.lifecycleRun && state.nativeResponseHasTools && !boundary.handled)) {
+      state.prompt = renderPromptFrame(frame, state.runOptions ?? frame.options).map(section => section.text).filter(Boolean).join('\n\n');
+      await beginTurn(context.agent, state, state.nativeTurn, state.nativeNextStep, context.signal);
+      // Startup callbacks can change the active registry before the first
+      // request: rebuild from the host's current schemas and catalog.
+      frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+      if (state.runOptions) state.runOptions = { ...state.runOptions, selectedTools: frame.options.selectedTools,
+        toolSnippets: applyCatalogEdits(frame.options.toolSnippets, state.runCatalogEdits?.snippets),
+        toolGuidelines: applyCatalogEdits(frame.options.toolGuidelines, state.runCatalogEdits?.guidelines) };
+    }
     // A Pi run spans native tool steps and queued follow-up turns. The next
     // idle->prompt run starts from fresh resources, never the previous override.
     const sections = renderPromptFrame(frame, state.runOptions ?? frame.options);
@@ -388,7 +494,33 @@ export function apply(ctx) {
     state.prompt = sections.map(section => section.text).filter(Boolean).join('\n\n');
     return { ...assembly, tools: visible(context.agent, state), sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
   });
-  ctx.on('agent/status', ({ agent, status }) => { const state = states.get(agent); if (state && status === 'idle') { state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; } });
+  ctx.on('agent/status', ({ agent, status }) => {
+    const state = states.get(agent);
+    if (state && status === 'running') state.nativeNextStep = 1;
+    if (!state || status !== 'idle') return;
+    const run = state.lifecycleRun;
+    if (!run || !state.events.has('agent_end')) { state.lifecycleRun = undefined; clearRunPrompt(state); return; }
+    // Cancellation can land after the durable completed turn/end but before
+    // this idle emit. The actual loop signal is authoritative in that window.
+    if (run.activitySignal?.aborted) {
+      const cause = run.activitySignal.reason;
+      run.endReason = { kind: 'aborted', reason: { kind: cause.kind,
+        ...(cause.kind === 'hook' ? { reason: cause.reason } : {}) } };
+    }
+    if (run.endReason?.kind === 'aborted' && run.endReason.reason?.kind === 'disposed') {
+      state.lifecycleRun = undefined; clearRunPrompt(state); return;
+    }
+    run.ending = true; run.endSeq = run.terminalSeq ?? agent.session.snapshotEvents().at(-1)?.seq ?? run.firstSeq;
+    // Idle is an emit observation. Reserve maintenance synchronously so native
+    // whenIdle/teardown follows this asynchronous end callback and parks wakes.
+    // If another idle listener already woke, the next assembly drains it.
+    try {
+      const completion = agent.runMaintenance(signal => finishLifecycle(agent, state, signal));
+      state.lifecycleCompletion = completion;
+      completion.catch(error => { if (state.guest) settings.notify(agent, 'Pi 扩展 agent_end：' + error.message, 'error'); })
+        .finally(() => { if (state.lifecycleCompletion === completion) state.lifecycleCompletion = undefined; });
+    } catch (error) { if (agent.status === 'idle') settings.notify(agent, 'Pi 扩展 agent_end：' + error.message, 'error'); }
+  });
   ctx.tools.guard(exec => {
     const state = exec.agent && states.get(exec.agent);
     if (state?.active && !state.active.has(exec.name) && !exec.parent) return 'Pi extension disabled this model-facing tool.';
@@ -421,12 +553,31 @@ export function apply(ctx) {
   });
   ctx.on('agent/disposed', ({ agent }) => { const state = states.get(agent); states.delete(agent); if (settings.states.get(agent.id) === state) settings.states.delete(agent.id); if (state) void state.dispose().catch(error => ctx.logger.warn(error.message)); });
   ctx.on('session/event', (session, event) => {
+    if (event.type === 'turn/start') {
+      const [, state] = sessionState(session);
+      if (state) { state.pendingLifecycleSeq = event.seq; state.nativeTurn = event.data.turn; state.nativeNextStep = 1; }
+    }
+    if (event.type === 'step/start') {
+      const [, state] = sessionState(session);
+      if (state) state.nativeNextStep = event.data.step + 1;
+    }
+    if (event.type === 'turn/end') {
+      const [, state] = sessionState(session);
+      if (state) {
+        state.nativeResponseHasTools = false;
+        if (state.lifecycleRun) { state.lifecycleRun.endReason = event.data.reason; state.lifecycleRun.terminalSeq = event.seq; }
+      }
+    }
+    if (event.type === 'assistant/message') {
+      const [, state] = sessionState(session);
+      if (state) state.nativeResponseHasTools = event.data.message.content.some(part => part.type === 'tool-call');
+    }
     if (event.type === 'user/message' && event.data.source?.pi?.runPrompt || event.type === 'request/header') {
-      const agent = ctx.agents.get(session.id), state = agent && states.get(agent);
+      const [, state] = sessionState(session);
       if (state && state.pendingForce !== undefined) state.forceAdmitted = state.pendingForce;
     }
     if (event.type !== 'sandbox/mode') return;
-    const agent = ctx.agents.get(session.id), state = agent && states.get(agent);
+    const [agent, state] = sessionState(session);
     if (state?.guest && JSON.stringify(currentPolicy(agent)) !== state.policyKey) {
       // Revoke the old process range immediately; no callback may retain a
       // wider policy after the native mode event. Next assembly re-confines.

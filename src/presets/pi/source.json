@@ -521,17 +521,21 @@
   },
   "guestAdapter": {
     "module": "extensions/guest.mjs",
-    "sha256": "16217e3fed19ca4d829bc66875681d07b1fa1c77193bd85cd7cbe81c2ec205df",
+    "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978",
     "helpers": [
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "e9a2c8b05e9fcf97b7e36e79fee8dedc2700e6899dcf6aad0e420bbc03f1b629"
+        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
       },
       {
         "module": "extensions/validation.ts",
         "sha256": "460786b57dead200e411b9afec916a5049c96ebcff4da082096456ac06d44fb7",
         "source": "packages/ai/src/utils/validation.ts",
         "originalBytes": true
+      },
+      {
+        "module": "extensions/wire.mjs",
+        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
       }
     ],
     "source": [
@@ -551,8 +555,8 @@
       "jiti@2.7.0 loads original TS/JS default factories with fsCache/moduleCache disabled. Original fixed typebox@1.3.27 modules and explicit pure Pi defineTool/typeguard/StringEnum helpers are virtual imports; @sinclair/typebox@0.34.41 remains a separate legacy module alias. Unsupported original runtime exports are absent.",
       "Original validateToolArguments from packages/ai/src/utils/validation.ts is loaded byte-for-byte as a pure helper. It uses fixed typebox/compile Compile, Value.Convert, optional-null normalization and upstream plain JSON Schema coercion. StringEnum retains original Type.Unsafe. No private JSON schema matcher or Pi agent runtime is used. Native host schema/guard checks remain authoritative before guest invocation, so native argument acceptance may be narrower than the original coerced Pi contract.",
       "All factories must succeed before a new registration batch commits. Tools expose original serialized parameters and callback IDs; unsupported prepareArguments/prepareLoadout are exposed as booleans and rejected by the native host. constrainedSampling/renderShell metadata is also rejected because those contracts are not adapted. Active callback registrations and event subscriptions/unsubscriptions use a serial host-acknowledged operation queue. Same-extension replacement and cross-extension first-wins are preserved; a rejected operation rolls back to the acknowledged base and replays later pending changes. Old callback IDs remain valid for already captured native definitions.",
-      "Supported first-profile events are input, tool_call, tool_result, session_start and session_shutdown. Unknown event subscriptions fail the factory. Registration order is retained; input transforms form a pipeline and handled stops it; tool_call block stops early and the final input is returned so the native host can reject argument mutations.",
-      "JSONL messages are bounded to 2 MiB, 32 modules, 64 active callbacks and 256 pending API calls. Reentrant stdin dispatch and AsyncLocalStorage isolate callback context; cancellation uses per-invocation AbortController. Console output uses stderr. Tool updates retain requestId.",
+      "Supported events are input, before_agent_start, agent_start, turn_start, agent_end, tool_call, tool_result, session_start and session_shutdown. Unknown event subscriptions fail the factory. Registration order is retained; input transforms form a pipeline and handled stops it; tool_call block stops early and the final input is returned so the native host can reject argument mutations.",
+      "Bidirectional complete JSON messages are bounded to 128 MiB through strict wire fragmentation/reassembly; each JSONL frame remains bounded to 2 MiB. Registration descriptions retain a separate budget; 32 modules, 64 active callbacks and 256 pending API calls. Reentrant stdin dispatch and AsyncLocalStorage isolate callback context; cancellation uses per-invocation AbortController. Console output uses stderr. Tool updates retain requestId.",
       "ui.notify/select/confirm/input, exec, executeTool, sendUserMessage and setActiveTools request native host actions; void actions drain their host acknowledgements before callback completion. executeTool is restricted to tool callbacks. setActiveTools updates the callback snapshot immediately for known tools only and waits for preceding registration acknowledgements; nested executeTool also waits for those acknowledgements.",
       "Synchronous getters use only supplied native read-only snapshots; absent required fields and unsupported API properties fail immediately. ctx.model is a limited native id/provider route projection, possibly undefined, without provider credentials or SDK objects. ctx.isProjectTrusted requires an explicit native boolean; otherwise it is unsupported. No fake TUI, account API, transcript store or custom input queue is implemented."
     ],
@@ -622,10 +626,14 @@
   },
   "extensionHostAdapter": {
     "module": "extensions.mjs",
-    "sha256": "adecfce204c76e747eb442d982420c9862652915390e133a7ab2b778bad9f099",
+    "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf",
     "transport": {
       "module": "extensions/transport.mjs",
-      "sha256": "d4a0a031056e70dba788f2fdb6472eaebddd8c4d9c7e8877667d841a5a662929"
+      "sha256": "3a04e0271b9895af70416bdce510c9cd73e9fa61093b44a914d199c8ee7730cd",
+      "wire": {
+        "module": "extensions/wire.mjs",
+        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
+      }
     },
     "hostIntegration": "Explicit local entry allowlist; native scoped tools/commands, fs versions, subprocess/sandbox, userQuestions and attachments. Extension-only callback guest; native model/API, inbox and journal remain authoritative.",
     "events": [
@@ -634,24 +642,27 @@
       "input",
       "before_agent_start",
       "tool_call",
-      "tool_result"
+      "tool_result",
+      "agent_start",
+      "turn_start",
+      "agent_end"
     ],
     "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback. test/installed-pi-start.test.mjs covers awaited input before template/assembly, chained mutable options/getSystemPrompt, forced leading prompt transitions, custom native source metadata, dynamic add/replace/loadout, one-at-a-time steer, queued follow-up and durable cold queued literal input.",
-    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, custom TUI renderer, sendMessage or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent."
+    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, custom TUI renderer, sendMessage or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent. agent_start/turn_start/agent_end are awaited notifications adapted to native activity/request steps; editable turn_end and agent_before_settle remain unsupported. Native journal turn/end precedes idle-reserved runMaintenance and native whenIdle/teardown waits for end callbacks. Native retry and original Pi low-level run/pre-settle semantics differ."
   },
   "beforeAgentStartAdapter": {
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "adecfce204c76e747eb442d982420c9862652915390e133a7ab2b778bad9f099"
+        "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf"
       },
       {
         "module": "extensions/guest.mjs",
-        "sha256": "16217e3fed19ca4d829bc66875681d07b1fa1c77193bd85cd7cbe81c2ec205df"
+        "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978"
       },
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "e9a2c8b05e9fcf97b7e36e79fee8dedc2700e6899dcf6aad0e420bbc03f1b629"
+        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
       },
       {
         "module": "resources.mjs",
@@ -682,7 +693,7 @@
       "reproducibility": "Strict fixed manifest SHA and TS AST pure-function extraction; main build checks generated output; no original agent/model runtime."
     },
     "hostIntegration": "Native claimed events -> shared steering selection -> awaited input -> nonrecursive templates -> awaited start hook -> native pre-step admission. source.pi.input retains source/template/streaming choices. source.pi.runPrompt retains force presence for cold head cleanup; no second prompt history or queue.",
-    "lifecycle": "Once per fresh user run, not per tool/steer/queued streaming follow-up; options and forced text survive that native activity and reset at idle. Fresh or cleared force uses startsRequestSeries; normal in-history updates preserve native semantics.",
+    "lifecycle": "Once per fresh user run, not per tool/steer/queued streaming follow-up. End-only callback continuation retains accepted force; new human input during end maintenance starts fresh before_agent_start/force. Quiet end clears the override. Fresh or cleared force uses startsRequestSeries; normal in-history updates preserve native semantics.",
     "limits": "Original force is request-only; native DSH logs effective prompt admission. Custom role maps to native user/context with metadata. Default custom-message display is adapted through native uiConversation; full-history transforms, custom TUI renderers, remaining lifecycle APIs and JSONL tree runtime are not present."
   },
   "customMessageDisplayAdapter": {
@@ -715,6 +726,58 @@
         ".cache/pi-display-ui-result.json: actual native Chat process expansion and Pi type label/Markdown heading/list/code with light/dark screenshots"
       ],
       "limits": "One isolated official alpha Web host and scripted provider. Actual rc.2 ASAR APIs inspected; not a full Desktop/Windows UI check, original independent TUI row, custom renderer or sendMessage."
+    }
+  },
+  "lifecycleAdapter": {
+    "version": "0.12.0",
+    "modules": [
+      {
+        "module": "extensions.mjs",
+        "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf"
+      },
+      {
+        "module": "extensions/guest.mjs",
+        "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978"
+      },
+      {
+        "module": "extensions/pi-api.mjs",
+        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
+      },
+      {
+        "module": "extensions/transport.mjs",
+        "sha256": "3a04e0271b9895af70416bdce510c9cd73e9fa61093b44a914d199c8ee7730cd"
+      },
+      {
+        "module": "extensions/wire.mjs",
+        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
+      }
+    ],
+    "source": [
+      "packages/coding-agent/src/core/agent-session.ts",
+      "packages/coding-agent/src/core/extensions/types.ts",
+      "packages/agent/src/agent-loop.ts"
+    ],
+    "events": [
+      "agent_start",
+      "turn_start",
+      "agent_end"
+    ],
+    "hostIntegration": "Awaited notifications follow actual native activity and request steps, each step including one provider response and its tool batch. Native journal turn/end commits before idle observation synchronously reserves runMaintenance; whenIdle/teardown waits for end callbacks. No second loop, inbox or journal.",
+    "adaptations": [
+      "agent_start has type only; turn_start has turnIndex from zero and dispatch timestamp; agent_end has current-scope actual append-origin messages. Startup/step registrations reassemble the first-request tools and native guard. Pure notification handler errors are reported and later handlers continue.",
+      "End-only continuation retains accepted force; fresh human input during end maintenance starts its own before_agent_start and force. Native retry and original Pi low-level prompt/continue run and pre-settlement boundaries differ.",
+      "End messages retain full text/image/toolCall/thinking and original native-only block structures; native attachments supply image bytes. Original Pi replay api/stopReason is retained when present, otherwise native finish reasons are mapped. Native usage is retained with corresponding token fields; no invented SDK costs or guarantee of complete Pi signatures. ctx.sessionManager remains a bounded 100-entry/4000-text-character-per-entry read-only view.",
+      "User-cancel end notification exposes an already-aborted ctx.signal; host forbids exec/executeTool/sendUserMessage/UI questions from resuming work, while notify and read-only APIs remain available. Disposed activity does not start end maintenance. This stop-notification restriction is an OMAA adaptation.",
+      "Strict bidirectional wire transport limits complete JSON messages to 128 MiB and individual JSONL frames to 2 MiB, validating sequence, bytes, canonical base64, UTF-8 and completeness without truncation. Registration payloads retain a separate budget."
+    ],
+    "limits": "No editable turn_end/agent_before_settle BoundaryResult, draft entries, context preview/edit/compaction or continuation-control parity. Native user turn is not a Pi turn. No original Pi loop, complete SessionManager, SDK cost calculation or all-signature parity.",
+    "verification": {
+      "status": "native-alpha-fixture-passed",
+      "evidence": [
+        "test/installed-pi-lifecycle.test.mjs: final 6.8s PASS in one native alpha host with scripted provider; startup/step ordering and first-request tools/guard, pure-handler error continuation, new human force during end maintenance, end-only force retention, full >2 MiB multilingual message, cancelled notification signal and blocked continuation.",
+        ".cache/pi-lifecycle-native-evidence.json"
+      ],
+      "limits": "rc.2 core loop/Session received read-only byte comparison only. No claim of rc.2 real execution, Desktop all-hook coverage, Windows or real-model quality. Main-model source review fixed the late-dispose window by retaining the actual native signal, including handled queued input without a provider request; no dedicated disposed-window fixture is claimed."
     }
   }
 }

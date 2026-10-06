@@ -9,7 +9,7 @@ OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。
 | 桌面 DSH `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.` | `trisoul_x-0.2.0-rc.2.omd.0.8.1.tgz` |
 | Web／源码 DSH `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.` | `trisoul_x-0.2.1-alpha.1.omd.0.8.1.tgz` |
 
-本次 0.11.0 tag 为 `v0.2.1-alpha.1.omaa.0.11.0`，配对兼容 OMD 仍为 `0.8.1`。选择当前宿主对应的 OMAA 附件更新，已有匹配的兼容 OMD 可以继续使用。
+0.12.0 对应 tag 为 `v0.2.1-alpha.1.omaa.0.12.0`，配对兼容 OMD 仍为 `0.8.1`。选择当前宿主对应的 OMAA 附件更新，已有匹配的兼容 OMD 可以继续使用。
 
 发行主 tag 跟随源码 `package.json` 的完整版本（`v<DSH宿主>.omaa.<三段版本>`）；同一发行提供两个宿主附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
 
@@ -69,7 +69,7 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 保存采用 revision 冲突检查；配置已被其他窗口修改时先「重新读取」，未保存的输入会保留，再核对并提交。页面显示各 Pi 会话的加载状态、实际工具/命令与错误。点击「清空并停用」保存空白名单；扩展回调进程关闭并释放注册项。配置文件位于 `DSH_HOME/omaa/pi-extensions.json`。
 
-扩展仅通过当前 DSH 的 subprocess/sandbox 与权限执行回调，工具、问答、通知、附件和用户消息复用原生服务；活动回调可动态注册工具、命令与事件。不会另启 Pi 模型、工具循环或账号。0.10.0 已接入异步 input 与 before_agent_start 的可变系统选项、自定义消息和完整 force；0.11.0 新增该批次的默认消息显示和隐藏处理。context/context_with_system 完整历史替换、自定义 TUI/render、appendEntry 等未接入，完整边界见 [Pi 文档](products/pi.md)。
+扩展仅通过当前 DSH 的 subprocess/sandbox 与权限执行回调，工具、问答、通知、附件和用户消息复用原生服务；活动回调可动态注册工具、命令与事件。不会另启 Pi 模型、工具循环或账号。0.10.0 已接入异步 input 与 before_agent_start 的可变系统选项、自定义消息和完整 force；0.11.0 新增该批次的默认消息显示和隐藏处理；0.12.0 增加串行 agent_start/turn_start/agent_end 通知、完整结束 messages 与大消息分帧。用户取消后的结束通知 signal 已 aborted，不能由 exec/executeTool/sendUserMessage/UI 问答续跑。可编辑 turn_end/agent_before_settle、context/context_with_system 完整历史替换、自定义 TUI/render、appendEntry 等未接入，完整边界见 [Pi 文档](products/pi.md)。
 
 ## 维护发行附件
 
