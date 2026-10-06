@@ -1,5 +1,7 @@
 # Oh My Agents Above All
 
+![OMAA — 五种代理工作方式，运行在 DSH 上](assets/marketing/omaa-launch-2026-10-06-v2.png)
+
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
 当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.12.1`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
