@@ -433,7 +433,7 @@
   },
   "deferredBehaviors": [
     "Separate Pi steer/follow-up UI controls and exact pre-assembly cancellation semantics",
-    "Pi extension events outside input/tool_call/tool_result/session_start/session_shutdown, broader extension API and section-delta transcript updates",
+    "Pi full-history context/context_with_system and remaining lifecycle callbacks, broader extension APIs, native custom TUI rendering and exact original structured-section transcript deltas",
     "Pi output truncation artifact contracts",
     "Remote npm/git package installation, full Pi extension API beyond the opt-in native guest profile, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
     "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately"
@@ -445,7 +445,7 @@
   ],
   "adaptedPrompt": {
     "module": "prompt.mjs",
-    "sha256": "28e1c8c596b3f3d0292d9068e7c736a2156a0f397b59fbdab82b8fa0de6ec999"
+    "sha256": "1ce31aa898b407c5f4081a3aa526ee8f420c93be7c319997ee911e2cacc4c3c9"
   },
   "resourceAdapter": {
     "module": "resources.mjs",
@@ -471,7 +471,7 @@
       "Project cwd.pi/settings.json and user agentDir/settings.json skills/prompts use their own base directories, absolute/tilde paths, native resource discovery and upstream minimatch@10.2.6 filter dimensions/order. Explicit project settings precede project auto roots, then explicit user settings, user auto roots, and package resources. Settings globs filter discovered plain entries; package manifest globs are enumerated through bounded native fs.",
       "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract."
     ],
-    "sha256": "75c98e7aadb7a7937bcb4d3f089545d77fe578d885d71ec7286c22224dd8356e",
+    "sha256": "32da4dd5e184cf85a7142ae94fccf1e6c3f379dd2de99f208053c8b46265188c",
     "helpers": [
       {
         "module": "resource-ignore.mjs",
@@ -505,11 +505,11 @@
   },
   "guestAdapter": {
     "module": "extensions/guest.mjs",
-    "sha256": "8a5ffcad6c3481f461472be6f22cd4a954d96ff60d31d18517bd481ec9230cdf",
+    "sha256": "16217e3fed19ca4d829bc66875681d07b1fa1c77193bd85cd7cbe81c2ec205df",
     "helpers": [
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "8829468cd7202318801ce86a2b43a135ef5278d9958d760b35bdf81d29ffb876"
+        "sha256": "e9a2c8b05e9fcf97b7e36e79fee8dedc2700e6899dcf6aad0e420bbc03f1b629"
       },
       {
         "module": "extensions/validation.ts",
@@ -552,7 +552,7 @@
   },
   "steeringAdapter": {
     "module": "steering.mjs",
-    "sha256": "97d45062e34320ed0c3a9dfbf7b3150ae15ef81a91c24178af53cef95263eeec",
+    "sha256": "c5fc20b98cb9128bb2982afae2f39386f2fa664587bd1452f3d23833e41dddff",
     "source": "packages/agent/src/agent.ts and agent-loop.ts default one-at-a-time",
     "hostIntegration": "Native scoped inbox events track typed next-step identities. Public pre-step mutable messages and native Inbox splice defer remaining steers before native message commit; original id/source kept, notifications/queue unchanged. No loop replacement or custom history.",
     "boundary": "Native loop claims input and awaits system assembly before pre-step, so cancellation/failure before that hook cannot promise Pi remaining-queue parity.",
@@ -606,7 +606,7 @@
   },
   "extensionHostAdapter": {
     "module": "extensions.mjs",
-    "sha256": "e70cb11c1c89bfa8db316448a17fc59961869ae51fdfff976f595cc0fd982d5b",
+    "sha256": "adecfce204c76e747eb442d982420c9862652915390e133a7ab2b778bad9f099",
     "transport": {
       "module": "extensions/transport.mjs",
       "sha256": "d4a0a031056e70dba788f2fdb6472eaebddd8c4d9c7e8877667d841a5a662929"
@@ -616,10 +616,57 @@
       "session_start",
       "session_shutdown",
       "input",
+      "before_agent_start",
       "tool_call",
       "tool_result"
     ],
-    "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback.",
-    "differences": "Dynamic registrations update native scoped registries with synchronous host rollback; new declarations and tool guidelines become visible at the next native assembly. No before_agent_start/context mutation, TUI rendering or appendEntry. Tool input already logged stays immutable; native result state/details/structuredContent rewriting limited. Read-only session view bounded; callback-bound actions; no installation of dependencies."
+    "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback. test/installed-pi-start.test.mjs covers awaited input before template/assembly, chained mutable options/getSystemPrompt, forced leading prompt transitions, custom native source metadata, dynamic add/replace/loadout, one-at-a-time steer, queued follow-up and durable cold queued literal input.",
+    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata; display does not reproduce original TUI. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, TUI rendering or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent."
+  },
+  "beforeAgentStartAdapter": {
+    "modules": [
+      {
+        "module": "extensions.mjs",
+        "sha256": "adecfce204c76e747eb442d982420c9862652915390e133a7ab2b778bad9f099"
+      },
+      {
+        "module": "extensions/guest.mjs",
+        "sha256": "16217e3fed19ca4d829bc66875681d07b1fa1c77193bd85cd7cbe81c2ec205df"
+      },
+      {
+        "module": "extensions/pi-api.mjs",
+        "sha256": "e9a2c8b05e9fcf97b7e36e79fee8dedc2700e6899dcf6aad0e420bbc03f1b629"
+      },
+      {
+        "module": "resources.mjs",
+        "sha256": "32da4dd5e184cf85a7142ae94fccf1e6c3f379dd2de99f208053c8b46265188c"
+      },
+      {
+        "module": "steering.mjs",
+        "sha256": "c5fc20b98cb9128bb2982afae2f39386f2fa664587bd1452f3d23833e41dddff"
+      },
+      {
+        "module": "extension-prompt.mjs",
+        "sha256": "c14376fb1a0b795a4a3cae0e35822f1ddd39842594897448480b17d918b7a8b5"
+      }
+    ],
+    "pureHelpers": {
+      "module": "../../../lib/pi-prompt-helpers.mjs",
+      "sha256": "206f4d79654b4a658e188eea79f99a8f951334ea55dfd15ae98a74a1e5290d33",
+      "builder": "scripts/build-pi-prompt-helpers.mjs",
+      "source": [
+        "packages/coding-agent/src/core/system-prompt.ts",
+        "packages/coding-agent/src/core/skills.ts"
+      ],
+      "functions": [
+        "normalizeBuildSystemPromptOptions",
+        "formatSkillsForPrompt",
+        "escapeXml"
+      ],
+      "reproducibility": "Strict fixed manifest SHA and TS AST pure-function extraction; main build checks generated output; no original agent/model runtime."
+    },
+    "hostIntegration": "Native claimed events -> shared steering selection -> awaited input -> nonrecursive templates -> awaited start hook -> native pre-step admission. source.pi.input retains source/template/streaming choices. source.pi.runPrompt retains force presence for cold head cleanup; no second prompt history or queue.",
+    "lifecycle": "Once per fresh user run, not per tool/steer/queued streaming follow-up; options and forced text survive that native activity and reset at idle. Fresh or cleared force uses startsRequestSeries; normal in-history updates preserve native semantics.",
+    "limits": "Original force is request-only; native DSH logs effective prompt admission. Custom role maps to native user/context with metadata. Full-history transforms, original TUI/display, remaining lifecycle APIs and JSONL tree runtime are not present."
   }
 }

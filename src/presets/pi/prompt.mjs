@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { normalizeBuildSystemPromptOptions, formatSkillsForPrompt } from '../../../lib/pi-prompt-helpers.mjs';
 
 export const product = Object.freeze({
   id: 'pi', name: 'Pi Coding Agent',
@@ -21,51 +22,74 @@ const snippets = {
   write: 'Create or overwrite files',
   read_image: 'Read image files visually',
 };
+const guidelines = {
+  read: ['Use read to examine files instead of cat or sed.'],
+  edit: ['Use edit for precise changes (old_string must match exactly)',
+    'When changing multiple separate locations in one file, use separate edit calls with file_path, old_string, and new_string.',
+    'Each old_string is matched against the current file. Read the current contents after earlier edits when a later change depends on them. Merge nearby changes into one edit.',
+    'Keep old_string as small as possible while still being unique in the file. Do not pad with large unchanged regions.'],
+  write: ['Use write only for new files or complete rewrites.'],
+  read_image: ['Use read_image to examine images; read returns text file contents.'],
+};
 
 function section(name, content) { return `<${name}>\n${content}\n</${name}>`; }
 function escapeContext(text) { return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
 
-export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', customTools = [] } = {}) {
-  const active = new Set(tools);
-  const custom = customTools.filter(tool => active.has(tool.name));
-  const toolSnippets = { ...snippets, ...Object.fromEntries(custom.filter(t => t.promptSnippet).map(t => [t.name, t.promptSnippet])) };
+export function promptOptions({ tools = new Set(), cwd, customTools = [] } = {}) {
+  return normalizeBuildSystemPromptOptions({ cwd, selectedTools: [...tools],
+    toolSnippets: { ...snippets, ...Object.fromEntries(customTools.filter(t => t.promptSnippet).map(t => [t.name, t.promptSnippet])) },
+    toolGuidelines: { ...guidelines, ...Object.fromEntries(customTools.map(t => [t.name, t.promptGuidelines ?? []])) },
+  });
+}
+
+export function buildPromptSections(input) {
+  const options = normalizeBuildSystemPromptOptions(input);
+  const active = new Set(options.selectedTools);
+  const toolSnippets = options.toolSnippets;
   const names = Object.keys(toolSnippets).filter(name => active.has(name));
   const rules = [];
   if (active.has('bash') && active.has('pwsh')) rules.push('Use bash or PowerShell for file operations like listing, searching, and finding files');
   else if (active.has('pwsh')) rules.push('Use PowerShell for file operations like listing, searching, and finding files');
   else if (active.has('bash')) rules.push('Use bash for file operations like ls, rg, find');
-  if (active.has('read')) rules.push('Use read to examine files instead of cat or sed.');
-  if (active.has('edit')) rules.push(
-    'Use edit for precise changes (old_string must match exactly)',
-    'When changing multiple separate locations in one file, use separate edit calls with file_path, old_string, and new_string.',
-    'Each old_string is matched against the current file. Read the current contents after earlier edits when a later change depends on them. Merge nearby changes into one edit.',
-    'Keep old_string as small as possible while still being unique in the file. Do not pad with large unchanged regions.',
-  );
-  if (active.has('write')) rules.push('Use write only for new files or complete rewrites.');
-  if (active.has('read_image')) rules.push('Use read_image to examine images; read returns text file contents.');
-  for (const tool of custom) for (const rule of tool.promptGuidelines ?? []) {
+  for (const name of Object.keys(options.toolGuidelines).filter(name => active.has(name))) for (const rule of options.toolGuidelines[name]) {
+    const normalized = rule.trim(); if (normalized && !rules.includes(normalized)) rules.push(normalized);
+  }
+  for (const rule of options.promptGuidelines) {
     const normalized = rule.trim(); if (normalized && !rules.includes(normalized)) rules.push(normalized);
   }
   rules.push('Be concise in your responses', 'Show file paths clearly when working with files');
 
-  const sections = [
-    preamble.replace('operating inside pi, a coding agent harness', 'operating inside DSH with the Pi Coding Agent preset'),
-    section('tools', `${names.length ? names.map(name => `- ${name}: ${toolSnippets[name]}`).join('\n') : '(none)'}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`),
-    section('rules', rules.map(rule => `- ${rule}`).join('\n')),
-  ];
+  const sections = options.customPrompt ? { preamble: options.customPrompt } : {
+    preamble: preamble.replace('operating inside pi, a coding agent harness', 'operating inside DSH with the Pi Coding Agent preset'),
+    tools: section('tools', `${names.length ? names.map(name => `- ${name}: ${toolSnippets[name]}`).join('\n') : '(none)'}\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.`),
+    rules: section('rules', rules.map(rule => `- ${rule}`).join('\n')),
+  };
   // Upstream's installation-owned documentation paths have no equivalent in DSH.
   // Preserve the complete documentation instructions and use fixed official references.
-  if (active.has('bash') || active.has('pwsh') || active.has('web_fetch')) {
+  if (!options.customPrompt && (active.has('bash') || active.has('pwsh') || active.has('web_fetch'))) {
     const base = `https://raw.githubusercontent.com/earendil-works/pi/${product.sourceCommit}/packages/coding-agent`;
     const docs = docsSource
       .replace('${getReadmePath()}', `${base}/README.md`)
       .replace('${getDocsPath()}', `${base}/docs`)
       .replace('${getExamplesPath()}', `${base}/examples`);
-    sections.push(section('docs', `${docs}\n- These are documentation URLs. Fetch them with an available command or web tool when needed.`));
+    sections.docs = section('docs', `${docs}\n- These are documentation URLs. Fetch them with an available command or web tool when needed.`);
   }
-  if (cwd) sections.push(section('cwd', escapeContext(String(cwd).replaceAll('\\', '/'))));
-  return sections.join('\n\n');
+  if (options.appendSystemPrompt) sections.addendum = section('addendum', options.appendSystemPrompt);
+  if (options.contextFiles.length) sections.project_context = section('project_context', 'Project-specific instructions and guidelines:\n' + options.contextFiles.map(file => '<project_instructions path="' + escapeContext(file.path).replaceAll('"', '&quot;') + '">\n' + file.content + '\n</project_instructions>').join('\n'));
+  const skillFileReadTool = ['read', 'bash'].find(tool => active.has(tool));
+  if (skillFileReadTool && options.skills.length) {
+    const text = formatSkillsForPrompt(options.skills, skillFileReadTool).trim();
+    if (text) sections.skills = section('skills', text);
+  }
+  if (options.cwd) sections.cwd = section('cwd', escapeContext(String(options.cwd).replaceAll('\\', '/')));
+  for (const [name, text] of Object.entries(options.sections)) {
+    if (!/^[a-z][a-z0-9_-]*$/.test(name) || name === 'preamble') throw Error('Invalid system prompt section name: ' + name);
+    if (text) sections[name] = section(name, text);
+  }
+  return sections;
 }
+
+export function buildPrompt(input = {}) { return Object.values(buildPromptSections(promptOptions(input))).join('\n\n'); }
 
 const compactionSource = readFileSync(new URL('./sources/packages/coding-agent/src/core/compaction/compaction.ts', import.meta.url), 'utf8');
 const summaryPrompt = compactionSource.match(/const SUMMARIZATION_PROMPT = `([\s\S]*?)`;/)?.[1];

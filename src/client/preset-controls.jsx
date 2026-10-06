@@ -154,8 +154,9 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     {state.saving && <p role="status" className="omaa-help">正在保存会话设置…</p>}
     {(state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{state.error || localError || appearanceState.error}</p>}
     {product && <>
-      <label className="omaa-setting-row"><span>工作模式</span><select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || product.id === 'pi' || data.pendingMode}
-        onChange={event => change({ mode: event.target.value })}>{(product.id === 'pi' ? modes.slice(0, 1) : modes).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      {product.id === 'pi' ? <div className="omaa-setting-row"><span>工作模式</span><span className="omaa-setting-value">执行（Pi 默认模式）</span></div>
+        : <label className="omaa-setting-row"><span>工作模式</span><select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || data.pendingMode}
+          onChange={event => change({ mode: event.target.value })}>{modes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
       {data.pendingMode && <p role="status" className="omaa-help">模式切换等待处理，请在宿主提示中继续。</p>}
       <label className="omaa-setting-row"><span>会话主题</span><select aria-label="会话主题" value={state.pendingPatch?.theme ?? data.theme} disabled={disabled} onChange={event => change({ theme: event.target.value })}>
         <option value="product">跟随当前预设</option><option value="host">DSH 默认外观</option><option value="omd" disabled={!data.omdAvailable}>OMD 当前外观</option>

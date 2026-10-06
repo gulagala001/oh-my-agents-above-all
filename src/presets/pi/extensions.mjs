@@ -2,12 +2,22 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { startGuest } from './extensions/transport.mjs';
+import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
-const supportedEvents = new Set(['session_start', 'session_shutdown', 'input', 'tool_call', 'tool_result']);
+const supportedEvents = new Set(['session_start', 'session_shutdown', 'input', 'before_agent_start', 'tool_call', 'tool_result']);
 const textOf = blocks => (blocks ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const json = value => JSON.parse(JSON.stringify(value));
+const catalogEdits = (before, after) => ({
+  changed: Object.fromEntries(Object.entries(after).filter(([name, value]) => !isDeepStrictEqual(value, before[name]))),
+  removed: Object.keys(before).filter(name => !Object.hasOwn(after, name)),
+});
+const applyCatalogEdits = (fresh, edits) => {
+  const value = { ...fresh, ...edits?.changed };
+  for (const name of edits?.removed ?? []) delete value[name];
+  return value;
+};
 const delegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
 const enhanced = name => delegation.has(name) || name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || ['computer_use', 'computer_use_reset'].includes(name);
 
@@ -38,7 +48,10 @@ function nativeBranch(agent) {
     let message;
     if (event.type === 'tool/call') { calls.set(event.data.callId, event.data.name); continue; }
     const sourceMessage = event.data.message ?? event.data;
-    if (event.type === 'user/message') message = { role: 'user', content: sourceMessage.content ?? [] };
+    if (event.type === 'user/message') message = sourceMessage.source?.kind === 'pi-extension'
+      ? { role: 'custom', content: sourceMessage.content ?? [], customType: sourceMessage.source.customType,
+        display: sourceMessage.source.display, details: sourceMessage.source.details, timestamp: sourceMessage.source.timestamp }
+      : { role: 'user', content: sourceMessage.content ?? [] };
     else if (event.type === 'assistant/message') message = { role: 'assistant', content: (sourceMessage.content ?? []).filter(p => p.type !== 'reasoning') };
     else if (event.type === 'tool/result') message = { role: 'toolResult', toolCallId: sourceMessage.toolCallId,
       toolName: event.data.name ?? calls.get(sourceMessage.toolCallId), content: sourceMessage.content ?? [], isError: Boolean(sourceMessage.isError), details: event.data.meta?.piExtension?.details ?? {} };
@@ -114,10 +127,13 @@ export function apply(ctx) {
     }
     if (method === 'sendUserMessage') {
       const options = args.options ?? {};
-      if (options.expandPromptTemplates) throw Error('扩展 sendUserMessage 的命令/技能分派尚未适配');
+      if (options.expandPromptTemplates !== undefined && typeof options.expandPromptTemplates !== 'boolean') throw Error('Pi expandPromptTemplates 必须为布尔值');
+      if (options.deliverAs !== undefined && !['steer', 'followUp'].includes(options.deliverAs)) throw Error('无效的 Pi 输入投递方式');
       const blocks = typeof args.content === 'string' ? [{ type: 'text', text: args.content }] : await admitContent(args.content, signal);
-      const message = createUserMessage({ content: blocks, source: { kind: 'user' } });
-      state.inputOrigins.set(message.id, { source: 'extension', ...(agent.status === 'running' ? { streamingBehavior: options.deliverAs ?? 'followUp' } : {}) });
+      const input = { source: 'extension', expandPromptTemplates: options.expandPromptTemplates ?? false,
+        streaming: agent.status === 'running', ...(agent.status === 'running' ? { streamingBehavior: options.deliverAs ?? 'followUp' } : {}) };
+      const message = createUserMessage({ content: blocks, source: { kind: 'user', pi: { input } } });
+      state.inputOrigins.set(message.id, input);
       if (options.deliverAs === 'steer') agent.steer(message);
       else if (!options.deliverAs || options.deliverAs === 'followUp') agent.followup(message);
       else throw Error('无效的 Pi 输入投递方式');
@@ -225,7 +241,9 @@ export function apply(ctx) {
     state.descriptors = descriptors; state.events = new Set(descriptors.events);
   }
   function makeState(agent) {
+    const previous = agent.session.snapshotEvents().findLast(event => event.type === 'user/message' && event.data.source?.pi?.runPrompt)?.data.source.pi.runPrompt;
     const state = { status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
+      forceAdmitted: previous?.force === true,
       busy: () => Boolean(state.loading || state.calls || state.disposal),
       view: () => ({ status: state.status, ...(state.error ? { error: state.error } : {}), tools: state.descriptors?.tools.map(t => t.name) ?? [], commands: state.descriptors?.commands.map(c => c.name) ?? [] }),
       async dispose({ shutdown = true } = {}) {
@@ -240,6 +258,7 @@ export function apply(ctx) {
         }
         for (const registry of [state.toolRegistrations, state.commandRegistrations]) { for (const entry of registry.values()) entry.dispose(); registry.clear(); }
         state.guest = null; state.key = null; state.active = null; state.events.clear(); state.descriptors = null; state.status = 'disabled';
+        state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; state.inputOrigins.clear();
         if (guest) await guest.close();
         })().then(disposal.resolve, disposal.reject);
         try { await disposal.promise; } finally { state.disposal = null; }
@@ -283,20 +302,24 @@ export function apply(ctx) {
     finally { state.calls--; }
   }
   const controller = {
+    inputMetadata: (agent, id) => states.get(agent)?.inputOrigins.get(id),
     promptTools(agent) {
       const state = states.get(agent), allowed = new Set(visible(agent, state ?? {}).map(t => t.name));
       return state?.descriptors?.tools.filter(t => allowed.has(t.name)) ?? [];
     },
     async input(agent, messages, signal) {
       if (!owns(agent)) return messages;
-      const state = await ensure(agent, signal); if (!state.events.has('input')) return messages;
+      const state = await ensure(agent, signal);
+      if (!state.events.has('input')) { for (const message of messages) state.inputOrigins.delete(message.id); return messages; }
       const result = [];
       for (const message of messages) {
         if (message.role !== 'user' || message.source?.kind !== 'user') { result.push(message); continue; }
         const original = textOf(message.content);
         const images = await piContent(message.content.filter(p => p.type === 'image'), signal);
-        const origin = state.inputOrigins.get(message.id) ?? { source: 'interactive' }; state.inputOrigins.delete(message.id);
-        const response = await invoke(agent, state, { kind: 'event', eventName: 'input', event: { type: 'input', text: original, ...origin, ...(images.length ? { images } : {}) } }, signal);
+        const origin = state.inputOrigins.get(message.id) ?? message.source?.pi?.input ?? { source: 'interactive' }; state.inputOrigins.delete(message.id);
+        const { expandPromptTemplates: _expand, streaming: _streaming, ...eventOrigin } = origin;
+        const response = state.events.has('input') ? await invoke(agent, state, { kind: 'event', eventName: 'input', event: { type: 'input', text: original, ...eventOrigin, ...(images.length ? { images } : {}) } }, signal) : undefined;
+        for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 input：' + error.error, 'error');
         if (response?.action === 'handled') continue;
         if (response?.action === 'transform') {
           if (typeof response.text !== 'string' || response.text.length > 256 * 1024) throw Error('Pi 输入转换文字无效');
@@ -317,11 +340,55 @@ export function apply(ctx) {
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     if (!context.agent || !owns(context.agent)) return next();
     const state = await ensure(context.agent, context.signal);
+    const resources = ctx.get('omaaPiResources');
+    const boundary = await resources.prepare(context.agent, context.signal, () => {
+      state.prompt = promptFrameText(resources.frame(context.agent, _initial, visible(context.agent, state)));
+    });
     const assembly = await next();
-    const allowed = new Set(visible(context.agent, state).map(t => t.name));
-    state.prompt = assembly.sections.map(s => s.text).filter(Boolean).join('\n\n');
-    return { ...assembly, tools: assembly.tools.filter(tool => allowed.has(tool.name)) };
+    let frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+    state.prompt = promptFrameText(frame);
+    if (!state.runStarted && boundary.users.length) {
+      state.runStarted = true;
+      if (boundary.startsRun && state.events.has('before_agent_start')) {
+        const prompt = boundary.users.map(message => textOf(message.content)).join('\n');
+        const images = await piContent(boundary.users.flatMap(message => message.content.filter(part => part.type === 'image')), context.signal);
+        const response = await invoke(context.agent, state, { kind: 'event', eventName: 'before_agent_start',
+          event: { type: 'before_agent_start', prompt, ...(images.length ? { images } : {}) }, promptFrame: frame }, context.signal);
+        const options = response.systemPromptOptions;
+        if (!Array.isArray(options.selectedTools) || options.selectedTools.some(name => typeof name !== 'string')) throw Error('Pi selectedTools 必须是工具名称列表');
+        if (!isDeepStrictEqual(options.selectedTools, frame.options.selectedTools)) {
+          const known = new Set(ctx.tools.schemas(context.agent).map(tool => tool.name));
+          state.active = new Set(options.selectedTools.filter(name => known.has(name)));
+        }
+        state.runOptions = options;
+        state.runCatalogEdits = { snippets: catalogEdits(frame.options.toolSnippets, options.toolSnippets),
+          guidelines: catalogEdits(frame.options.toolGuidelines, options.toolGuidelines) };
+        for (const error of response.errors ?? []) settings.notify(context.agent, 'Pi 扩展 before_agent_start：' + error.error, 'error');
+        for (const message of response.messages ?? []) {
+          if (typeof message.customType !== 'string' || typeof message.display !== 'boolean') throw Error('Pi 自定义消息需要 customType 和 display');
+          const blocks = typeof message.content === 'string' ? [{ type: 'text', text: message.content }] : await admitContent(message.content ?? [], context.signal);
+          boundary.customMessages.push(createUserMessage({ content: blocks,
+            source: { kind: 'pi-extension', form: 'context', customType: message.customType, display: message.display,
+              ...(message.details === undefined ? {} : { details: message.details }), timestamp: Date.now() } }));
+        }
+      }
+    }
+    frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+    if (state.runOptions) state.runOptions = { ...state.runOptions, selectedTools: frame.options.selectedTools,
+      toolSnippets: applyCatalogEdits(frame.options.toolSnippets, state.runCatalogEdits?.snippets),
+      toolGuidelines: applyCatalogEdits(frame.options.toolGuidelines, state.runCatalogEdits?.guidelines) };
+    // A Pi run spans native tool steps and queued follow-up turns. The next
+    // idle->prompt run starts from fresh resources, never the previous override.
+    const sections = renderPromptFrame(frame, state.runOptions ?? frame.options);
+    const force = state.runOptions?.forceSystemPrompt !== undefined;
+    boundary.startsRequestSeries = force !== state.forceAdmitted || force && boundary.startsRun;
+    if (boundary.users.length && (boundary.startsRun || boundary.startsRequestSeries)) boundary.messages = boundary.messages.map(message => message.source?.kind === 'user'
+      ? { ...message, source: { ...message.source, pi: { ...message.source.pi, runPrompt: { force } } } } : message);
+    state.pendingForce = force;
+    state.prompt = sections.map(section => section.text).filter(Boolean).join('\n\n');
+    return { ...assembly, tools: visible(context.agent, state), sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
   });
+  ctx.on('agent/status', ({ agent, status }) => { const state = states.get(agent); if (state && status === 'idle') { state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; } });
   ctx.tools.guard(exec => {
     const state = exec.agent && states.get(exec.agent);
     if (state?.active && !state.active.has(exec.name) && !exec.parent) return 'Pi extension disabled this model-facing tool.';
@@ -354,6 +421,10 @@ export function apply(ctx) {
   });
   ctx.on('agent/disposed', ({ agent }) => { const state = states.get(agent); states.delete(agent); if (settings.states.get(agent.id) === state) settings.states.delete(agent.id); if (state) void state.dispose().catch(error => ctx.logger.warn(error.message)); });
   ctx.on('session/event', (session, event) => {
+    if (event.type === 'user/message' && event.data.source?.pi?.runPrompt || event.type === 'request/header') {
+      const agent = ctx.agents.get(session.id), state = agent && states.get(agent);
+      if (state && state.pendingForce !== undefined) state.forceAdmitted = state.pendingForce;
+    }
     if (event.type !== 'sandbox/mode') return;
     const agent = ctx.agents.get(session.id), state = agent && states.get(agent);
     if (state?.guest && JSON.stringify(currentPolicy(agent)) !== state.policyKey) {

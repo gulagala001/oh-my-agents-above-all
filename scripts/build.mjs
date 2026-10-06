@@ -1,6 +1,8 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
+import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
+
 import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
@@ -9,6 +11,7 @@ import { buildZCodeImportCache } from './build-zcode-import-cache.mjs';
 import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
 import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
 
+await buildPiPromptHelpers();
 const root = fileURLToPath(new URL('../', import.meta.url));
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
 const planSection = 'You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy.';
