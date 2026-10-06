@@ -85,6 +85,10 @@ node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-rc2.tgz -
 
 脚本严格核对已审阅的官方基线；新版本或内容差异会指出文件并停止，升级时先审阅上游差异、更新补丁与基线，再重新打包。它不自动下载宿主、不安装包，也不执行 OMD 的全量 host 构建。
 
+## 开源许可
+
+OMAA 原创代码采用 [Apache-2.0](LICENSE)，允许按许可条款商业使用、修改和再分发。第三方代码与材料保留各自许可和署名；适用范围与 Cursor 样本的授权边界见 [许可说明](LICENSING.md)。
+
 [架构](docs/architecture.md) · [OMD 增强边界](docs/omd-enhancement-boundary.md) · [主题来源](docs/theme-sources.md) · [第三方声明](THIRD_PARTY_NOTICES.md)
 
 [安装与更新](docs/install.md) · [贡献](CONTRIBUTING.md)

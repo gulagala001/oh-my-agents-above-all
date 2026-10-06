@@ -18,7 +18,7 @@
 
 `6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db`
 
-`codex-desktop.provenance.json` 记录读取时的 OMD Git HEAD、源绝对路径与 hash。当前本地 OMD package 没有声明 SPDX license，根目录也没有找到 LICENSE；因此 metadata 的 license 为 null，并记录用户已明确授权这次本地资产复制。没有发明 OpenAI 许可或声称来自官方客户端源码。OMD 的原始 light/dark/common token、CSS 和 layout 数据均保留，未加载其后端、运行时控制器或副作用代码。
+`codex-desktop.provenance.json` 记录读取时的 OMD Git HEAD、源绝对路径与 hash。历史来源没有声明 SPDX license，因此保留原 `source.license: null` 记录；权利持有人于 2026-10-06 另明确授权所复制的 OMD Codex 主题与共享布局自有部分以 Apache-2.0 开源，当前 provenance 以 `redistributionLicense` 和 `authorization` 独立记录该授权。没有发明 OpenAI 许可或声称来自官方客户端源码。OMD 的原始 light/dark/common token、CSS 和 layout 数据均保留，未加载其后端、运行时控制器或副作用代码。
 
 ## Grok Build：数字声明优先于注释
 

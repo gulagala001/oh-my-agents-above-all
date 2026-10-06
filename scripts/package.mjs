@@ -21,7 +21,7 @@ const dist = join(root, 'dist');
 await mkdir(cache, { recursive: true });
 await mkdir(dist, { recursive: true });
 const staging = await mkdtemp(join(cache, `package-${hostVersion}-`));
-const files = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md'];
+const files = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md'];
 const localNames = new Set([
   'AGENTS.md', 'CLAUDE.md', 'AI_README.md', 'COMPUTER_USE_HANDOFF.md',
   'COMPUTER_USE_BASELINE.md', 'WINDOWS_HANDOFF.md', 'PROMPT_MAINTENANCE.md',
