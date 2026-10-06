@@ -32,7 +32,7 @@ DSH edit 为单次 `file_path/old_string/new_string/replace_all`，Pi v1.0.2 原
 
 ## 用户指定的本地扩展
 
-`extensions.mjs`、`extensions/guest.mjs` 与 `extensions/pi-api.mjs` 已实现扩展 factory/回调桥。默认白名单为空；全局设置「Pi 本地扩展」仅保存用户明确填写的绝对 TS/JS 文件路径，不自动运行 `.pi`、package manifest 或扫描目录里发现的扩展。配置使用 revision 冲突检查，运行中的 Pi 任务拒绝切换；「清空并停用」清除白名单。当前上限为 32 个文件，每个入口最多 256 KiB。配置位于 `DSH_HOME/omaa/pi-extensions.json`。
+`extensions.mjs`、`extensions/guest.mjs` 与 `extensions/pi-api.mjs` 已实现扩展 factory/回调桥。默认白名单为空；全局设置「Oh My Agents Above All」中的「Pi 本地扩展」仅保存用户明确填写的绝对 TS/JS 文件路径，不自动运行 `.pi`、package manifest 或扫描目录里发现的扩展。配置使用 revision 冲突检查，运行中的 Pi 任务拒绝切换；「清空并停用」清除白名单。当前上限为 32 个文件，每个入口最多 256 KiB。配置位于 `DSH_HOME/omaa/pi-extensions.json`。
 
 guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sandbox` 约束，加载本地 default factory 与扩展回调；它没有 Pi 的 agent loop、模型/provider、账号、输入驱动或另一份会话日志。扩展工具执行与嵌套工具调用走同一原生工具注册、执行、权限及结果入账；`pi.exec` 同样使用原生 subprocess/sandbox。回调会核对当前权限，策略不一致时拒绝调用；原生 sandbox 模式变化事件撤销旧进程，后续按当前权限重新加载。
 
