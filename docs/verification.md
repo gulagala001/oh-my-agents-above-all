@@ -17,7 +17,7 @@
 
 `pnpm test` 包含来源回归与已安装宿主测试，实际模型任务需要明确配置才运行。未运行或跳过的测试不计为通过；脚本化 provider 可验证接线与生命周期，不能证明真实模型代码质量。
 
-本轮 Web 与宿主执行来自 macOS。Windows 文本装配分支有检查，Windows 运行、其他模型/provider、原厂客户端及专有服务没有据此宣称通过。OMAA 包含完整来源、主题与许可，不含 DSH 和原厂运行时；最终大小以实际 `.tgz` 为准。兼容 OMD 约 8.2 MB（解包约 18 MB），由固定官方源码及入库补丁构建，保留宿主工厂并排除本地维护文件。当前 OMAA 0.8.0／兼容 OMD 0.8.1 已实际安装到 Web alpha.1 与桌面 rc.2；旧的安装初版记录不代表后续任务质量已全部达成。
+本轮 Web 与宿主执行来自 macOS。Windows 文本装配分支有检查，Windows 运行、其他模型/provider、原厂客户端及专有服务没有据此宣称通过。OMAA 包含完整来源、主题与许可，不含 DSH 和原厂运行时；最终大小以实际 `.tgz` 为准。兼容 OMD 约 8.2 MB（解包约 18 MB），由固定官方源码及入库补丁构建，保留宿主工厂并排除本地维护文件。历史 OMAA 0.8.0／兼容 OMD 0.8.1 已实际安装到 Web alpha.1 与桌面 rc.2；后续版本沿用双宿主原生安装和重启路径；原生更新页显示各端实际加载版本。历史安装记录不代表后续任务质量已全部达成。
 
 UI 修复：无项目草稿的设置迁移先启用增强再调用既有 OMD 模式控制器，保留主题、Ask/Plan 和源草稿；原版 Web 的 Pi Pro 源→目标会话迁移已真实执行，目标仍启用 Pro、增强且保持 DSH 外观，未发送模型任务。桌面匹配包经原生安装器更新并重启，原会话和模型已恢复，设置面板实际可打开。保存竞态、同 ID 切预设、主题过渡及窄侧栏通过单个隔离浏览器 fixture 核对；文件恢复／Git 操作／Pi 分叉的失效状态限制及目标迁移失败补偿仅跑了对应模块检查，没有重做五预设长任务矩阵。Pi 本地 settings/package 资源、忽略规则及 native 懒加载完成了同一安装回归。
 
@@ -39,6 +39,16 @@ OMAA 0.9.0 的 `installed-zcode-amend` 单个原生安装 fixture 已通过：�
 
 一个最终 `installed-pi-start` 原生 alpha fixture 已通过：异步 input 后模板展开、handler 快照串行、可变 options/getSystemPrompt、字面完整 force 的进入/连续替换/退出、自定义消息原生来源、动态工具新增/同名替换/显式 loadout/setActiveTools、逐条 steer 和排队 follow-up 的单次启动、handled 零模型请求、输入/启动回调异常继续，以及原生队列持久后故障冷恢复的字面扩展输入。独立原生资源用例检查 SYSTEM/APPEND、技能、模板和 native inbox 接线；普通 Pi 四种工具配置的提示词字节与前版一致。构建及身份/会话设置快速回归通过。
 
-用例采用脚本 provider，不代替真实模型长期任务；未新增 Desktop/Windows 扩展 UI 全面验收。Pi 的工作模式改为静态“执行（Pi 默认模式）”，不暴露未实现的模式选择。force 由 DSH 原生日志和请求序列首条归一化承载，区别于原厂请求投影；custom display 仅保留 metadata，完整历史 context/TUI/JSONL 扩展仍有差异。
+用例采用脚本 provider，不代替真实模型长期任务；未新增 Desktop/Windows 扩展 UI 全面验收。Pi 的工作模式改为静态“执行（Pi 默认模式）”，不暴露未实现的模式选择。force 由 DSH 原生日志和请求序列首条归一化承载，区别于原厂请求投影；0.10 当时 custom display 仅保留 metadata，0.11 的默认展示核验见下文；完整历史 context/TUI/JSONL 扩展仍有差异。
 
 Pi 自定义消息展示在单个隔离 alpha Web 会话中完成实际点击和明暗实拍：类型标签、Markdown 标题/列表/代码均可见；display:false、details 和 image blocks 不进入默认展示；原生 provider 请求及事件保留隐藏文本与图片。证据 `.cache/pi-display-native-evidence.json`、`.cache/pi-display-ui-result.json` 与明暗截图。过程折叠仍由 DSH 管理，rc.2 本轮只有实际 ASAR 接口核对，未扩桌面/Windows 或五产品矩阵。
+
+## Pi 0.12 生命周期通知
+
+最终唯一 `test/installed-pi-lifecycle.test.mjs` 原生 alpha fixture 通过，body 6819.566 ms、total 11404.65 ms；证据 `.cache/pi-lifecycle-native-evidence.json`。使用单个隔离宿主和 scripted provider，实际核对串行 agent_start/turn_start/agent_end、首请求动态工具与 guard、纯 handler 异常后继续、结束维护等待期间人工新输入使用新的 force、仅结束回调续投保留原 force、超过 2 MiB 的完整中文消息，以及用户取消后通知 signal 已 aborted 且不能续跑。traced Session lookup 和人工输入边界修复包含在本轮实现范围。
+
+agent_end 的 messages 来自当前 scope 实际 append-origin 消息，完整保留 text/image/toolCall/thinking，native-only 块保留结构；api/stopReason 沿用原生 Pi replay 或原生 finish 映射，native usage 保留，不猜 Pi SDK 费用或宣称全部签名全等。双向严格重组的完整消息上限 128 MiB、JSONL frame 上限 2 MiB，超限或完整性失败明确拒绝，不截断为成功。ctx.sessionManager 仍为最多 100 条、每条文本 4000 字符的有界只读视图。
+
+通知适配 DSH 实际 activity/请求 step，一个 step 为一次 provider response 及工具批次；原生 turn/end 入账之后由 idle 同步预占 runMaintenance，whenIdle/teardown 等待结束回调。用户取消后禁止 exec/executeTool/sendUserMessage/UI 问答续跑，notify 与只读查询可用；disposed 不新建结束 maintenance。该停止约束及 native retry、原版低层 run/pre-settle 差异仍保留。
+
+未实现可编辑 turn_end/agent_before_settle、draft/context preview 与完整历史变换、自定义 TUI renderer。rc.2 核心 loop/Session 只做只读字节核对，没有据此宣称 rc.2 真实全 hook、Desktop 全面运行或 Windows 验收。该 fixture 不证明真实模型长期任务质量；发布与部署也须另以实际完成结果核对。

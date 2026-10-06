@@ -1,8 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { StringDecoder } from 'node:string_decoder';
+import { encodeFrames, frameDecoder, MAX_FRAME_BYTES } from './wire.mjs';
 
-const MAX_FRAME = 2_097_152;
+const MAX_FRAME = MAX_FRAME_BYTES;
 const guestFile = fileURLToPath(new URL('./guest.mjs', import.meta.url));
 
 // The subprocess provider owns the process range, scrubbed environment and
@@ -16,20 +17,18 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
   const child = subprocess.spawn({ argv: confined.argv, cwd,
     env: { ELECTRON_RUN_AS_NODE: undefined, JITI_FS_CACHE: '0' },
     stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: life.signal });
-  const decoder = new StringDecoder('utf8');
+  const decoder = new StringDecoder('utf8'), messages = frameDecoder();
   const pending = new Map(); let buffer = '', stderr = '', stopped = false, closing;
   child.stdin?.on('error', () => {});
   const send = value => {
     if (stopped) throw Error('Pi 扩展进程已停止');
-    const line = JSON.stringify(value) + '\n';
-    if (Buffer.byteLength(line) > MAX_FRAME) throw Error('Pi 扩展消息超过 2 MiB');
-    child.stdin.write(line);
+    for (const line of encodeFrames(value)) child.stdin.write(line);
   };
   const close = () => {
     if (closing) return closing;
     const result = Promise.withResolvers(); closing = result.promise;
     void (async () => {
-      stopped = true; life.abort(); child.terminate();
+      stopped = true; messages.clear(); life.abort(); child.terminate();
       try { await child.done; } catch {}
       if (!await child.waitForExit(AbortSignal.timeout(5000))) throw Error('Pi 扩展进程未完成退出');
       for (const entry of pending.values()) entry.reject(Error('Pi 扩展进程已停止'));
@@ -63,7 +62,8 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
           if (Buffer.byteLength(line) > MAX_FRAME) throw Error('Pi 扩展消息超过大小限制');
           // Never globally await callbacks: executeTool and userQuestions can
           // require another guest invocation while this API frame is pending.
-          void frame(JSON.parse(line)).catch(async error => { for (const e of pending.values()) e.reject(error); await close(); });
+          const value = messages.accept(JSON.parse(line));
+          if (value !== null) void frame(value).catch(async error => { for (const e of pending.values()) e.reject(error); await close(); });
         }
         if (Buffer.byteLength(buffer) > MAX_FRAME) throw Error('Pi 扩展消息超过大小限制');
       }
@@ -71,10 +71,10 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
   })();
   void (async () => { for await (const chunk of child.stderr) stderr = (stderr + chunk.toString('utf8')).slice(-8192); })().catch(() => {});
   void child.done.then(() => {
-    stopped = true;
+    stopped = true; messages.clear();
     for (const entry of pending.values()) entry.reject(Error('Pi 扩展进程退出' + (stderr ? ': ' + stderr.slice(-2048) : '')));
     pending.clear();
-  }, error => { stopped = true; for (const entry of pending.values()) entry.reject(error); pending.clear(); });
+  }, error => { stopped = true; messages.clear(); for (const entry of pending.values()) entry.reject(error); pending.clear(); });
   return {
     get stopped() { return stopped; },
     close,

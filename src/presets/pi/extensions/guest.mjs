@@ -9,6 +9,7 @@ import { format } from 'node:util';
 import path from 'node:path';
 import { callbackContext, codingAgentShim, aiShim, createPiAPI, createCallbackContext, supportedEvents } from './pi-api.mjs';
 import { promptFrameText } from '../extension-prompt.mjs';
+import { encodeFrames, frameDecoder } from './wire.mjs';
 
 // Fixed upstream's pure argument validator; no Pi provider or agent runtime.
 const validatorImporter = createJiti(import.meta.url, { fsCache: false, moduleCache: false, tryNative: false,
@@ -25,9 +26,7 @@ for (const method of ['log', 'info', 'warn', 'error', 'debug', 'dir']) console[m
 const validId = id => typeof id === 'string' && id.length > 0 && id.length <= 128 || Number.isSafeInteger(id) && id >= 0;
 const errorText = error => String(error?.message ?? error).slice(0, 4096);
 function send(frame) {
-  const line = JSON.stringify(frame);
-  if (Buffer.byteLength(line) > MAX_JSON_BYTES) throw new Error('Pi extension protocol output exceeds 2 MiB');
-  writeProtocol(line + '\n');
+  for (const line of encodeFrames(frame)) writeProtocol(line);
 }
 const pendingAPI = new Map(), active = new Map();
 let generation = 0, apiCounter = 0, callbackCounter = 0, runtime, loading = false;
@@ -255,7 +254,13 @@ async function dispatchEvent(frame, context) {
     if (!modified) return undefined;
     return Object.fromEntries(['content', 'details', 'structuredContent', 'isError', 'usage'].filter(key => event[key] !== undefined).map(key => [key, event[key]]));
   }
-  for (const { handler } of handlers) { context.controller.signal.throwIfAborted(); await handler(event, ctx); }
+  const errors = [];
+  for (const { handler, extensionPath } of handlers) {
+    context.controller.signal.throwIfAborted();
+    try { await handler(event, ctx); }
+    catch (error) { context.controller.signal.throwIfAborted(); errors.push({ extensionPath, error: errorText(error) }); }
+  }
+  return { errors };
 }
 async function invoke(frame, context) {
   if (loading || !runtime?.active) throw new Error('Pi extensions are not loaded');
@@ -283,6 +288,7 @@ async function processRequest(frame) {
   }
   const context = { id: frame.id, phase: frame.type, snapshot: frame.snapshot ?? {}, controller: new AbortController(),
     pending: new Set(), voidErrors: [], finished: false };
+  if (frame.callbackAbortReason) context.notificationSignal = AbortSignal.abort(new Error('Native activity canceled: ' + JSON.stringify(frame.callbackAbortReason)));
   active.set(frame.id, context);
   try {
     const value = await callbackContext.run(context, () => frame.type === 'load' ? load(frame, context) : invoke(frame, context));
@@ -306,6 +312,7 @@ function dispatch(frame) {
   else throw new Error('Unsupported Pi extension protocol frame: ' + frame.type);
 }
 let input = Buffer.alloc(0);
+const messages = frameDecoder();
 process.stdin.on('data', chunk => {
   try {
     input = Buffer.concat([input, chunk]);
@@ -313,12 +320,13 @@ process.stdin.on('data', chunk => {
     while ((newline = input.indexOf(10)) !== -1) {
       if (newline > MAX_JSON_BYTES) throw new Error('Pi extension protocol input exceeds 2 MiB');
       const line = input.subarray(0, newline); input = input.subarray(newline + 1);
-      if (line.length) dispatch(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(line)));
+      if (line.length) { const frame = messages.accept(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(line))); if (frame !== null) dispatch(frame); }
     }
     if (input.length > MAX_JSON_BYTES) throw new Error('Pi extension protocol input exceeds 2 MiB');
   } catch (error) { console.error(errorText(error)); process.exitCode = 1; process.stdin.destroy(); }
 });
 function shutdown() {
+  messages.clear();
   if (runtime) runtime.active = false;
   for (const context of active.values()) context.controller.abort(new Error('Pi extension guest stdin closed'));
   for (const pending of pendingAPI.values()) pending.reject(new Error('Pi extension guest stdin closed'));
