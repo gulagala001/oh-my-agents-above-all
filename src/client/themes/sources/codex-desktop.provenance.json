@@ -12,5 +12,11 @@
     "license": null,
     "licenseNote": "No LICENSE file or SPDX license found in the local OMD package; user explicitly authorized copying this local asset. No OpenAI source/license attribution is invented."
   },
-  "limitation": "Existing OMD authored asset; not claimed as first-party OpenAI UI source or new native visual measurement."
+  "limitation": "Existing OMD authored asset; not claimed as first-party OpenAI UI source or new native visual measurement.",
+  "redistributionLicense": "Apache-2.0",
+  "authorization": {
+    "basis": "Explicit grant by the rights holder for the copied OMD-authored theme and shared-layout assets",
+    "date": "2026-10-06",
+    "scope": "OMD-authored portions of the snapshots in this manifest; retained third-party notices remain applicable."
+  }
 }

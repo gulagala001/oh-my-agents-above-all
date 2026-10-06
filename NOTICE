@@ -1,0 +1,24 @@
+Oh My Agents Above All (OMAA)
+Copyright 2026 gulagala001 and OMAA contributors.
+
+OMAA-authored code and documentation are licensed under the Apache License,
+Version 2.0. The separately identified upstream works retain their licenses
+and notices; see LICENSING.md and THIRD_PARTY_NOTICES.md.
+
+This distribution incorporates material from:
+- OpenAI Codex, Copyright 2025 OpenAI, Apache-2.0.
+- xAI Grok Build, Apache-2.0, with its retained upstream third-party notices.
+- Pi Coding Agent, MIT, with original copyright notices in its retained licenses.
+- ZCode by zai-org, Apache-2.0.
+- DeepSeek Harness, Copyright 2026 DeepSeek, MIT.
+- Oh My DSH theme/shared-layout assets, under the rights holder's explicit
+  Apache-2.0 grant for those copied OMD-authored portions.
+- Other dependencies listed with exact license and NOTICE texts in
+  THIRD_PARTY_NOTICES.md.
+
+The Cursor comparison sample's repository-level CC0 declaration does not
+establish permission from the underlying text's rights holder. OMAA's license
+does not grant rights in that material; its current scope is in LICENSING.md.
+
+Product names identify source and compatibility. They do not imply affiliation
+or endorsement, and this notice grants no rights to third-party trademarks.

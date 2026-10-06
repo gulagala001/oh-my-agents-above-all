@@ -39,5 +39,11 @@
       "sourceSha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a",
       "sha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a"
     }
-  ]
+  ],
+  "redistributionLicense": "Apache-2.0",
+  "authorization": {
+    "basis": "Explicit grant by the rights holder for the copied OMD-authored theme and shared-layout assets",
+    "date": "2026-10-06",
+    "scope": "OMD-authored portions of the snapshots in this manifest; retained third-party notices remain applicable."
+  }
 }
