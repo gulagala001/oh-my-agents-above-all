@@ -6,6 +6,7 @@ export function apply(ctx, config = {}) {
   if (!['one-at-a-time', 'all'].includes(mode)) throw new Error('Pi steering mode must be one-at-a-time or all');
   if (mode === 'all') return;
   const tracked = new WeakMap();
+  const prepared = new WeakMap();
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi';
   const idsFor = agent => {
     let ids = tracked.get(agent);
@@ -20,20 +21,26 @@ export function apply(ctx, config = {}) {
     else ids.delete(message.id);
   });
   ctx.on('agent/inbox/discarded', ({ agent, message }) => tracked.get(agent)?.delete(message.id));
+  const select = (agent, messages) => {
+    const ids = idsFor(agent), steering = messages.filter(message => message.source.kind === 'user' && ids.has(message.id));
+    const deferred = steering.slice(1), waiting = new Set(deferred.map(message => message.id));
+    if (deferred.length) agent.inbox.splice('next-step', 0, 0, deferred);
+    for (const message of steering) if (!waiting.has(message.id)) ids.delete(message.id);
+    return messages.filter(message => !waiting.has(message.id));
+  };
+  // The awaited input/assembly boundary and native pre-step must select the
+  // same steer. Deferred messages have no extension/template side effects.
+  ctx.provide('omaaPiSteering', { select(agent, messages) {
+    const selected = select(agent, messages);
+    prepared.set(agent, { claimed: new Set(messages.map(m => m.id)), selected: new Set(selected.map(m => m.id)) });
+    return selected;
+  } });
   ctx.on('agent/pre-step', (info, next) => {
     if (!owns(info.agent)) return next();
     info.signal.throwIfAborted();
-    const ids = idsFor(info.agent), steering = info.messages.filter(message => message.source.kind === 'user' && ids.has(message.id));
-    const deferred = steering.slice(1), waiting = new Set(deferred.map(message => message.id));
-    // DSH's documented pre-step payload has a mutable messages array. Filter
-    // synchronously before the native skill/template hooks inspect it, then
-    // reinsert the original identified messages with the public Inbox API.
-    // This preserves native history and cancellation after this boundary.
-    if (deferred.length) {
-      info.messages.splice(0, info.messages.length, ...info.messages.filter(message => !waiting.has(message.id)));
-      info.agent.inbox.splice('next-step', 0, 0, deferred);
-    }
-    for (const message of steering) if (!waiting.has(message.id)) ids.delete(message.id);
+    const early = prepared.get(info.agent); prepared.delete(info.agent);
+    const messages = early ? info.messages.filter(message => !early.claimed.has(message.id) || early.selected.has(message.id)) : select(info.agent, info.messages);
+    info.messages.splice(0, info.messages.length, ...messages);
     return next();
   }, { prepend: true });
 }

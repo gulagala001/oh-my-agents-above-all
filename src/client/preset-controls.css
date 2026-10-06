@@ -9,6 +9,7 @@
 .omaa-preset-controls header p,.omaa-help { color:var(--dsw-alias-label-secondary); line-height:1.5; margin:6px 0 14px; font-size:12px; }
 .omaa-setting-row { display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:39px; margin:9px 0; }
 .omaa-setting-row select { box-sizing:border-box; width:60%; min-width:0; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; padding:6px 8px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); font:inherit; }
+.omaa-setting-value { box-sizing:border-box; width:60%; min-width:0; padding:6px 8px; }
 .omaa-setting-row input { accent-color:var(--dsw-alias-brand-primary); }
 .omaa-setting-row :disabled { opacity:.55; cursor:not-allowed; }
 .omaa-enhancement-work-mode { margin-top:4px; }.omaa-enhancement-work-mode .omaa-help { margin-bottom:9px; }
@@ -18,5 +19,5 @@
 /* DSH 0.2.1's native header is a grid; the pinned Codex adapter places the
    same children as one horizontal title bar, above its 58px-inset pane. */
 html.omd[data-omd-layout="codex-desktop"] .wSkVaW_header { display:flex; align-items:center; }
-@container omaa-settings (max-width:280px) { .omaa-setting-row:has(select) { flex-direction:column; align-items:stretch; gap:6px; margin:12px 0; } .omaa-setting-row select { width:100%; } }
+@container omaa-settings (max-width:280px) { .omaa-setting-row:has(select),.omaa-setting-row:has(.omaa-setting-value) { flex-direction:column; align-items:stretch; gap:6px; margin:12px 0; } .omaa-setting-row select,.omaa-setting-value { width:100%; } }
 @media(max-width:420px) { .omaa-preset-controls { padding:15px; } .omaa-setting-row { gap:10px; } }

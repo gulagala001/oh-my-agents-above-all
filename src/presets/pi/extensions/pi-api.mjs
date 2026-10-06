@@ -3,7 +3,7 @@ import { Type } from 'typebox';
 
 export { Type };
 export const callbackContext = new AsyncLocalStorage();
-export const supportedEvents = new Set(['input', 'tool_call', 'tool_result', 'session_start', 'session_shutdown']);
+export const supportedEvents = new Set(['input', 'before_agent_start', 'tool_call', 'tool_result', 'session_start', 'session_shutdown']);
 
 // Pure helpers from Pi cd32f77 extensions/types.ts and ai/typebox-helpers.ts.
 export const defineTool = tool => tool;
@@ -93,7 +93,7 @@ export function createCallbackContext(runtime) {
       return context.snapshot.isProjectTrusted;
     },
     hasPendingMessages: () => snapshot(runtime, 'hasPendingMessages'),
-    getSystemPrompt: () => snapshot(runtime, 'systemPrompt'),
+    getSystemPrompt: () => { const context = live(runtime); return context.renderSystemPrompt ? context.renderSystemPrompt() : snapshot(runtime, 'systemPrompt'); },
     async executeTool(name, params, options) {
       const current = live(runtime);
       if (current.kind !== 'tool') unsupported('ctx.executeTool outside tool callback');

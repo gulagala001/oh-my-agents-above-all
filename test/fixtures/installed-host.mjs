@@ -126,6 +126,10 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
   return {
     get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
     root, home, workspace, piAgentDir, requests, errors, install, boot, stop, call, rpc, api, snapshot, prompt, send,
+    async crash() {
+      if (!child || child.exitCode !== null || child.signalCode !== null) return;
+      const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited;
+    },
     uninstall: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'oh-my-agents-above-all']),
     create: agentPreset => rpc('session/create', { cwd: workspace, agentPreset }),
     replyWith(fn) { responder = fn; },

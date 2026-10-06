@@ -34,3 +34,9 @@ OMAA 0.9.0 的运行图由单个原生 fixture 核对 site × ordinal、phase �
 OMAA 0.9.0 的 `installed-zcode-amend` 单个原生安装 fixture 已通过：整个宿主冷重启后，第一 ask 复用缓存，分歧任务只调用一次 native 模型且新 child 不含旧 poison 后缀；并发相同 world.run 的结果保持准入次序，工作区计数器没有二次效果；ask 失败可 catch 后继续；lineage、跨 session 拒绝、子会话 cold continuation、max_concurrency 升降／不取消在执行 ask 均已实际核对。同时修复未声明 phase 的 ask/world 原生 lossless JSON 传输错误。日志 `.cache/zcode-amend-native-check.log`。原厂完整 journal/replay、半转录续跑、精确工具 effect 分类、原模型 pin 继承与所有模型／平台不在这项证据范围内。
 
 同一已配置 Space Bunny Free 的一次真实 create→amend 任务实际返回 OMAA_AMEND_SEED／OMAA_AMEND_LIVE，API 显示一条 cached node 与正确 resumedFrom／supersededBy。证据 `.cache/zcode-amend-live-verification.json`；原 helper 错把直连模型当成本地 mock server 可捕获请求，判据已明确纠正，不把该不可测请求数当证据。新的 lineage 入口已在隔离 alpha Web fixture 实点：从 Amend 工具卡片“查看产物”打开 Lineage revision，点击“← 前次运行”切到 Lineage original 并更新图，再点击“后续运行 →”恢复 revision 与 Review／Revise／Deliver 三段。实拍 `.cache/zcode-lineage-ui.png`，结果 `.cache/zcode-lineage-ui-result.json`。本次同时修复 Amend 工具卡片缺少产物入口；并发 retune 卡片显示“已调整并发”的接线未做真实操作，不据此宣称 Desktop/Windows 或所有 UI 通过。
+
+## Pi 0.10 启动钩子
+
+一个最终 `installed-pi-start` 原生 alpha fixture 已通过：异步 input 后模板展开、handler 快照串行、可变 options/getSystemPrompt、字面完整 force 的进入/连续替换/退出、自定义消息原生来源、动态工具新增/同名替换/显式 loadout/setActiveTools、逐条 steer 和排队 follow-up 的单次启动、handled 零模型请求、输入/启动回调异常继续，以及原生队列持久后故障冷恢复的字面扩展输入。独立原生资源用例检查 SYSTEM/APPEND、技能、模板和 native inbox 接线；普通 Pi 四种工具配置的提示词字节与前版一致。构建及身份/会话设置快速回归通过。
+
+用例采用脚本 provider，不代替真实模型长期任务；未新增 Desktop/Windows 扩展 UI 全面验收。Pi 的工作模式改为静态“执行（Pi 默认模式）”，不暴露未实现的模式选择。force 由 DSH 原生日志和请求序列首条归一化承载，区别于原厂请求投影；custom display 仅保留 metadata，完整历史 context/TUI/JSONL 扩展仍有差异。

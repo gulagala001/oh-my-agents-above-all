@@ -4,13 +4,13 @@
 
 ## 生效文本
 
-真实主提示词来源是 [`core/system-prompt.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/system-prompt.ts)，不是营销介绍或泄露样本。其默认结构为 preamble → tools → rules → docs → 可选 addendum/project_context/skills → cwd → 自定义 sections。工具 snippets 与 guidelines 来自具体 read/bash/edit/write 定义，原版默认四个工具，并按已选工具去重规则。上游 before_agent_start 可改变结构化 sections；section delta 记入 transcript，完整强制 prompt 是不同分支。这项系统结构改写尚未接入 OMAA 扩展桥。
+真实主提示词来源是 [`core/system-prompt.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/system-prompt.ts)，不是营销介绍或泄露样本。其默认结构为 preamble → tools → rules → docs → 可选 addendum/project_context/skills → cwd → 自定义 sections。工具 snippets 与 guidelines 来自具体 read/bash/edit/write 定义，原版默认四个工具，并按已选工具去重规则。上游 before_agent_start 可改变结构化 sections；section delta 记入 transcript，完整强制 prompt 是不同分支。OMAA 0.10.0 已接入该回调，系统选项归一化与技能渲染使用固定原版纯函数；完整强制 prompt 的原生记录差异见下文。
 
 `prompt.mjs` 的 `buildPrompt({tools,cwd,platform,mode})` 保留完整默认 preamble、工具段组织、read/write 规则、简洁及清楚路径原句、完整文档阅读要求和 cwd 结构。默认组合保留 read/bash/edit/write 四核心，额外提供宿主原生 read_image 和 skill 作为实际能力；Windows 用真实 pwsh 时沿用上游 PowerShell 规则。额外图片工具只在注册 read_image 时明确说明其真实分工。项目 AGENTS.md/CLAUDE.md 和技能正文由 DSH 原生上下文及技能服务承载。
 
 `resources.mjs` 补齐 Pi 约定目录。`cwd/.pi/SYSTEM.md` 优先于用户 `~/.pi/agent/SYSTEM.md`，非空时替换完整默认 persona 段并保留 cwd；`APPEND_SYSTEM.md` 按同一优先级装配 `<addendum>`，不混淆替换与追加。用户目录可由原版 `PI_CODING_AGENT_DIR` 或插件 `agentDir` 指定。文件由宿主 `ctx.fs` 读取；宿主权限、工具 schema、环境与其他系统段仍有效。用户目录规则按原版 `AGENTS.override.md` → `AGENTS.md` → `AGENTS.MD` → `CLAUDE.md` → `CLAUDE.MD` 取第一份，保持原版 project_context 标题和标签。工作区规则继续由宿主注入一次；宿主按仓库根和触及文件发现规则，可同时装配不同候选及 local 文件，尚不等同 Pi 从文件系统根到 cwd 的单候选继承与嵌套 worktree shadow 规则。
 
-用户和项目 `prompts/` 直接子级的 `.md` 成为提示模板；同名按固定 CLI 的 PackageManager 默认优先级选择项目资源，再选择用户资源（同层 first-wins）。上游完整参数语法包括 `$1`、`$@`、`$ARGUMENTS`、`${1:-default}`、`${@:-default}`、`${@:N}`、`${@:N:L}`，引号参数和替换值不递归展开。普通输入、steer 和 queue 在原生 pre-step 中只展开一次，保留用户消息 id/source。合法宿主命令名在首次资源装配后进入原生斜杠命令列表；其他 Pi 文件名仍可直接输入展开。已有宿主命令优先。每次装配重新读取资源，文件修改在后续请求生效；单文件 64 KiB、资源 256 KiB、128 个模板和单目录 512 个条目有明确上限。
+用户和项目 `prompts/` 直接子级的 `.md` 成为提示模板；同名按固定 CLI 的 PackageManager 默认优先级选择项目资源，再选择用户资源（同层 first-wins）。上游完整参数语法包括 `$1`、`$@`、`$ARGUMENTS`、`${1:-default}`、`${@:-default}`、`${@:N}`、`${@:N:L}`，引号参数和替换值不递归展开。普通输入、steer 和 queue 在原生 pre-step 中只展开一次，保留用户消息 id/source。启用扩展时依次等待异步 input、模板展开和 before_agent_start，预处理结果缓存后交给原生 pre-step 入账；未启用扩展时保持原有装配。合法宿主命令名在首次资源装配后进入原生斜杠命令列表；其他 Pi 文件名仍可直接输入展开。已有宿主命令优先。每次装配重新读取资源，文件修改在后续请求生效；单文件 64 KiB、资源 256 KiB、128 个模板和单目录 512 个条目有明确上限。
 
 技能目录遵循固定 CLI 的默认入口：当前 cwd 的 `.pi/skills`，从 cwd 向最近含 `.git` 的目录（含该目录）逐层发现 `.agents/skills`；没有仓库则到文件系统根。`.pi/skills` **不向祖先继承**。项目 `.pi` 优先于项目 `.agents`，同类祖先靠近 cwd 的优先；项目默认资源优先于用户 `~/.pi/agent/skills` 和 `~/.agents/skills`。依据固定 [package-manager.ts](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts) 的 collectAncestorAgentsSkillDirs/addAutoDiscoveredResources/resourcePrecedenceRank，而非单独调用 loadSkills(includeDefaults:true) 的顺序。
 
@@ -38,16 +38,20 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 
 源码已接入的范围：
 
-- 加载阶段及活动回调内的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`。斜杠命令注册在当前 Pi 的原生命令服务中；活动回调中的动态变更等待宿主 ACK 后完成；同一文件同名工具或命令替换，跨文件同名取第一个扩展。订阅返回的取消函数也可在活动回调内使用。注册表通过原生工具和命令服务更新，当前请求已经装配的工具声明不追改；新声明、snippets 和 guidelines 在后续原生装配中生效。宿主拒绝某次变更时恢复上一份已接纳定义，发起回调明确失败。
+- 加载阶段及活动回调内的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`before_agent_start`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`。斜杠命令注册在当前 Pi 的原生命令服务中；活动回调中的动态变更等待宿主 ACK 后完成；同一文件同名工具或命令替换，跨文件同名取第一个扩展。订阅返回的取消函数也可在活动回调内使用。注册表通过原生工具和命令服务更新，已经发出的模型请求不追改；新声明、snippets 和 guidelines 在下一次原生装配中生效，before_agent_start 内的变更可进入尚未发出的首个请求。宿主拒绝某次变更时恢复上一份已接纳定义，发起回调明确失败。
 - TypeBox typed schema 与普通 JSON Schema 的工具参数使用固定上游的完整 `validateToolArguments` 校验，保留其转换和错误行为；validator 原文和来源由 `source.json` 维护，不导入 Pi 模型或代理运行时。
-- `input` 支持 continue/handled/transform，保留原生消息身份和附件；`tool_call` 可阻止工具，不能改写已经入账的工具参数或模拟整批 terminate。`tool_result` 可替换受支持的 text/image 内容，不任意改写错误状态、details 或 structuredContent。
+- `input` 支持异步 continue/handled/transform，保留原生消息身份和附件；`tool_call` 可阻止工具，不能改写已经入账的工具参数或模拟整批 terminate。`tool_result` 可替换受支持的 text/image 内容，不任意改写错误状态、details 或 structuredContent。
 - `ctx.ui.select`、`confirm`、`input` 接入原生 userQuestions；`notify` 经活动 Pi 输入区的原生通知展示，按会话 cursor/ID 去重，未启用扩展时暂停读取，不伪造 assistant 消息。
-- `getActiveTools` / `setActiveTools`、只读工具/命令目录和有界会话视图，以及回调内的 `sendUserMessage`、`exec` 和工具回调中的 `ctx.executeTool`。消息继续使用原生 steer/follow-up；`executeTool` 不作为任意回调中的额外执行入口。
+- `getActiveTools` / `setActiveTools`、只读工具/命令目录和有界会话视图，以及回调内的 `sendUserMessage`、`exec` 和工具回调中的 `ctx.executeTool`。消息继续使用原生 steer/follow-up；`sendUserMessage` 的输入来源、streaming 和默认关闭的 `expandPromptTemplates` 保存到原生 `source.pi.input`，排队及冷恢复保留输入来源与展开选择。`executeTool` 不作为任意回调中的额外执行入口。
 - native attachment 桥将 Pi image 的 data/mimeType 转为原生已接纳附件，反向读取原生图片供回调使用；工具结果、输入变换和扩展投递复用附件服务，输入变换保留未改动的原生文件附件。
 
-尚不支持 `before_agent_start`、`context` / `context_with_system` 替换、自定义 TUI/组件渲染、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的命令/技能模板分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
+`before_agent_start` 对当前订阅快照按顺序等待回调，暴露可变 `systemPromptOptions` 和反映前序改动的 `ctx.getSystemPrompt()`；支持返回自定义消息及完整 `systemPrompt`。回调显式编辑 `selectedTools` 时使用该列表，否则采用最新 `setActiveTools`，同步新工具 snippets/guidelines。每次运行只触发一次，系统选项及 force 在后续工具步骤、steer 和排队 follow-up 中保持，回到 idle 后清空。自定义消息以原生 user/context 消息入账，`source.kind` 为 `pi-extension`，保留 `customType`、`display` 和 `details`；`display` 仅是元数据，尚未复刻 Pi TUI 显示。
 
-OMAA 0.5 包含此扩展入口及动态注册，隔离原生执行检查已通过。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
+完整 force 经 DSH 原生 journal 和 `startsRequestSeries` 首条系统消息归一化进入实际请求；原版 Pi force 仅作请求投影、不记入 transcript，两者记录语义不同。
+
+尚不支持 `context` / `context_with_system` 完整历史替换、自定义 TUI/组件渲染、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
+
+OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已通过。before_agent_start 与异步输入链从 0.10.0 起提供，旧版本安装不包含它们。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
 
 ## 行为与宿主边界
 
@@ -56,8 +60,8 @@ OMAA 0.5 包含此扩展入口及动态注册，隔离原生执行检查已通�
 | 默认核心只有 read/bash/edit/write；README 明确跳过默认 plan mode/subagents。 | 保持精简默认组合。宿主已有权限仍执行；不把宿主计划、子代理或权限机制称为 Pi 原生。 |
 | `steer()` 在当前 assistant turn 完成后排入下一次请求，`followUp()` 仅在 agent 原本将停止时开始下一请求。默认两队列均 one-at-a-time，可改 all。依据 agent.ts 与 agent-loop.ts。 | 原生 steer 在整批工具后投递，queue 下一 turn。Pi 默认逐条 steer：公开 pre-step 在原生入账前同步只保留首条 typed steer，其余以原 id/source 经 native Inbox splice 排回；不处理通知或 queue，不替换 loop/伪造事件。组件可配置 all，尚无原厂两队列 UI 控件。已在实际安装中核对两条 steer 分别进入后续请求且各入账一次。宿主先 claim/assemble 再进入 hook，故此更早边界的取消/失败不能承诺原厂剩余输入完全保全；不保证单工具之间插话。 |
 | 固定版本工具执行默认 parallel，支持 sequential；两种执行均完成整批后再 drain steer。 | DSH 的执行策略为实际行为依据，不替换 agent loop。**“steer 跳过尚未执行工具”不是这个固定 commit 的契约**。 |
-| Extensions 有 input、before_agent_start、context/context_with_system、工具拦截及可请求继续的生命周期事件；before_agent_start 支持结构化系统选项。 | 源码已有显式本地 factory/回调桥，接入工具、commands、input/tool_call/tool_result 与启动/关闭事件。before_agent_start、context 替换及自定义 TUI 未接入；不运行完整 Pi 代理或把任意 Pi npm 包当作 DSH 插件。实际接线检查范围见本文核验记录。 |
-| context_with_system 要求首个系统消息位置不变；sections 支持增量更新。 | 宿主系统消息/事件记录负责。预设只供文本段，不建立平行日志或重排消息。 |
+| Extensions 有 input、before_agent_start、context/context_with_system、工具拦截及可请求继续的生命周期事件；before_agent_start 支持结构化系统选项。 | 源码已有显式本地 factory/回调桥，接入工具、commands、input/before_agent_start/tool_call/tool_result 与启动/关闭事件。before_agent_start 的可变选项、串行回调、自定义消息及 force 复用原生请求和入账；context 完整历史替换及自定义 TUI 未接入；不运行完整 Pi 代理或把任意 Pi npm 包当作 DSH 插件。实际接线检查范围见本文核验记录。 |
+| context_with_system 要求首个系统消息位置不变；sections 支持增量更新。 | 宿主系统消息/事件记录负责，before_agent_start 改动进入原生装配；完整 force 使用原生 journal 与请求序列首条归一化。context_with_system 完整历史替换未接入，不建立平行日志。 |
 | 常规压缩保留约 20000 最近 token，预留 16384，支持 summary/update、分支摘要和被切开的回合前缀摘要；文件读/改路径单独跟踪。 | `buildCompactionPrompt()` 提供完整常规 SUMMARIZATION_PROMPT。主集成仅替换原生摘要请求最后用户指令；实际阈值、保留尾部和工具配对由 DSH 管理，不声称沿用 Pi 数值。 |
 | 不完整 length/error 摘要拒绝持久化；compaction 取消或失败不应提交半份 checkpoint。 | 常规压缩依赖原生 DSH 事务；可选离开分支摘要失败、取消或未完整生成时拒绝创建新分支。未移植 Pi JSONL 树存储、扩展自定义压缩或原厂队列恢复。 |
 
@@ -92,3 +96,5 @@ Pi 模型/provider 登录、账号、安装器、独立代理 RPC、原厂 JSONL
 `test/installed-pi-extensions.test.mjs` 在一个隔离的官方 Web DSH 中载入原版 hello、protected-paths、input-transform 文件，核对实际工具内容/details 入账、.env 拒写、嵌套原生 read、原生图片附件、输入转换/handled、斜杠命令、完全权限切换为 workspace-write 后的直接文件写入约束、冷恢复、其它预设隔离与清空停用。没有调用外部模型或改用户现场配置；这证明所测契约，不覆盖所有 Pi 扩展 API 或桌面全部执行分支。问答复用已核对的两宿主原生 schema；基本超时可取消问答，尚没有原厂 TUI 倒计时。执行白名单只作用于 Pi 根会话，增强生成的子代理不加载这些扩展。
 
 `test/installed-pi-dynamic-extensions.test.mjs` 定向核对原生首次装配前的启动回调注册、工具同名替换和增补、动态斜杠命令、输入事件取消订阅，以及原生 output schema 拒绝后的工具/回调恢复。会话设置显示原生标题或工作目录名，内部 session ID 仅在悬停信息中显示。
+
+`test/installed-pi-start.test.mjs` 的定向范围包括异步 input 后模板展开、串行 start 回调与前序系统快照、自定义消息元数据、工具/steer/排队 follow-up 的单次 start、force 与 idle 重置、回调异常后继续、动态工具显式选择及 setActiveTools、扩展投递默认不展开模板和冷恢复来源。该 fixture 不覆盖完整历史替换、Pi TUI 或全部第三方扩展；一个最终原生 alpha 用例已通过；使用脚本 provider，不据此声明全部扩展或真实模型长期质量。冷故障用例等待原生 JSONL 的 200 ms 批处理落盘窗口，排队恢复后仍保留默认不展开的字面输入；恢复期间排入同一 activity 的消息不误判为新启动钩子，回到 idle 后才开启下一次 hook。

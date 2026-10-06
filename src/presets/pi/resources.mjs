@@ -1,15 +1,17 @@
-import { applySharedIdentity, omdIdentityPrompt } from '../../host/identity.mjs';
+import { omdIdentityPrompt } from '../../host/identity.mjs';
 import path from 'node:path';
 import { homedir } from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { load as yamlLoad, JSON_SCHEMA } from 'js-yaml';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { FileSystemSkillProvider } from '@deepseek-ai/dsh-skill-filesystem';
+import { renderPrompt } from '@deepseek-ai/dsh-system-prompt';
+import { promptFrame, renderPromptFrame } from './extension-prompt.mjs';
 import { selectPiSkills, piIgnoreRulesChanged } from './skill-discovery.mjs';
 import { loadPiResourcePaths, selectPiPromptFiles } from './resource-paths.mjs';
 
 export const name = 'omaa-pi-resources';
-export const inject = ['fs', 'skills', 'commands', 'systemPrompt'];
+export const inject = ['fs', 'skills', 'commands', 'systemPrompt', 'tools'];
 const maxFileBytes = 64 * 1024, maxTotalBytes = 256 * 1024, maxTemplates = 128;
 const absent = error => ['ENOENT', 'ENOTDIR', 'FS_NOT_FOUND', 'FS_NOT_DIRECTORY'].includes(error?.code);
 
@@ -162,6 +164,16 @@ export function apply(ctx, config = {}) {
     if (actor?.name === 'write' || actor?.name === 'edit') provider?.observeHostMutation(target.displayPath);
   });
   const catalogs = new WeakMap(), registered = new Set();
+  const claims = new WeakMap(), origins = new WeakMap(), boundaries = new WeakMap(), preparedAssemblies = new WeakSet();
+  ctx.on('agent/inbox/inserted', ({ agent, message }) => {
+    let entries = origins.get(agent); if (!entries) origins.set(agent, entries = new Map());
+    if (!entries.has(message.id)) entries.set(message.id, { streaming: agent.status === 'running', streamingBehavior: agent.inbox.nextStep.some(item => item.id === message.id) ? 'steer' : 'followUp' });
+  });
+  ctx.on('agent/inbox/discarded', ({ agent, message }) => origins.get(agent)?.delete(message.id));
+  ctx.on('agent/inbox/claimed', ({ agent, message, turn }) => {
+    let batch = claims.get(agent); if (!batch) claims.set(agent, batch = []);
+    batch.push({ message, turn });
+  });
   const load = async (agent, signal) => {
     const catalog = await loadPiResources(ctx.fs, { cwd: agent.session.header.cwd, agentDir, signal });
     const cwd = agent.session.header.cwd;
@@ -189,34 +201,61 @@ export function apply(ctx, config = {}) {
   };
   ctx.systemPrompt.section({ name: 'omaa:pi-addendum', order: 5, text: '', interpolate: false });
   ctx.systemPrompt.section({ name: 'omaa:pi-global-context', order: 10, text: '', interpolate: false });
+  const resources = {
+    frame(agent, assembly, tools) {
+      return promptFrame(assembly.sections.map(section => ({ name: section.name, text: renderPrompt({ ...assembly, sections: [section] }) })), {
+        tools: new Set(tools.map(tool => tool.name)), cwd: agent.session.header.cwd,
+        customTools: ctx.get('omaaPiExtensions')?.promptTools(agent) ?? [], catalog: catalogs.get(agent) ?? {},
+        identity: omdIdentityPrompt(ctx), child: agent.session.header.origin === 'subagent',
+      });
+    },
+    boundary: agent => boundaries.get(agent),
+    async prepare(agent, signal, beforeInput) {
+      await load(agent, signal);
+      beforeInput?.();
+      const claimed = claims.get(agent) ?? []; claims.delete(agent);
+      const original = claimed.map(item => item.message);
+      const selected = ctx.get('omaaPiSteering')?.select(agent, original) ?? original;
+      const extension = ctx.get('omaaPiExtensions');
+      const inputMetadata = new Map(selected.map(message => [message.id, { ...origins.get(agent)?.get(message.id), ...message.source?.pi?.input, ...extension?.inputMetadata(agent, message.id) }]));
+      const processed = extension ? await extension.input(agent, selected, signal) : selected;
+      signal.throwIfAborted();
+      const catalog = catalogs.get(agent);
+      const messages = processed.map(message => {
+        if (message.role !== 'user' || message.source?.kind !== 'user' || inputMetadata.get(message.id)?.expandPromptTemplates === false) return message;
+        return { ...message, content: message.content.map(part => part.type === 'text' ? { ...part, text: expandPromptTemplate(part.text, catalog.templates) } : part) };
+      });
+      for (const message of selected) origins.get(agent)?.delete(message.id);
+      const users = messages.filter(message => message.role === 'user' && message.source?.kind === 'user');
+      const boundary = { claimedIds: new Set(original.map(message => message.id)), messages, users, customMessages: [],
+        startsRun: users.some(message => !inputMetadata.get(message.id)?.streaming),
+        handled: selected.some(message => message.source?.kind === 'user') && !users.length };
+      boundaries.set(agent, boundary); preparedAssemblies.add(agent);
+      return boundary;
+    },
+  };
+  ctx.provide('omaaPiResources', resources);
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     if (!context.agent) return next();
     const observed = observedSelections.get(context.agent.session.header.cwd);
     if (observed && await piIgnoreRulesChanged(ctx.fs, observed.ignoreObservations, context.signal)) invalidateSkills?.();
-    const catalog = await load(context.agent, context.signal), assembly = await next();
-    return { ...assembly, sections: assembly.sections.map(section => {
-      if (section.name === 'deployment:persona-prefix' && catalog.system?.text) {
-        const cwd = context.agent.session.header.cwd.replaceAll('\\', '/').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        return { ...section, text: applySharedIdentity(catalog.system.text, 'pi', omdIdentityPrompt(ctx), { userSystem: true, child: context.agent.session.header.origin === 'subagent' }) + '\n\n<cwd>\n' + cwd + '\n</cwd>', interpolate: false };
-      }
-      if (section.name === 'omaa:pi-addendum') return { ...section, text: catalog.append?.text ? '<addendum>\n' + catalog.append.text + '\n</addendum>' : '', interpolate: false };
-      if (section.name === 'omaa:pi-global-context') {
-        const file = catalog.globalContext;
-        const escapedPath = file?.file.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-        return { ...section, text: file ? '<project_context>\nProject-specific instructions and guidelines:\n<project_instructions path="' + escapedPath + '">\n' + file.text + '\n</project_instructions>\n</project_context>' : '', interpolate: false };
-      }
-      return section;
-    }) };
+    if (!preparedAssemblies.has(context.agent)) await resources.prepare(context.agent, context.signal);
+    preparedAssemblies.delete(context.agent);
+    const assembly = await next(), tools = ctx.tools?.schemas(context.agent) ?? assembly.tools;
+    const frame = resources.frame(context.agent, assembly, tools);
+    const textByName = new Map(renderPromptFrame(frame).map(section => [section.name, section.text]));
+    return { ...assembly, sections: assembly.sections.map(section => textByName.has(section.name)
+      ? { ...section, text: textByName.get(section.name), interpolate: false } : section) };
   });
-  ctx.on('agent/pre-step', async ({ agent, signal }, next) => {
+  ctx.on('agent/pre-step', async (info, next) => {
+    const boundary = boundaries.get(info.agent); boundaries.delete(info.agent);
+    if (boundary) {
+      const changes = new Map(boundary.messages.map(message => [message.id, message]));
+      info.messages.splice(0, info.messages.length, ...info.messages.flatMap(message => !boundary.claimedIds.has(message.id) ? [message] : changes.has(message.id) ? [changes.get(message.id)] : []));
+    }
     const decision = await next();
     if (decision.kind === 'reject') return decision;
-    const catalog = catalogs.get(agent) ?? await load(agent, signal);
-    const messages = ctx.get('omaaPiExtensions') ? await ctx.get('omaaPiExtensions').input(agent, decision.messages, signal) : decision.messages;
-    return { ...decision, messages: messages.map(message => {
-      if (message.role !== 'user' || message.source?.kind !== 'user') return message;
-      const content = message.content.map(part => part.type === 'text' ? { ...part, text: expandPromptTemplate(part.text, catalog.templates) } : part);
-      return { ...message, content };
-    }) };
-  });
+    if (boundary?.handled && !boundary.messages.length) return { ...decision, messages: [] };
+    return { ...decision, ...(boundary?.startsRequestSeries ? { startsRequestSeries: true } : {}), messages: [...decision.messages, ...boundary?.customMessages ?? []] };
+  }, { prepend: true });
 }

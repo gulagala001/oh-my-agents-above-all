@@ -1,6 +1,6 @@
 {
   "name": "oh-my-agents-above-all",
-  "version": "0.2.1-alpha.1.omaa.0.9.0",
+  "version": "0.2.1-alpha.1.omaa.0.10.0",
   "private": true,
   "type": "module",
   "description": "DSH 五产品深度预设：Codex、Grok Build、Cursor、Pi、ZCode，独立主题与可选 OMD 增强",
@@ -26,6 +26,7 @@
     "@deepseek-ai/dsh-llm": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-skill-filesystem": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.1",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-tool-fs-search": "0.2.1-alpha.1",
     "esbuild": "0.25.12",
     "playwright": "1.63.0",
@@ -77,6 +78,7 @@
     "@deepseek-ai/dsh-llm": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-skill-filesystem": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.1",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-alpha.1",
     "@deepseek-ai/dsh-tool-fs-search": "0.2.1-alpha.1"
   },
   "peerDependenciesMeta": {

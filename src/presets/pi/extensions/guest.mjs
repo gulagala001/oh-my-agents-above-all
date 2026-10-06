@@ -8,6 +8,7 @@ import * as legacyTypeboxCompiler from '@sinclair/typebox/compiler';
 import { format } from 'node:util';
 import path from 'node:path';
 import { callbackContext, codingAgentShim, aiShim, createPiAPI, createCallbackContext, supportedEvents } from './pi-api.mjs';
+import { promptFrameText } from '../extension-prompt.mjs';
 
 // Fixed upstream's pure argument validator; no Pi provider or agent runtime.
 const validatorImporter = createJiti(import.meta.url, { fsCache: false, moduleCache: false, tryNative: false,
@@ -198,22 +199,42 @@ async function load(frame, context) {
 async function dispatchEvent(frame, context) {
   const eventName = frame.eventName;
   if (!supportedEvents.has(eventName)) throw new Error('Unsupported Pi extension event: ' + eventName);
-  const handlers = context.runtime.extensions.flatMap(extension => (extension.events.get(eventName) ?? []).slice());
+  const handlers = context.runtime.extensions.flatMap(extension => (extension.events.get(eventName) ?? []).map(registration => ({ ...registration, extensionPath: extension.file })));
   const event = { ...(frame.event ?? {}), type: eventName };
   const ctx = createCallbackContext(context.runtime);
-  if (eventName === 'input') {
-    const originalText = event.text, originalImages = event.images;
-    for (const { handler } of handlers) {
+  if (eventName === 'before_agent_start') {
+    const promptFrame = frame.promptFrame, options = promptFrame.options;
+    const messages = [], errors = [];
+    context.renderSystemPrompt = () => promptFrameText(promptFrame, options);
+    for (const { handler, extensionPath } of handlers) {
       context.controller.signal.throwIfAborted();
+      try {
+        const result = await handler({ ...event, systemPromptOptions: options,
+          get systemPrompt() { return context.renderSystemPrompt(); } }, ctx);
+        if (result?.message) messages.push(result.message);
+        if (result?.systemPrompt !== undefined) options.forceSystemPrompt = result.systemPrompt;
+      } catch (error) {
+        context.controller.signal.throwIfAborted();
+        errors.push({ extensionPath, error: errorText(error) });
+      }
+    }
+    return { messages, systemPromptOptions: options, errors };
+  }
+  if (eventName === 'input') {
+    const originalText = event.text, originalImages = event.images, errors = [];
+    for (const { handler, extensionPath } of handlers) {
+      context.controller.signal.throwIfAborted();
+      try {
       const result = await handler(event, ctx);
-      if (result?.action === 'handled') return { action: 'handled' };
+      if (result?.action === 'handled') return { action: 'handled', errors };
       if (result?.action === 'transform') {
         if (typeof result.text !== 'string') throw new Error('Pi input transform requires text');
         event.text = result.text; if (result.images !== undefined) event.images = result.images;
       } else if (result?.action !== undefined && result.action !== 'continue') throw new Error('Invalid Pi input event result');
+      } catch (error) { context.controller.signal.throwIfAborted(); errors.push({ extensionPath, error: errorText(error) }); }
     }
     return event.text !== originalText || event.images !== originalImages
-      ? { action: 'transform', text: event.text, ...(event.images === undefined ? {} : { images: event.images }) } : { action: 'continue' };
+      ? { action: 'transform', text: event.text, ...(event.images === undefined ? {} : { images: event.images }), errors } : { action: 'continue', errors };
   }
   if (eventName === 'tool_call') {
     if (!event.input || typeof event.input !== 'object' || Array.isArray(event.input)) throw new Error('Pi tool_call requires input');
