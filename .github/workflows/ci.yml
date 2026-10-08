@@ -86,13 +86,14 @@ jobs:
             execFileSync('git', ['-C', base, 'fetch', '--depth', '1', 'https://github.com/gulagala001/oh-my-dsh.git', rule.sourceCommit], { stdio: 'inherit' });
             execFileSync('git', ['-C', base, 'checkout', '--detach', 'FETCH_HEAD'], { stdio: 'inherit' });
             execFileSync(process.execPath, ['scripts/package.mjs', '--host-version', row.version], { stdio: 'inherit' });
-            // Only browser/skin assets are rebuilt. The overlay verifies and
-            // preserves this host's native factories and vendor snapshot.
-            execFileSync(process.execPath, ['scripts/package-omd-compat.mjs', '--base', base, '--host-version', row.version], { stdio: 'inherit' });
+            // Reviewed integrated baselines retain every official byte. Historical
+            // overlays rebuild only client assets and retain native factories/vendor.
+            const baselinePackage = JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', process.cwd() + '/.cache'], { cwd: base, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }))[0];
+            execFileSync(process.execPath, ['scripts/package-omd-compat.mjs', '--base', '.cache/' + baselinePackage.filename, '--host-version', row.version], { stdio: 'inherit' });
           }
           JS
       - name: Prepare verified paired release assets
-        run: node scripts/release-assets.mjs --omd-version 0.8.2
+        run: node scripts/release-assets.mjs --omd-version 0.9.0
       - uses: actions/upload-artifact@v7
         with:
           name: omaa-release-packages
