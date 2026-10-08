@@ -86,6 +86,7 @@ async function browserChecks(t, f, config, sessions, coexist = false) {
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.setDefaultTimeout(20000);
+  let releaseSettings, delayedSettings = 0;
   await page.goto(f.origin);
   await page.getByRole('button', { name: /^(Continue|继续)$/, exact: true }).click();
   const loader = await page.evaluate(() => ({ present: !!window.__ModuleLoader__, load: typeof window.__ModuleLoader__?.load }));
@@ -95,11 +96,34 @@ async function browserChecks(t, f, config, sessions, coexist = false) {
     await page.getByText('HOST_MATRIX_' + product.id, { exact: true }).first().click();
     await page.locator(`html[data-omaa-theme="${product.theme}"]`).waitFor();
     assert.equal(await page.locator('style[data-omaa-theme-style]').count(), 1);
+    if (coexist && product.id === products[0].id) {
+      const ready = new Promise(resolve => { releaseSettings = resolve; });
+      t.after(() => releaseSettings());
+      await page.route('**/omaa/api/session?session=' + encodeURIComponent(sessions[product.id]), async route => {
+        if (route.request().method() === 'GET') { delayedSettings++; await ready; }
+        await route.continue();
+      });
+    }
     await page.getByRole('button', { name: product.name + ' 预设设置' }).click();
     const panel = page.getByRole('region', { name: 'Oh My Agents Above All 预设设置' });
     const enhancement = panel.getByLabel('OMD 增强', { exact: true });
+    if (coexist && product.id === products[0].id) {
+      try {
+        await until(() => delayedSettings > 0);
+        assert.equal(await enhancement.isDisabled(), true, 'pending settings must disable mutations');
+        assert.equal(await panel.getByText('正在读取会话设置…', { exact: true }).isVisible(), true);
+        assert.equal((await f.api(sessions[product.id])).value.omdAvailable, true, 'loaded backend capability is independent of the pending browser request');
+      } finally { releaseSettings(); }
+    }
+    await until(() => panel.getByLabel('会话主题', { exact: true }).isEnabled());
     assert.equal(await enhancement.isChecked(), false);
-    assert.equal(await enhancement.isDisabled(), !coexist);
+    const enhancementDisabled = await enhancement.isDisabled();
+    if (enhancementDisabled !== !coexist) {
+      const panelText = await panel.innerText(), availability = (await f.api(sessions[product.id])).value;
+      t.diagnostic(JSON.stringify({ presetSettings: { product: product.id, enhancementDisabled, panelText,
+        omdAvailable: availability.omdAvailable, running: availability.running, pendingMode: availability.pendingMode } }));
+    }
+    assert.equal(enhancementDisabled, !coexist);
     await panel.getByLabel('明暗模式', { exact: true }).selectOption('dark');
     await page.locator('html[data-appearance="dark"]').waitFor();
     await panel.getByLabel('明暗模式', { exact: true }).selectOption('light');
