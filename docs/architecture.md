@@ -44,9 +44,9 @@ composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 
 
 ## 兼容包生产
 
-OMAA 自身继续使用 `scripts/package.mjs` 从同一源码绑定 rc.2／alpha.1 宿主。`scripts/package-omd-compat.mjs` 单独从官方 OMD `0.6.1` 目录或 tgz 构建兼容附件；`compat/omd` 保存两端固定 commit、完整发行文件哈希、最小源码补丁和两个薄适配模块。它先核对 manifest 与来源，再在隔离目录应用补丁，重建客户端及皮肤资产，沿用输入包对应的 `lib/host` 与 `vendor`。rc.2 的 legacy draft recovery、两端 projectless 与原生注入保持在各自官方底稿中。
+OMAA 自身继续使用 `scripts/package.mjs` 从同一源码绑定 rc.2／alpha.1 宿主。配对 OMD `0.9.0` 已把 OMAA 薄桥接整合到官方源码；两端固定 commit 各自包含对应宿主的原生 SDK、工厂、vendor 和锁文件。`scripts/package-omd-compat.mjs` 根据审定规则选择 `integrated-baseline` 模式，核对完整 manifest、发行白名单及全部文件哈希，保留原客户端、`lib/host`、`vendor` 和发行说明，仅追加兼容来源记录。输入与输出的 OMD 完整版本必须相同。历史 tag 的 overlay 模式仍按原补丁和来源哈希核验。
 
-构建输出包含宿主前缀版本、tgz、SHA256 与来源元数据，供 GitHub Releases 附件交付。未知上游版本、漂移内容或补丁冲突均明确停止；不从另一个工作区整包复制，也不自动修改用户安装。更新来源与补丁后才接受新基线。
+构建输出包含宿主前缀版本、tgz、SHA256 与来源元数据，供 GitHub Releases 附件交付。未知上游版本、漂移内容或补丁冲突均明确停止；不从另一个工作区整包复制，也不自动修改用户安装。审阅来源并更新对应规则后才接受新基线。
 
 ## 维护上游版本
 

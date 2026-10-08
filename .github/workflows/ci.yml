@@ -17,9 +17,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validation-plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.hosts.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - id: hosts
+        name: Read the shared validation representatives
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const { validationHosts } = JSON.parse(readFileSync('src/host/compatibility.json', 'utf8'));
+          appendFileSync(process.env.GITHUB_OUTPUT, 'matrix=' + JSON.stringify({ include: validationHosts }) + '\n');
+          JS
+
   packages:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
@@ -34,7 +54,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build presets and browser client
         run: pnpm build
-      - name: Check settings, appearance ownership and Cursor rules
+      - name: Check settings, appearance ownership, ranges and distribution
         run: >-
           node --test --test-concurrency=1
           test/preferences.test.mjs
@@ -44,36 +64,161 @@ jobs:
           test/cursor-rules.test.mjs
           test/identity-compat.test.mjs
           test/updates.test.mjs
-      - name: Package OMAA for both hosts
+          test/host-range.test.mjs
+          test/package-distribution.test.mjs
+          test/npm-runner.test.mjs
+      - name: Pack one candidate source entry for all native hosts
         run: |
-          node scripts/package.mjs --host-version 0.2.1-alpha.1
-          node scripts/package.mjs --host-version 0.2.0-rc.2
-      - name: Fetch fixed official alpha OMD baseline
-        uses: actions/checkout@v7
-        with:
-          repository: gulagala001/oh-my-dsh
-          ref: 95fbfc4428834e98a033fb4724b990a8796bd2d5
-          path: .cache/omd-official-alpha
-          persist-credentials: false
-      - name: Fetch fixed official rc.2 OMD baseline
-        uses: actions/checkout@v7
-        with:
-          repository: gulagala001/oh-my-dsh
-          ref: d29b75c98a0f6575af5880497c4d970125eeedf2
-          path: .cache/omd-official-rc2
-          persist-credentials: false
-      # The compatibility script imports esbuild from OMAA's installed lockfile.
-      # It retains each baseline's native lib/host and vendor, and rebuilds only
-      # browser/skin assets. Do not install or execute the OMD build-host script.
-      - name: Package compatible OMD for both hosts
+          mkdir -p dist/source-entry
+          npm pack --ignore-scripts --json --pack-destination dist/source-entry > dist/source-entry/pack.json
+      - name: Package OMAA and reviewed native OMD baselines
         run: |
-          node scripts/package-omd-compat.mjs --base .cache/omd-official-alpha --host-version 0.2.1-alpha.1
-          node scripts/package-omd-compat.mjs --base .cache/omd-official-rc2 --host-version 0.2.0-rc.2
+          node --input-type=module <<'JS'
+          import { mkdirSync, readFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import { validationHosts } from './src/host/compatibility.mjs';
+          mkdirSync('.cache', { recursive: true });
+          for (const row of validationHosts) {
+            const rule = JSON.parse(readFileSync(`compat/omd/${row.omdVariant}.json`, 'utf8'));
+            if (rule.hostVersion !== row.version || !/^[a-f0-9]{40}$/.test(rule.sourceCommit)) throw new Error('Invalid reviewed OMD baseline');
+            const base = `.cache/omd-official-${row.omdVariant}`;
+            execFileSync('git', ['init', base], { stdio: 'inherit' });
+            execFileSync('git', ['-C', base, 'fetch', '--depth', '1', 'https://github.com/gulagala001/oh-my-dsh.git', rule.sourceCommit], { stdio: 'inherit' });
+            execFileSync('git', ['-C', base, 'checkout', '--detach', 'FETCH_HEAD'], { stdio: 'inherit' });
+            execFileSync(process.execPath, ['scripts/package.mjs', '--host-version', row.version], { stdio: 'inherit' });
+            // Reviewed integrated baselines retain every official byte. Historical
+            // overlays rebuild only client assets and retain native factories/vendor.
+            const baselinePackage = JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', process.cwd() + '/.cache'], { cwd: base, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }))[0];
+            execFileSync(process.execPath, ['scripts/package-omd-compat.mjs', '--base', '.cache/' + baselinePackage.filename, '--host-version', row.version], { stdio: 'inherit' });
+          }
+          JS
       - name: Prepare verified paired release assets
-        run: node scripts/release-assets.mjs --omd-version 0.8.1
+        run: node scripts/release-assets.mjs --omd-version 0.9.0
       - uses: actions/upload-artifact@v7
         with:
           name: omaa-release-packages
           path: dist/release-assets/*
           if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: omaa-source-entry
+          path: dist/source-entry/*
+          if-no-files-found: error
+          retention-days: 14
+
+  native-hosts:
+    needs: [validation-plan, packages]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.validation-plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      HOST_VERSION: ${{ matrix.version }}
+      HOST_LOADER_VERSION: ${{ matrix.loaderVersion }}
+      DSH_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '11.23.0'
+      - name: Install locked fixture dependencies
+        run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: omaa-release-packages
+          path: dist/release-assets
+      - uses: actions/download-artifact@v8
+        with:
+          name: omaa-source-entry
+          path: dist/source-entry
+      - name: Install the exact official host in its own native environment
+        run: |
+          mkdir -p .cache/native-host
+          echo '{"private":true}' > .cache/native-host/package.json
+          npm install --prefix .cache/native-host --save-exact --ignore-scripts "@deepseek-ai/dsh@$HOST_VERSION" "@deepseek-ai/cordis-plugin-loader@$HOST_LOADER_VERSION"
+          echo "OMAA_HOST_CLI=$GITHUB_WORKSPACE/.cache/native-host/node_modules/@deepseek-ai/dsh/lib/bin.js" >> "$GITHUB_ENV"
+          echo "OMAA_HOST_VERSION=$HOST_VERSION" >> "$GITHUB_ENV"
+      - name: Install isolated Chrome for Testing and Linux browser dependencies
+        run: |
+          pnpm exec playwright install-deps chromium
+          node --input-type=module <<'JS'
+          import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const manifest = await (await fetch('https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json')).json();
+          const stable = manifest.channels.Stable, archive = stable.downloads.chrome.find(row => row.platform === 'linux64');
+          if (!/^https:\/\/storage.googleapis.com\/chrome-for-testing-public\/[0-9.]+\/linux64\/chrome-linux64.zip$/.test(archive?.url) || !/^\d+\.\d+\.\d+\.\d+$/.test(stable.version)) throw new Error('Unexpected official CFT download');
+          mkdirSync('.cache/cft', { recursive: true });
+          execFileSync('curl', ['--fail', '--location', '--output', '.cache/cft/chrome.zip', archive.url], { stdio: 'inherit' });
+          execFileSync('unzip', ['-q', '.cache/cft/chrome.zip', '-d', '.cache/cft'], { stdio: 'inherit' });
+          mkdirSync('dist/host-reports', { recursive: true });
+          writeFileSync('dist/host-reports/browser-source.json', JSON.stringify({ version: stable.version, url: archive.url }) + '\n');
+          appendFileSync(process.env.GITHUB_ENV, `OMAA_HOST_BROWSER=${process.cwd()}/.cache/cft/chrome-linux64/chrome\n`);
+          JS
+      - name: Select the same source candidate and this host's paired artifacts
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync, readFileSync, readdirSync } from 'node:fs';
+          import { resolve } from 'node:path';
+          const host = process.env.HOST_VERSION;
+          const files = readdirSync('dist/release-assets').filter(name => name.endsWith('.metadata.json')).map(name => JSON.parse(readFileSync('dist/release-assets/' + name, 'utf8')));
+          const source = JSON.parse(readFileSync('dist/source-entry/pack.json', 'utf8'))[0];
+          const variant = files.find(row => row.hostVersion === host && row.name === 'oh-my-agents-above-all');
+          const omd = files.find(row => row.hostVersion === host && row.name === 'trisoul_x');
+          if (!source?.filename || !variant || !omd) throw new Error('Missing matrix artifacts');
+          appendFileSync(process.env.GITHUB_ENV, `OMAA_HOST_PACKAGE=${resolve('dist/source-entry', source.filename)}\nOMAA_HOST_VARIANT_PACKAGE=${resolve('dist/release-assets', variant.filename)}\nOMAA_HOST_OMD_PACKAGE=${resolve('dist/release-assets', omd.filename)}\n`);
+          JS
+      - name: Verify the same source entry in the real native host and paired OMD
+        env:
+          OMAA_HOST_MATRIX: '1'
+          OMAA_HOST_REPORT: dist/host-reports/source-entry.json
+        run: node --test --test-concurrency=1 test/host-compatibility.test.mjs
+      - name: Verify native preset guards and Pi lifecycle on the same source candidate
+        env:
+          OMAA_TEST_SAFE: '1'
+          OMAA_PRESETS_EVIDENCE: dist/host-reports/presets-native.json
+          OMAA_PI_START_EVIDENCE: dist/host-reports/pi-start-native.json
+          OMAA_PI_LIFECYCLE_EVIDENCE: dist/host-reports/pi-lifecycle-native.json
+        run: |
+          set -o pipefail
+          export OMAA_TEST_HOST_CLI="$OMAA_HOST_CLI"
+          export OMAA_TEST_HOST_PACKAGE="$OMAA_HOST_PACKAGE"
+          export OMAA_TEST_HOST_VERSION="$OMAA_HOST_VERSION"
+          node --input-type=module <<'JS'
+          import { createHash } from 'node:crypto';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const source = JSON.parse(readFileSync('dist/source-entry/pack.json', 'utf8'))[0];
+          writeFileSync('dist/host-reports/native-deep-source.json', JSON.stringify({
+            schema: 1, expectedHostVersion: process.env.OMAA_TEST_HOST_VERSION,
+            cli: process.env.OMAA_TEST_HOST_CLI, package: process.env.OMAA_TEST_HOST_PACKAGE,
+            packageVersion: source.version,
+            packSha256: createHash('sha256').update(readFileSync(process.env.OMAA_TEST_HOST_PACKAGE)).digest('hex'),
+            isolatedLocalhostProvider: true,
+            suites: ['installed-presets', 'installed-pi-start', 'installed-pi-lifecycle'],
+          }, null, 2) + '\n');
+          JS
+          node --test --test-reporter=tap --test-concurrency=1 \
+            test/installed-presets.test.mjs \
+            test/installed-pi-start.test.mjs \
+            test/installed-pi-lifecycle.test.mjs \
+            | tee dist/host-reports/native-deep.tap
+      - name: Verify the host-aligned variant's native installation and SDK routing
+        env:
+          OMAA_HOST_VARIANT_INSTALL: '1'
+          OMAA_HOST_VARIANT_REPORT: dist/host-reports/host-variant.json
+        run: |
+          export OMAA_HOST_PACKAGE="$OMAA_HOST_VARIANT_PACKAGE"
+          node --test --test-concurrency=1 test/host-variant-install.test.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: omaa-native-host-${{ matrix.version }}-linux
+          path: dist/host-reports/*
+          if-no-files-found: warn
           retention-days: 14

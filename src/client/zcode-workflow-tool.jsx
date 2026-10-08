@@ -20,14 +20,28 @@ export function workflowToolResult(block) {
     value };
 }
 
-function argumentText(block, phase) {
+function argumentReader(block, phase) {
+  if (block.args) return block.args;
+  // Older hosts expose raw arguments only after preparation has finished.
+  const raw = phase === 'start' ? block.argsRaw : phase === 'result' ? block.call?.argsRaw : undefined;
+  try {
+    const values = JSON.parse(raw);
+    if (!values || typeof values !== 'object' || Array.isArray(values)) return undefined;
+    return {
+      value: key => values[key],
+      textPrefix: (key, length) => typeof values[key] === 'string' ? values[key].slice(0, length) : undefined,
+    };
+  } catch { return undefined; }
+}
+
+function argumentText(block, phase, args) {
   if (phase === 'start') return block.argsRaw;
   if (phase === 'result' && block.call?.argsRaw) return block.call.argsRaw;
   // A preparing PartialArguments instance grows in place. Read its fields
   // during this render, never memoize it by object identity.
   const values = {};
-  for (const key of block.args?.keys?.() || []) {
-    const value = block.args.text(key) ?? block.args.value(key);
+  for (const key of args?.keys?.() || []) {
+    const value = args.text(key) ?? args.value(key);
     if (value !== undefined) values[key] = value;
   }
   return Object.keys(values).length ? JSON.stringify(values, null, 2) : '';
@@ -41,9 +55,11 @@ export function ZCodeWorkflowTool({ phase, block, useDisclosure, inspect, openAr
   const failed = phase === 'result' && (block.isError || result.value?.ok === false || result.status === 'failed');
   const stopped = phase === 'result' && (block.error?.code === 'interrupted' || result.value?.error?.kind === 'abort' || result.status === 'killed' || result.status === 'cancelled');
   const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : ({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' })[result.status] || '已完成';
-  const name = block.args?.textPrefix?.('name', 100) || block.args?.value?.('saved')?.name || block.args?.textPrefix?.('path', 100) || 'ZCode 工作流';
+  const args = argumentReader(block, phase);
+  const savedName = args?.value?.('saved')?.name;
+  const name = args?.textPrefix?.('name', 100) || (typeof savedName === 'string' && savedName) || args?.textPrefix?.('path', 100) || 'ZCode 工作流';
   const output = phase === 'result' ? resultText(block) : '';
-  const input = expanded ? argumentText(block, phase) : '';
+  const input = expanded ? argumentText(block, phase, args) : '';
   useEffect(() => { setActionError(''); }, [callId, result.runId]);
   const open = async () => { setActionError(''); try { await openArtifacts(result.runId); } catch (error) { setActionError(error.message); } };
   return <div className="omaa-zcode-tool" data-phase={phase} data-error={failed || undefined}>

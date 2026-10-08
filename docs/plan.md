@@ -14,7 +14,7 @@ Pi 已补原生完成回合分叉、parent 树导航与默认关闭的离开分�
 
 DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行时、账号安装器、多魂、投票、固定交稿模板或另一套任务板。简单修改保持轻量，按风险验证；具体边界见 [架构](architecture.md) 和 [增强边界](omd-enhancement-boundary.md)。
 
-兼容交付已转为固定官方 OMD 0.6.1 基线与入库最小补丁，通过 `scripts/package-omd-compat.mjs` 生成对应宿主的 tgz、SHA256 与来源元数据；不把本机缓存 stage 作为源码。正式附件由 GitHub Releases 交付，升级先审阅基线差异，保持对应宿主原生工厂、无项目聊天和 rc.2 草稿恢复。
+本版 OMAA 0.13.0 配对 OMD 0.9.0 的分宿主官方基线：源码已包含完整 OMAA 薄桥接，审定规则明确采用 integrated-baseline 模式。`scripts/package-omd-compat.mjs` 保留完整发行文件、客户端、原生工厂及 vendor，生成对应宿主的 tgz、SHA256 与来源元数据。正式附件由 GitHub Releases 交付；原 tag 的 0.6.1 底稿与 overlay 校验继续保留。
 
 当前交付要求是在 GitHub 仓库及 Releases 提供可安装成品、来源补丁、两宿主包和维护流程。当前 UI 修复聚焦无项目 Pro/Ultra 首次发送、设置保存竞态、同 ID 切预设残留、主题过渡与窄侧栏。正在运行的用户任务应保持，桌面重载在空闲后进行。
 
@@ -22,7 +22,7 @@ DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行
 
 Pi extension-only 回调桥已在源码实现：用户显式指定绝对 TS/JS 文件白名单，默认关闭、不自动运行项目发现文件；guest 由 native subprocess/sandbox 承载，没有另一套 Pi loop/model/账号。源码接入扩展工具与 commands（可在活动回调动态注册与替换）、input/before_agent_start/tool_call/tool_result/session_start/session_shutdown、原生 questions/notify、typed/普通 JSON Schema 的固定上游 validator，以及原生附件桥。来源清单与 hash 由 `source.json` 维护。已接入异步 input → 模板展开 → before_agent_start → 原生 pre-step 缓存入账；串行回调支持可变系统选项、getSystemPrompt、自定义消息和完整 force，动态工具选择与 snippets/guidelines 同步。force 跨工具、steer 及排队 follow-up 保持，idle 清空；扩展输入来源与默认关闭的模板展开选择保存在原生消息中。context/context_with_system 完整历史替换、TUI/custom render、appendEntry 等仍明确不支持，具体边界见 [Pi 文档](products/pi.md)。OMAA 0.5 包含扩展入口及活动回调内动态工具、命令与事件注册；失败变更恢复上一份已接纳定义，隔离原生执行检查已通过；不能将源码实现标成安装交付成功，也不把部分 ABI 接入称为完整原版扩展运行时。
 
-OMAA 0.9.0 接入 ZCode 原版 Timeline／PhaseList、successor-run Amend、连续完成结果缓存、精确 native completed event prefix 和同 run 并发 retune；同时修复未声明 phase 的 ask/world 传输错误。修订保留前驱并在同会话中关联后继，不支持半转录继承、原模型 pin 或原厂 same-run journal/replay；effect 分类仍采用明确记录的保守边界。单个原生 fixture、Space Bunny Free 短任务与已有 alpha Web graph 点击各有有限证据，新的 Amend 卡片和前次／后续入口也已在隔离 alpha Web 实点。该功能从 0.9.0 起提供，配对兼容 OMD 保持 `0.8.1`；双宿主安装和重载须保留现有用户配置与会话。五产品稳定日用目标及 Desktop/Windows 新图验收继续推进。
+OMAA 0.9.0 接入 ZCode 原版 Timeline／PhaseList、successor-run Amend、连续完成结果缓存、精确 native completed event prefix 和同 run 并发 retune；同时修复未声明 phase 的 ask/world 传输错误。修订保留前驱并在同会话中关联后继，不支持半转录继承、原模型 pin 或原厂 same-run journal/replay；effect 分类仍采用明确记录的保守边界。单个原生 fixture、Space Bunny Free 短任务与已有 alpha Web graph 点击各有有限证据，新的 Amend 卡片和前次／后续入口也已在隔离 alpha Web 实点。该功能从 OMAA 0.9.0 起提供，当时配对兼容 OMD 为 `0.8.1`；双宿主安装和重载须保留现有用户配置与会话。五产品稳定日用目标及 Desktop/Windows 新图验收继续推进。
 
 OMAA 0.10.0 源码包含 Pi 异步输入链和 before_agent_start；实际安装需使用匹配宿主的新版包，不将源码版本视为用户已安装版本。`test/installed-pi-start.test.mjs` 定向覆盖回调顺序、系统快照/force 生命周期、自定义消息、动态工具选择及扩展输入冷恢复，一个最终原生 alpha 用例已通过，未扩五产品任务矩阵。完整 force 与自定义消息由 DSH 原生日志承载，区别于原版 Pi force 仅投影和 TUI display 行为。
 

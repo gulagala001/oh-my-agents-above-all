@@ -141,12 +141,22 @@ test('Pi awaited input and chained start hooks share a native run, retain custom
   await until(async () => !(await f.api(sessionId)).value.running && f.requests.slice(coldQueueFrom).some(request => user(request).includes('COLD_NEW_RUN')));
   assert(f.requests.slice(coldQueueFrom).some(request => user(request).includes('/expand cold-literal')));
   assert(f.requests.slice(coldQueueFrom).every(request => !user(request).includes('EXPANDED_NATIVE cold-literal')));
+  const coldSnapshot = await f.snapshot(sessionId);
+  const coldStarts = coldSnapshot.records.filter(record => record.event?.type === 'user/message'
+    && record.event.data.source?.customType === 'start-a' && text(record.event.data) === 'START_A:COLD_NEW_RUN');
+  assert.equal(coldStarts.length, 1, 'cold recovery must admit the human input once');
+  assert.equal(coldStarts[0].event.data.source.details.starts, 1, 'the recovered guest starts a fresh counter');
 
   snapshot = await f.prompt(sessionId, 'COLD_IDLE_START');
   assert(f.requests.slice(coldQueueFrom).filter(request => request.tools?.length).every(request => !system(request).includes('FORCED_FINAL')));
-  assert(snapshot.records.some(record => record.event?.type === 'user/message' && record.event.data.source?.customType === 'start-a' && record.event.data.source.details.starts === 1 && text(record.event.data).includes('COLD_IDLE_START')));
+  const idleStarts = snapshot.records.filter(record => record.event?.type === 'user/message'
+    && record.event.seq > coldSnapshot.projections.asOfSeq && record.event.data.source?.customType === 'start-a'
+    && text(record.event.data) === 'START_A:COLD_IDLE_START');
+  assert.equal(idleStarts.length, 1, 'the next idle input starts exactly once');
+  assert.equal(idleStarts[0].event.data.source.details.starts, 2, 'the same recovered guest increments after its first cold start');
   if (process.env.OMAA_PI_START_EVIDENCE) await writeFile(process.env.OMAA_PI_START_EVIDENCE, JSON.stringify({
-    at: new Date().toISOString(), fixture: 'native DSH alpha / scripted provider / owned local extension',
+    at: new Date().toISOString(), host: f.evidence.version, artifactSha256: f.evidence.artifact?.sha256,
+    fixture: 'native DSH / scripted provider / owned local extension',
     requests: f.requests, nativeRecords: snapshot.records, queuedInput: queued,
     checked: ['awaited input then template','chained options and literal forced heads','dynamic tool add/replace/loadout','one-at-a-time steer and shared follow-up run','handled has no model','durable queued literal after fault/cold recovery','fresh idle hook after recovery'],
   },null,2)+'\n',{mode:0o600});
