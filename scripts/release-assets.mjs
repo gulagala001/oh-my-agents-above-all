@@ -9,7 +9,7 @@ import { hostManifest, omdCompatibility, hasReviewedOmdManifest, omdBuildMode, r
 import { validationHosts, splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const usage = 'Usage: node scripts/release-assets.mjs --omd-version 0.9.0 [--packages DIR] [--out DIR]';
+const usage = 'Usage: node scripts/release-assets.mjs --omd-version 0.10.0 [--packages DIR] [--out DIR]';
 const options = {}, args = process.argv.slice(2);
 for (let i = 0; i < args.length; i += 2) {
   if (!['--packages', '--out', '--omd-version'].includes(args[i]) || !args[i + 1] || args[i + 1].startsWith('--') || Object.hasOwn(options, args[i])) throw new Error(usage);
