@@ -9,6 +9,7 @@ dist/
 .host-source/
 .release-work/
 release-assets/
+work/
 *.tgz.sha256
 *.tgz.metadata.json
 *.log
