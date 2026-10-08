@@ -1,24 +1,37 @@
-# OMD 兼容附件
+# OMD 配对附件
 
-此目录把 OMAA 所需的 OMD 接口维护为可审阅、可重复打包的最小补丁。输入为官方 OMD `0.6.1`，当前候选输出为对应宿主 `omd.0.8.2`（可用 `--omd-version` 指定三段版本）；OMAA 自身仍由 `scripts/package.mjs` 打包。0.8.2 移除 Jevify 推荐入口，当前公开配对版仍为 0.8.1。发行附件交付 tgz、SHA256 和来源元数据，安装使用宿主原生插件入口。
+本版 OMAA `0.13.0` 配对 OMD `0.9.0`。OMD 官方分宿主源码已整合完整 OMAA 薄桥接；这里的审定规则采用 `integrated-baseline` 模式，核对并保留官方发行 payload，输出配对 tgz、SHA256 和来源 metadata。OMAA 自身由 `scripts/package.mjs` 打包，安装仍使用宿主原生插件入口。
 
-| DSH 宿主 | 官方 OMD 基线 | 固定 commit | 补丁 |
-| --- | --- | --- | --- |
-| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.6.1` | `95fbfc4428834e98a033fb4724b990a8796bd2d5` | `alpha.patch` |
-| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.6.1` | `d29b75c98a0f6575af5880497c4d970125eeedf2` | `rc2.patch` |
+| DSH 宿主 | 官方 OMD 基线 | 审定规则 |
+| --- | --- | --- |
+| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.9.0` | [alpha.json](alpha.json) |
+| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.9.0` | [rc2.json](rc2.json) |
 
-基线来自 [OMD 源码与发行](https://github.com/gulagala001/oh-my-dsh)。准备对应 tag 的官方 tgz，或该 commit 的源码目录：
+每个规则中的 `sourceCommit`、`sourceTag` 和文件 SHA 固定绑定该宿主的官方来源。两端各自保留 SDK、工厂、vendor、客户端与锁定来源，完整输入／输出 OMD 版本必须相同。基线来自 [OMD 源码与发行](https://github.com/gulagala001/oh-my-dsh)。
+
+准备对应宿主的官方 `0.9.0` tgz：
 
 ```sh
 pnpm install --frozen-lockfile
-node scripts/package-omd-compat.mjs --base /absolute/path/official-alpha.tgz --host-version 0.2.1-alpha.1
-node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2-directory --host-version 0.2.0-rc.2
+node scripts/package-omd-compat.mjs --base /absolute/path/official-alpha.tgz --host-version 0.2.1-alpha.1 --omd-version 0.9.0
+node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2.tgz --host-version 0.2.0-rc.2 --omd-version 0.9.0
 ```
 
-输出默认进入 `dist/`；`--out-dir` 可指定其他目录。构建只在临时目录复制发行白名单，完成或失败后清理临时目录，不改变输入包和用户 profile。需本地 Node、npm、git、tar 及本仓库锁定的 esbuild；不会自动下载或执行其他产品客户端。
+从源码生产官方输入时，先检出规则中的固定 commit，并运行 `npm pack --ignore-scripts`，再把所得官方 tgz 交给配对构建器。源码树包含内部模拟器和测试材料，官方 pack 按已审定的 `.npmignore` 排除；配对构建器严格拒绝把这些额外源码文件当作发行 payload。CI 与 tag 发行复用这一条路径。
 
-`*.json` 记录基线 manifest 与完整发行文件哈希、补丁哈希、修改后文件哈希；`*.patch` 改桥接接线、Ultracode 装配状态、CodeGraph 挂载顺序、外观 ownership、OMAA 草稿设置迁移和 Jevify 推荐移除，`additions/` 保存 enhancement/coordinator 两个独立薄模块。原模型请求和工具说明沿用底稿。保留两端各自 projectless、native inject、transferOptimizer，以及 rc.2 的 legacy draft recovery。
+输出默认进入 `dist/`，`--out-dir` 可指定其他目录。构建只在临时目录处理官方发行白名单，完成或失败后清理临时目录，保持输入包和用户 profile。需要本地 Node、npm、git、tar 及本仓库锁定依赖；不会自动下载或执行其他产品客户端。
 
-脚本只重建 browser client 与皮肤 JSON，构建前后核对 `lib/host`、`vendor`；不导入会连带执行 `build-host.mjs` 的官方 `build.mjs`。因此 rc.2 的原生 workflow factories 不会被 alpha 工厂覆盖。包内新增 `omaa-compat.json` 记录来源，package 版本与 release manifest 同步。兼容 OMD 的版本检查／更新在 OMAA 启用时动态委托给同一配对发行服务；OMAA 禁用仍安装时暂停，卸载后恢复原独立更新路径。
+`*.json` 记录完整 manifest SHA、官方发行文件白名单与逐文件 SHA。`integrated-baseline` 明确声明 `patch:null`、空字节 SHA、空 additions/patchedFiles；构建保留原客户端、皮肤、发行说明、`lib/host` 和 `vendor`，仅追加 `omaa-compat.json` 与其 manifest 白名单项。来源 metadata、包内兼容记录及 overlay SHA 精确绑定规则原始字节；准备和发布校验还复核包内完整 payload，不能靠重算外部 sidecars 接受内容漂移。
 
-上游升级时，从固定新 commit/官方包开始，审阅当前补丁涉及的契约和上游差异，更新对应补丁、完整基线及修改后哈希，再运行打包和相关行为检查。未知版本、同版本内容漂移、新文件或冲突会指出文件并停止；不能改版本号绕过核对。此目录不保存用户配置、凭据、本地维护文件或缓存。
+OMD 的版本检查／更新在 OMAA 启用时委托给同一配对发行服务；OMAA 禁用但仍安装时暂停这条路径，卸载后恢复原独立更新方式。安装后重载当前 profile。
+
+## 历史补丁模式
+
+历史 OMAA `v0.2.1-alpha.1.omaa.0.12.1` 配对 OMD `0.8.1`，以两端官方 `0.6.1` 为底稿，通过审定 overlay 添加桥接。旧 tag 保存当时的 `alpha.patch`、`rc2.patch`、additions、基线及修改后文件 SHA；幂等校验静态回查该 tag 的规则，不借用本版基线，也不执行 tag 中的代码。历史来源如下：
+
+| DSH 宿主 | 历史官方 OMD 底稿 | 固定 commit |
+| --- | --- | --- |
+| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.6.1` | `95fbfc4428834e98a033fb4724b990a8796bd2d5` |
+| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.6.1` | `d29b75c98a0f6575af5880497c4d970125eeedf2` |
+
+升级基线时，先审阅固定新 commit 与官方包的实际差异，再更新对应规则和 payload SHA，运行打包与原生验收。未知版本、同版本内容漂移、新文件或冲突均明确停止。此目录不保存用户配置、凭据、本地维护文件或缓存。
