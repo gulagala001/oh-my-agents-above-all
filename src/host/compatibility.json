@@ -13,7 +13,7 @@
         },
         {
           "version": "0.2.0-rc.2.omd.0.9.0",
-          "commit": "fbaa6d4f8bba3c2051f15fa6e2c47d27489915ed"
+          "commit": "226a28127550f195116938e63630e0c27f126056"
         }
       ]
     },
@@ -28,7 +28,7 @@
         },
         {
           "version": "0.2.1-alpha.1.omd.0.9.0",
-          "commit": "b82f39afe9abbf615eb641b67ab021b1516d3f89"
+          "commit": "62eadd0ab5797b58e254363edd8db5f2a8428e21"
         }
       ]
     }
