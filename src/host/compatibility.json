@@ -14,6 +14,10 @@
         {
           "version": "0.2.0-rc.2.omd.0.9.0",
           "commit": "01567a89792989c566dbd959ffc33a187f72badd"
+        },
+        {
+          "version": "0.2.0-rc.2.omd.0.10.0",
+          "commit": "bb5afae4088183c09e349f98b6bc13a891412be3"
         }
       ]
     },
@@ -29,6 +33,10 @@
         {
           "version": "0.2.1-alpha.1.omd.0.9.0",
           "commit": "2f830fb65904b37313095c40f365745c0c913827"
+        },
+        {
+          "version": "0.2.1-alpha.1.omd.0.10.0",
+          "commit": "de86711d2341e5239b2d95adde62bf48acf54cef"
         }
       ]
     }

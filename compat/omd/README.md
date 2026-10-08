@@ -1,20 +1,20 @@
 # OMD 配对附件
 
-本版 OMAA `0.13.0` 配对 OMD `0.9.0`。OMD 官方分宿主源码已整合完整 OMAA 薄桥接；这里的审定规则采用 `integrated-baseline` 模式，核对并保留官方发行 payload，输出配对 tgz、SHA256 和来源 metadata。OMAA 自身由 `scripts/package.mjs` 打包，安装仍使用宿主原生插件入口。
+本版 OMAA `0.13.1` 配对 OMD `0.10.0`。OMD 官方分宿主源码已整合完整 OMAA 薄桥接；这里的审定规则采用 `integrated-baseline` 模式，核对并保留官方发行 payload，输出配对 tgz、SHA256 和来源 metadata。OMAA 自身由 `scripts/package.mjs` 打包，安装仍使用宿主原生插件入口。
 
 | DSH 宿主 | 官方 OMD 基线 | 审定规则 |
 | --- | --- | --- |
-| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.9.0` | [alpha.json](alpha.json) |
-| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.9.0` | [rc2.json](rc2.json) |
+| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.10.0` | [alpha.json](alpha.json) |
+| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.10.0` | [rc2.json](rc2.json) |
 
 每个规则中的 `sourceCommit`、`sourceTag` 和文件 SHA 固定绑定该宿主的官方来源。两端各自保留 SDK、工厂、vendor、客户端与锁定来源，完整输入／输出 OMD 版本必须相同。基线来自 [OMD 源码与发行](https://github.com/gulagala001/oh-my-dsh)。
 
-准备对应宿主的官方 `0.9.0` tgz：
+准备对应宿主的官方 `0.10.0` tgz：
 
 ```sh
 pnpm install --frozen-lockfile
-node scripts/package-omd-compat.mjs --base /absolute/path/official-alpha.tgz --host-version 0.2.1-alpha.1 --omd-version 0.9.0
-node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2.tgz --host-version 0.2.0-rc.2 --omd-version 0.9.0
+node scripts/package-omd-compat.mjs --base /absolute/path/official-alpha.tgz --host-version 0.2.1-alpha.1 --omd-version 0.10.0
+node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2.tgz --host-version 0.2.0-rc.2 --omd-version 0.10.0
 ```
 
 从源码生产官方输入时，先检出规则中的固定 commit，并运行 `npm pack --ignore-scripts`，再把所得官方 tgz 交给配对构建器。源码树包含内部模拟器和测试材料，官方 pack 按已审定的 `.npmignore` 排除；配对构建器严格拒绝把这些额外源码文件当作发行 payload。CI 与 tag 发行复用这一条路径。
@@ -25,7 +25,9 @@ node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2.tgz --hos
 
 OMD 的版本检查／更新在 OMAA 启用时委托给同一配对发行服务；OMAA 禁用但仍安装时暂停这条路径，卸载后恢复原独立更新方式。安装后重载当前 profile。
 
-## 历史补丁模式
+## 历史发行模式
+
+历史 OMAA `v0.2.1-alpha.1.omaa.0.13.0` 配对两宿主的官方 OMD `0.9.0`，使用当时的 `integrated-baseline` 规则。原 tag 的 manifest、逐文件 SHA 与附件继续按其固定来源核验，不借用本版 `0.10.0` 的规则。
 
 历史 OMAA `v0.2.1-alpha.1.omaa.0.12.1` 配对 OMD `0.8.1`，以两端官方 `0.6.1` 为底稿，通过审定 overlay 添加桥接。旧 tag 保存当时的 `alpha.patch`、`rc2.patch`、additions、基线及修改后文件 SHA；幂等校验静态回查该 tag 的规则，不借用本版基线，也不执行 tag 中的代码。历史来源如下：
 
