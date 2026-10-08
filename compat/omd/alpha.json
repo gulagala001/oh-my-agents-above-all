@@ -5,7 +5,7 @@
   "sourceCommit": "95fbfc4428834e98a033fb4724b990a8796bd2d5",
   "sourceTag": "v0.2.1-alpha.1.omd.0.6.1",
   "patch": "alpha.patch",
-  "patchSha256": "4d6afc55a1f4e43232e43f6bfb85333eb80af20085bc19da6d41a844332944b6",
+  "patchSha256": "d5807ae889cc2dfb25b63bd1b020faac941f0bfa0efed9b8c39e3325b2c18272",
   "basePackageSha256": "adcdde858438698a87af2853a17ef00d0db3c09e5b3d2f2c9da9714365b4e76e",
   "files": {
     "CHANGELOG.md": "b85058796a58645fbac8928ec6894c0136cf0f4beedc061c544e5b0c2c42ea31",
@@ -876,7 +876,8 @@
     "src/client/skins/claude-cli-terminal/presentation.jsx": "2349525cfed387fcad5b12db99863d9c7da69d0f034d38055b245b8b2d977ed0",
     "src/client/skins/codex-desktop/integration.jsx": "63e8fa707304defc316a19145b7ff89eff9a563a5810dd9acfadb470604900c8",
     "src/client/skins/google-material-expressive/integration.jsx": "e933218bac095c24f5f7092adfc9dcc7eb6152719f2756fe48efd63bd304fe2e",
-    "src/client/projectless-state.mjs": "77c48bafca63715c10db9a8f118b9c2c195192153203f0d184912460aaa788b4"
+    "src/client/projectless-state.mjs": "77c48bafca63715c10db9a8f118b9c2c195192153203f0d184912460aaa788b4",
+    "src/recommended-plugin-catalog.mjs": "e61e7aa0448b90c99c40f008ec7670fd08eb616ef88b6e83f9ecd6d7a31a323c"
   },
   "additions": {
     "src/omaa-enhancement.mjs": "5c25d508d800aed3f67ae8368f43e4b9d31007db6a830b0b2c982add271d626e",

@@ -5,10 +5,12 @@ import { execFileSync } from 'node:child_process';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, version as esbuildVersion } from 'esbuild';
+import { validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
+import { runNpmSync } from './npm-runner.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const overlay = join(root, 'compat', 'omd');
-const usage = 'Usage: node scripts/package-omd-compat.mjs --base <official-directory|official.tgz> --host-version <0.2.0-rc.2|0.2.1-alpha.1> [--omd-version 0.8.1] [--out-dir dist]';
+const usage = 'Usage: node scripts/package-omd-compat.mjs --base <official-directory|official.tgz> --host-version <VERSION> [--omd-version 0.8.2] [--out-dir dist]';
 const args = process.argv.slice(2), options = {};
 for (let i = 0; i < args.length; i += 2) {
   const key = args[i];
@@ -17,15 +19,16 @@ for (let i = 0; i < args.length; i += 2) {
 }
 if (!options['--base'] || !options['--host-version']) throw new Error(usage);
 const hostVersion = options['--host-version'];
-const variant = { '0.2.0-rc.2': 'rc2', '0.2.1-alpha.1': 'alpha' }[hostVersion];
+const variant = validationHosts.find(row => row.version === hostVersion)?.omdVariant;
 if (!variant) throw new Error(`Unsupported host ${hostVersion}; review and register a new baseline before packaging.`);
-const omdVersion = options['--omd-version'] ?? '0.8.1';
+const omdVersion = options['--omd-version'] ?? '0.8.2';
 if (!/^\d+\.\d+\.\d+$/.test(omdVersion)) throw new Error('OMD version must have three numeric components.');
 const [major, minor] = omdVersion.split('.').map(Number);
 if (major === 0 && minor < 7) throw new Error('The OMAA bridge is a new feature; OMD must be 0.7.0 or newer.');
-const outputVersion = `${hostVersion}${hostVersion.includes('-') ? '.' : '-'}omd.${omdVersion}`;
+const outputVersion = alignedVersion(hostVersion, 'omd', omdVersion);
 const rulesBytes = await readFile(join(overlay, `${variant}.json`));
 const rules = JSON.parse(rulesBytes);
+if (rules.hostVersion !== hostVersion) throw new Error('OMD baseline host differs from its validation representative.');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const localOnly = new Set(['AGENTS.md', 'CLAUDE.md', 'AI_README.md', 'OMAA_HANDOFF.md', 'COMPUTER_USE_HANDOFF.md', 'COMPUTER_USE_BASELINE.md', 'COMPUTER_USE_ASSESSMENT.md', 'WINDOWS_HANDOFF.md', 'PROMPT_MAINTENANCE.md', 'PROMPT_CHANGES.md', '.cache', '.git', 'node_modules', 'data', 'test']);
 const allowedFiles = ['src', 'lib', 'presets', 'cordis.patch.yml', 'README.md', 'CONTRIBUTING.md', 'scripts', 'THIRD_PARTY_NOTICES.md', 'docs', 'vendor', 'release-manifest.json', 'CHANGELOG.md'];
@@ -142,13 +145,14 @@ try {
   releases.releases = [{ version: outputVersion, severity: 'normal', title: 'OMAA 兼容增强与外观协调', notes: [
     `配对官方 DSH ${hostVersion}，在固定 OMD 0.6.1 基线上添加 OMAA 兼容接口。`,
     '五预设可复用基础增强与 Pro/Ultra，保留原生工作流、无项目会话和宿主草稿恢复。',
+    '移除 Jevify 推荐入口。',
   ] }, ...releases.releases.filter(entry => entry.version !== outputVersion)];
   await writeFile(join(staging, 'release-manifest.json'), `${JSON.stringify(releases, null, 2)}\n`);
   await writeFile(join(staging, 'omaa-compat.json'), `${JSON.stringify({ schema: 1, version: outputVersion, hostVersion, baseVersion: rules.baseVersion, sourceCommit: rules.sourceCommit, overlaySha256, patchSha256: sha(patchBytes), nativeHostFactories: 'preserved' }, null, 2)}\n`);
   manifest.files.push('omaa-compat.json');
   await writeFile(join(staging, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   const dist = resolve(root, options['--out-dir'] ?? 'dist'); await mkdir(dist, { recursive: true });
-  const packed = JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', dist], { cwd: staging, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, stdio: ['ignore', 'pipe', 'inherit'] }))[0];
+  const packed = JSON.parse(runNpmSync(['pack', '--ignore-scripts', '--json', '--pack-destination', dist], { cwd: staging, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, stdio: ['ignore', 'pipe', 'inherit'] }))[0];
   for (const entry of packed.files) {
     if (!safePath(entry.path) || entry.path.split('/').some(part => localOnly.has(part)) || entry.path.includes('/.build-')) throw new Error(`Non-release file in packed inventory: ${entry.path}`);
   }

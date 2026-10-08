@@ -1,0 +1,10 @@
+{
+  "hostRange": ">=0.2.0-rc.2 <=0.2.1-alpha.1",
+  "loaderRange": ">=1.0.5 <=1.0.6-alpha.1",
+  "validationHosts": [
+    { "version": "0.2.0-rc.2", "loaderVersion": "1.0.5", "omdVariant": "rc2",
+      "omdBaselines": [{ "version": "0.2.0-rc.2.omd.0.6.1", "commit": "d29b75c98a0f6575af5880497c4d970125eeedf2" }] },
+    { "version": "0.2.1-alpha.1", "loaderVersion": "1.0.6-alpha.1", "omdVariant": "alpha",
+      "omdBaselines": [{ "version": "0.2.1-alpha.1.omd.0.6.1", "commit": "95fbfc4428834e98a033fb4724b990a8796bd2d5" }] }
+  ]
+}

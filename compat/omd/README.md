@@ -1,6 +1,6 @@
 # OMD 兼容附件
 
-此目录把 OMAA 所需的 OMD 接口维护为可审阅、可重复打包的最小补丁。输入为官方 OMD `0.6.1`，输出为对应宿主 `omd.0.8.1`（可用 `--omd-version` 指定后续三段版本）；OMAA 自身仍由 `scripts/package.mjs` 打包。发行附件交付 tgz、SHA256 和来源元数据，安装使用宿主原生插件入口。
+此目录把 OMAA 所需的 OMD 接口维护为可审阅、可重复打包的最小补丁。输入为官方 OMD `0.6.1`，当前候选输出为对应宿主 `omd.0.8.2`（可用 `--omd-version` 指定三段版本）；OMAA 自身仍由 `scripts/package.mjs` 打包。0.8.2 移除 Jevify 推荐入口，当前公开配对版仍为 0.8.1。发行附件交付 tgz、SHA256 和来源元数据，安装使用宿主原生插件入口。
 
 | DSH 宿主 | 官方 OMD 基线 | 固定 commit | 补丁 |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2-directory
 
 输出默认进入 `dist/`；`--out-dir` 可指定其他目录。构建只在临时目录复制发行白名单，完成或失败后清理临时目录，不改变输入包和用户 profile。需本地 Node、npm、git、tar 及本仓库锁定的 esbuild；不会自动下载或执行其他产品客户端。
 
-`*.json` 记录基线 manifest 与完整发行文件哈希、补丁哈希、修改后文件哈希；`*.patch` 只改桥接接线、Ultracode 装配状态、CodeGraph 挂载顺序、外观 ownership 和 OMAA 草稿设置迁移，`additions/` 保存 enhancement/coordinator 两个独立薄模块。原模型请求和工具说明沿用底稿。保留两端各自 projectless、native inject、transferOptimizer，以及 rc.2 的 legacy draft recovery。
+`*.json` 记录基线 manifest 与完整发行文件哈希、补丁哈希、修改后文件哈希；`*.patch` 改桥接接线、Ultracode 装配状态、CodeGraph 挂载顺序、外观 ownership、OMAA 草稿设置迁移和 Jevify 推荐移除，`additions/` 保存 enhancement/coordinator 两个独立薄模块。原模型请求和工具说明沿用底稿。保留两端各自 projectless、native inject、transferOptimizer，以及 rc.2 的 legacy draft recovery。
 
 脚本只重建 browser client 与皮肤 JSON，构建前后核对 `lib/host`、`vendor`；不导入会连带执行 `build-host.mjs` 的官方 `build.mjs`。因此 rc.2 的原生 workflow factories 不会被 alpha 工厂覆盖。包内新增 `omaa-compat.json` 记录来源，package 版本与 release manifest 同步。兼容 OMD 的版本检查／更新在 OMAA 启用时动态委托给同一配对发行服务；OMAA 禁用仍安装时暂停，卸载后恢复原独立更新路径。
 

@@ -15,6 +15,10 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
   await writeFile(join(f.home, 'skills', 'native-fixture', 'SKILL.md'), '---\nname: native-fixture\ndescription: Native OMAA integration fixture instructions\n---\nNATIVE_SKILL_CONTENT: preserve the fixture instruction.\n');
   await f.boot();
   const stock = await f.create('standard');
+  // An unmodified host may keep a literal stock default in its composition.
+  // Use the native model selector before making any pre-install request.
+  assert.deepEqual((await f.rpc('session/selectModel', { sessionId: stock.sessionId, provider: 'fixture', model: 'fixture' })).selected,
+    { provider: 'fixture', model: 'fixture' });
   await f.prompt(stock.sessionId, 'STOCK_BEFORE_INSTALL');
   const stockBefore = markerRequest(f, 'STOCK_BEFORE_INSTALL');
   assert(stockBefore); assert(!modelText(stockBefore).includes('Pi Coding Agent preset'));
@@ -120,4 +124,9 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
   assert.deepEqual([...toolsOf(afterUninstall)].sort(), [...toolsOf(stockBefore)].sort(), 'uninstall must restore native tools');
   assert.equal(modelText(afterUninstall).split('\n\n')[0], stockBeforeText.split('\n\n')[0], 'uninstall must restore native identity');
   assert(!modelText(afterUninstall).includes('Pi Coding Agent preset'));
+  if (process.env.OMAA_PRESETS_EVIDENCE) await writeFile(process.env.OMAA_PRESETS_EVIDENCE, JSON.stringify({
+    at: new Date().toISOString(), host: f.evidence.version, artifactSha256: f.evidence.artifact?.sha256,
+    checked: ['native stock model selection', 'five complete prompts and native tools', 'native skill loading', 'Ask/Plan write and command guards', 'cold mode restore', 'stop and continue', 'stock identity/tools preserved after install/uninstall'],
+    stockTools: [...toolsOf(stockBefore)].sort(),
+  }, null, 2) + '\n');
 });

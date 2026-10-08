@@ -90,7 +90,7 @@ test('Pi lifecycle callbacks await native activity, isolate fresh prompts, prese
   const canceled=(await rows()).findLast(row=>row.type==='end');assert.equal(canceled.aborted,true);
   assert(!f.requests.slice(from).some(request=>texts(request).includes('FORBIDDEN_AFTER_CANCEL')));
   const status=await configure();assert.equal(status.value.states.find(row=>row.sessionId===sessionId).status,'ready');
-  await writeFile('.cache/pi-lifecycle-native-evidence.json',JSON.stringify({at:new Date().toISOString(),host:'0.2.1-alpha.1',rows:await rows(),
+  await writeFile(process.env.OMAA_PI_LIFECYCLE_EVIDENCE ?? '.cache/pi-lifecycle-native-evidence.json',JSON.stringify({at:new Date().toISOString(),host:f.evidence.version,artifactSha256:f.evidence.artifact?.sha256,rows:await rows(),
     requests:f.requests.filter(request=>request.tools?.length).map(request=>({system:system(request),user: texts(request).slice(-120),tools:request.tools.map(tool=>tool.function.name)})),
     checked:['awaited lifecycle order/turn indices','first-request startup tool registry','fresh human vs end-only prompt lifetime','full >2 MiB multilingual guest frame','cancel notification retains aborted signal and cannot resume']},null,2)+'\n');
 });

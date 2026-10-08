@@ -3,14 +3,36 @@ import { spawn, execFile } from 'node:child_process';
 import { once } from 'node:events';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve, basename } from 'node:path';
+import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
+
+import { npmCommand } from '../../scripts/npm-runner.mjs';
 
 const runFile = promisify(execFile);
 const repo = fileURLToPath(new URL('../../', import.meta.url));
-const cli = join(repo, 'node_modules/@deepseek-ai/dsh/lib/bin.js');
+const defaultCli = join(repo, 'node_modules/@deepseek-ai/dsh/lib/bin.js');
+export function fixtureEnvironment(home, safe = false) {
+  const env = safe ? Object.fromEntries(['PATH', 'HOME', 'USERPROFILE', 'SystemRoot', 'TEMP', 'TMP', 'TMPDIR', 'LANG', 'LC_ALL', 'PNPM_HOME'].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])) : { ...process.env };
+  env.DSH_HOME = home;
+  if (safe) { env.DSH_TELEMETRY_DISABLED = '1'; env.npm_config_ignore_scripts = 'true'; env.npm_config_userconfig = join(home, 'fixture-empty.npmrc'); }
+  delete env.NODE_TEST_CONTEXT; delete env.NODE_TEST_WORKER_ID;
+  return env;
+}
+async function regularPath(path, label) {
+  const absolute = resolve(path);
+  if (!(await stat(absolute)).isFile()) throw new Error(label + ' must be a regular file: ' + absolute);
+  return realpath(absolute);
+}
+export async function packageEvidence(path) {
+  const absolute = await regularPath(path, 'Package tarball');
+  const { stdout } = await runFile('tar', ['-xOf', absolute, 'package/package.json'], { encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 });
+  const manifest = JSON.parse(stdout);
+  const listing = (await runFile('tar', ['-tf', absolute], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })).stdout.trim().split('\n');
+  return { path: absolute, filename: basename(absolute), name: manifest.name, version: manifest.version, manifest, files: listing.map(path => ({ path: path.replace(/^package\//, '') })), sha256: createHash('sha256').update(await readFile(absolute)).digest('hex') };
+}
 const sanitize = text => String(text).replace(/token=[\w-]+/g, 'token=[redacted]');
 export async function until(check, timeout = 20000) {
   const end = Date.now() + timeout;
@@ -20,17 +42,34 @@ export async function until(check, timeout = 20000) {
 export const textReply = content => ({ delta: { role: 'assistant', content }, finish_reason: 'stop' });
 export const toolReply = (name, args) => ({ delta: { role: 'assistant', tool_calls: [{ index: 0, id: crypto.randomUUID(), type: 'function', function: { name, arguments: JSON.stringify(args) } }] }, finish_reason: 'tool_calls' });
 
-export async function installedHost(t, { liveSettings, piResources = false } = {}) {
+export async function installedHost(t, { liveSettings, piResources = process.env.OMAA_TEST_SAFE === '1', cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1' } = {}) {
+  if (safeEnvironment && liveSettings) throw new Error('Safe host matrix only permits the localhost fixture provider');
+  const cli = await regularPath(cliPath, 'DSH CLI');
+  const artifact = packagePath ? await packageEvidence(packagePath) : undefined;
+  const omdArtifact = omdPackagePath ? await packageEvidence(omdPackagePath) : undefined;
+  if (artifact && artifact.name !== 'oh-my-agents-above-all') throw new Error('Expected an OMAA tarball');
+  if (omdArtifact && omdArtifact.name !== 'trisoul_x') throw new Error('Expected an OMD tarball');
   const root = await mkdtemp(join(tmpdir(), 'omaa-installed-'));
   const home = join(root, 'dsh-home'), workspace = join(root, 'workspace');
   await mkdir(home); await mkdir(workspace);
-  const env = { ...process.env, DSH_HOME: home };
+  const env = fixtureEnvironment(home, safeEnvironment);
   // The host is a separate application, not a node:test worker. These markers
   // make a workspace's nested `node --test` skip discovery and report 0 tests.
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_TEST_WORKER_ID;
   const piAgentDir = piResources ? join(root, 'pi-agent') : undefined;
-  if (piAgentDir) { await mkdir(piAgentDir); env.PI_CODING_AGENT_DIR = piAgentDir; }
+  if (piAgentDir) {
+    await mkdir(piAgentDir); env.PI_CODING_AGENT_DIR = piAgentDir;
+    if (safeEnvironment) {
+      // User-scope resource filters apply to both this temporary agentDir and
+      // ~/.agents/skills. Basename matching excludes all user SKILL.md bodies,
+      // while project .pi/.agents resources remain available. Discovery can
+      // still list user paths and read ignore-rule metadata; this is not OS
+      // filesystem isolation. A local git boundary stops ancestor discovery.
+      await writeFile(join(piAgentDir, 'settings.json'), JSON.stringify({ skills: ['!**'] }));
+      await mkdir(join(workspace, '.git'));
+    }
+  }
   const protectedValues = [liveSettings?.apiKey, liveSettings?.baseUrl];
   if (liveSettings?.baseUrl) try { protectedValues.push(new URL(liveSettings.baseUrl).origin); } catch {}
   const redact = value => protectedValues.filter(value => typeof value === 'string' && value.length).sort((a, b) => b.length - a.length).reduce((text, secret) => text.replaceAll(secret, '[redacted]'), sanitize(value));
@@ -66,17 +105,31 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
     }
   });
   await writeFile(join(home, 'settings.yaml'), JSON.stringify({
+    ...(safeEnvironment ? { 'trisoul-x': { componentAutoSetup: false, computerUseNativeBinary: join(root, 'missing-native-driver'), computerUseNativeSocket: join(root, 'missing-native.sock'), computerUseBrowserExecutable: join(root, 'missing-browser-driver'), computerUseChromeUserDataDir: join(root, 'isolated-chrome-profile') } } : {}),
     'llm-pi-ai': { providers: { fixture: { api: 'openai-completions', baseURL: `http://127.0.0.1:${provider.address().port}/v1`, apiKeyEnv: 'OMAA_INSTALL_FIXTURE', models: [{ id: 'fixture', name: 'Local installation fixture', contextWindow: 1000000, maxTokens: 8192, input: ['text', 'image'] }] } } },
     ...liveSettings ? { 'llm-pi-ai': {providers: { [liveProviderId]: {api: liveSettings.api, baseURL:liveSettings.baseUrl, ...(liveSettings.streamIdleTimeoutMs !== undefined ? { streamIdleTimeoutMs: liveSettings.streamIdleTimeoutMs } : {}), apiKeyEnv:'OMAA_LIVE_CONFIGURED_KEY', compat:liveSettings.compat||{}, models:[liveModel]} }}, 'agent-default-model':{provider:liveProviderId,model:liveModel.id} } : { 'agent-default-model':{provider:'fixture',model:'fixture'} },
   }));
   await writeFile(join(home, '.credentials.yaml'), JSON.stringify({ version: 1, refs: liveSettings ? { OMAA_LIVE_CONFIGURED_KEY: liveSettings.apiKey } : { OMAA_INSTALL_FIXTURE:'local-dummy-key' } }), { mode: 0o600 });
   const command = async args => {
-    try { return await runFile(process.execPath, [cli, ...args], { cwd: repo, env, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 }); }
+    try { return await runFile(process.execPath, [cli, ...args], { cwd: safeEnvironment ? workspace : repo, env, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 }); }
     catch (error) { throw new Error(redact(error.stderr || error.stdout || error.message)); }
   };
+  const versionOutput = (await command(['--version'])).stdout.trim();
+  if (expectedHostVersion && versionOutput !== expectedHostVersion) throw new Error('CLI version mismatch: expected ' + expectedHostVersion + ', received ' + versionOutput);
+  const hostManifest = JSON.parse(await readFile(join(dirname(dirname(cli)), 'package.json'), 'utf8'));
+  if (hostManifest.name !== '@deepseek-ai/dsh' || hostManifest.version !== versionOutput) throw new Error('CLI package and --version disagree');
   await command(['--profile', 'omaa-fixture', '--from-default-profile', 'web', '--dump-config']);
+  const installArtifact = async value => {
+    const hash = async () => createHash('sha256').update(await readFile(value.path)).digest('hex');
+    if (await hash() !== value.sha256) throw new Error('Tarball changed after evidence capture');
+    await command(['plugin', '--profile', 'omaa-fixture', 'add', 'file:' + value.path]);
+    if (await hash() !== value.sha256) throw new Error('Tarball changed during native installation');
+    return value;
+  };
   const install = async () => {
-    const result = await runFile(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', root], { cwd: repo, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
+    if (artifact) return installArtifact(artifact);
+    const npm = npmCommand(['pack', '--json', '--ignore-scripts', '--pack-destination', root]);
+    const result = await runFile(npm.program, npm.args, { cwd: repo, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
     const [packed] = JSON.parse(result.stdout);
     await command(['plugin', '--profile', 'omaa-fixture', 'add', 'file:' + join(root, packed.filename)]);
     return packed;
@@ -126,6 +179,23 @@ export async function installedHost(t, { liveSettings, piResources = false } = {
   return {
     get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
     root, home, workspace, piAgentDir, requests, errors, install, boot, stop, call, rpc, api, snapshot, prompt, send,
+    evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, isolation: { safeEnvironment, piAgentDir, userPiSkillBodiesExcluded: !!(safeEnvironment && piAgentDir), projectResourcesEnabled: true, ancestorBoundary: !!(safeEnvironment && piAgentDir), metadataScanning: 'User resource directory paths and ignore-rule metadata may still be observed; this is not OS-level filesystem isolation.', omd: safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver'), chromeUserDataDir: join(root, 'isolated-chrome-profile'), computerUseExecuted: false } : undefined } },
+    command,
+    installOmd: () => { if (!omdArtifact) throw new Error('No explicit OMD tarball configured'); return installArtifact(omdArtifact); },
+    removeOmd: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'trisoul_x']),
+    async exemptions() { return JSON.parse((await command(['plugin', '--profile', 'omaa-fixture', 'version-exemptions'])).stdout); },
+    async installedEvidence(name = 'oh-my-agents-above-all') {
+      const { stdout } = await runFile(process.execPath, [fileURLToPath(new URL('./host-sdk-evidence.mjs', import.meta.url)), cli, home, name], { cwd: workspace, env, encoding: 'utf8', timeout: 30000, maxBuffer: 16 * 1024 * 1024 });
+      return JSON.parse(stdout);
+    },
+    async bundleEnabled(enabled, name = 'oh-my-agents-above-all') {
+      const path = join(home, 'profiles', 'omaa-fixture', 'package.json');
+      const manifest = JSON.parse(await readFile(path, 'utf8'));
+      const bundles = manifest.dsh.profile.bundles.filter(value => value !== name);
+      if (enabled) bundles.push(name);
+      manifest.dsh.profile.bundles = bundles;
+      await writeFile(path, JSON.stringify(manifest, null, 2) + '\n');
+    },
     async crash() {
       if (!child || child.exitCode !== null || child.signalCode !== null) return;
       const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited;

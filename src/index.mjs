@@ -6,6 +6,7 @@ import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
 import { createUpdates } from './updates.mjs';
+import { nativeHostVersion } from './host/compatibility.mjs';
 import { createPiExtensionSettings, piExtensionSessionNames } from './host/pi-extensions.mjs';
 import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
 import { createZCodeArtifactStore } from './host/zcode-artifacts.mjs';
@@ -22,12 +23,14 @@ export function apply(ctx) {
   return mount(ctx);
 }
 async function mount(ctx) {
+  const hostVersion = nativeHostVersion();
   const store = createPreferencesStore(join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa'));
   const workflowArtifacts = await createZCodeArtifactStore(ctx);
   ctx.effect(() => () => workflowArtifacts.close());
   const presetOf = session => ctx.sessionProjections.stateOf(session, 'agentPreset') ?? session.header.agentPreset;
   const preferences = session => store.get(session.id);
   const hub = {
+    hostVersion,
     workflowArtifacts,
     checkpointDirectory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'checkpoints'),
     sandboxPolicy: () => ctx.get('sandboxPolicy'),
@@ -49,7 +52,7 @@ async function mount(ctx) {
       const workControl = ctx.get('trisoulX')?.omaaWorkMode;
       const workView = workControl?.inspect(session, agent);
       const workAvailable = typeof workControl?.select === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
-      return { agent, session, value: { ...preferences(session), product: product ?? null,
+      return { agent, session, value: { ...preferences(session), product: product ?? null, hostVersion,
         mode: hub.modeFor(session, agent),
         pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
         omdAvailable: typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
@@ -120,7 +123,7 @@ async function mount(ctx) {
   ctx.on('agent/disposed', ({ agent }) => { extensionNotices.delete(agent.id); }, { global: true });
   const transferSession = createSessionTransfer({ store, hub, workControl: () => ctx.get('trisoulX')?.omaaWorkMode,
     flush: session => ctx.sessions.flush(session) });
-  hub.updates = createUpdates({ getManager: () => ctx.get('pluginManager'),
+  hub.updates = createUpdates({ hostVersion, getManager: () => ctx.get('pluginManager'),
     getOmdVersion: () => ctx.get('trisoulX')?.omaaInstalledVersion,
     isRunning: () => {
       const agents = ctx.agents.list(), jobs = ctx.get('jobs');
