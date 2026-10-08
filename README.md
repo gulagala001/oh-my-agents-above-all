@@ -4,7 +4,9 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码版本为 **OMAA `0.2.1-alpha.1.omaa.0.12.1`**，宿主为 **DSH `0.2.1-alpha.1`**，Node.js 要求 `>=22.19`。源码可构建并打包为本地插件；实际验证范围见 [验证记录](docs/verification.md)。
+当前源码为 **OMAA `0.2.1-alpha.1.omaa.0.13.0` 兼容性候选，尚未发布**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
+
+当前已发布版仍为 `0.12.1`：rc.2 用户请安装该发行的 **rc.2 附件**，该旧 tag 的源码入口只声明 alpha。新候选的源码跨版本安装能力不能由旧 tag 获得。
 
 与 OMD 同 profile 使用时，需要提供 OMAA 兼容增强与外观协调接口的 OMD。官方 OMD `0.6.1` 尚无该接口；使用发行附件中的对应宿主兼容 OMD，或在独立 DSH profile 使用。支持 Web DSH `0.2.1-alpha.1` 与桌面 DSH `0.2.0-rc.2`，两端包必须与正在运行的宿主匹配。
 

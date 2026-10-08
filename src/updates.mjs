@@ -1,26 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { splitReleaseVersion as parseRelease, compareFeatures, alignedVersion, supportsHostVersion, validationHosts } from './host/compatibility.mjs';
 
 const REPO = 'gulagala001/oh-my-agents-above-all';
 export const RELEASES_URL = `https://github.com/${REPO}/releases`;
 const API = `https://api.github.com/repos/${REPO}`;
-const SUPPORTED = {
-  '0.2.1-alpha.1': '95fbfc4428834e98a033fb4724b990a8796bd2d5',
-  '0.2.0-rc.2': 'd29b75c98a0f6575af5880497c4d970125eeedf2',
-};
 const PACKAGE = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
 const RUNNING_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const fail = message => Object.assign(new Error(message), { statusCode: 409 });
 export function splitReleaseVersion(version, product = 'omaa') {
-  const match = typeof version === 'string' && /^(0\.2\.1-alpha\.1|0\.2\.0-rc\.2)\.(omaa|omd)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(version);
-  if (!match || match[2] !== product) throw fail('发行版本或 DSH 宿主不受支持');
-  return { host: match[1], feature: match.slice(3).map(BigInt) };
+  try { return parseRelease(version, product); }
+  catch { throw fail('发行版本或 DSH 宿主格式无效'); }
 }
 function compare(left, right, product) {
   const a = splitReleaseVersion(left, product), b = splitReleaseVersion(right, product);
-  if (a.host !== b.host) throw fail('发行与当前 DSH 宿主不匹配');
-  for (let i = 0; i < 3; i++) if (a.feature[i] !== b.feature[i]) return a.feature[i] > b.feature[i] ? 1 : -1;
-  return 0;
+  if (a.host !== b.host && product === 'omd') throw fail('发行与当前 DSH 宿主不匹配');
+  return compareFeatures(left, right, product);
 }
 function published(release) {
   if (!release || release.draft !== false || !release.published_at || !Array.isArray(release.assets)) throw fail('GitHub 发行尚未发布或附件无效');
@@ -49,9 +44,9 @@ async function boundedJson(response, limit) {
 
 // Only discover public release metadata here. Package download, installation,
 // profile transactions and cancellation remain the native plugin manager's job.
-export function createUpdates({ currentVersion = RUNNING_VERSION, getManager, getOmdVersion = () => null,
+export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = splitReleaseVersion(currentVersion).host, getManager, getOmdVersion = () => null,
   isRunning = () => false, fetchImpl = globalThis.fetch, now = Date.now } = {}) {
-  const hostVersion = splitReleaseVersion(currentVersion).host;
+  if (!supportsHostVersion(hostVersion)) throw fail('当前 DSH 尚未在兼容范围内验证');
   const shutdown = new AbortController();
   let pair = null, checkedAt = null, checkError = '', checking = null, job = null, closed = false;
   let currentOmdVersion = getOmdVersion(), state = { phase: 'idle', target: null, targetVersion: null, error: '', installed: [] };
@@ -66,7 +61,8 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, getManager, ge
     const metadata = await read(asset(release, `${filename}.metadata.json`), 65536);
     asset(release, `${filename}.sha256`);
     if (metadata.name !== PACKAGE[product] || metadata.version !== version || metadata.hostVersion !== hostVersion || metadata.filename !== filename || !/^[a-f0-9]{64}$/.test(metadata.sha256)) throw fail('发行附件元数据与目标包不一致');
-    if (product === 'omd' && (metadata.baseVersion !== `${hostVersion}.omd.0.6.1` || metadata.sourceCommit !== SUPPORTED[hostVersion] || metadata.nativeHostFactories !== 'preserved' || !/^[a-f0-9]{64}$/.test(metadata.overlaySha256))) throw fail('兼容 OMD 来源尚未受支持，请先审阅新的官方基线');
+    const baselines = validationHosts.find(row => row.version === hostVersion)?.omdBaselines ?? [];
+    if (product === 'omd' && (!baselines.some(row => metadata.baseVersion === row.version && metadata.sourceCommit === row.commit) || metadata.nativeHostFactories !== 'preserved' || !/^[a-f0-9]{64}$/.test(metadata.overlaySha256))) throw fail('兼容 OMD 来源尚未受支持，请先审阅新的官方基线');
     return { version, url, sha256: metadata.sha256, filename };
   }
   async function inventory() {
@@ -97,14 +93,21 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, getManager, ge
         if (!Array.isArray(rows) || rows.length > 30) throw fail('GitHub 发行列表无效');
         const eligible = rows.filter(row => {
           try { published(row); return true; } catch { return false; }
-        }).sort((a, b) => compare(a.tag_name.slice(1).replace(/^(?:0\.2\.0-rc\.2|0\.2\.1-alpha\.1)/, hostVersion), b.tag_name.slice(1).replace(/^(?:0\.2\.0-rc\.2|0\.2\.1-alpha\.1)/, hostVersion), 'omaa'));
+        }).sort((a, b) => compareFeatures(a.tag_name.slice(1), b.tag_name.slice(1)));
         // A main tag may use alpha while carrying the rc.2 artifact. Preserve
         // that shared OMAA suffix and choose only the current host's package.
-        const release = eligible.at(-1);
+        const release = eligible.findLast(row => {
+          const feature = published(row) && splitReleaseVersion(row.tag_name.slice(1)).feature.join('.');
+          const filename = `${PACKAGE.omaa}-${alignedVersion(hostVersion, 'omaa', feature)}.tgz`;
+          return row.assets.some(item => item.name === filename && item.state === 'uploaded');
+        });
         if (!release) throw fail('尚未找到已发布且受支持的 OMAA 发行');
-        const suffix = published(release).slice(published(release).indexOf('.omaa.'));
-        const omaa = await readPackage(release, 'omaa', hostVersion + suffix);
-        const omdNames = release.assets.map(row => row.name).filter(name => name.startsWith(`${PACKAGE.omd}-${hostVersion}.omd.`) && name.endsWith('.tgz'));
+        const feature = splitReleaseVersion(published(release)).feature.join('.');
+        const omaa = await readPackage(release, 'omaa', alignedVersion(hostVersion, 'omaa', feature));
+        const omdNames = release.assets.map(row => row.name).filter(name => {
+          if (!name.startsWith(`${PACKAGE.omd}-`) || !name.endsWith('.tgz')) return false;
+          try { return splitReleaseVersion(name.slice(PACKAGE.omd.length + 1, -4), 'omd').host === hostVersion; } catch { return false; }
+        });
         if (omdNames.length > 1) throw fail('发行有多份兼容 OMD，无法确认配对版本');
         if (omd && omdNames.length !== 1) throw fail('最新发行缺少当前宿主的配对兼容 OMD');
         const compat = omdNames.length ? await readPackage(release, 'omd', omdNames[0].slice(PACKAGE.omd.length + 1, -4)) : null;
@@ -123,6 +126,8 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, getManager, ge
       if (!omaa?.installed || omaa.readOnlyReason) reason = '此 OMAA 安装由宿主管理，请通过原安装方式更新';
       else if (omaa.version !== currentVersion || (omd && omd.version !== currentOmdVersion)) reason = '安装版本已改变，请先重启当前 DSH';
       else if (omd?.readOnlyReason) reason = '当前 OMD 由宿主管理，请通过原安装方式更新';
+      else if (pair && compare(currentVersion, pair.omaa.version, 'omaa') > 0) reason = '当前 OMAA 高于已发布的配对版本，请确认对应兼容发行';
+      else if (omd && pair?.omd && compare(omd.version, pair.omd.version, 'omd') > 0) reason = '当前 OMD 高于已发布的配对版本，请确认对应兼容发行';
       else if (isRunning()) reason = '有任务正在运行，请先结束任务再更新';
       else if (job) reason = '更新正在进行，请稍候';
       else if (closed) reason = '更新服务已停止，请重启 DSH';
@@ -155,6 +160,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, getManager, ge
       if (!wanted || !current || wanted.version !== version || compare(wanted.version, current, target) <= 0) throw fail('目标发行已改变，请重新检查更新');
       const { manager, omaa, omd } = await inventory();
       if (!omaa?.installed || omaa.readOnlyReason || omaa.version !== currentVersion || (omd && (omd.readOnlyReason || omd.version !== currentOmdVersion))) throw fail('安装状态已改变，请先重启或检查原生插件页面');
+      if (compare(currentVersion, selected.omaa.version, 'omaa') > 0) throw fail('当前 OMAA 高于配对附件，请先确认对应兼容发行；不会降级或混装');
       if (omd && selected.omd && compare(selected.omd.version, omd.version, 'omd') < 0) throw fail('当前 OMD 高于配对附件，请先确认对应兼容发行；不会降级或混装');
       if (isRunning()) throw fail('有任务正在运行，请先结束任务再更新');
       // The explicit action updates one published pair. Each package uses the

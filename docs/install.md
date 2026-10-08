@@ -11,7 +11,9 @@ OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。
 
 0.12.1 对应 tag 为 `v0.2.1-alpha.1.omaa.0.12.1`，配对兼容 OMD 仍为 `0.8.1`。选择当前宿主对应的 OMAA 附件更新，已有匹配的兼容 OMD 可以继续使用。
 
-发行主 tag 跟随源码 `package.json` 的完整版本（`v<DSH宿主>.omaa.<三段版本>`）；同一发行提供两个宿主附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
+发行主 tag 跟随源码 `package.json` 的完整版本；预发行宿主使用 `v<DSH宿主>.omaa.<三段版本>`，正式宿主使用 `v<DSH宿主>-omaa.<三段版本>`。同一发行按当前验收代表提供配对附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
+
+源码中的 `0.13.0` 为尚未发布的[版本适配候选](compatibility.md)，正在验证同一源码入口与实际宿主识别。当前 `0.12.1` 的旧源码 tag 只声明 alpha；rc.2 请使用上表的已发布附件，不能通过放宽宿主门禁代替正确安装。
 
 下载后在附件所在目录核对哈希：
 
@@ -73,16 +75,16 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 ## 维护发行附件
 
-构建和两宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。完成 OMAA 与兼容 OMD 打包后，运行：
+构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本轮源码候选配对 OMD 0.8.2，完成 OMAA 与兼容 OMD 打包后，运行：
 
 ```sh
-node scripts/release-assets.mjs --omd-version 0.8.1
+node scripts/release-assets.mjs --omd-version 0.8.2
 ```
 
-脚本从当前源码版本和宿主清单选择四个包，核对包内版本、宿主、SHA256 与元数据，将十二份附件准备到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
+脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。当前两个代表生成四个包、十二份附件，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
 
 
-已有同 tag 的 release 时，`.github/workflows/release.yml` 调用 `scripts/verify-release.mjs` 做幂等核对：tag 必须对应相同源码 commit，十二份资产 inventory、四个 tgz SHA 和 checksum 必须一致，metadata 只允许顶层 `createdAt` 不同。全部一致才成功；任何差异拒绝，流程不会 overwrite 现有 release 附件。
+已有同 tag 的 release 时，`.github/workflows/release.yml` 调用 `scripts/verify-release.mjs` 做幂等核对：tag 必须对应相同源码 commit，按该 tag 的宿主清单选择的资产 inventory、tgz SHA 和 checksum 必须一致，metadata 只允许顶层 `createdAt` 不同。全部一致才成功；任何差异拒绝，流程不会 overwrite 现有 release 附件。
 
 ## 卸载
 

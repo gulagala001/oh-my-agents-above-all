@@ -1,6 +1,20 @@
 # 验证记录
 
-验证针对原版 DSH `0.2.1-alpha.1` 中安装后的实际插件、工具和会话。来源/文本检查、脚本化宿主执行、真实模型任务及 Web 点击分别说明范围；不按测试数量推算产品完成率。
+验证针对安装后的实际插件、工具和会话。来源/文本检查、脚本化宿主执行、真实模型任务及 Web 点击分别说明范围；不按测试数量推算产品完成率。以下历史功能记录主要来自 alpha；本轮跨宿主验收单列，不能由历史记录推定所有旧宿主或平台已测。
+
+## 0.13.0 兼容性候选
+
+候选尚未发布。macOS arm64／Node 24.18 的原生 CLI Web 已分别运行 DSH `0.2.0-rc.2` 与 `0.2.1-alpha.1`，使用同一个源码 tarball、本地脚本 provider 和隔离 Chrome for Testing。rc.2 实际识别宿主为 rc.2，源码包的 alpha 发布前缀未参与运行时选包。SDK 经原生 PluginPackages 解析，安装无源码链接、override 或版本豁免。
+
+`test/host-compatibility.test.mjs` 已覆盖五预设真实原生读写、客户端 ModuleLoader、明暗主题、设置与模式、停止继续、冷重启、禁用启用和卸载。配对 OMD 分别检查两种安装顺序、增强关闭／开启／关闭、实际 CodeGraph 建索引及联合卸载。原生服务保持共享；OMD 的普通依赖链允许对应宿主同版 schemastery utility 副本，路径和声明单独记录，不能把该例外推广到 DSH 服务或 Cordis。
+
+两宿主另分别通过 `installed-presets`、`installed-pi-start`、`installed-pi-lifecycle`：五套完整请求、实际原生技能、Ask/Plan 写入及命令拦截，Pi 异步启动、冷队列原文、启动次数、超过 2 MiB 的完整结束消息和取消后禁止续跑。首轮失败保留：stock 默认模型须经原生选择器明确选中本地 fixture；冷恢复后第二次启动计数为 2，原测试误写为 1。修正的是测试前提和精确断言，没有删除能力检查。
+
+范围、更新路由、完整发行 manifest、重算 checksum 后的篡改拒绝、npm 跨平台入口及 rc.2 raw-arguments 工具卡片另有针对性回归。CI 对动态代表宿主安装精确官方 CLI，复验同一个源码包、宿主专用附件和配对 OMD；报告绑定宿主、平台与 tarball SHA。发布版 rc.2 `0.12.1` 附件已实际通过独立安装，旧 tag 的 alpha-only 源码则被 rc.2 原生安装器拒绝，不能笼统归因为 rc.2 附件损坏。
+
+本轮没有真实账号／付费模型请求或 Computer Use 桌面动作；macOS CLI Web 不代替 Desktop ASAR、Windows 或所有 provider 的验收。Pi 用户技能正文已通过临时 agentDir 的忽略规则排除，仍可能扫描用户资源路径和 ignore 元数据，不宣称操作系统级文件隔离。具体版本边界见[版本适配](compatibility.md)。
+
+## 历史功能验收
 
 | 范围 | 当前证据与状态 |
 | --- | --- |
