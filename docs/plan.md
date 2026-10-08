@@ -14,7 +14,7 @@ Pi 已补原生完成回合分叉、parent 树导航与默认关闭的离开分�
 
 DSH 是唯一模型/工具循环与会话负责人；不恢复外部产品运行时、账号安装器、多魂、投票、固定交稿模板或另一套任务板。简单修改保持轻量，按风险验证；具体边界见 [架构](architecture.md) 和 [增强边界](omd-enhancement-boundary.md)。
 
-本轮兼容交付统一为 OMD 0.9.0 的分宿主官方基线：源码已包含完整 OMAA 薄桥接，审定规则明确采用 integrated-baseline 模式。`scripts/package-omd-compat.mjs` 保留完整发行文件、客户端、原生工厂及 vendor，生成对应宿主的 tgz、SHA256 与来源元数据。正式附件由 GitHub Releases 交付；原 tag 的 0.6.1 底稿与 overlay 校验继续保留。
+本版 OMAA 0.13.0 配对 OMD 0.9.0 的分宿主官方基线：源码已包含完整 OMAA 薄桥接，审定规则明确采用 integrated-baseline 模式。`scripts/package-omd-compat.mjs` 保留完整发行文件、客户端、原生工厂及 vendor，生成对应宿主的 tgz、SHA256 与来源元数据。正式附件由 GitHub Releases 交付；原 tag 的 0.6.1 底稿与 overlay 校验继续保留。
 
 当前交付要求是在 GitHub 仓库及 Releases 提供可安装成品、来源补丁、两宿主包和维护流程。当前 UI 修复聚焦无项目 Pro/Ultra 首次发送、设置保存竞态、同 ID 切预设残留、主题过渡与窄侧栏。正在运行的用户任务应保持，桌面重载在空闲后进行。
 
