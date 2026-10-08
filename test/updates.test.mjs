@@ -6,20 +6,21 @@ const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
 const versions = { omaa: `${host}.omaa.0.3.0`, omd: `${host}.omd.0.7.2` };
 const names = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
-function fixture({ partialFailure = false, metadataHost = host, draft = false, missingOmd = false } = {}) {
+function fixture({ partialFailure = false, metadataHost = host, draft = false, missingOmd = false,
+  currentVersion = `${host}.omaa.0.2.1`, runtimeHost, releaseTag = tag, laterUnpaired = false } = {}) {
   const metadata = new Map(), calls = [];
-  const release = { tag_name: tag, draft, prerelease: true, published_at: '2026-10-06T00:00:00Z',
-    html_url: `https://github.com/${repo}/releases/tag/${tag}`, assets: [] };
+  const release = { tag_name: releaseTag, draft, prerelease: true, published_at: '2026-10-06T00:00:00Z',
+    html_url: `https://github.com/${repo}/releases/tag/${releaseTag}`, assets: [] };
   for (const product of ['omaa', 'omd']) {
     if (product === 'omd' && missingOmd) continue;
     const filename = `${names[product]}-${versions[product]}.tgz`;
-    const url = `https://github.com/${repo}/releases/download/${tag}/${filename}`;
+    const url = `https://github.com/${repo}/releases/download/${releaseTag}/${filename}`;
     for (const suffix of ['', '.metadata.json', '.sha256']) release.assets.push({ name: filename + suffix, browser_download_url: url + suffix, state: 'uploaded' });
     metadata.set(url + '.metadata.json', { name: names[product], version: versions[product], hostVersion: metadataHost, filename, sha256: 'a'.repeat(64),
       ...(product === 'omd' ? { baseVersion: `${host}.omd.0.6.1`, sourceCommit: 'd29b75c98a0f6575af5880497c4d970125eeedf2', nativeHostFactories: 'preserved', overlaySha256: 'b'.repeat(64) } : {}) });
   }
   const bundles = [
-    { name: names.omaa, version: `${host}.omaa.0.2.1`, installed: true, enabled: true },
+    { name: names.omaa, version: currentVersion, installed: true, enabled: true },
     { name: names.omd, version: `${host}.omd.0.7.1`, installed: true, enabled: false },
   ];
   let running = false;
@@ -31,9 +32,10 @@ function fixture({ partialFailure = false, metadataHost = host, draft = false, m
       return { application: 'restart-required', bundle: names[product] };
     },
   };
-  const service = createUpdates({ currentVersion: bundles[0].version, getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
+  const service = createUpdates({ currentVersion: bundles[0].version, ...(runtimeHost ? { hostVersion: runtimeHost } : {}), getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
     isRunning: () => running, fetchImpl: async url => {
-      const value = url.includes('/releases?') ? [release] : metadata.get(url);
+      const unpaired = { ...release, tag_name: 'v0.2.2-alpha.1.omaa.0.4.0', html_url: `https://github.com/${repo}/releases/tag/v0.2.2-alpha.1.omaa.0.4.0`, assets: [] };
+      const value = url.includes('/releases?') ? [release, ...(laterUnpaired ? [unpaired] : [])] : metadata.get(url);
       return new Response(JSON.stringify(value), { status: value ? 200 : 404 });
     } });
   return { service, calls, setRunning: value => { running = value; } };
@@ -72,4 +74,30 @@ test('public prerelease pair uses native transactions, guards host/draft/pair, a
   assert.equal(failed.phase, 'failed'); assert.equal(failed.restartRequired, true);
   assert.deepEqual(failed.installed, [{ product: 'omd', version: versions.omd }]);
   assert.match(failed.error, /native failure/);
+});
+
+test('source package uses the actual native host for updates across release prefixes', async t => {
+  const f = fixture({ currentVersion: '0.2.1-alpha.1.omaa.0.2.1', runtimeHost: host,
+    releaseTag: 'v0.2.2-alpha.1.omaa.0.3.0', laterUnpaired: true });
+  t.after(() => f.service.close());
+  await f.service.check(true);
+  const state = await f.service.status();
+  assert.equal(state.error, ''); assert.equal(state.hostVersion, host);
+  assert.equal(state.latestVersion, versions.omaa);
+  assert.equal(state.releaseTag, 'v0.2.2-alpha.1.omaa.0.3.0', 'latest unpaired main release does not erase the host-compatible pair');
+  await f.service.start('omaa', versions.omaa);
+  assert.deepEqual(f.calls.map(row => row.product), ['omd', 'omaa']);
+  assert(f.calls.every(row => row.url.includes(host)), 'a source prefix never selects the wrong native host artifact');
+});
+
+test('updating OMD cannot combine a newer installed OMAA with an older release pair', async t => {
+  const f = fixture({ currentVersion: `${host}.omaa.0.4.0` });
+  t.after(() => f.service.close());
+  await f.service.check(true);
+  assert.equal((await f.service.status()).available, false);
+  assert.match((await f.service.status()).blockedReason, /OMAA 高于/);
+  await f.service.start('omd', versions.omd);
+  assert.equal((await f.service.status()).phase, 'failed');
+  assert.match((await f.service.status()).error, /不会降级或混装/);
+  assert.equal(f.calls.length, 0, 'neither member of an incompatible pair is installed');
 });
