@@ -5,10 +5,13 @@ export const releaseFiles = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.ym
 
 // Build and verify the same complete manifest contract. Keep all source fields,
 // including exports and bundle registration, unless the host transform owns it.
-export function hostManifest(source, hostVersion, loaderVersion, { hostRange = HOST_RANGE, loaderRange = LOADER_RANGE } = {}) {
+export function hostManifest(source, hostVersion, loaderVersion, { hostRange = HOST_RANGE, loaderRange = LOADER_RANGE, files = releaseFiles } = {}) {
+  if (!Array.isArray(files) || !files.length || new Set(files).size !== files.length
+    || files.some(file => typeof file !== 'string' || !/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*$/.test(file)
+      || file.split('/').some(part => part === '.' || part === '..'))) throw new Error('Invalid release file allowlist.');
   const release = splitReleaseVersion(source.version, 'omaa'), manifest = structuredClone(source);
   manifest.version = alignedVersion(hostVersion, 'omaa', release.feature.join('.'));
-  manifest.files = [...releaseFiles];
+  manifest.files = [...files];
   for (const field of ['devDependencies', 'peerDependencies']) {
     for (const name of Object.keys(manifest[field] ?? {})) {
       if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) manifest[field][name] = field === 'peerDependencies' ? hostRange : hostVersion;
