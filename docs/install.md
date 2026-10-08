@@ -57,7 +57,7 @@ dsh web
 兼容 OMD 的原有版本面板在 OMAA 启用时也使用这套配对检查与原生安装，避免直接跟随原 OMD 发行而丢失桥接。OMAA 禁用但仍安装时暂停这条更新路径；卸载 OMAA 后恢复 OMD 原来的独立更新方式。未经审阅的新宿主／OMD 来源或附件差异会明确拒绝，更新不会强升 DSH。
 
 
-独立使用 OMAA 不需要 OMD。同 profile 已安装 OMD 时，需要它提供 OMAA enhancement/workflow composition 与外观协调接口；官方 OMD `0.6.1` 本身缺这些接口，不能仅按较大的版本号认定兼容。发行中的兼容 OMD 在对应官方 `0.6.1` 底稿上增加薄桥接，保留原生工厂、无项目聊天与 rc.2 草稿恢复，详见 [兼容构建](../compat/omd/README.md)。
+独立使用 OMAA 不需要 OMD。同 profile 已安装 OMD 时，需要它提供 OMAA enhancement/workflow composition 与外观协调接口；官方 OMD `0.6.1` 本身缺这些接口，不能仅按较大的版本号认定兼容。历史配对 OMD `0.8.1` 在对应官方 `0.6.1` 底稿上增加薄桥接；本轮 `0.9.0` 候选直接使用已整合桥接的官方分宿主源码，完整保留对应原生工厂、vendor 与恢复行为，详见 [兼容构建](../compat/omd/README.md)。
 
 OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；Ask/Plan 暂停高级编排。切换主题不改变模型/API。安装、更新或卸载 OMD 后重载当前 profile，重新选择工作流 composition。更新按同样的原生插件安装流程替换对应宿主包，保留 DSH 会话和工作区。
 
@@ -75,10 +75,10 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 ## 维护发行附件
 
-构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本轮源码候选配对 OMD 0.8.2，完成 OMAA 与兼容 OMD 打包后，运行：
+构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本轮源码候选配对 OMD 0.9.0，完成 OMAA 与兼容 OMD 打包后，运行：
 
 ```sh
-node scripts/release-assets.mjs --omd-version 0.8.2
+node scripts/release-assets.mjs --omd-version 0.9.0
 ```
 
 脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。当前两个代表生成四个包、十二份附件，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。

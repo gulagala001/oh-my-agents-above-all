@@ -5,11 +5,11 @@ import { lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
-import { hostManifest, omdCompatibility, hasReviewedOmdManifest } from './host-manifest.mjs';
+import { hostManifest, omdCompatibility, hasReviewedOmdManifest, omdBuildMode, reviewedPatchBytes, omdModeMetadata, verifyIntegratedOmdPayload } from './host-manifest.mjs';
 import { validationHosts, splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const usage = 'Usage: node scripts/release-assets.mjs --omd-version 0.8.2 [--packages DIR] [--out DIR]';
+const usage = 'Usage: node scripts/release-assets.mjs --omd-version 0.9.0 [--packages DIR] [--out DIR]';
 const options = {}, args = process.argv.slice(2);
 for (let i = 0; i < args.length; i += 2) {
   if (!['--packages', '--out', '--omd-version'].includes(args[i]) || !args[i + 1] || args[i + 1].startsWith('--') || Object.hasOwn(options, args[i])) throw new Error(usage);
@@ -45,10 +45,11 @@ for (const { version: expectedHost, loaderVersion, omdVariant: variant } of vali
   hosts.add(hostVersion);
   baselines.set(hostVersion, rules);
   expected.push({ name: source.name, version: alignedVersion(hostVersion, 'omaa', release.feature.join('.')), hostVersion, loaderVersion });
-  if (!/^[a-z0-9-]+\.patch$/.test(rules.patch)) throw new Error('Invalid OMD overlay patch path.');
-  const rulesBytes = await readFile(join(root, 'compat', 'omd', `${variant}.json`)), patchBytes = await readFile(join(root, 'compat', 'omd', rules.patch));
-  if (sha(patchBytes) !== rules.patchSha256) throw new Error('Reviewed OMD patch hash mismatch.');
-  expected.push({ name: 'trisoul_x', version: alignedVersion(hostVersion, 'omd', omdVersion), hostVersion, ...Object.fromEntries(['baseVersion', 'sourceTag', 'sourceCommit', 'patchSha256'].map(key => [key, rules[key]])), overlaySha256: sha(Buffer.concat([rulesBytes, patchBytes])), nativeHostFactories: 'preserved' });
+  const mode = omdBuildMode(rules);
+  const rulesBytes = await readFile(join(root, 'compat', 'omd', `${variant}.json`));
+  const patchBytes = reviewedPatchBytes(rules, mode === 'overlay' ? await readFile(join(root, 'compat', 'omd', rules.patch)) : undefined);
+  if (mode === 'integrated-baseline' && alignedVersion(hostVersion, 'omd', omdVersion) !== rules.baseVersion) throw new Error('Integrated OMD output version must equal the reviewed official baseline version.');
+  expected.push({ ...omdModeMetadata(rules), name: 'trisoul_x', version: alignedVersion(hostVersion, 'omd', omdVersion), hostVersion, ...Object.fromEntries(['baseVersion', 'sourceTag', 'sourceCommit', 'patchSha256'].map(key => [key, rules[key]])), overlaySha256: sha(Buffer.concat([rulesBytes, patchBytes])), nativeHostFactories: 'preserved' });
 }
 if (!hosts.has(release.host)) throw new Error('Current OMAA host is absent from compatibility manifests.');
 
@@ -72,9 +73,11 @@ for (const entry of expected) {
     if (!isDeepStrictEqual(manifest, hostManifest(source, entry.hostVersion, entry.loaderVersion))) throw new Error(`Archive OMAA manifest differs from the complete source/host contract: ${name}`);
   } else {
     const rule = baselines.get(entry.hostVersion);
+    if (metadata.mode !== omdModeMetadata(rule).mode) throw new Error(`OMD build mode differs from reviewed source: ${name}`);
     if (!hasReviewedOmdManifest(manifest, rule)) throw new Error(`Archive OMD manifest differs from the complete reviewed baseline contract: ${name}`);
     const compatibility = JSON.parse(execFileSync('tar', ['-xOf', tarball, 'package/omaa-compat.json'], { encoding: 'utf8', maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }));
     if (!isDeepStrictEqual(compatibility, omdCompatibility(metadata, rule, entry.overlaySha256))) throw new Error(`Archive OMD compatibility differs from reviewed source: ${name}`);
+    await verifyIntegratedOmdPayload(tarball, rule);
   }
   attachments.set(name, bytes);
   attachments.set(`${name}.sha256`, checksumBytes);

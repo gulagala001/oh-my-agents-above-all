@@ -78,14 +78,14 @@ dsh plugin --profile web remove oh-my-agents-above-all
 
 卸载插件不会删除 DSH 会话和工作区文件。插件偏好、文件检查点、有界 Pi 分支派生上下文及已保存的 Pi 扩展白名单保存在 `DSH_HOME/omaa`（默认 `~/.dsh/omaa`），不自动清除；原生会话 journal 仍由 DSH 管理。
 
-兼容 OMD 通过已入库的 [固定补丁与基线](compat/omd/README.md) 构建，输入为官方 OMD `0.6.1` 包或其固定源码目录，输出独立 `.tgz`、SHA256 与来源元数据。它保留对应宿主的原生工厂、无项目聊天与 rc.2 草稿恢复，仅重建前端；不依赖本机缓存或另一个工作区的未提交修改。发行可同时附上两端兼容包，独立使用 OMAA 无需安装 OMD。
+本轮配对 OMD 统一为 `0.9.0` 候选，包含现行核心、完整 OMAA 薄桥接及 AX 更新。构建使用 [审阅过的分宿主基线](compat/omd/README.md)：rc.2 与 alpha 各有对应原生 SDK、工厂、vendor 和锁文件的固定源码 commit。`integrated-baseline` 模式完整保留官方发行文件及客户端，只追加兼容来源记录，输出 `.tgz`、SHA256 与来源元数据。历史补丁模式继续用于原发行的来源核对。独立使用 OMAA 无需安装 OMD。
 
 ```sh
 node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-alpha.tgz --host-version 0.2.1-alpha.1
 node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-rc2.tgz --host-version 0.2.0-rc.2
 ```
 
-脚本严格核对已审阅的官方基线；新版本或内容差异会指出文件并停止，升级时先审阅上游差异、更新补丁与基线，再重新打包。它不自动下载宿主、不安装包，也不执行 OMD 的全量 host 构建。
+脚本严格核对已审阅的官方基线；新版本或内容差异会指出文件并停止，升级时先审阅上游差异、更新对应基线规则，再重新打包。它不自动下载宿主、不安装包，也不执行 OMD 的全量 host 构建。
 
 ## 开源许可
 

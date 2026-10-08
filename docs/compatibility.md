@@ -16,9 +16,9 @@ OMAA `0.13.0` 为未发布候选。源码的 DSH 兼容约束为 `>=0.2.0-rc.2 <
 
 独立 OMAA 不要求 OMD。同 profile 的 OMD 需要提供增强、工作流组合与外观协调接口；这些能力须按实际接口检查，不能从 OMD 版本大小推断。缺桥接的旧 OMD 仍会明确阻止预设挂载；请安装当前宿主对应的兼容 OMD 或使用独立 profile。无需为此更换 DSH 宿主。
 
-兼容 OMD 仍采用[审阅过的基线与补丁](https://github.com/gulagala001/oh-my-agents-above-all/tree/main/compat/omd)，保留对应宿主的原生工厂、组件和恢复行为。基础增强、Pro／Ultra、身份与主题分别验收；不会把新版 SDK 或工厂塞入旧宿主的包。
+配对 OMD `0.9.0` 候选采用[审阅过的分宿主官方基线](https://github.com/gulagala001/oh-my-agents-above-all/tree/main/compat/omd)。两端源码 commit 各自绑定对应宿主的 SDK、工厂、vendor 与锁文件；`integrated-baseline` 模式核对并保留全部官方发行文件。基础增强、Pro／Ultra、身份与主题分别验收，打包成功仍不代表运行验收通过。
 
-配对 OMD `0.8.2` 为本轮补丁候选，在已有桥接上移除 Jevify 推荐入口，避免更新 OMAA 后重新带回该推荐。当前公开 `0.12.1` 发行仍搭配历史 OMD `0.8.1`。
+本轮配对统一为 OMD `0.9.0` 功能版本，包含现行核心、完整 OMAA 薄桥接、AX 更新及 Jevify 推荐入口清理。当前公开 OMAA `0.12.1` 发行仍搭配历史 OMD `0.8.1`；原 tag 继续按其当时的白名单、补丁和来源校验。
 
 新功能与修复要核对当前支持范围。真实接口缺失的功能明确限制；推荐插件按自己的兼容声明和运行证据判断，不能因 OMAA 通过就认定所有插件可用。
 

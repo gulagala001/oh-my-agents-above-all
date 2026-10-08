@@ -7,7 +7,7 @@ import { cp, mkdir, mkdtemp, readFile, readdir, writeFile, symlink, rm } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hostManifest } from '../scripts/host-manifest.mjs';
+import { hostManifest, omdBuildMode, reviewedPatchBytes, emptyPatchSha256 } from '../scripts/host-manifest.mjs';
 import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
 
 const run = promisify(execFile), repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -36,10 +36,14 @@ async function hostCli(root, version, loaderVersion, output = version) {
   await save(join(root, 'native-host/node_modules/@deepseek-ai/cordis-plugin-loader/package.json'), { name: '@deepseek-ai/cordis-plugin-loader', version: loaderVersion });
   return cli;
 }
-async function archive(root, entry, manifest, compatibility) {
+async function archive(root, entry, manifest, compatibility, payload = {}) {
   const name = `${entry.name}-${entry.version}.tgz`, staging = join(root, 'archive', name, 'package');
   await save(join(staging, 'package.json'), manifest ?? { name: entry.name, version: entry.version, devDependencies: { '@deepseek-ai/dsh': entry.hostVersion } });
-  if (entry.name === 'trisoul_x') await save(join(staging, 'omaa-compat.json'), compatibility ?? { schema: 1, version: entry.version, hostVersion: entry.hostVersion, baseVersion: entry.baseVersion, sourceCommit: entry.sourceCommit, overlaySha256: entry.overlaySha256, patchSha256: entry.patchSha256, nativeHostFactories: 'preserved' });
+  if (entry.name === 'trisoul_x') await save(join(staging, 'omaa-compat.json'), compatibility ?? { schema: 1, version: entry.version, hostVersion: entry.hostVersion, baseVersion: entry.baseVersion, sourceCommit: entry.sourceCommit, overlaySha256: entry.overlaySha256, patchSha256: entry.patchSha256, nativeHostFactories: 'preserved', ...(entry.mode === undefined ? {} : { mode: entry.mode }) });
+  for (const [file, bytes] of Object.entries(payload)) {
+    await mkdir(dirname(join(staging, file)), { recursive: true });
+    await writeFile(join(staging, file), bytes);
+  }
   await mkdir(join(root, 'dist'), { recursive: true });
   await run('tar', ['-czf', join(root, 'dist', name), '-C', dirname(staging), 'package']);
   const bytes = await readFile(join(root, 'dist', name)), metadata = { ...entry, filename: name, sha256: sha(bytes) };
@@ -47,7 +51,7 @@ async function archive(root, entry, manifest, compatibility) {
   await save(join(root, 'dist', name + '.metadata.json'), metadata);
   return metadata;
 }
-async function releaseFixture(t, { taggedPolicy = true, stableSource = true, legacyFiles = false } = {}) {
+async function releaseFixture(t, { taggedPolicy = true, stableSource = true, legacyFiles = false, integrated = false } = {}) {
   const { root, source } = await fixture(t);
   const rows = [...validationHosts, ...(!legacyFiles ? [{ version: '0.2.0', loaderVersion: '1.0.5', omdVariant: 'stable' }] : [])];
   if (legacyFiles) {
@@ -63,11 +67,18 @@ async function releaseFixture(t, { taggedPolicy = true, stableSource = true, leg
   await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts: rows });
   const assets = [];
   for (const row of rows) {
-    const patchBytes = Buffer.from('reviewed fixture patch for ' + row.version + '\n');
-    const baseline = { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', '0.6.1'), private: true, type: 'module', main: 'src/index.mjs', exports: { '.': './src/index.mjs', './client': './lib/client.js' }, files: ['src', 'lib', 'scripts', 'vendor'], devDependencies: { '@deepseek-ai/dsh': row.version, '@deepseek-ai/dsh-storage-domain': row.version, '@deepseek-ai/cordis-plugin-loader': row.loaderVersion }, peerDependencies: { '@deepseek-ai/dsh-storage-domain': row.version, '@deepseek-ai/cordis-plugin-loader': row.loaderVersion }, dsh: { bundle: { patch: ['./cordis.patch.yml'] } } };
-    const rule = { hostVersion: row.version, baseVersion: baseline.version, basePackageSha256: sha(Buffer.from(JSON.stringify(baseline, null, 2) + '\n')), sourceTag: 'official-' + row.version, sourceCommit: '1'.repeat(40), patch: row.omdVariant + '.patch', patchSha256: sha(patchBytes) };
+    const patchBytes = integrated ? Buffer.alloc(0) : Buffer.from('reviewed fixture patch for ' + row.version + '\n');
+    const payload = integrated ? {
+      'src/index.mjs': 'export const integratedBridge = true;\n',
+      'lib/client.js': 'OFFICIAL_CLIENT_BYTES_RETAINED\n',
+      'lib/host/factory.mjs': 'export const nativeHost = "' + row.version + '";\n',
+      'scripts/retained.mjs': 'export const retainedScript = true;\n',
+      'vendor/native-snapshot.txt': 'OFFICIAL_VENDOR_BYTES_RETAINED\n',
+    } : {};
+    const baseline = { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', integrated ? '0.9.0' : '0.6.1'), private: true, type: 'module', main: 'src/index.mjs', exports: { '.': './src/index.mjs', './client': './lib/client.js' }, files: ['src', 'lib', 'scripts', 'vendor'], devDependencies: { '@deepseek-ai/dsh': row.version, '@deepseek-ai/dsh-storage-domain': row.version, '@deepseek-ai/cordis-plugin-loader': row.loaderVersion }, peerDependencies: { '@deepseek-ai/dsh-storage-domain': row.version, '@deepseek-ai/cordis-plugin-loader': row.loaderVersion }, dsh: { bundle: { patch: ['./cordis.patch.yml'] } } };
+    const rule = { hostVersion: row.version, baseVersion: baseline.version, basePackageSha256: sha(Buffer.from(JSON.stringify(baseline, null, 2) + '\n')), sourceTag: 'official-' + row.version, sourceCommit: '1'.repeat(40), patch: integrated ? null : row.omdVariant + '.patch', patchSha256: sha(patchBytes), ...(integrated ? { mode: 'integrated-baseline', additions: {}, patchedFiles: {}, packageFiles: [...baseline.files], files: Object.fromEntries(Object.entries(payload).map(([file, bytes]) => [file, sha(Buffer.from(bytes))])) } : {}) };
     await save(join(root, 'compat/omd', row.omdVariant + '.json'), rule);
-    await writeFile(join(root, 'compat/omd', rule.patch), patchBytes);
+    if (!integrated) await writeFile(join(root, 'compat/omd', rule.patch), patchBytes);
     const packaged = JSON.parse((await command(root, 'package.mjs', ['--host-version', row.version])).stdout);
     let metadata = await json(packaged.tarball + '.metadata.json');
     if (!taggedPolicy) {
@@ -81,7 +92,7 @@ async function releaseFixture(t, { taggedPolicy = true, stableSource = true, leg
     }
     assets.push(metadata);
     const overlaySha256 = sha(Buffer.concat([await readFile(join(root, 'compat/omd', row.omdVariant + '.json')), patchBytes]));
-    assets.push(await archive(root, { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', '0.8.1'), ...rule, overlaySha256, nativeHostFactories: 'preserved' }, { ...baseline, version: alignedVersion(row.version, 'omd', '0.8.1'), files: [...baseline.files, 'omaa-compat.json'] }));
+    assets.push(await archive(root, { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', integrated ? '0.9.0' : '0.8.1'), ...rule, overlaySha256, nativeHostFactories: 'preserved' }, { ...baseline, version: alignedVersion(row.version, 'omd', integrated ? '0.9.0' : '0.8.1'), files: [...baseline.files, 'omaa-compat.json'] }, undefined, payload));
   }
   if (!taggedPolicy) {
     await rm(join(root, 'src/host/compatibility.json'));
@@ -296,4 +307,127 @@ test('current policy cannot override the mandatory licensing whitelist', async t
   await archive(root, metadata, manifest); await refreshRemote(root);
   await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.8.1']), /complete source\/host contract/);
   await assert.rejects(command(root, 'verify-release.mjs', args, env), /complete tagged source\/host contract/);
+});
+
+
+async function integratedPackFixture(t) {
+  const { root } = await fixture(t), row = validationHosts[0], base = join(root, 'official-integrated');
+  const files = {
+    'src/index.mjs': 'export const integratedBridge = true;\n',
+    'src/ultracode.mjs': 'export const retainedUltracode = true;\n',
+    'src/codegraph-agent.mjs': 'export const retainedCodegraph = true;\n',
+    'src/client/index.jsx': 'UNBUILDABLE_JXS_PROVES_NO_REBUILD\n',
+    'lib/client.js': 'OFFICIAL_CLIENT_BYTES_RETAINED\n',
+    'lib/host/factory.mjs': 'export const nativeHost = "' + row.version + '";\n',
+    'vendor/native-snapshot.txt': 'OFFICIAL_VENDOR_BYTES_RETAINED\n',
+    'scripts/pack-skin.mjs': 'throw Error("integrated mode must not rebuild skins");\n',
+    'release-manifest.json': JSON.stringify({ releases: [{ version: alignedVersion(row.version, 'omd', '0.9.0'), notes: ['official integrated release note'] }] }) + '\n',
+    'LICENSE': 'OFFICIAL_LICENSE_BYTES_RETAINED\n',
+  };
+  const manifest = { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', '0.9.0'), private: true, type: 'module', main: 'src/index.mjs', files: ['src', 'lib', 'vendor', 'scripts', 'release-manifest.json', 'LICENSE'], devDependencies: { '@deepseek-ai/dsh': row.version, esbuild: (await json(join(repo, 'node_modules/esbuild/package.json'))).version } };
+  await save(join(base, 'package.json'), manifest);
+  for (const [file, bytes] of Object.entries(files)) { await mkdir(dirname(join(base, file)), { recursive: true }); await writeFile(join(base, file), bytes); }
+  const rules = { schema: 1, mode: 'integrated-baseline', hostVersion: row.version, baseVersion: manifest.version, basePackageSha256: sha(await readFile(join(base, 'package.json'))), sourceTag: 'v' + manifest.version, sourceCommit: '1'.repeat(40), patch: null, patchSha256: emptyPatchSha256, additions: {}, patchedFiles: {}, packageFiles: [...manifest.files], files: Object.fromEntries(Object.entries(files).map(([file, bytes]) => [file, sha(Buffer.from(bytes))])) };
+  await save(join(root, 'compat/omd', row.omdVariant + '.json'), rules);
+  return { root, row, base, rules, files };
+}
+
+test('integrated official-shaped baseline packs without patching or rebuilding and retains every byte', async t => {
+  const { root, row, base, rules, files } = await integratedPackFixture(t);
+  const args = ['--base', base, '--host-version', row.version];
+  const result = JSON.parse((await command(root, 'package-omd-compat.mjs', args)).stdout);
+  assert.equal(result.version, alignedVersion(row.version, 'omd', '0.9.0'));
+  assert.equal(result.mode, 'integrated-baseline'); assert.equal(result.patchSha256, emptyPatchSha256);
+  assert.equal(result.overlaySha256, sha(await readFile(join(root, 'compat/omd', row.omdVariant + '.json'))));
+  const compatibility = JSON.parse((await run('tar', ['-xOf', result.tarball, 'package/omaa-compat.json'])).stdout);
+  assert.equal(compatibility.mode, result.mode); assert.equal(compatibility.overlaySha256, result.overlaySha256);
+  for (const [file, bytes] of Object.entries(files)) {
+    assert.equal((await run('tar', ['-xOf', result.tarball, 'package/' + file])).stdout, bytes, file);
+    assert.equal(await readFile(join(base, file), 'utf8'), bytes, 'input ' + file);
+  }
+  const published = join(root, 'official-published'), officialTarball = join(root, 'official-integrated.tgz');
+  await mkdir(published); await cp(base, join(published, 'package'), { recursive: true });
+  await run('tar', ['-czf', officialTarball, '-C', published, 'package']);
+  const packedOfficial = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', officialTarball, '--host-version', row.version])).stdout);
+  assert.equal(packedOfficial.version, result.version); assert.equal(packedOfficial.mode, 'integrated-baseline');
+  for (const [file, bytes] of Object.entries(files)) assert.equal((await run('tar', ['-xOf', packedOfficial.tarball, 'package/' + file])).stdout, bytes, 'official tgz ' + file);
+  assert.deepEqual(await readdir(join(root, '.cache')), []);
+  await assert.rejects(command(root, 'package-omd-compat.mjs', [...args, '--omd-version', '0.8.2']), /output version must equal/);
+  await writeFile(join(base, 'vendor/native-snapshot.txt'), 'changed native snapshot');
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Base release differs/);
+  await writeFile(join(base, 'vendor/native-snapshot.txt'), files['vendor/native-snapshot.txt']);
+  await writeFile(join(base, 'lib/client.js'), 'changed client snapshot');
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Base release differs/);
+  await writeFile(join(base, 'lib/client.js'), files['lib/client.js']);
+  await writeFile(join(base, 'unreviewed-root.txt'), 'unreviewed release input');
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Unknown files in official baseline/);
+  await rm(join(base, 'unreviewed-root.txt'));
+  await symlink(join(base, 'lib/client.js'), join(base, 'unknown-root-link'));
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /symlink/i);
+  await rm(join(base, 'unknown-root-link'));
+  const manifestBytes = await readFile(join(base, 'package.json'));
+  const externalManifest = join(root, 'external-manifest.json');
+  await writeFile(externalManifest, manifestBytes); await rm(join(base, 'package.json'));
+  await symlink(externalManifest, join(base, 'package.json'));
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /regular|symlink/i);
+  await rm(join(base, 'package.json')); await writeFile(join(base, 'package.json'), manifestBytes);
+  await writeFile(join(base, 'src/unreviewed.mjs'), 'export const bypass = true;');
+  await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Unknown files in official baseline/);
+  assert.deepEqual(await readdir(join(root, '.cache')), []);
+});
+
+test('integrated mode requires reviewed explicit no-op fields and a safe complete package whitelist', () => {
+  const valid = { mode: 'integrated-baseline', patch: null, patchSha256: emptyPatchSha256, additions: {}, patchedFiles: {}, packageFiles: ['src', 'lib', 'vendor'] };
+  assert.equal(omdBuildMode(valid), 'integrated-baseline'); assert.deepEqual(reviewedPatchBytes(valid), Buffer.alloc(0));
+  for (const change of [{ mode: null }, { mode: 'unknown' }, { patch: 'apply.patch' }, { patchSha256: '1'.repeat(64) }, { additions: { 'src/new.mjs': '1'.repeat(64) } }, { additions: 1 }, { patchedFiles: null }, { patchedFiles: [] }, { packageFiles: ['../vendor'] }, { packageFiles: ['omaa-compat.json'] }]) assert.throws(() => omdBuildMode({ ...valid, ...change }));
+  assert.throws(() => reviewedPatchBytes(valid, Buffer.from('not empty')), /patch hash mismatch/);
+});
+
+test('integrated paired release preparation and tagged verification bind no-op mode and provenance', async t => {
+  const { root, source, assets } = await releaseFixture(t, { integrated: true });
+  const prepared = JSON.parse((await command(root, 'release-assets.mjs', ['--omd-version', '0.9.0', '--out', 'paired-prepared'])).stdout);
+  assert.equal(prepared.attachmentCount, 18);
+  const { tag, env } = await mockRelease(root, source), args = ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')];
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /18 attachments, 6 identical tarballs/);
+  const metadata = assets.find(row => row.name === 'trisoul_x'), metadataPath = join(root, 'dist', metadata.filename + '.metadata.json');
+  await save(metadataPath, { ...metadata, mode: 'overlay' }); await refreshRemote(root);
+  await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.9.0', '--out', 'dist/rejected-mode']), /Metadata mode mismatch/);
+  await assert.rejects(command(root, 'verify-release.mjs', args, env), /build mode differs/);
+  await save(metadataPath, metadata); await refreshRemote(root);
+  const manifest = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', metadata.filename), 'package/package.json'])).stdout);
+  const compatibility = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', metadata.filename), 'package/omaa-compat.json'])).stdout);
+  delete compatibility.mode;
+  await archive(root, metadata, manifest, compatibility); await refreshRemote(root);
+  await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.9.0', '--out', 'dist/rejected-embedded-mode']), /OMD compatibility differs/);
+  await assert.rejects(command(root, 'verify-release.mjs', args, env), /OMD compatibility differs/);
+});
+
+test('integrated release payload drift, missing members, unknown members and links fail after complete rehashing', async t => {
+  const { root, source, assets } = await releaseFixture(t, { integrated: true });
+  await command(root, 'release-assets.mjs', ['--omd-version', '0.9.0', '--out', 'payload-positive']);
+  const { tag, env } = await mockRelease(root, source);
+  const args = ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')];
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /18 attachments, 6 identical tarballs/);
+  const metadata = assets.find(row => row.name === 'trisoul_x');
+  const staging = join(root, 'archive', metadata.filename, 'package');
+  const manifest = await json(join(staging, 'package.json'));
+  const client = join(staging, 'lib/client.js'), clientBytes = await readFile(client);
+  const unexpected = join(staging, 'unknown-payload.txt');
+  const mutations = [
+    ['changed-client', () => writeFile(client, 'ALTERED_UNREVIEWED_CLIENT\n'), () => writeFile(client, clientBytes)],
+    ['missing-client', () => rm(client), () => writeFile(client, clientBytes)],
+    ['unknown-member', () => writeFile(unexpected, 'UNREVIEWED_PAYLOAD\n'), () => rm(unexpected)],
+    ['linked-client', async () => { await rm(client); await symlink('/tmp/omaa-fixture-untrusted-link-target', client); }, async () => { await rm(client); await writeFile(client, clientBytes); }],
+  ];
+  for (const [label, mutate, restore] of mutations) {
+    await mutate();
+    const altered = await archive(root, metadata, manifest);
+    assert.notEqual(altered.sha256, metadata.sha256, label + ' must alter the archive');
+    // Recompute every attachment digest so source payload evidence is the only
+    // rejection reason, rather than an incidental sidecar or remote mismatch.
+    await refreshRemote(root);
+    await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.9.0', '--out', 'payload-rejected-' + label]), /[Ii]ntegrated.*(?:payload|archive|member|inventory)/, label + ' preparation');
+    await assert.rejects(command(root, 'verify-release.mjs', args, env), /[Ii]ntegrated.*(?:payload|archive|member|inventory)/, label + ' verification');
+    await restore();
+  }
 });

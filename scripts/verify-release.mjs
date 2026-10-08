@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import semver from 'semver';
-import { hostManifest, omdCompatibility, hasReviewedOmdManifest } from './host-manifest.mjs';
+import { hostManifest, omdCompatibility, hasReviewedOmdManifest, omdBuildMode, reviewedPatchBytes, omdModeMetadata, verifyIntegratedOmdPayload } from './host-manifest.mjs';
 import { splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -71,10 +71,9 @@ async function main() {
     requireMatch(typeof row.omdVariant === 'string' && /^[a-z0-9-]+$/.test(row.omdVariant) && semver.valid(row.version) === row.version, 'Invalid tagged OMD representative.');
     const rule = sourceJson(`compat/omd/${row.omdVariant}.json`);
     requireMatch(rule.hostVersion === row.version, 'Tagged OMD baseline differs from its validation representative.');
-    requireMatch(/^[a-z0-9-]+\.patch$/.test(rule.patch), 'Invalid tagged OMD patch path.');
+    const mode = omdBuildMode(rule);
     const rulesBytes = command('git', ['show', `${localCommit}:compat/omd/${row.omdVariant}.json`], 'Tagged OMD rules lookup');
-    const patchBytes = command('git', ['show', `${localCommit}:compat/omd/${rule.patch}`], 'Tagged OMD patch lookup');
-    requireMatch(sha(patchBytes) === rule.patchSha256, 'Tagged OMD patch hash differs from its reviewed rules.');
+    const patchBytes = reviewedPatchBytes(rule, mode === 'overlay' ? command('git', ['show', `${localCommit}:compat/omd/${rule.patch}`], 'Tagged OMD patch lookup') : undefined);
     return { ...rule, loaderVersion: row.loaderVersion, overlaySha256: sha(Buffer.concat([rulesBytes, patchBytes])) };
   });
   requireMatch(rules.some(row => row.hostVersion === releaseVersion.host), 'Tagged OMAA host is absent from compatibility baselines.');
@@ -122,6 +121,7 @@ async function main() {
       requireMatch(metadata.loaderVersion === rule.loaderVersion, `OMAA loader differs from tagged source: ${name}`);
       requireMatch(metadata.version === alignedVersion(rule.hostVersion, 'omaa', releaseVersion.feature.join('.')), `Package version differs from tagged source: ${name}`);
     } else {
+      requireMatch(metadata.mode === omdModeMetadata(rule).mode, `OMD build mode differs from tagged source: ${name}`);
       const omdRelease = splitReleaseVersion(metadata.version, 'omd');
       requireMatch(omdRelease.host === rule.hostVersion, `Invalid OMD host version: ${name}`);
       omdVersions.add(omdRelease.feature.join('.'));
@@ -144,6 +144,7 @@ async function main() {
       requireMatch(metadata.nativeHostFactories === 'preserved', `OMD native preservation metadata differs: ${name}`);
       const compatibility = parseJson(command('tar', ['-xOf', join(assetsDir, name), 'package/omaa-compat.json'], 'Archive compatibility lookup'), `${name} OMD compatibility`);
       requireMatch(isDeepStrictEqual(compatibility, omdCompatibility(metadata, rule, rule.overlaySha256)), `Archive OMD compatibility differs from reviewed tagged source: ${name}`);
+      await verifyIntegratedOmdPayload(join(assetsDir, name), rule);
     }
     const tarballAsset = inventory.get(name);
     requireMatch(tarballAsset.state === 'uploaded' && tarballAsset.size === bytes.length && tarballAsset.digest === `sha256:${hash}`, `Remote tarball size or digest differs: ${name}`);
