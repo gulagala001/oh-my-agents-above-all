@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createUpdates } from '../src/updates.mjs';
+import { validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
 
 const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
@@ -100,4 +101,33 @@ test('updating OMD cannot combine a newer installed OMAA with an older release p
   assert.equal((await f.service.status()).phase, 'failed');
   assert.match((await f.service.status()).error, /不会降级或混装/);
   assert.equal(f.calls.length, 0, 'neither member of an incompatible pair is installed');
+});
+
+test('current OMAA 0.13.1 pair accepts each host reviewed OMD 0.10 source and rejects commit drift', async t => {
+  for (const row of validationHosts) {
+    const baseline = row.omdBaselines.find(item => item.version === alignedVersion(row.version, 'omd', '0.10.0'));
+    assert(baseline, 'current pair must have a reviewed runtime source');
+    for (const drift of [false, true]) {
+      const releaseTag = 'v0.2.1-alpha.1.omaa.0.13.1', metadata = new Map();
+      const release = { tag_name: releaseTag, draft: false, prerelease: true, published_at: '2026-10-08T00:00:00Z',
+        html_url: `https://github.com/${repo}/releases/tag/${releaseTag}`, assets: [] };
+      for (const product of ['omaa', 'omd']) {
+        const version = alignedVersion(row.version, product, product === 'omaa' ? '0.13.1' : '0.10.0');
+        const filename = `${names[product]}-${version}.tgz`, url = `https://github.com/${repo}/releases/download/${releaseTag}/${filename}`;
+        for (const suffix of ['', '.metadata.json', '.sha256']) release.assets.push({ name: filename + suffix, browser_download_url: url + suffix, state: 'uploaded' });
+        metadata.set(url + '.metadata.json', { name: names[product], version, hostVersion: row.version, filename, sha256: 'a'.repeat(64),
+          ...(product === 'omd' ? { baseVersion: baseline.version, sourceCommit: drift ? 'f'.repeat(40) : baseline.commit,
+            nativeHostFactories: 'preserved', overlaySha256: 'b'.repeat(64) } : {}) });
+      }
+      const service = createUpdates({ currentVersion: alignedVersion(row.version, 'omaa', '0.13.0'), hostVersion: row.version,
+        getManager: () => ({ listBundles: async () => [{ name: names.omaa, version: alignedVersion(row.version, 'omaa', '0.13.0'), installed: true, enabled: true }] }),
+        fetchImpl: async url => new Response(JSON.stringify(url.includes('/releases?') ? [release] : metadata.get(url)), { status: 200 }) });
+      t.after(() => service.close());
+      await service.check(true);
+      const state = service.snapshot();
+      if (drift) { assert.match(state.error, /来源尚未受支持/); assert.equal(state.latestVersion, null); }
+      else { assert.equal(state.error, ''); assert.equal(state.latestVersion, alignedVersion(row.version, 'omaa', '0.13.1'));
+        assert.equal(state.latestOmdVersion, baseline.version); assert.equal(state.hostVersion, row.version); }
+    }
+  }
 });

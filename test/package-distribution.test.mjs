@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostManifest, omdBuildMode, reviewedPatchBytes, emptyPatchSha256 } from '../scripts/host-manifest.mjs';
-import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
+import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
 
 const run = promisify(execFile), repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -25,7 +25,7 @@ async function fixture(t) {
   for (const name of ['README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md']) await writeFile(join(root, name), 'distribution fixture\n');
   await writeFile(join(root, 'src/AGENTS.md'), 'local only');
   const source = await json(join(repo, 'package.json'));
-  source.version = alignedVersion(validationHosts.at(-1).version, 'omaa', '0.13.0');
+  source.version = alignedVersion(validationHosts.at(-1).version, 'omaa', '0.13.1');
   await save(join(root, 'package.json'), source); return { root, source };
 }
 async function hostCli(root, version, loaderVersion, output = version) {
@@ -63,7 +63,7 @@ async function releaseFixture(t, { taggedPolicy = true, stableSource = true, leg
     }
     await save(join(root, 'package.json'), source);
   }
-  if (stableSource) { source.version = alignedVersion('0.2.0', 'omaa', '0.13.0'); await save(join(root, 'package.json'), source); }
+  if (stableSource) { source.version = alignedVersion('0.2.0', 'omaa', '0.13.1'); await save(join(root, 'package.json'), source); }
   await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts: rows });
   const assets = [];
   for (const row of rows) {
@@ -121,7 +121,7 @@ test('representative distributions retain exact SDKs and shared peer range', asy
   for (const row of validationHosts) {
     const result = JSON.parse((await command(root, 'package.mjs', ['--host-version', row.version])).stdout);
     const manifest = JSON.parse((await run('tar', ['-xOf', result.tarball, 'package/package.json'])).stdout);
-    assert.equal(manifest.version, alignedVersion(row.version, 'omaa', '0.13.0'));
+    assert.equal(manifest.version, alignedVersion(row.version, 'omaa', '0.13.1'));
     assert.deepEqual(manifest.files, ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md']);
     assert.equal(manifest.devDependencies['@deepseek-ai/dsh'], row.version);
     assert.equal(manifest.devDependencies['@deepseek-ai/cordis-plugin-loader'], row.loaderVersion);
@@ -138,7 +138,7 @@ test('in-range nonrepresentative host requires an observed CLI and aligns stable
   await assert.rejects(command(root, 'package.mjs', ['--host-version', '0.2.0']), /supply --host-cli/);
   const cli = await hostCli(root, '0.2.0', '1.0.5');
   const result = JSON.parse((await command(root, 'package.mjs', ['--host-version', '0.2.0', '--host-cli', cli])).stdout);
-  assert.equal(result.version, '0.2.0-omaa.0.13.0'); assert.equal(result.loaderVersion, '1.0.5');
+  assert.equal(result.version, '0.2.0-omaa.0.13.1'); assert.equal(result.loaderVersion, '1.0.5');
   await hostCli(root, '0.2.0', '1.0.5', '0.2.0-rc.2');
   await assert.rejects(command(root, 'package.mjs', ['--host-version', '0.2.0', '--host-cli', cli]), /--version does not match/);
   await hostCli(root, '0.2.0', '1.0.7');
@@ -183,7 +183,7 @@ test('OMD overlay still requires its reviewed native host baseline', async t => 
   await save(join(root, 'compat/omd', row.omdVariant + '.json'), rules);
   const base = join(root, 'wrong-official-baseline');
   await save(join(base, 'package.json'), { name: 'trisoul_x', version: rules.baseVersion, devDependencies: { '@deepseek-ai/dsh': row.version } });
-  await assert.rejects(command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version]), /package.json differs from the fixed official manifest/);
+  await assert.rejects(command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version, '--omd-version', splitReleaseVersion(rules.baseVersion, 'omd').feature.join('.')]), /package.json differs from the fixed official manifest/);
   await save(join(root, 'compat/omd', row.omdVariant + '.json'), { ...rules, hostVersion: '0.2.0' });
   await assert.rejects(command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version]), /baseline host differs/);
 });
@@ -310,7 +310,7 @@ test('current policy cannot override the mandatory licensing whitelist', async t
 });
 
 
-async function integratedPackFixture(t) {
+async function integratedPackFixture(t, omdVersion = '0.9.0') {
   const { root } = await fixture(t), row = validationHosts[0], base = join(root, 'official-integrated');
   const files = {
     'src/index.mjs': 'export const integratedBridge = true;\n',
@@ -321,10 +321,10 @@ async function integratedPackFixture(t) {
     'lib/host/factory.mjs': 'export const nativeHost = "' + row.version + '";\n',
     'vendor/native-snapshot.txt': 'OFFICIAL_VENDOR_BYTES_RETAINED\n',
     'scripts/pack-skin.mjs': 'throw Error("integrated mode must not rebuild skins");\n',
-    'release-manifest.json': JSON.stringify({ releases: [{ version: alignedVersion(row.version, 'omd', '0.9.0'), notes: ['official integrated release note'] }] }) + '\n',
+    'release-manifest.json': JSON.stringify({ releases: [{ version: alignedVersion(row.version, 'omd', omdVersion), notes: ['official integrated release note'] }] }) + '\n',
     'LICENSE': 'OFFICIAL_LICENSE_BYTES_RETAINED\n',
   };
-  const manifest = { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', '0.9.0'), private: true, type: 'module', main: 'src/index.mjs', files: ['src', 'lib', 'vendor', 'scripts', 'release-manifest.json', 'LICENSE'], devDependencies: { '@deepseek-ai/dsh': row.version, esbuild: (await json(join(repo, 'node_modules/esbuild/package.json'))).version } };
+  const manifest = { name: 'trisoul_x', version: alignedVersion(row.version, 'omd', omdVersion), private: true, type: 'module', main: 'src/index.mjs', files: ['src', 'lib', 'vendor', 'scripts', 'release-manifest.json', 'LICENSE'], devDependencies: { '@deepseek-ai/dsh': row.version, esbuild: (await json(join(repo, 'node_modules/esbuild/package.json'))).version } };
   await save(join(base, 'package.json'), manifest);
   for (const [file, bytes] of Object.entries(files)) { await mkdir(dirname(join(base, file)), { recursive: true }); await writeFile(join(base, file), bytes); }
   const rules = { schema: 1, mode: 'integrated-baseline', hostVersion: row.version, baseVersion: manifest.version, basePackageSha256: sha(await readFile(join(base, 'package.json'))), sourceTag: 'v' + manifest.version, sourceCommit: '1'.repeat(40), patch: null, patchSha256: emptyPatchSha256, additions: {}, patchedFiles: {}, packageFiles: [...manifest.files], files: Object.fromEntries(Object.entries(files).map(([file, bytes]) => [file, sha(Buffer.from(bytes))])) };
@@ -334,7 +334,7 @@ async function integratedPackFixture(t) {
 
 test('integrated official-shaped baseline packs without patching or rebuilding and retains every byte', async t => {
   const { root, row, base, rules, files } = await integratedPackFixture(t);
-  const args = ['--base', base, '--host-version', row.version];
+  const args = ['--base', base, '--host-version', row.version, '--omd-version', '0.9.0'];
   const result = JSON.parse((await command(root, 'package-omd-compat.mjs', args)).stdout);
   assert.equal(result.version, alignedVersion(row.version, 'omd', '0.9.0'));
   assert.equal(result.mode, 'integrated-baseline'); assert.equal(result.patchSha256, emptyPatchSha256);
@@ -348,11 +348,11 @@ test('integrated official-shaped baseline packs without patching or rebuilding a
   const published = join(root, 'official-published'), officialTarball = join(root, 'official-integrated.tgz');
   await mkdir(published); await cp(base, join(published, 'package'), { recursive: true });
   await run('tar', ['-czf', officialTarball, '-C', published, 'package']);
-  const packedOfficial = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', officialTarball, '--host-version', row.version])).stdout);
+  const packedOfficial = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', officialTarball, '--host-version', row.version, '--omd-version', '0.9.0'])).stdout);
   assert.equal(packedOfficial.version, result.version); assert.equal(packedOfficial.mode, 'integrated-baseline');
   for (const [file, bytes] of Object.entries(files)) assert.equal((await run('tar', ['-xOf', packedOfficial.tarball, 'package/' + file])).stdout, bytes, 'official tgz ' + file);
   assert.deepEqual(await readdir(join(root, '.cache')), []);
-  await assert.rejects(command(root, 'package-omd-compat.mjs', [...args, '--omd-version', '0.8.2']), /output version must equal/);
+  await assert.rejects(command(root, 'package-omd-compat.mjs', [...args.slice(0, 4), '--omd-version', '0.8.2']), /output version must equal/);
   await writeFile(join(base, 'vendor/native-snapshot.txt'), 'changed native snapshot');
   await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Base release differs/);
   await writeFile(join(base, 'vendor/native-snapshot.txt'), files['vendor/native-snapshot.txt']);
@@ -373,6 +373,15 @@ test('integrated official-shaped baseline packs without patching or rebuilding a
   await rm(join(base, 'package.json')); await writeFile(join(base, 'package.json'), manifestBytes);
   await writeFile(join(base, 'src/unreviewed.mjs'), 'export const bypass = true;');
   await assert.rejects(command(root, 'package-omd-compat.mjs', args), /Unknown files in official baseline/);
+  assert.deepEqual(await readdir(join(root, '.cache')), []);
+});
+
+test('current OMD 0.10 default preserves its integrated official payload', async t => {
+  const { root, row, base, files } = await integratedPackFixture(t, '0.10.0');
+  const result = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version])).stdout);
+  assert.equal(result.version, alignedVersion(row.version, 'omd', '0.10.0'));
+  assert.equal(result.mode, 'integrated-baseline');
+  for (const [file, bytes] of Object.entries(files)) assert.equal((await run('tar', ['-xOf', result.tarball, 'package/' + file])).stdout, bytes, file);
   assert.deepEqual(await readdir(join(root, '.cache')), []);
 });
 
