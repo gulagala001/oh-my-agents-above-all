@@ -53,6 +53,7 @@ async function main() {
     representatives = policy.validationHosts;
     for (const row of representatives) requireMatch(semver.valid(row.version) === row.version && semver.satisfies(row.version, policy.hostRange, { includePrerelease: true }) && semver.valid(row.loaderVersion) === row.loaderVersion && semver.satisfies(row.loaderVersion, policy.loaderRange, { includePrerelease: true }), 'Tagged representative is outside its compatibility range.');
   } else {
+    requireMatch(Array.isArray(source.files), 'Legacy tag must describe its release file allowlist.');
     // Existing releases precede the shared policy. Derive their inventory only
     // from that tag's reviewed overlays; never borrow today's representatives.
     const legacyScript = command('git', ['show', `${localCommit}:scripts/package.mjs`], 'Tagged legacy packager lookup').toString('utf8');
@@ -132,7 +133,11 @@ async function main() {
     const manifest = parseJson(command('tar', ['-xOf', join(assetsDir, name), 'package/package.json'], 'Archive manifest lookup'), `${name} package manifest`);
     requireMatch(manifest.name === metadata.name && manifest.version === metadata.version && manifest.devDependencies?.['@deepseek-ai/dsh'] === metadata.hostVersion, `Archive package/host differs from metadata: ${name}`);
     if (metadata.name === source.name) {
-      const policy = taggedPolicy ?? { hostRange: rule.hostVersion, loaderRange: rule.loaderVersion };
+      // Legacy tags own their historical whitelist; current distributions keep
+      // the default releaseFiles contract, including the licensing files.
+      const policy = taggedPolicy
+        ? { hostRange: taggedPolicy.hostRange, loaderRange: taggedPolicy.loaderRange }
+        : { hostRange: rule.hostVersion, loaderRange: rule.loaderVersion, files: source.files };
       requireMatch(isDeepStrictEqual(manifest, hostManifest(source, rule.hostVersion, rule.loaderVersion, policy)), `Archive OMAA manifest differs from complete tagged source/host contract: ${name}`);
     } else {
       requireMatch(hasReviewedOmdManifest(manifest, rule), `Archive OMD manifest differs from the complete reviewed tagged baseline contract: ${name}`);

@@ -7,6 +7,7 @@ import { cp, mkdir, mkdtemp, readFile, readdir, writeFile, symlink, rm } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { hostManifest } from '../scripts/host-manifest.mjs';
 import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
 
 const run = promisify(execFile), repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,9 +47,18 @@ async function archive(root, entry, manifest, compatibility) {
   await save(join(root, 'dist', name + '.metadata.json'), metadata);
   return metadata;
 }
-async function releaseFixture(t, { taggedPolicy = true, stableSource = true } = {}) {
+async function releaseFixture(t, { taggedPolicy = true, stableSource = true, legacyFiles = false } = {}) {
   const { root, source } = await fixture(t);
-  const rows = [...validationHosts, { version: '0.2.0', loaderVersion: '1.0.5', omdVariant: 'stable' }];
+  const rows = [...validationHosts, ...(!legacyFiles ? [{ version: '0.2.0', loaderVersion: '1.0.5', omdVariant: 'stable' }] : [])];
+  if (legacyFiles) {
+    source.version = alignedVersion(validationHosts.at(-1).version, 'omaa', '0.12.1');
+    source.files = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md'];
+    for (const name of Object.keys(source.peerDependencies ?? {})) {
+      if (name.startsWith('@deepseek-ai/dsh-') || name === '@deepseek-ai/dsh') source.peerDependencies[name] = validationHosts.at(-1).version;
+      if (name === '@deepseek-ai/cordis-plugin-loader') source.peerDependencies[name] = validationHosts.at(-1).loaderVersion;
+    }
+    await save(join(root, 'package.json'), source);
+  }
   if (stableSource) { source.version = alignedVersion('0.2.0', 'omaa', '0.13.0'); await save(join(root, 'package.json'), source); }
   await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts: rows });
   const assets = [];
@@ -66,6 +76,7 @@ async function releaseFixture(t, { taggedPolicy = true, stableSource = true } = 
         if (name.startsWith('@deepseek-ai/dsh-') || name === '@deepseek-ai/dsh') manifest.peerDependencies[name] = row.version;
         if (name === '@deepseek-ai/cordis-plugin-loader') manifest.peerDependencies[name] = row.loaderVersion;
       }
+      if (legacyFiles) manifest.files = [...source.files];
       metadata = await archive(root, metadata, manifest);
     }
     assets.push(metadata);
@@ -100,6 +111,7 @@ test('representative distributions retain exact SDKs and shared peer range', asy
     const result = JSON.parse((await command(root, 'package.mjs', ['--host-version', row.version])).stdout);
     const manifest = JSON.parse((await run('tar', ['-xOf', result.tarball, 'package/package.json'])).stdout);
     assert.equal(manifest.version, alignedVersion(row.version, 'omaa', '0.13.0'));
+    assert.deepEqual(manifest.files, ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md']);
     assert.equal(manifest.devDependencies['@deepseek-ai/dsh'], row.version);
     assert.equal(manifest.devDependencies['@deepseek-ai/cordis-plugin-loader'], row.loaderVersion);
     assert.equal(manifest.peerDependencies['@deepseek-ai/dsh-llm'], HOST_RANGE);
@@ -236,4 +248,52 @@ test('rehashing OMD manifest drift cannot bypass the reviewed original manifest 
     await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.8.1']), /complete reviewed baseline contract/, name + ' preparation');
     await assert.rejects(command(root, 'verify-release.mjs', ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')], env), /complete reviewed tagged baseline contract/, name + ' verification');
   }
+});
+
+
+test('historical six-file release verifies its own whitelist and still rejects rehashed drift', async t => {
+  const { root, source, assets } = await releaseFixture(t, { taggedPolicy: false, stableSource: false, legacyFiles: true });
+  const { tag, env } = await mockRelease(root, source);
+  await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts });
+  const args = ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')];
+  assert.equal(tag, 'v0.2.1-alpha.1.omaa.0.12.1');
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /12 attachments, 4 identical tarballs/);
+  const metadata = assets.find(row => row.name === source.name && row.hostVersion === validationHosts[0].version);
+  const manifest = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', metadata.filename), 'package/package.json'])).stdout);
+  assert.deepEqual(manifest.files, ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md']);
+  const mutations = [
+    ['removed whitelist entry', value => { value.files.pop(); }],
+    ['added modern license whitelist', value => { value.files.push('LICENSE', 'NOTICE', 'LICENSING.md'); }],
+    ['main', value => { value.main = 'lib/fake.js'; }],
+    ['peers', value => { value.peerDependencies['@deepseek-ai/dsh-system-prompt'] = validationHosts.at(-1).version; }],
+  ];
+  for (const [name, mutate] of mutations) {
+    const altered = structuredClone(manifest); mutate(altered);
+    await archive(root, metadata, altered); await refreshRemote(root);
+    await assert.rejects(command(root, 'verify-release.mjs', args, env), /complete tagged source\/host contract/, name);
+  }
+});
+
+
+test('explicit historical whitelists reject malformed or unsafe file arrays', async () => {
+  const source = await json(join(repo, 'package.json')), row = validationHosts[0];
+  for (const files of [null, 'src', [], ['src', 'src'], ['../src'], ['/src'], ['src/../outside'], ['src\\outside'], [1], ['LICENSE\nNOTICE']]) {
+    assert.throws(() => hostManifest(source, row.version, row.loaderVersion, { files }), /Invalid release file allowlist/);
+  }
+});
+
+
+test('current policy cannot override the mandatory licensing whitelist', async t => {
+  const { root, source, assets } = await releaseFixture(t);
+  const policyPath = join(root, 'src/host/compatibility.json'), policy = await json(policyPath);
+  await save(policyPath, { ...policy, files: ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md'] });
+  const { tag, env } = await mockRelease(root, source);
+  const args = ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')];
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /18 attachments, 6 identical tarballs/);
+  const metadata = assets.find(row => row.name === source.name);
+  const manifest = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', metadata.filename), 'package/package.json'])).stdout);
+  manifest.files = manifest.files.filter(file => !['LICENSE', 'NOTICE', 'LICENSING.md'].includes(file));
+  await archive(root, metadata, manifest); await refreshRemote(root);
+  await assert.rejects(command(root, 'release-assets.mjs', ['--omd-version', '0.8.1']), /complete source\/host contract/);
+  await assert.rejects(command(root, 'verify-release.mjs', args, env), /complete tagged source\/host contract/);
 });
