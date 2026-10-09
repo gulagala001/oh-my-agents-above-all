@@ -21,7 +21,7 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
   for (const name of ['OMAA_TEST_HOST_PACKAGE', 'OMAA_TEST_HOST_PACKAGE_SHA256', 'OMAA_TEST_OMD_PACKAGE', 'OMAA_TEST_OMD_PACKAGE_SHA256', 'OMAA_TEST_IUI_PACKAGE', 'OMAA_TEST_IUI_PACKAGE_SHA256', 'OMAA_IUI_STOCK_BLANK_EVIDENCE']) assert(process.env[name], 'Explicit frozen input/evidence required: ' + name);
   const out = resolve(process.env.OMAA_IUI_COEXIST_EVIDENCE_DIR || 'work/rea-upgrade/iui-coexist/actual'); await mkdir(out, { recursive: true });
   let f, context, page, installedIui, nativeReadSent = false;
-  const sessions = [], checks = [], errors = [], warnings = [], nativeSubmissions = [], userLayerChecks = [];
+  const sessions = [], checks = [], errors = [], warnings = [], nativeSubmissions = [], userLayerChecks = [], readiness = [];
   const stockBlankEvidencePath = resolve(process.env.OMAA_IUI_STOCK_BLANK_EVIDENCE);
   const stockBlankBytes = await readFile(stockBlankEvidencePath), stockBlankReport = JSON.parse(stockBlankBytes);
   assert.equal(stockBlankReport.stockOnly, true); assert.equal(stockBlankReport.passed, true);
@@ -43,7 +43,7 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
       if (f?.origin) for (const session of sessions) {
         await writeFile(join(out, 'session-' + session.id + '.json'), JSON.stringify(await f.snapshot(session.sessionId), null, 2) + '\n');
       }
-      await writeFile(join(out, 'capture.json'), JSON.stringify({ verified, phase, errors, warnings, knownNativeBlankWarnings: warnings.filter(isKnownNativeBlankWarning), unexpectedWarnings: warnings.filter(row => !isKnownNativeBlankWarning(row)), automaticMissingPresetBlankRecovery: false, stockBlankEvidence, nativeErrors: f?.errors, checks, userLayerChecks, nativeSubmissions }, null, 2) + '\n');
+      await writeFile(join(out, 'capture.json'), JSON.stringify({ verified, phase, errors, warnings, knownNativeBlankWarnings: warnings.filter(isKnownNativeBlankWarning), unexpectedWarnings: warnings.filter(row => !isKnownNativeBlankWarning(row)), automaticMissingPresetBlankRecovery: false, stockBlankEvidence, nativeErrors: f?.errors, checks, userLayerChecks, nativeSubmissions, readiness }, null, 2) + '\n');
     } finally { await context?.close(); }
   });
   f = await installedHost(t, { safeEnvironment: true, piResources: true, isolatedHome: true, omdPackagePath: process.env.OMAA_TEST_OMD_PACKAGE });
@@ -144,7 +144,20 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
   const workspace = await f.rpc('workspace/create', { path: f.workspace });
   for (const product of products) {
     const created = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: product.preset });
-    const enhanced = await f.api(created.sessionId, { enhancement: true }); assert.equal(enhanced.status, 200); assert.equal(enhanced.value.enhancementActive, true);
+    // Base presets load before optional OMD children. Observe actual scoped
+    // readiness rather than requiring session/create to block on enhancement.
+    const started = Date.now();
+    await until(async () => {
+      const available = await f.api(created.sessionId);
+      assert.equal(available.status, 200, JSON.stringify(available));
+      assert.equal(available.value.product?.preset, product.preset);
+      const previous = readiness.at(-1);
+      if (previous?.sessionId !== created.sessionId || previous.omdAvailable !== available.value.omdAvailable) {
+        readiness.push({ sessionId: created.sessionId, product: product.id, elapsedMs: Date.now() - started, omdAvailable: available.value.omdAvailable });
+      }
+      return available.value.omdAvailable === true;
+    });
+    const enhanced = await f.api(created.sessionId, { enhancement: true }); assert.equal(enhanced.status, 200, JSON.stringify(enhanced)); assert.equal(enhanced.value.enhancementActive, true);
     await f.prompt(created.sessionId, 'IUI_GENERATE_' + product.id);
     const title = 'IUI combined ' + product.id; await f.rpc('session/rename', { sessionId: created.sessionId, title });
     sessions.push({ id: product.id, sessionId: created.sessionId, title, preset: product.preset, expected: { place: '编辑-' + product.id, count: 0, enabled: false } });
