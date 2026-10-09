@@ -129,8 +129,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -320,8 +319,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -519,8 +517,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -692,8 +689,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -878,8 +874,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]

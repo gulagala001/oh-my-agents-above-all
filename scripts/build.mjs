@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
+import semver from 'semver';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
 
 import { products } from '../src/shared/products.mjs';
@@ -13,6 +14,8 @@ import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
 
 await buildPiPromptHelpers();
 const root = fileURLToPath(new URL('../', import.meta.url));
+const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
+const nativeActivations = semver.gte(manifest.devDependencies['@deepseek-ai/dsh'], '0.2.1-alpha.2');
 const row = (id, name, config, extra = {}) => ({ id, name, ...extra, ...(config ? { config } : {}) });
 const planSection = 'You are in plan mode. Research the workspace and ask questions without changing project files. Use the available read-only shell for research commands; its file restrictions cannot be widened in this mode. Produce a complete implementation plan. When ready, call exit_plan_mode alone with the complete plan Markdown, starting with a # heading. Implement only after the user approves the plan or selects the default mode. Follow the current tool schemas and runtime policy.';
 const composition = product => [
@@ -36,7 +39,8 @@ const composition = product => [
       row('tool-workflow', '@deepseek-ai/dsh-tool-workflow'),
       row('tool-subagent-control', '@deepseek-ai/dsh-tool-subagent-control'),
       row('tool-subagent-list-agents', '@deepseek-ai/dsh-tool-subagent-control/list-agents'),
-      row('tool-subagent', '@deepseek-ai/dsh-tool-subagent', { provider: 'spawn', toolName: 'subagent', modelSelectionSettings: true, backgroundMode: 'continuable' }),
+      row('tool-subagent', '@deepseek-ai/dsh-tool-subagent', { provider: 'spawn', toolName: 'subagent', modelSelectionSettings: true,
+        ...nativeActivations ? {} : { backgroundMode: 'continuable' } }),
     ], { group: true, isolate: { workflowEngine: true } }),
   ...product.id === 'pi' ? [] : [
     row('planning', 'cordis:group', [row('plan-mode', '@deepseek-ai/dsh-plan-mode', { section: planSection }), row('product-plan-tools', 'oh-my-agents-above-all/plan-tools')], { group: true, isolate: { planMode: true } }),
@@ -94,7 +98,6 @@ await buildZCodeArtifacts();
 await buildZCodeImportCache();
 await buildZCodeRunProjection();
 await buildZCodeGraphUiAssets({ mode: 'check' });
-const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 const graphAliases = JSON.parse(await readFile(root + 'scripts/zcode-graph-ui-aliases.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));

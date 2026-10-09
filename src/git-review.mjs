@@ -40,7 +40,7 @@ async function serial(key, run) {
 }
 async function binding(session) {
   if (typeof session?.header?.cwd !== 'string') fail('INVALID_SESSION', '缺少原生会话工作目录');
-  const root = await fs.realpath(session.header.cwd), repo = await fs.realpath((await git(root, ['rev-parse', '--show-toplevel'])).trim());
+  const root = await fs.realpath(executionContext.getStore()?.cwd ?? session.header.cwd), repo = await fs.realpath((await git(root, ['rev-parse', '--show-toplevel'])).trim());
   if (!inside(repo, root)) fail('UNSAFE_PATH', '工作目录不在 Git 仓库内');
   const gitDir = await fs.realpath((await git(root, ['rev-parse', '--absolute-git-dir'])).trim());
   const policyRoot = executionContext.getStore()?.policy?.workspaceRoot;

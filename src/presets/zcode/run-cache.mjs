@@ -1,15 +1,21 @@
 import { inputHash, normalizePersona, matchImportedActor, ImportedWorldQueue } from '../../../lib/zcode-import-cache.mjs';
 import { readActorPrefix } from './continuity.mjs';
+import { executionDirectories } from '../../host/working-directory.mjs';
 
 // Results and exact native event offsets are execution facts, independent of
 // the bounded workflow UI. Large values stay in native immutable attachments.
 export const RUN_CACHE_VERSION = 1;
 export const actorPersona = reference => normalizePersona(reference.name || undefined, reference.persona ?? undefined);
 
-export async function importCompletedRun({ ctx, parent, store, record, signal }) {
+export async function importCompletedRun({ ctx, parent, store, record, signal, directories }) {
   if (record.execution?.version !== RUN_CACHE_VERSION || typeof record.execution.script !== 'string')
     throw Error('This workflow predates durable task-prefix caching; create a new workflow before amending it.');
   const actors = new Map(), world = new Map();
+  const location = directories ?? await executionDirectories(ctx, parent, signal);
+  // Older runs always executed in their immutable project directory. A cwd
+  // change makes both observations and actor context a different operation.
+  const previousCwd = record.execution.cwd ?? location.workspaceRoot;
+  if (previousCwd !== location.cwd) return { actors, world, cwd: location.cwd, directoryChanged: true };
   for (const actor of record.execution.actors) {
     if (!actor.persona.name || actors.has(actor.persona.name)) continue;
     const entries = [];
@@ -30,7 +36,7 @@ export async function importCompletedRun({ ctx, parent, store, record, signal })
     const entries = world.get(row.inputHash) ?? [];
     entries.push({ result: await store.readItem(row.resultRef, signal) }); world.set(row.inputHash, entries);
   }
-  return { actors, world };
+  return { actors, world, cwd: location.cwd };
 }
 
 export function createRunCache({ store, parent, runId, imported }) {

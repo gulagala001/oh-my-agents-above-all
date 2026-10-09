@@ -1,3 +1,4 @@
+import { currentDirectory } from './host/working-directory.mjs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { products, productForPreset } from './shared/products.mjs';
@@ -130,7 +131,7 @@ async function mount(ctx) {
   ctx.effect(() => () => hub.updates.close());
   ctx.on('plugin-manager/install-state', progress => hub.updates.progress(progress), { global: true });
   ctx.provide('omaa', hub);
-  const gitReview = createGitReview({ execution: session => ({ subprocess: ctx.get('subprocess'), sandbox: ctx.get('sandbox'),
+  const gitReview = createGitReview({ execution: session => ({ cwd: currentDirectory(ctx, session), subprocess: ctx.get('subprocess'), sandbox: ctx.get('sandbox'),
     get policy() {
       const policy = hub.sandboxPolicy()?.resolve({ session });
       return policy && { ...policy, ...(hub.modeFor(session) !== 'default' || ctx.agents.get(session.id)?.status === 'running' ? { mode: 'read-only' } : {}) };

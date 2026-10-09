@@ -1,8 +1,32 @@
-import test from 'node:test';
+import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createUpdates } from '../src/updates.mjs';
-import { validationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+import { validationHosts as currentValidationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+
+const validationHosts = currentValidationHosts.filter(row => !row.validationPending);
+let archiveRoot, createArchivedUpdates;
+before(async () => {
+  // Historical pair tests use their own complete policy. The pending a2 build
+  // must not admit old SDKs or invent a reviewed a2 OMD release baseline.
+  archiveRoot = await mkdtemp(join(tmpdir(), 'omaa-update-archive-'));
+  await mkdir(join(archiveRoot, 'src/host'), { recursive: true });
+  for (const path of ['src/updates.mjs', 'src/host/compatibility.mjs']) await cp(new URL('../' + path, import.meta.url), join(archiveRoot, path));
+  await writeFile(join(archiveRoot, 'src/host/compatibility.json'), JSON.stringify({ hostRange: '>=0.2.0-rc.2 <=0.2.1-alpha.1', loaderRange: '>=1.0.5 <=1.0.6-alpha.1', validationHosts }));
+  await writeFile(join(archiveRoot, 'package.json'), JSON.stringify({ type: 'module', version: '0.2.1-alpha.1.omaa.0.14.1' }));
+  await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), join(archiveRoot, 'node_modules'), 'dir');
+  ({ createUpdates: createArchivedUpdates } = await import(pathToFileURL(join(archiveRoot, 'src/updates.mjs')).href));
+});
+after(async () => { if (archiveRoot) await rm(archiveRoot, { recursive: true, force: true }); });
+
+test('the pending a2 SDK build rejects old hosts before any update request or native installation', () => {
+  for (const hostVersion of ['0.2.0-rc.2', '0.2.1-alpha.1']) assert.throws(() => createUpdates({ hostVersion,
+    fetchImpl: () => { throw Error('Unexpected network request'); }, getManager: () => { throw Error('Unexpected native installation'); } }), /兼容范围/);
+});
 
 const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
@@ -34,7 +58,7 @@ function fixture({ partialFailure = false, metadataHost = host, draft = false, m
       return { application: 'restart-required', bundle: names[product] };
     },
   };
-  const service = createUpdates({ currentVersion: bundles[0].version, ...(runtimeHost ? { hostVersion: runtimeHost } : {}), getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
+  const service = createArchivedUpdates({ currentVersion: bundles[0].version, ...(runtimeHost ? { hostVersion: runtimeHost } : {}), getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
     isRunning: () => running, fetchImpl: async url => {
       const unpaired = { ...release, tag_name: 'v0.2.2-alpha.1.omaa.0.4.0', html_url: `https://github.com/${repo}/releases/tag/v0.2.2-alpha.1.omaa.0.4.0`, assets: [] };
       const value = url.includes('/releases?') ? [release, ...(laterUnpaired ? [unpaired] : [])] : metadata.get(url);
@@ -123,7 +147,7 @@ test('current OMAA pair accepts each reviewed host source and rejects commit dri
           ...(product === 'omd' ? { baseVersion: baseline.version, sourceCommit: drift ? 'f'.repeat(40) : baseline.commit,
             nativeHostFactories: 'preserved', overlaySha256: 'b'.repeat(64) } : {}) });
       }
-      const service = createUpdates({ currentVersion: alignedVersion(row.version, 'omaa', '0.13.0'), hostVersion: row.version,
+      const service = createArchivedUpdates({ currentVersion: alignedVersion(row.version, 'omaa', '0.13.0'), hostVersion: row.version,
         getManager: () => ({ listBundles: async () => [{ name: names.omaa, version: alignedVersion(row.version, 'omaa', '0.13.0'), installed: true, enabled: true }] }),
         fetchImpl: async url => new Response(JSON.stringify(url.includes('/releases?') ? [release] : metadata.get(url)), { status: 200 }) });
       t.after(() => service.close());

@@ -96,7 +96,7 @@ function validateMetadata(value, id, root) {
   return value;
 }
 
-export function createCheckpointStore(directory, { workspaceChanges, isIdle = () => false } = {}) {
+export function createCheckpointStore(directory, { workspaceChanges, isIdle = () => false, writable = () => false, currentDirectory = session => session.header.cwd } = {}) {
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) fail('INVALID_STORE', 'An absolute checkpoint directory is required');
   const sessions = new Map(), sessionLocks = new Map(), installed = new WeakSet();
   let storageRoot, storageIdentity;
@@ -167,30 +167,37 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     catch (error) { return { kind: 'unavailable', reason: error.code ?? 'CAPTURE_FAILED' }; }
   }
   const idle = session => { if (!isIdle(session)) fail('SESSION_RUNNING', 'Stop the session before restoring files'); };
+  const authorize = session => {
+    idle(session);
+    if (!writable(session)) fail('CHECKPOINT_PERMISSION', 'Switch to a writable default mode before restoring files');
+  };
   function matchCurrent(expected, current) {
     if (!sameSide(expected, current)) fail('CHECKPOINT_CONFLICT', 'The file contents or permissions changed after this checkpoint');
     if (expected.kind === 'bytes' && !sameIdentity(expected.identity, current.identity)) fail('CHECKPOINT_CONFLICT', 'The file was replaced after this checkpoint');
     for (const parent of expected.parents ?? []) if (!sameIdentity(parent, current.parents?.find(value => value.path === parent.path))) fail('CHECKPOINT_CONFLICT', 'A checkpoint parent directory was replaced');
   }
   async function check(state, file, session) {
-    idle(session);
+    authorize(session);
     const current = await readSide(state.root, path.resolve(state.root, file.path));
     const expected = file.restored ? file.restored.side : file.after;
     if (!expected || expected.kind === 'unavailable' || file.before.kind === 'unavailable' || file.discontinuous) fail('RESTORE_UNAVAILABLE', 'Exact checkpoint bytes are not available for this file');
     matchCurrent(expected, current);
     await content(state, file.before); // Verify every baseline before any file is changed.
+    authorize(session);
     return current;
   }
   async function replace(state, file, session, applied) {
     const target = path.resolve(state.root, file.path), before = file.before;
     await check(state, file, session);
     if (file.restored) return;
-    if (before.kind === 'absent') { await check(state, file, session); await fs.unlink(target); applied(); return; }
+    if (before.kind === 'absent') { await check(state, file, session); authorize(session); await fs.unlink(target); applied(); return; }
     const bytes = await content(state, before), temporary = path.join(path.dirname(target), '.omaa-restore-' + randomUUID() + '.tmp');
     try {
+      authorize(session);
       const handle = await fs.open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, before.mode);
       try { await handle.writeFile(bytes); await handle.chmod(before.mode); await handle.sync(); } finally { await handle.close(); }
       await check(state, file, session);
+      authorize(session);
       if (file.after.kind === 'absent') { await fs.link(temporary, target); await fs.unlink(temporary); }
       else await fs.rename(temporary, target);
       applied();
@@ -202,7 +209,14 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
       const session = exec.agent?.session, id = session?.id, requested = exec.arguments?.file_path;
       if (!id || !['write', 'edit'].includes(exec.name) || typeof requested !== 'string') return next();
       let binding; try { binding = await rootFor(id, session); } catch { return next(); }
-      const target = path.resolve(binding.root, requested);
+      let target;
+      try {
+        const cwd = await fs.realpath(currentDirectory(session));
+        // macOS /var and /private/var can name the same immutable workspace.
+        target = path.isAbsolute(requested) && inside(session.header.cwd, requested)
+          ? path.resolve(binding.root, path.relative(session.header.cwd, requested))
+          : path.resolve(cwd, requested);
+      } catch { return next(); }
       if (!inside(binding.root, target) || target === binding.root) return next();
       const turnNumber = session.snapshotEvents().findLast(event => event.type === 'turn/start')?.data.turn;
       if (!Number.isSafeInteger(turnNumber) || turnNumber < 1) return next();
@@ -246,8 +260,9 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
       return { sessionId, limits: store.limits, checkpoints, restoredAt: state.restoredAt, lastRestoredPaths: state.lastRestoredPaths ?? [] };
     },
     async restore(sessionId, session, { turn, paths, signal = new AbortController().signal } = {}) {
-      integer(turn, 'turn'); signal.throwIfAborted(); idle(session);
+      integer(turn, 'turn'); signal.throwIfAborted(); authorize(session);
       return locked(sessionLocks, sessionId, async () => {
+        authorize(session);
         const state = await load(sessionId, session), record = state.turns.find(value => value.turn === turn);
         if (!record) fail('CHECKPOINT_NOT_FOUND', 'This turn has no captured file checkpoint');
         if (paths !== undefined && (!Array.isArray(paths) || paths.some(value => typeof value !== 'string') || new Set(paths).size !== paths.length)) fail('INVALID_CHECKPOINT', 'Checkpoint paths must be a unique list');
@@ -293,7 +308,19 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
 }
 export function apply(ctx) {
   const agents = ctx.agents;
-  ctx.omaa.checkpoints ??= createCheckpointStore(ctx.omaa.checkpointDirectory, { workspaceChanges: ctx.get('workspaceChanges'), isIdle: session => agents.get(session.id)?.status !== 'running' });
+  ctx.omaa.checkpoints ??= createCheckpointStore(ctx.omaa.checkpointDirectory, {
+    workspaceChanges: ctx.get('workspaceChanges'),
+    currentDirectory: session => ctx.get('workingDirectory')?.get(session) ?? session.header.cwd,
+    isIdle: session => {
+      const agent = agents.get(session.id);
+      return !agent || agent.status === 'idle' && !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length;
+    },
+    writable: session => {
+      const agent = agents.get(session.id);
+      const policy = (agent?.ctx.get('sandboxPolicy') ?? ctx.omaa.sandboxPolicy())?.resolve({ session });
+      return Boolean(policy && policy.mode !== 'read-only' && ctx.omaa.modeFor(session, agent) === 'default');
+    },
+  });
   ctx.omaa.checkpoints.onError ??= error => ctx.logger.warn('Cursor checkpoint capture: %s', error.message);
   ctx.omaa.checkpoints.install(ctx);
 }
