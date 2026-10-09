@@ -4,7 +4,7 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码为 **OMAA `0.2.1-alpha.1.omaa.0.14.0` 未发布候选**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
+当前源码为 **OMAA `0.2.1-alpha.1.omaa.0.14.1` 未发布候选**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
 
 本轮候选配对 **OMD `0.12.0`**，分别保留 rc.2 与 alpha.1 的 SDK、原生组件及锁定来源；尚未创建 tag 或 Release。候选验收使用对应宿主的本地 `.tgz`。公开安装仍使用已发布 OMAA `0.13.1` 与 OMD `0.10.0`，不包含本轮新能力；具体文件名见[安装指南](docs/install.md)。
 
@@ -22,10 +22,10 @@ dsh web
 当前候选的本地安装示例（尚未公开发行）：
 
 ```sh
-dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.14.0.tgz
+dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.14.1.tgz
 ```
 
-rc.2 使用对应的 `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.14.0.tgz`，不混用另一宿主的包。
+rc.2 使用对应的 `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.14.1.tgz`，不混用另一宿主的包。
 
 
 已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，应在桌面原生插件管理器中安装 rc.2 附件，不能用上述 CLI 命令直接修改。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。

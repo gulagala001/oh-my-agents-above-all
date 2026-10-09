@@ -45,7 +45,13 @@ test('installed web keeps native conversation and switches five session themes a
     await page.locator('html[data-appearance="dark"]').waitFor();
     await panel.getByLabel('明暗模式', { exact: true }).selectOption('light');
     await page.locator('html[data-appearance="light"]').waitFor();
-    if (product.id === 'pi') assert(await panel.getByLabel('工作模式', { exact: true }).isDisabled());
+    if (product.id === 'pi') {
+      assert(await panel.getByText('执行（Pi 默认模式）', { exact: true }).isVisible());
+      assert.equal(await panel.getByLabel('工作模式', { exact: true }).count(), 0);
+      const rejected = await f.api(ids[product.id], { mode: 'ask' });
+      assert.equal(rejected.status, 400, 'Pi must reject non-default modes through the native settings API');
+      assert.equal((await f.api(ids[product.id])).value.mode, 'default');
+    }
     else {
       await panel.getByLabel('工作模式', { exact: true }).selectOption('ask');
       await page.waitForFunction(() => document.querySelector('.omaa-preset-controls select[aria-label="工作模式"]')?.value === 'ask');

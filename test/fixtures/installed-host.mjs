@@ -15,9 +15,15 @@ const runFile = promisify(execFile);
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 const defaultCli = join(repo, 'node_modules/@deepseek-ai/dsh/lib/bin.js');
 export function fixtureEnvironment(home, safe = false) {
-  const env = safe ? Object.fromEntries(['PATH', 'HOME', 'USERPROFILE', 'SystemRoot', 'TEMP', 'TMP', 'TMPDIR', 'LANG', 'LC_ALL', 'PNPM_HOME', 'COREPACK_HOME'].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])) : { ...process.env };
+  const env = safe ? Object.fromEntries(['PATH', 'SystemRoot', 'LANG', 'LC_ALL', 'PNPM_HOME', 'COREPACK_HOME'].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])) : { ...process.env };
   env.DSH_HOME = home;
-  if (safe) { env.DSH_TELEMETRY_DISABLED = '1'; env.npm_config_ignore_scripts = 'true'; env.npm_config_userconfig = join(home, 'fixture-empty.npmrc'); }
+  if (safe) {
+    Object.assign(env, { HOME: join(home, 'user-home'), USERPROFILE: join(home, 'user-home'),
+      TEMP: join(home, 'tmp'), TMP: join(home, 'tmp'), TMPDIR: join(home, 'tmp'),
+      XDG_CONFIG_HOME: join(home, 'config'), XDG_CACHE_HOME: join(home, 'cache'),
+      APPDATA: join(home, 'config'), LOCALAPPDATA: join(home, 'cache'),
+      DSH_TELEMETRY_DISABLED: '1', npm_config_ignore_scripts: 'true', npm_config_userconfig: join(home, 'fixture-empty.npmrc') });
+  }
   delete env.NODE_TEST_CONTEXT; delete env.NODE_TEST_WORKER_ID;
   return env;
 }
@@ -42,16 +48,21 @@ export async function until(check, timeout = 20000) {
 export const textReply = content => ({ delta: { role: 'assistant', content }, finish_reason: 'stop' });
 export const toolReply = (name, args) => ({ delta: { role: 'assistant', tool_calls: [{ index: 0, id: crypto.randomUUID(), type: 'function', function: { name, arguments: JSON.stringify(args) } }] }, finish_reason: 'tool_calls' });
 
-export async function installedHost(t, { liveSettings, piResources = process.env.OMAA_TEST_SAFE === '1', cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = false } = {}) {
+export async function installedHost(t, { liveSettings, piResources = process.env.OMAA_TEST_SAFE === '1', cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = false, storeDir = process.env.OMAA_TEST_PUBLIC_STORE, installTimeoutMs = 600000 } = {}) {
   if (safeEnvironment && liveSettings) throw new Error('Safe host matrix only permits the localhost fixture provider');
   const cli = await regularPath(cliPath, 'DSH CLI');
   const artifact = packagePath ? await packageEvidence(packagePath) : undefined;
   const omdArtifact = omdPackagePath ? await packageEvidence(omdPackagePath) : undefined;
   if (artifact && artifact.name !== 'oh-my-agents-above-all') throw new Error('Expected an OMAA tarball');
   if (omdArtifact && omdArtifact.name !== 'trisoul_x') throw new Error('Expected an OMD tarball');
-  const root = await mkdtemp(join(tmpdir(), 'omaa-installed-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'omaa-installed-')));
   const home = join(root, 'dsh-home'), workspace = join(root, 'workspace');
   await mkdir(home); await mkdir(workspace);
+  if (safeEnvironment) {
+    for (const directory of ['user-home', 'tmp', 'config', 'cache']) await mkdir(join(home, directory));
+    await writeFile(join(home, 'user-home', '.npmrc'), '');
+    await writeFile(join(home, 'fixture-empty.npmrc'), '');
+  }
   const env = fixtureEnvironment(home, safeEnvironment);
   const userHome = isolatedHome ? join(root, 'user-home') : undefined;
   if (userHome) { await mkdir(userHome); env.HOME = userHome; env.USERPROFILE = userHome; }
@@ -113,7 +124,8 @@ export async function installedHost(t, { liveSettings, piResources = process.env
   }));
   await writeFile(join(home, '.credentials.yaml'), JSON.stringify({ version: 1, refs: liveSettings ? { OMAA_LIVE_CONFIGURED_KEY: liveSettings.apiKey } : { OMAA_INSTALL_FIXTURE:'local-dummy-key' } }), { mode: 0o600 });
   const command = async args => {
-    try { return await runFile(process.execPath, [cli, ...args], { cwd: safeEnvironment ? workspace : repo, env, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 }); }
+    if (storeDir && args[0] === 'plugin' && (args.includes('add') || args.includes('remove'))) args = [...args, '--store-dir', resolve(storeDir)];
+    try { return await runFile(process.execPath, [cli, ...args], { cwd: safeEnvironment ? workspace : repo, env, encoding: 'utf8', timeout: installTimeoutMs, maxBuffer: 16 * 1024 * 1024 }); }
     catch (error) { throw new Error(redact(error.stderr || error.stdout || error.message)); }
   };
   const versionOutput = (await command(['--version'])).stdout.trim();
@@ -181,7 +193,7 @@ export async function installedHost(t, { liveSettings, piResources = process.env
   return {
     get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
     root, home, userHome, workspace, piAgentDir, requests, errors, install, boot, stop, call, rpc, api, snapshot, prompt, send,
-    evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, isolation: { safeEnvironment, piAgentDir, userPiSkillBodiesExcluded: !!(safeEnvironment && piAgentDir), projectResourcesEnabled: true, ancestorBoundary: !!(safeEnvironment && piAgentDir), metadataScanning: 'User resource directory paths and ignore-rule metadata may still be observed; this is not OS-level filesystem isolation.', omd: safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver'), chromeUserDataDir: join(root, 'isolated-chrome-profile'), computerUseExecuted: false } : undefined } },
+    evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, isolation: { safeEnvironment, piAgentDir, userHome: safeEnvironment ? env.HOME : userHome, userPiSkillBodiesExcluded: !!(safeEnvironment && piAgentDir), projectResourcesEnabled: true, ancestorBoundary: !!(safeEnvironment && piAgentDir), metadataScanning: 'User resource directory paths and ignore-rule metadata may still be observed; this is not OS-level filesystem isolation.', omd: safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver'), chromeUserDataDir: join(root, 'isolated-chrome-profile'), computerUseExecuted: false } : undefined } },
     command,
     installOmd: () => { if (!omdArtifact) throw new Error('No explicit OMD tarball configured'); return installArtifact(omdArtifact); },
     removeOmd: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'trisoul_x']),

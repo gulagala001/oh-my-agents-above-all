@@ -15,7 +15,9 @@ const fields = [{ name: 'place', label: '地点', type: 'text', value: '初始',
 const source = `root = Form("组合验收",${JSON.stringify(fields)},[Text("组合验收")],"提交表单","IUI_SUBMIT_COMBINED")`;
 const response = label => label + '\n\n```openui\n' + source + '\n```';
 
-test('fixed original IUI Forms remain editable, durable and native-submittable across five enhanced OMAA presets and lifecycle', { timeout: 600000 }, async t => {
+const enabled = process.env.OMAA_IUI_COEXIST === '1' || Boolean(process.env.OMAA_TEST_IUI_PACKAGE);
+test('fixed original IUI Forms remain editable, durable and native-submittable across five enhanced OMAA presets and lifecycle', { timeout: 600000,
+  skip: !enabled && 'Set OMAA_IUI_COEXIST=1 with explicit frozen OMAA, OMD, IUI and stock host evidence to run this native acceptance.' }, async t => {
   for (const name of ['OMAA_TEST_HOST_PACKAGE', 'OMAA_TEST_HOST_PACKAGE_SHA256', 'OMAA_TEST_OMD_PACKAGE', 'OMAA_TEST_OMD_PACKAGE_SHA256', 'OMAA_TEST_IUI_PACKAGE', 'OMAA_TEST_IUI_PACKAGE_SHA256', 'OMAA_IUI_STOCK_BLANK_EVIDENCE']) assert(process.env[name], 'Explicit frozen input/evidence required: ' + name);
   const out = resolve(process.env.OMAA_IUI_COEXIST_EVIDENCE_DIR || 'work/rea-upgrade/iui-coexist/actual'); await mkdir(out, { recursive: true });
   let f, context, page, installedIui, nativeReadSent = false;

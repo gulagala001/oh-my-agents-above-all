@@ -8,18 +8,11 @@ import { createSessionTransfer } from './host/session-transfer.mjs';
 import { createUpdates } from './updates.mjs';
 import { nativeHostVersion } from './host/compatibility.mjs';
 import { createPiExtensionSettings, piExtensionSessionNames } from './host/pi-extensions.mjs';
-import { interpolate } from '@deepseek-ai/cordis-plugin-loader';
 import { createZCodeArtifactStore } from './host/zcode-artifacts.mjs';
 
 export const name = 'omaa';
-export const inject = ['loader', 'agents', 'sessions', 'sessionProjections', 'systemPrompt', 'storageDomain', 'attachments'];
+export const inject = ['agents', 'sessions', 'sessionProjections', 'storageDomain', 'attachments', 'sandboxPolicy'];
 export function apply(ctx) {
-  // Presets load eagerly. A configured OMD must finish its real provider Fiber
-  // before working groups choose a workflow implementation, regardless of row
-  // order. Keep the OMAA service owned by this plugin, not the dependency scope.
-  const configuredOmd = [...ctx.loader.entries()].some(entry => entry.options.name === 'trisoul_x' && !interpolate(ctx, entry.options.disabled ?? false));
-  let mounted = false;
-  if (configuredOmd) return ctx.inject(['trisoulX'], () => { if (!mounted) { mounted = true; return mount(ctx); } });
   return mount(ctx);
 }
 async function mount(ctx) {
@@ -30,6 +23,10 @@ async function mount(ctx) {
   const presetOf = session => ctx.sessionProjections.stateOf(session, 'agentPreset') ?? session.header.agentPreset;
   const preferences = session => store.get(session.id);
   const hub = {
+    workflowControllers: new Set(),
+    workflowFor: agent => agent && [...hub.workflowControllers].find(controller => controller.matches(agent)),
+    enhancementScopes: new Set(),
+    enhancementAvailable: agent => Boolean(agent && [...hub.enhancementScopes].some(matches => matches(agent))),
     hostVersion,
     workflowArtifacts,
     checkpointDirectory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'checkpoints'),
@@ -40,8 +37,8 @@ async function mount(ctx) {
       const active = plan?.pending ?? plan?.active ?? ctx.sessionProjections.stateOf(session, 'plan')?.active;
       return active ? 'plan' : preferences(session).mode;
     },
-    enhancementEnabled: session => Boolean(productForPreset(presetOf(session)) && preferences(session).enhancement && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function'),
-    enhancementWorkModeFor: (session, agent) => hub.enhancementEnabled(session) && hub.modeFor(session, agent) === 'default' ? ctx.get('trisoulX')?.omaaWorkMode?.current(session, agent) ?? 'off' : 'off',
+    enhancementEnabled: session => Boolean(productForPreset(presetOf(session)) && preferences(session).enhancement && hub.enhancementAvailable(ctx.agents.get(session.id)) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function'),
+    enhancementWorkModeFor: (session, agent) => hub.enhancementEnabled(session) && hub.workflowFor(agent)?.mode === 'omd' && hub.modeFor(session, agent) === 'default' ? ctx.get('trisoulX')?.omaaWorkMode?.current(session, agent) ?? 'off' : 'off',
     async inspect(sessionId) {
       const found = await ctx.get('sessionController')?.resolveAgent(sessionId);
       if (found?.error) throw found.error;
@@ -51,11 +48,11 @@ async function mount(ctx) {
       const omdIncompatible = Boolean(ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function');
       const workControl = ctx.get('trisoulX')?.omaaWorkMode;
       const workView = workControl?.inspect(session, agent);
-      const workAvailable = typeof workControl?.select === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
+      const workAvailable = hub.workflowFor(agent)?.mode === 'omd' && typeof workControl?.select === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
       return { agent, session, value: { ...preferences(session), product: product ?? null, hostVersion,
         mode: hub.modeFor(session, agent),
         pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
-        omdAvailable: typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
+        omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
         enhancementActive: hub.enhancementEnabled(session), enhancementWorkMode: hub.enhancementEnabled(session) ? workView?.savedMode ?? 'off' : 'off',
         enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: Boolean(hub.enhancementEnabled(session) && workView?.enabled) } };
     },
@@ -70,7 +67,7 @@ async function mount(ctx) {
       if (workMode !== undefined && workMode !== 'off' && (!value.enhancementWorkModeAvailable || hub.modeFor(session, agent) !== 'default' || patch.mode === 'plan' || patch.mode === 'ask' || patch.enhancement === false)) throw new Error('Pro / Ultra 需要兼容 OMD 工作流和空闲执行模式');
       const wantedPlan = patch.mode === 'plan';
       if (product.id === 'pi' && patch.mode !== undefined && patch.mode !== 'default') throw new Error('Pi 使用默认编程模式');
-      if (patch.enhancement === true && typeof ctx.get('trisoulX')?.installOmaaEnhancement !== 'function') throw new Error('请安装并启用 Oh My DSH 后开启增强');
+      if (patch.enhancement === true && !value.omdAvailable) throw new Error('请安装并启用兼容的 Oh My DSH 后开启增强');
       const previous = preferences(session), { enhancementWorkMode: ignoredWorkMode, ...preferencePatch } = patch;
       const next = validatePreferences(previous, { ...preferencePatch, ...(workMode && workMode !== 'off' ? { enhancement: true } : {}), ...(wantedPlan ? { mode: 'default' } : {}) }, products.map(p => p.theme));
       if (patch.mode !== undefined) {
