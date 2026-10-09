@@ -15,4 +15,7 @@
 .omaa-pi-extension-states li>div { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; }
 .omaa-pi-extension-session-name { flex:1; min-width:0; overflow-wrap:anywhere; font-weight:500; }
 .omaa-pi-extension-states small { display:block; margin-top:5px; line-height:1.6; color:var(--dsw-alias-label-secondary); }
+.omaa-pi-extensions { container:omaa-pi-extensions / inline-size; }
+.omaa-pi-extension-actions button { min-height:30px; }
+@container omaa-pi-extensions (max-width:300px) { .omaa-pi-extension-actions { flex-direction:column; align-items:stretch; } .omaa-pi-extension-actions button { text-align:left; } }
 @media(max-width:420px) { .omaa-pi-extensions { padding:15px; } }

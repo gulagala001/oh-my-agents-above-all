@@ -71,7 +71,7 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     await findCheckpointIssues(settings, sessions, sidebarRight, id, selected, path);
     return {};
   });
-  return <section className="omaa-checkpoints" aria-label="Cursor 文件检查点">
+  return <section className="omaa-checkpoints" aria-busy={busy || undefined} aria-label="Cursor 文件检查点">
     <style>{css}</style>
     <header><h3>文件改动</h3><button type="button" disabled={busy || session.loading || session.saving}
       onClick={() => setReload(previous => previous + 1)}>{state.loading ? '正在读取…' : '刷新检查点'}</button></header>

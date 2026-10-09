@@ -17,7 +17,7 @@ function source(initial) {
 }
 function fixture(initial = 'a') {
   const mounted = source(initial), list = source({ byId: { a: { running: false }, b: { running: false } } }), calls = [];
-  const request = (url, options) => new Promise(resolve => calls.push({ url, options, resolve: data => resolve(new Response(JSON.stringify(data), { status: 200 })) }));
+  const request = (url, options) => new Promise(resolve => calls.push({ url, options, resolve: (data, status = 200) => resolve(new Response(JSON.stringify(data), { status })) }));
   const store = createSessionSettings({ sidebarRight: { mounted }, sessions: { list } }, request);
   return { mounted, list, calls, store };
 }
@@ -79,5 +79,21 @@ test('POST emits accepted preferences immediately, and explicit reopening refres
   assert.equal(f.calls.length, 3);
   f.calls[2].resolve(value('codex', { mode: 'ask', theme: 'host' })); await reopening;
   assert.equal(f.store.getSnapshot().data.theme, 'host');
+  f.store.dispose();
+});
+
+test('failed saves reject the caller, preserve confirmed values and require an actual successful reread', async () => {
+  const f = fixture(); await tick(); f.calls[0].resolve(value()); await tick();
+  const saving = f.store.update({ mode: 'ask' });
+  const rejection = assert.rejects(saving, /权限已改变/);
+  await tick(); f.calls[1].resolve({ error: '权限已改变' }, 409); await rejection;
+  assert.equal(f.store.getSnapshot().data.mode, 'default');
+  assert.equal(f.store.getSnapshot().saving, false);
+  assert.equal(f.store.getSnapshot().pendingPatch, undefined);
+  await assert.rejects(f.store.update({ theme: 'host' }), /重新读取/);
+  const retry = f.store.refresh(); await tick();
+  assert.equal(f.store.getSnapshot().error, '权限已改变', 'retry does not make stale data authoritative');
+  f.calls[2].resolve(value('codex', { mode: 'ask' })); await retry;
+  assert.equal(f.store.getSnapshot().error, ''); assert.equal(f.store.getSnapshot().data.mode, 'ask');
   f.store.dispose();
 });

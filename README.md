@@ -4,11 +4,11 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码为 **OMAA `0.2.1-alpha.1.omaa.0.14.1` 未发布候选**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
+当前源码为 **OMAA `0.2.1-alpha.2.omaa.0.15.0` 未发布候选**，Node.js 要求 `>=22.19`，开发 SDK 为官方 DSH `0.2.1-alpha.2`。本次前端验收绑定实际 a2 SDK 与冻结工件；rc.2／alpha.1 的 0.15 独立 SDK 构建与验收正在准备，历史 0.14.2 结果不能替代本次验证。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md) · [会话工作台](docs/frontend-workbench.md)。
 
-本轮候选配对 **OMD `0.12.0`**，分别保留 rc.2 与 alpha.1 的 SDK、原生组件及锁定来源；尚未创建 tag 或 Release。候选验收使用对应宿主的本地 `.tgz`。公开安装仍使用已发布 OMAA `0.13.1` 与 OMD `0.10.0`，不包含本轮新能力；具体文件名见[安装指南](docs/install.md)。
+本轮前端候选配对 **OMD `0.13.0`**，尚未创建 tag 或 Release。候选验收使用与实际宿主匹配的本地 `.tgz`、锁定 SDK 和 SHA-256。公开安装仍使用已发布 OMAA `0.13.1` 与 OMD `0.10.0`，不包含本轮新能力；具体文件名见[安装指南](docs/install.md)。
 
-与 OMD 同 profile 使用时，安装本版发行下对应宿主的 OMD `0.10.0`，其源码已包含 OMAA 兼容增强与外观协调接口。独立使用 OMAA 无需 OMD。Web／CLI 与 Desktop 均按正在运行的完整 DSH 版本选择附件；实际验收的平台与范围见[验证记录](docs/verification.md)。
+与 OMD 同 profile 使用时选择同一批次、同一宿主的配对 OMD，保留增强与外观协调接口。独立使用 OMAA 无需 OMD。Web／CLI 与 Desktop 均按正在运行的完整 DSH 版本选择附件；实际验收的平台与范围见[验证记录](docs/verification.md)。
 
 ## 安装与使用
 
@@ -22,13 +22,13 @@ dsh web
 当前候选的本地安装示例（尚未公开发行）：
 
 ```sh
-dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.14.1.tgz
+dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.2.omd.0.13.0.tgz file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.2.omaa.0.15.0.tgz
 ```
 
-rc.2 使用对应的 `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.14.1.tgz`，不混用另一宿主的包。
+独立使用 OMAA 时可只添加 OMAA 文件。rc.2／alpha.1 须等待本次独立 SDK 构建与实际验收的对应工件，不混用 a2 包。
 
 
-已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，应在桌面原生插件管理器中安装 rc.2 附件，不能用上述 CLI 命令直接修改。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
+已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，可使用桌面原生插件管理器，或与桌面实际 SDK 对应的官方 CLI 和准确 profile 安装；不要以另一宿主的 Web CLI 代替。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
 
 在新会话中选择 `Codex · OMAA`、`Grok Build · OMAA`、`Cursor · OMAA`、`Pi Coding Agent · OMAA` 或 `ZCode · OMAA`。输入区预设按钮可打开右侧设置，通用设置中只保留一个「Oh My Agents Above All」入口，版本更新与 Pi 本地扩展在该页折叠区。
 
@@ -78,7 +78,7 @@ pnpm build
 node scripts/package.mjs
 ```
 
-`pnpm build` 生成预设注册清单、Web 客户端、ZCode 纯编译器 bundle 及 world/产物纯模块；TypeScript `5.9.3` 的 57 份 ES2022 标准库声明在构建时嵌入，编译脚本不读取工作区文件。`node scripts/package.mjs` 在 `dist` 生成当前宿主版本的 `.tgz`、SHA256 和元数据。桌面 DSH `0.2.0-rc.2` 使用 `node scripts/package.mjs --host-version 0.2.0-rc.2`；Web DSH `0.2.1-alpha.1` 可显式使用 `--host-version 0.2.1-alpha.1`。打包只复制发行白名单到独立 staging，并在副本内绑定对应宿主 SDK 和 loader，不改变源码 `package.json`；应先完成源码构建。卸载使用安装时的 profile：
+`pnpm build` 生成预设注册清单、Web 客户端、ZCode 纯编译器 bundle 及 world/产物纯模块；TypeScript `5.9.3` 的 57 份 ES2022 标准库声明在构建时嵌入，编译脚本不读取工作区文件。`node scripts/package.mjs` 在 `dist` 生成当前宿主版本的 `.tgz`、SHA256 和元数据。其他宿主必须在独立依赖锁与对应原生 SDK 下完整构建，再使用 `--host-version` 选择发行身份；该参数本身不会重建 SDK，不能将 a2 依赖或宿主工厂改名用于 rc.2／alpha.1。打包只复制发行白名单到独立 staging，并在副本内绑定对应宿主 SDK 和 loader，不改变源码 `package.json`；应先完成源码构建。卸载使用安装时的 profile：
 
 ```sh
 dsh plugin --profile web remove oh-my-agents-above-all
@@ -86,7 +86,9 @@ dsh plugin --profile web remove oh-my-agents-above-all
 
 卸载插件不会删除 DSH 会话和工作区文件。插件偏好、文件检查点、有界 Pi 分支派生上下文及已保存的 Pi 扩展白名单保存在 `DSH_HOME/omaa`（默认 `~/.dsh/omaa`），不自动清除；原生会话 journal 仍由 DSH 管理。
 
-当前候选配对 OMD `0.12.0`，保留完整原生插件共存基线与 OMAA 薄桥接。新增 Cursor 回合改动入口、Pi 完整只读消息历史、ZCode 保存定义与参数复用，并更新已核实的 Codex/Pi 固定来源。原有上下文、压缩、工作流与五产品能力继续按原生契约工作。构建使用 [审阅过的分宿主基线](compat/omd/README.md)：rc.2 与 alpha 各有对应原生 SDK、工厂、vendor 和锁文件的固定源码 commit。`integrated-baseline` 模式完整保留官方发行文件及客户端，只追加兼容来源记录，输出 `.tgz`、SHA256 与来源元数据。历史补丁模式继续用于原发行的来源核对。独立使用 OMAA 无需安装 OMD。
+当前前端候选配对 OMD `0.13.0`，包括原生区域标记、侧栏与低动效协调；OMAA 保留上下文、压缩、工作流、Cursor 回合审阅、Pi 历史与 ZCode 保存定义，新增状态反馈和紧凑工作台。对应宿主需保留独立 SDK、工厂、组件快照与锁文件，并对本次完整构建执行验收。历史 [兼容构建基线](compat/omd/README.md) 继续用于原发行的来源核对；其 `integrated-baseline` 说明不能代替本次前端或 SDK 构建证明。独立使用 OMAA 无需安装 OMD。
+
+以下为历史兼容工件的来源核对入口，本次完整 SDK 构建不使用改名或只追加元数据代替：
 
 ```sh
 node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-alpha.tgz --host-version 0.2.1-alpha.1

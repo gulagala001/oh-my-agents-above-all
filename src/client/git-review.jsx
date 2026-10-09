@@ -69,7 +69,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
     saveEditor(false);
     await drafts.submit(id, items => sendReviewFeedbackBatch(settings, sessions, id, items));
   });
-  return <section className="omaa-git-review" aria-label="Codex Git 审阅">
+  return <section className="omaa-git-review" aria-busy={busy || undefined} aria-label="Codex Git 审阅">
     <style>{css}</style>
     <header><h3>代码审阅</h3><button type="button" disabled={busy} onClick={() => run(() => store.read())}>刷新</button></header>
     <label className="omaa-git-scope">比较范围 <select aria-label="Git 比较范围" value={state.scope} disabled={busy} onChange={event => chooseScope(event.target.value)}>
@@ -85,7 +85,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
       <p className="omaa-git-caption">{summary.total} 个文件 · <span className="omaa-git-added">+{summary.added}</span> <span className="omaa-git-deleted">−{summary.deleted}</span>{summary.ref ? ` · ${summary.ref}` : ''}</p>
       {!summary.files.length && <p>此范围没有改动。</p>}
       <div className="omaa-git-files">{summary.files.map(file => <div className="omaa-git-file" key={file.path}>
-        <button type="button" className="omaa-git-path" title={file.path} disabled={busy} onClick={() => chooseFile(file.path)}>{file.display || file.path}</button>
+        <button type="button" className="omaa-git-path" title={file.path} aria-current={diff?.path === file.path ? 'true' : undefined} disabled={busy} onClick={() => chooseFile(file.path)}>{file.display || file.path}</button>
         <span className="omaa-git-counts">+{file.added} −{file.deleted}</span>
         {(file.actions || []).map(action => <button type="button" key={action} disabled={!canWrite} onClick={() => mutate(file.path, action)}>{labels[action]}</button>)}
       </div>)}</div>

@@ -1,4 +1,4 @@
-.omaa-zcode-workflows { box-sizing:border-box; width:100%; min-width:0; padding:16px; color:var(--dsw-alias-label-primary); font-family:inherit; font-size:12px; line-height:1.5; overflow-wrap:anywhere; --color-usage-chart-1:#0b7fff; --color-usage-chart-2:#1e8a3e; --color-usage-chart-3:#9e77ed; --color-usage-chart-4:#e03131; --color-usage-chart-5:#e07b00; --color-usage-chart-6:#0aa7a7; --color-foreground-subtle:var(--dsw-alias-label-secondary); --color-foreground-subtlest:var(--dsw-alias-label-tertiary); }
+.omaa-zcode-workflows { box-sizing:border-box; width:100%; min-width:0; padding:16px; container:omaa-zcode-workbench / inline-size; color:var(--dsw-alias-label-primary); font-family:inherit; font-size:12px; line-height:1.5; overflow-wrap:anywhere; --color-usage-chart-1:#0b7fff; --color-usage-chart-2:#1e8a3e; --color-usage-chart-3:#9e77ed; --color-usage-chart-4:#e03131; --color-usage-chart-5:#e07b00; --color-usage-chart-6:#0aa7a7; --color-foreground-subtle:var(--dsw-alias-label-secondary); --color-foreground-subtlest:var(--dsw-alias-label-tertiary); }
 .omaa-zcode-workflows h3,.omaa-zcode-workflows h4,.omaa-zcode-workflows p { margin:0; }.omaa-zcode-workflows h3 { font-size:14px; font-weight:600; }.omaa-zcode-workflows h4 { font-size:13px; font-weight:600; }
 .omaa-zcode-workflows button,.omaa-zcode-workflows select,.omaa-zcode-button { box-sizing:border-box; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); font:inherit; padding:4px 8px; }.omaa-zcode-workflows button,.omaa-zcode-button { cursor:pointer; }.omaa-zcode-workflows button:hover,.omaa-zcode-button:hover { background:var(--dsw-alias-interactive-bg-hover); }.omaa-zcode-workflows button:disabled { opacity:.55; cursor:wait; }.omaa-zcode-button { display:inline-flex; text-decoration:none; white-space:nowrap; }
 .omaa-zcode-workflows :focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
@@ -27,3 +27,23 @@
 
 /* ZAI usage-chart slots from the fixed upstream light/dark styles. */
 html[data-appearance="dark"] .omaa-zcode-workflows,.dark .omaa-zcode-workflows { --color-usage-chart-1:#4099ff; --color-usage-chart-2:#46bf72; --color-usage-chart-3:#7b5ce5; --color-usage-chart-4:#ff5c5c; --color-usage-chart-5:#ff8a30; --color-usage-chart-6:#42c8c8; }
+
+.omaa-zcode-section-nav { display:flex; flex-wrap:wrap; gap:5px; padding:8px 0 12px; border-top:1px solid var(--dsw-alias-border-l2); }
+.omaa-zcode-section-nav button { color:var(--dsw-alias-brand-primary); font-size:11px; min-height:28px; }
+.omaa-zcode-region { min-width:0; scroll-margin-block-start:12px; }
+.omaa-zcode-region:focus { outline:1px solid var(--dsw-alias-brand-primary); outline-offset:3px; border-radius:6px; }
+.omaa-zcode-artifact-tabs { overscroll-behavior-inline:contain; scrollbar-gutter:stable; }
+.omaa-zcode-artifact-tabs button>span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.omaa-zcode-artifact-tabs button small { flex-shrink:0; }
+.omaa-zcode-run-status { gap:6px; }
+.omaa-zcode-run-status small { font-variant-numeric:tabular-nums; }
+.omaa-zcode-text,.omaa-zcode-table-scroll { overscroll-behavior:contain; }
+@container omaa-zcode-workbench (max-width:300px) {
+  .omaa-zcode-toolbar,.omaa-zcode-artifact>header { flex-wrap:wrap; }
+  .omaa-zcode-run-status small { margin-left:0; flex-basis:100%; }
+  .omaa-zcode-run-select,.omaa-zcode-version { flex-wrap:wrap; gap:5px; }
+  .omaa-zcode-run-select select,.omaa-zcode-version select { width:100%; flex-basis:100%; }
+  .omaa-zcode-artifact-tabs button { max-width:180px; }
+}
+html[data-omd-reduce-effects] .omaa-zcode-workflows *,html[data-omd-reduce-effects] .omaa-zcode-workflows *::before,html[data-omd-reduce-effects] .omaa-zcode-workflows *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; backdrop-filter:none!important; }
+@media(prefers-reduced-motion:reduce) { .omaa-zcode-workflows *,.omaa-zcode-workflows *::before,.omaa-zcode-workflows *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; backdrop-filter:none!important; } }

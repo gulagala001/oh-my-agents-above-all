@@ -224,6 +224,26 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   await page.locator('.omaa-saved-workflow').first().waitFor({ state: 'attached' });
   await page.evaluate(() => previousSavedReadClick()); await page.waitForTimeout(50);
   assert.equal((await f.snapshot(sessionId)).records.filter(row => row.event?.type === 'user/message').length, originalUserCount, 'Returning to the original session must not revive the old callback');
-  await writeFile(join(evidenceDir, 'result.json'), JSON.stringify({ evidence: f.evidence, isolatedUserHome: f.userHome, catalog, globalCatalog, runs: [first.result.runId, second.result.runId], actualValue: second.result.value, nativeNavigation: { sessions: [sessionId, other.sessionId], oldCallbackDeclined: true }, nativeMaterial: { negativeZeroNumber: true, negativeZeroNested: true, text: nativeMaterialText }, contrastEvidence, uiErrors: errors, nativeErrors: f.errors }, null, 2) + '\n');
+  const frontendThemes = [];
+  if (process.env.OMAA_FRONTEND_TOOL_THEMES === '1') {
+    await page.getByRole('button', { name: 'ZCode 预设设置', exact: true }).click();
+    const panel = page.getByRole('region', { name: 'Oh My Agents Above All 预设设置', exact: true });
+    for (const theme of ['codex-desktop','grok-build','cursor-cli','pi-coding-agent','zcode']) {
+      await until(async () => await panel.getByLabel('会话主题', { exact: true }).isEnabled());
+      await panel.getByLabel('会话主题', { exact: true }).selectOption(theme); await page.locator(`html[data-omaa-theme="${theme}"]`).waitFor();
+      for (const appearance of ['light','dark']) {
+        await panel.getByLabel('明暗模式', { exact: true }).selectOption(appearance); await page.locator(`html[data-appearance="${appearance}"]`).waitFor();
+        await reveal(readCard);
+        if (await readCard.locator('.omaa-saved-title').getAttribute('aria-expanded') !== 'true') await readCard.locator('.omaa-saved-title').click();
+        await readCard.scrollIntoViewIfNeeded();
+        const bounds = await readCard.evaluate(node => ({ overflow: node.scrollWidth > node.clientWidth + 1, width: node.clientWidth, text: node.textContent }));
+        assert.equal(bounds.overflow, false, `${theme}/${appearance}: native saved tool card overflow`); assert(bounds.text.includes('运行参数'));
+        await readCard.screenshot({ path: join(evidenceDir, `tool-${theme}-${appearance}.png`) }); frontendThemes.push({ theme, appearance, ...bounds, text: undefined });
+      }
+    }
+    assert.equal((await f.snapshot(sessionId)).records.filter(row => row.event?.type === 'user/message').length, originalUserCount, 'Theme clicks never submit a workflow request');
+    assert.equal(frontendThemes.length, 10);
+  }
+  await writeFile(join(evidenceDir, 'result.json'), JSON.stringify({ evidence: f.evidence, isolatedUserHome: f.userHome, catalog, globalCatalog, runs: [first.result.runId, second.result.runId], actualValue: second.result.value, nativeNavigation: { sessions: [sessionId, other.sessionId], oldCallbackDeclined: true }, nativeMaterial: { negativeZeroNumber: true, negativeZeroNested: true, text: nativeMaterialText }, contrastEvidence, frontendThemes, uiErrors: errors, nativeErrors: f.errors }, null, 2) + '\n');
   assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
 });

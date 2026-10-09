@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const css = `.omaa-zcode-tool{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);min-width:0}.omaa-zcode-tool-head{display:flex;align-items:center;gap:7px;min-width:0}.omaa-zcode-tool button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer;border-radius:5px;padding:3px 5px}.omaa-zcode-tool button:hover{background:var(--dsw-alias-interactive-bg-hover)}.omaa-zcode-tool button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}.omaa-zcode-tool-title{display:flex;align-items:center;gap:7px;min-width:0;flex:1;text-align:left}.omaa-zcode-tool-title>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.omaa-zcode-tool small{font-size:11px;color:var(--dsw-alias-label-tertiary)}.omaa-zcode-tool[data-error] .omaa-zcode-tool-status,.omaa-zcode-tool .omaa-zcode-tool-error{color:var(--dsw-alias-state-error-primary)}.omaa-zcode-tool .omaa-zcode-tool-artifacts{color:var(--dsw-alias-brand-primary);font-size:11px;white-space:nowrap}.omaa-zcode-tool-body{margin:4px 0 4px 4px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-markdown-code-block);overflow:hidden}.omaa-zcode-tool-body section{padding:9px 12px}.omaa-zcode-tool-body section+section{border-top:1px solid var(--dsw-alias-border-l2)}.omaa-zcode-tool-body pre{margin:5px 0 0;max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace}.omaa-zcode-tool-inspect{font-size:11px!important}`;
 const statusLabels = new Map(Object.entries({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' }));
@@ -52,21 +52,36 @@ function argumentText(block, phase, args) {
 export function ZCodeWorkflowTool({ phase, block, useDisclosure, inspect, openArtifacts, callId }) {
   const { expanded, toggle } = useDisclosure();
   const [actionError, setActionError] = useState('');
+  const [opening, setOpening] = useState(false);
+  const lifetime = useRef({ alive: false, revision: 0, busy: false });
   const result = phase === 'result' ? workflowToolResult(block) : {};
   const failed = phase === 'result' && (block.isError || result.value?.ok === false || result.status === 'failed');
   const stopped = phase === 'result' && (block.error?.code === 'interrupted' || result.value?.error?.kind === 'abort' || result.status === 'killed' || result.status === 'cancelled');
-  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : statusLabels.get(result.status) || result.status || '已完成';
+  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : statusLabels.get(result.status) || result.status || (result.value?.ok === true ? '已完成' : '原始结果');
   const args = argumentReader(block, phase);
   const savedName = args?.value?.('saved')?.name;
   const name = args?.textPrefix?.('name', 100) || (typeof savedName === 'string' && savedName) || args?.textPrefix?.('path', 100) || 'ZCode 工作流';
   const output = phase === 'result' ? resultText(block) : '';
   const input = expanded ? argumentText(block, phase, args) : '';
-  useEffect(() => { setActionError(''); }, [callId, result.runId]);
-  const open = async () => { setActionError(''); try { await openArtifacts(result.runId); } catch (error) { setActionError(error.message); } };
-  return <div className="omaa-zcode-tool" data-phase={phase} data-error={failed || undefined}>
+  const identity = JSON.stringify([callId, result.runId, phase]);
+  useEffect(() => {
+    const life = lifetime.current; life.alive = true; life.identity = identity; ++life.revision; life.busy = false;
+    setActionError(''); setOpening(false);
+    return () => { life.alive = false; ++life.revision; life.busy = false; };
+  }, [identity]);
+  const open = async () => {
+    const life = lifetime.current;
+    if (!life.alive || life.identity !== identity || life.busy) return;
+    const ticket = life.revision, alive = () => life.alive && ticket === life.revision;
+    life.busy = true; setActionError(''); setOpening(true);
+    try { await openArtifacts(result.runId); }
+    catch (error) { if (alive()) setActionError(error.message); }
+    finally { if (alive()) { life.busy = false; setOpening(false); } }
+  };
+  return <div className="omaa-zcode-tool" data-phase={phase} data-error={failed || undefined} aria-busy={opening || undefined}>
     <style>{css}</style><div className="omaa-zcode-tool-head">
       <button type="button" className="omaa-zcode-tool-title" aria-expanded={expanded} onClick={toggle}><span aria-hidden="true">{expanded ? '⌄' : '›'}</span><span>{name}</span><small className="omaa-zcode-tool-status">{status}</small></button>
-      {result.runId && typeof openArtifacts === 'function' && <button type="button" className="omaa-zcode-tool-artifacts" onClick={() => { void open(); }}>查看产物</button>}
+      {result.runId && typeof openArtifacts === 'function' && <button type="button" className="omaa-zcode-tool-artifacts" disabled={opening} onClick={() => { void open(); }}>{opening ? '正在打开…' : '查看产物'}</button>}
       {typeof inspect === 'function' && <button type="button" className="omaa-zcode-tool-inspect" onClick={inspect} aria-label="检查工作流工具调用">检查</button>}
     </div>
     {actionError && <p role="alert" className="omaa-zcode-tool-error">{actionError}</p>}

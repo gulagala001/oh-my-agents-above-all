@@ -1,4 +1,4 @@
-.omaa-saved-workflow{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);min-width:0}
+.omaa-saved-workflow{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);min-width:0;container:omaa-saved-tool / inline-size}
 .omaa-saved-workflow header{display:flex;align-items:center;gap:8px}
 .omaa-saved-workflow button{font:inherit;color:inherit;border:1px solid var(--dsw-alias-border-l2);background:transparent;cursor:pointer;border-radius:5px;padding:3px 7px}
 .omaa-saved-workflow button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
@@ -26,4 +26,11 @@
 .omaa-saved-actions>button{color:var(--dsw-alias-brand-primary)}
 .omaa-saved-error{color:var(--dsw-alias-state-error-primary)!important;overflow-wrap:anywhere}
 .omaa-saved-body details{padding:8px 12px}
+.omaa-saved-notice{margin:6px 0;font-size:12px;overflow-wrap:anywhere}
+.omaa-saved-notice pre{margin:0;white-space:pre-wrap;font:inherit}
+.omaa-saved-workflow header{flex-wrap:wrap}
+.omaa-saved-workflow .omaa-saved-title{flex-basis:180px}
+.omaa-saved-title small{flex-shrink:0}
+.omaa-saved-parameter input[type=text],.omaa-saved-parameter select,.omaa-saved-parameter textarea{background:var(--dsw-alias-bg-layer-1)}
+@container omaa-saved-tool (max-width:400px){.omaa-saved-parameter{grid-template-columns:1fr}.omaa-saved-row{flex-wrap:wrap}.omaa-saved-title>span:nth-child(2){white-space:normal;overflow-wrap:anywhere}}
 @media(max-width:600px){.omaa-saved-parameter{grid-template-columns:1fr}.omaa-saved-row{gap:6px}.omaa-saved-workflow header{flex-wrap:wrap}}

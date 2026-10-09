@@ -44,6 +44,10 @@ test('saved tool cards validate parameters, submit native requests and invalidat
   await page.getByText('invalid_metadata', { exact: true }).waitFor();
   await page.getByRole('button', { name: '读取定义', exact: true }).nth(1).click();
   await page.getByRole('status').filter({ hasText: '请求已发送' }).waitFor();
+  await page.locator('.omaa-saved-title').click();
+  assert.equal(await page.locator('.omaa-saved-body').count(), 0);
+  assert.equal(await page.getByRole('status').filter({ hasText: '请求已发送' }).isVisible(), true, 'accepted request remains visible when the tool body is collapsed');
+  await page.locator('.omaa-saved-title').click();
   assert.match(await page.evaluate(() => savedActions.prompts[0][0][0].text), /"scope":"global"/);
   await render('read_saved_workflow', definition);
   await page.getByText('默认值：0', { exact: true }).waitFor(); await page.getByText('默认值：false', { exact: true }).waitFor();

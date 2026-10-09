@@ -75,12 +75,15 @@ export function ZCodeSavedWorkflowTool({ phase, block, toolName, sessionId, sett
   const update = (name, patch) => setDraft(previous => ({ ...previous, [name]: { ...previous[name], ...patch } }));
   const runStatus = value?.result?.status ?? (value?.result?.kind === 'background' ? 'backgrounded' : undefined);
   const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : failed ? '失败' : !supported ? '原始结果' : statusLabels.get(runStatus) || runStatus || '已完成';
-  return <div className="omaa-saved-workflow" data-phase={phase} data-error={failed || undefined}>
+  return <div className="omaa-saved-workflow" data-phase={phase} data-error={failed || undefined} aria-busy={actionState.busy || undefined}>
     <style>{css}</style><header>
       <button type="button" className="omaa-saved-title" aria-expanded={expanded} onClick={toggle}><span aria-hidden="true">{expanded ? '⌄' : '›'}</span><span>{labels[toolName]}{typeof value?.name === 'string' ? ` · ${value.name}` : ''}</span><small>{status}</small></button>
       {runId && <button type="button" onClick={openRun} disabled={current.sessionId !== sessionId || mounted !== sessionId}>查看运行与产物</button>}
       {inspect && <button type="button" onClick={inspect}>检查</button>}
     </header>
+    {actionState.busy && <p role="status" className="omaa-saved-notice">正在发送请求…</p>}
+    {actionState.error && <div role="alert" className="omaa-saved-notice omaa-saved-error"><pre>{actionState.error}</pre></div>}
+    {actionState.sent && <p role="status" className="omaa-saved-notice">请求已发送到当前会话，工具执行结果将显示在对话中。</p>}
     {expanded && <div className="omaa-saved-body">
       {phase !== 'result' ? <section role="status">{phase === 'preparing' ? '正在准备工具参数…' : '等待实际工具结果…'}</section> : failed ? <section className="omaa-saved-error"><pre>{textOf(block)}</pre></section> : !supported ? <section><small>原始工具结果</small><pre>{textOf(block) || '工具未返回内容。'}</pre></section> : <>
         {toolName === 'list_saved_workflows' && Array.isArray(value?.workflows) && <section>
@@ -97,8 +100,6 @@ export function ZCodeSavedWorkflowTool({ phase, block, toolName, sessionId, sett
         {toolName === 'run_saved_workflow' && value?.result && <section><h4>实际运行结果</h4><pre>{JSON.stringify(value.result, null, 2)}</pre></section>}
         <details><summary>原始工具结果</summary><pre>{textOf(block) || '工具未返回内容。'}</pre></details>
       </>}
-      {actionState.error && <section role="alert" className="omaa-saved-error"><pre>{actionState.error}</pre></section>}
-      {actionState.sent && <section role="status">请求已发送到当前会话，工具执行结果将显示在对话中。</section>}
     </div>}
   </div>;
 }

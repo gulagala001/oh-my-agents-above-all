@@ -65,7 +65,7 @@ export function PiExtensions({ settings, embedded = false } = {}) {
     } finally { if (current.revision === revision) current.busy = false; }
   };
   const busy = state.loading || state.saving;
-  return <section className="omaa-pi-extensions" aria-label="Pi 扩展设置">
+  return <section className="omaa-pi-extensions" aria-busy={busy || undefined} aria-label="Pi 扩展设置">
     <style>{css}</style>
     <header>{!embedded && <h2>Pi 本地扩展</h2>}<button type="button" disabled={busy} onClick={() => { void load(); }}>重新读取</button></header>
     <p>每行填写一个本地 TS / JS 文件的绝对路径。仅加载你明确保存的扩展，不自动执行项目中发现的文件。</p>

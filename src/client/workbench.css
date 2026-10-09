@@ -1,0 +1,51 @@
+/* OMAA owns only these panels. Native columns and other plugins keep their
+   appearance owner; product fonts and palettes come from the pinned packs. */
+.omaa-workbench { min-width:0; width:100%; container:omaa-workbench / inline-size; color:var(--dsw-alias-label-primary); }
+.omaa-workbench .omaa-preset-controls { padding:16px; }
+.omaa-workbench :is(.omaa-checkpoints,.omaa-git-review,.omaa-pi-branches,.omaa-workbench-link) { margin:0 16px 16px; }
+.omaa-preset-heading { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
+.omaa-preset-heading h2 { margin:0; flex:1; min-width:0; }
+.omaa-preset-controls header { margin-bottom:14px; }
+.omaa-session-state { flex-shrink:0; font-size:10px; line-height:1.5; padding:2px 6px; border-radius:4px; background:var(--dsw-alias-interactive-bg-hover); color:var(--dsw-alias-label-secondary); }
+.omaa-session-state[data-state="error"],.omaa-preset-chip[data-state="error"] { color:var(--dsw-alias-state-error-primary); }
+.omaa-session-state[data-state="running"],.omaa-preset-chip[data-state="running"] small { color:var(--dsw-alias-brand-primary); }
+.omaa-workbench-link { padding:12px 0; border-top:1px solid var(--dsw-alias-border-l2); }
+.omaa-workbench-link .omaa-help { margin:6px 0 0; }
+:is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows) button { min-height:28px; }
+.omaa-workbench-link button { padding:5px 8px; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-brand-primary); font:inherit; font-size:12px; cursor:pointer; }
+:is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows) :is(button,select,input,textarea):focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
+:is(.omaa-checkpoints,.omaa-git-review,.omaa-pi-branches) { min-width:0; overflow-wrap:anywhere; }
+.omaa-git-file { gap:5px; padding:6px; border:1px solid transparent; border-radius:6px; }
+.omaa-git-file:has([aria-current="true"]) { border-color:var(--dsw-alias-brand-primary); background:var(--dsw-alias-interactive-bg-hover); }
+.omaa-git-path { border:0!important; background:transparent!important; }
+.omaa-git-counts { font-variant-numeric:tabular-nums; }
+.omaa-checkpoint-file { padding:8px 0; border-bottom:1px solid var(--dsw-alias-border-l2); }
+.omaa-checkpoint-file code { flex-basis:100%; }
+.omaa-pi-branches header { flex-wrap:wrap; }
+.omaa-pi-branch-tree { overscroll-behavior:contain; scrollbar-gutter:stable; }
+.omaa-pi-branch-tree button small { max-width:45%; overflow:hidden; text-overflow:ellipsis; }
+.omaa-workbench :is(.omaa-help,.omaa-git-caption,.omaa-pi-branch-help) { font-size:12px; line-height:1.6; }
+.omaa-zcode-tool { container:omaa-workflow-tool / inline-size; }
+.omaa-zcode-tool-head { flex-wrap:wrap; gap:4px!important; }
+.omaa-zcode-tool-title { flex-basis:160px!important; }
+.omaa-zcode-tool-title small { flex-shrink:0; }
+.omaa-zcode-tool-artifacts:disabled { opacity:.55; cursor:wait; }
+@container omaa-workflow-tool (max-width:300px) { .omaa-zcode-tool-title>span:nth-child(2) { white-space:normal!important; overflow-wrap:anywhere; } }
+@container omaa-workbench (max-width:300px) {
+  .omaa-workbench .omaa-preset-controls { padding:12px; }
+  .omaa-workbench :is(.omaa-checkpoints,.omaa-git-review,.omaa-pi-branches,.omaa-workbench-link) { margin-inline:12px; }
+  .omaa-git-scope { align-items:stretch; }
+  .omaa-git-scope select,.omaa-checkpoints>label select,.omaa-pi-branches form>label select { width:100%; }
+  .omaa-git-file .omaa-git-path { flex-basis:100%; }
+}
+/* These remain active when an OMAA panel is shown under a host/OMD theme. */
+html[data-omd-reduce-effects] :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *,
+html[data-omd-reduce-effects] :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *::before,
+html[data-omd-reduce-effects] :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *::after,
+html[data-omd-reduce-effects] :is(.omaa-preset-chip,.omaa-checkpoint-review-chip) { animation:none!important; transition:none!important; scroll-behavior:auto!important; backdrop-filter:none!important; }
+@media(prefers-reduced-motion:reduce) {
+  :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *,
+  :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *::before,
+  :is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows,.omaa-zcode-tool,.omaa-saved-workflow) *::after,
+  :is(.omaa-preset-chip,.omaa-checkpoint-review-chip) { animation:none!important; transition:none!important; scroll-behavior:auto!important; backdrop-filter:none!important; }
+}
