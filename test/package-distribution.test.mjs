@@ -376,10 +376,12 @@ test('integrated official-shaped baseline packs without patching or rebuilding a
   assert.deepEqual(await readdir(join(root, '.cache')), []);
 });
 
-test('current OMD 0.10 default preserves its integrated official payload', async t => {
-  const { root, row, base, files } = await integratedPackFixture(t, '0.10.0');
+test('current OMD default preserves its integrated official payload', async t => {
+  const rule = JSON.parse(await readFile(new URL('../compat/omd/' + validationHosts[0].omdVariant + '.json', import.meta.url), 'utf8'));
+  const feature = splitReleaseVersion(rule.baseVersion, 'omd').feature.join('.');
+  const { root, row, base, files } = await integratedPackFixture(t, feature);
   const result = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version])).stdout);
-  assert.equal(result.version, alignedVersion(row.version, 'omd', '0.10.0'));
+  assert.equal(result.version, alignedVersion(row.version, 'omd', feature));
   assert.equal(result.mode, 'integrated-baseline');
   for (const [file, bytes] of Object.entries(files)) assert.equal((await run('tar', ['-xOf', result.tarball, 'package/' + file])).stdout, bytes, file);
   assert.deepEqual(await readdir(join(root, '.cache')), []);

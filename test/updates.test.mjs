@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createUpdates } from '../src/updates.mjs';
-import { validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
+import { validationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
 
 const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
@@ -103,16 +104,19 @@ test('updating OMD cannot combine a newer installed OMAA with an older release p
   assert.equal(f.calls.length, 0, 'neither member of an incompatible pair is installed');
 });
 
-test('current OMAA 0.13.1 pair accepts each host reviewed OMD 0.10 source and rejects commit drift', async t => {
+test('current OMAA pair accepts each reviewed host source and rejects commit drift', async t => {
+  const source = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
+  const feature = splitReleaseVersion(source.version, 'omaa').feature.join('.');
   for (const row of validationHosts) {
-    const baseline = row.omdBaselines.find(item => item.version === alignedVersion(row.version, 'omd', '0.10.0'));
+    const rule = JSON.parse(readFileSync(new URL('../compat/omd/' + row.omdVariant + '.json', import.meta.url)));
+    const baseline = row.omdBaselines.find(item => item.version === rule.baseVersion);
     assert(baseline, 'current pair must have a reviewed runtime source');
     for (const drift of [false, true]) {
-      const releaseTag = 'v0.2.1-alpha.1.omaa.0.13.1', metadata = new Map();
+      const releaseTag = 'v' + source.version, metadata = new Map();
       const release = { tag_name: releaseTag, draft: false, prerelease: true, published_at: '2026-10-08T00:00:00Z',
         html_url: `https://github.com/${repo}/releases/tag/${releaseTag}`, assets: [] };
       for (const product of ['omaa', 'omd']) {
-        const version = alignedVersion(row.version, product, product === 'omaa' ? '0.13.1' : '0.10.0');
+        const version = product === 'omaa' ? alignedVersion(row.version, 'omaa', feature) : baseline.version;
         const filename = `${names[product]}-${version}.tgz`, url = `https://github.com/${repo}/releases/download/${releaseTag}/${filename}`;
         for (const suffix of ['', '.metadata.json', '.sha256']) release.assets.push({ name: filename + suffix, browser_download_url: url + suffix, state: 'uploaded' });
         metadata.set(url + '.metadata.json', { name: names[product], version, hostVersion: row.version, filename, sha256: 'a'.repeat(64),
@@ -126,7 +130,7 @@ test('current OMAA 0.13.1 pair accepts each host reviewed OMD 0.10 source and re
       await service.check(true);
       const state = service.snapshot();
       if (drift) { assert.match(state.error, /来源尚未受支持/); assert.equal(state.latestVersion, null); }
-      else { assert.equal(state.error, ''); assert.equal(state.latestVersion, alignedVersion(row.version, 'omaa', '0.13.1'));
+      else { assert.equal(state.error, ''); assert.equal(state.latestVersion, alignedVersion(row.version, 'omaa', feature));
         assert.equal(state.latestOmdVersion, baseline.version); assert.equal(state.hostVersion, row.version); }
     }
   }

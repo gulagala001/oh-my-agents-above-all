@@ -58,7 +58,7 @@ const patch = [{ insert: [row('omaa', 'oh-my-agents-above-all'), ...products.map
   plugins: [row('working', 'cordis:group', [
     row('working-policy', 'oh-my-agents-above-all/working-policy'),
     row('working-tools', 'oh-my-agents-above-all/working-tools', composition(product), { group: true }),
-  ], { group: true, isolate: { sandboxPolicy: true, ...product.id === 'pi' ? { omaaPiExtensions: true } : {} } })],
+  ], { group: true, isolate: { sandboxPolicy: true, ...product.id === 'pi' ? { omaaPiExtensions: true, omaaPiResources: true, omaaPiSteering: true } : {} } })],
 }))] }];
 // JSON is a YAML subset; only the platform expressions need Cordis' JS tag.
 const yaml = JSON.stringify(patch, null, 2).replaceAll('"WINDOWS_DISABLED"', '!!js process.platform === \'win32\'').replaceAll('"UNIX_DISABLED"', '!!js process.platform !== \'win32\'');

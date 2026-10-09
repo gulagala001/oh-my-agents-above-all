@@ -609,7 +609,9 @@
               "group": true,
               "isolate": {
                 "sandboxPolicy": true,
-                "omaaPiExtensions": true
+                "omaaPiExtensions": true,
+                "omaaPiResources": true,
+                "omaaPiSteering": true
               },
               "config": [
                 {

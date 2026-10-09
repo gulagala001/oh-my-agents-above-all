@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { IconPanelLeftOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives';
-import { decorateSlot } from './slot-decoration.mjs';
+import { decorateSlotComponent } from './slot-decoration.mjs';
 
 const WIDTH_KEY = 'omd.codexDesktop.rightWidth.v1';
 const isCodex = state => state.active !== false && state.skins.find(s => s.id === state.selected)?.layout === 'codex-desktop';
@@ -60,19 +60,18 @@ export function applyCodexIntegration(ctx, getRuntime) {
   }
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: 'omaa-codex-geometry', order: 10 }, Shell));
   const name = 'conversation.session.header.corner';
-  ctx.slots.inject(name, () => decorateSlot(ctx.slots, name, () => true, original => {
+  ctx.slots.inject(name, () => decorateSlotComponent(ctx.slots, name, () => true, original => {
     const Original = original.component;
     function Corner(props) {
       const runtime = getRuntime();
       const state = useSyncExternalStore(runtime.subscribe, runtime.getSnapshot);
+      if (typeof props.useStore !== 'function' || typeof props.actions?.toggleExpanded !== 'function' || typeof props.t !== 'function') return <Original {...props}/>;
       const expanded = props.useStore(value => value.bySession[props.sessionId]?.layout.expanded ?? false);
       if (!isCodex(state)) return <Original {...props}/>;
       const label = props.t(expanded ? 'chrome.collapseAria' : 'chrome.expandAria');
       return <button type="button" className="codex-panel-toggle" aria-label={label} title={label} aria-expanded={expanded}
         onClick={() => props.actions.toggleExpanded(props.sessionId)}><IconPanelLeftOutlineRegular/></button>;
     }
-    return { options: { ...original.options, name, store: original.store, locale: original.locale,
-      inject: original.inject, children: original.children,
-      priority: (original.options.priority ?? 0) - 1 }, component: Corner };
+    return Corner;
   }));
 }
