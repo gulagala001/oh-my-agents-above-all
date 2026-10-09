@@ -154,7 +154,17 @@ export async function installedHost(t, { liveSettings, piResources = process.env
     if (!value.result?.ok) throw new Error(redact(JSON.stringify(value)) + '\n' + redact(log.slice(-4000)));
     return value.result.value;
   };
-  const rpc = (method, request) => call(method, { request });
+  const rpc = async (method, request) => {
+    const value = await call(method, { request });
+    // Faulty optional bundles can race the composition's default selection.
+    // Safe fixtures always choose their declared localhost model through the
+    // native selector before admitting any model request.
+    if (safeEnvironment && method === 'session/create') {
+      const model = await call('session/selectModel', { request: { sessionId: value.sessionId, provider: 'fixture', model: 'fixture' } });
+      if (model.selected?.provider !== 'fixture' || model.selected?.model !== 'fixture') throw new Error('Safe fixture did not select its explicit localhost model');
+    }
+    return value;
+  };
   const api = async (sessionId, patch) => {
     const response = await fetch(origin + '/omaa/api/session?session=' + encodeURIComponent(sessionId), { headers: { cookie, 'content-type': 'application/json' }, ...(patch === undefined ? {} : { method: 'POST', body: JSON.stringify(patch) }) });
     return { status: response.status, value: await response.json() };
