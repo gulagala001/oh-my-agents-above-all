@@ -1,0 +1,151 @@
+{
+  "kind": "Actual native DSH Web screenshots",
+  "capturedAt": "2026-10-10",
+  "omaaVersion": "0.2.1-alpha.2.omaa.0.15.0",
+  "dshVersion": "0.2.1-alpha.2",
+  "capturePackageSha256": "89966c1cd338f8018b3009a77b2500424c0d61f4b1dccceb8210ad9d58e29850",
+  "sourceBaseCommit": "d7093eb3a8db1172771b7a8a3564ac7bb1d2b64b",
+  "sourceFilesSha256": {
+    "src/client/git-review-state.mjs": "6e987a9fedcc2616b3155ae7d0c353a95d4b48e293fc2999564937a747f5ffe3",
+    "src/client/git-review.jsx": "fd7cb20e0711d122faad5f0822a6e9dd74cee340155d976707323ab4635b6c26",
+    "src/client/git-review.css": "a771431b6d417340b37db83584706dac795301dc9be9a04226ea040d52f43264",
+    "lib/client.js": "f4f3e8f9e9a68fb6ca1938c1c73639d1129562501a7df6e7d2b70986df9159dc"
+  },
+  "test": "test/frontend-gallery-native.test.mjs",
+  "platform": "macOS arm64",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "fixture": {
+    "ownedHome": true,
+    "ownedWorkspace": true,
+    "localSyntheticModel": true,
+    "isolatedChromeForTesting": true,
+    "mockKeychain": true,
+    "omdInstalled": false,
+    "realAccountsOrHardware": false
+  },
+  "screenshots": [
+    {
+      "product": "codex",
+      "appearance": "light",
+      "filename": "codex-light.png",
+      "sha256": "10d4e04763ab901439bbd1a7953a189a5a4f5db9d61cc9feeca2ca4a8bd7b2a7",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "codex",
+      "appearance": "dark",
+      "filename": "codex-dark.png",
+      "sha256": "52bcf581a1a980b1dff2c479d77bca2c4ba45205f322187af6477c31fb2a20c3",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "grok",
+      "appearance": "light",
+      "filename": "grok-light.png",
+      "sha256": "faf675ec021341cc79120dbdc372a5ff17930fb5b4a633d791f85d436a259182",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "grok",
+      "appearance": "dark",
+      "filename": "grok-dark.png",
+      "sha256": "fa42b2f1528d6c3cac2e75dc60311ea8e82ef27f95919c009ae5fc85b53cc027",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "cursor",
+      "appearance": "light",
+      "filename": "cursor-light.png",
+      "sha256": "a1fb665fe157e1b76cf06f98e2906a3a3e44c89a2ef02b13d0063f7986683f09",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "cursor",
+      "appearance": "dark",
+      "filename": "cursor-dark.png",
+      "sha256": "bc63232067c676c6756a83870238851dd3c9136d8aea658e6db1880ddecaf145",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "pi",
+      "appearance": "light",
+      "filename": "pi-light.png",
+      "sha256": "1eeb6c63c67784e976185b5b79645ec9f264ca054f47a17a9284bfd4be1e3f21",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "pi",
+      "appearance": "dark",
+      "filename": "pi-dark.png",
+      "sha256": "bbc574df6b4e72519938f2c33d2bc53f0ff0edfb815aa8fc4727bb9098d8c3c1",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "zcode",
+      "appearance": "light",
+      "filename": "zcode-light.png",
+      "sha256": "a8e07ab0f1f05467e6e0d5653b98439adc7b9e2be025dec6f8853cf355cc7215",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    },
+    {
+      "product": "zcode",
+      "appearance": "dark",
+      "filename": "zcode-dark.png",
+      "sha256": "97e4e9482294e3270b316b21b843e51e7343531261d974971e1ce38e1630a508",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "omaa": "0.2.1-alpha.2.omaa.0.15.0",
+      "host": "0.2.1-alpha.2"
+    }
+  ]
+}

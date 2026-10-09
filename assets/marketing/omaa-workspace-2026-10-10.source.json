@@ -1,0 +1,9 @@
+{
+  "asset": "assets/marketing/omaa-workspace-2026-10-10.png",
+  "kind": "AI-generated marketing illustration, not a product screenshot",
+  "tool": "built-in image_gen through imagegen skill",
+  "date": "2026-10-10",
+  "sha256": "6d3a7c1f3b5263c03b81213b7e8a3b6f1bacb64abbb38aa7279d7718f307cfa9",
+  "reference": "omaa-launch-2026-10-06-v2.png",
+  "prompt": "保留深蓝与五块不同材质的品牌面板，简化重复介绍与底部网址，放大 OMAA 和中文标题；五个面板表示可选择的 Codex、Grok Build、Cursor、Pi Coding Agent、ZCode 工作方式；保留独立主题、沿用模型与 API、可选 OMD 增强文案；不生成界面或性能、版本声称。"
+}

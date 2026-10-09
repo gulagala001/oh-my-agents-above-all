@@ -5,7 +5,7 @@ export function assertGitSession(settings, id, write = false) {
 }
 
 export function createGitReviewState(settings, request = fetch) {
-  let state = { sessionId: settings.getSnapshot().sessionId, scope: 'unstaged', ref: '', summary: null, diff: null, loading: false, saving: false, error: '' };
+  let state = { sessionId: settings.getSnapshot().sessionId, scope: 'unstaged', ref: '', summary: null, diff: null, loading: false, saving: false, error: '', errorCode: '' };
   let generation = 0, controller, productId = settings.getSnapshot().data?.product?.id;
   const listeners = new Set(), emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
   const api = async (id, query, body, signal) => {
@@ -22,18 +22,18 @@ export function createGitReviewState(settings, request = fetch) {
     assertGitSession(settings, id);
     if (state.saving) throw new Error('文件操作尚未完成。');
     controller?.abort(); controller = new AbortController(); const signal = controller.signal, revision = ++generation;
-    emit({ sessionId: id, scope, ref, loading: true, error: '', ...(path ? { diff: null } : { summary: null, diff: null }) });
+    emit({ sessionId: id, scope, ref, loading: true, error: '', errorCode: '', ...(path ? { diff: null } : { summary: null, diff: null }) });
     try {
       const value = await api(id, { scope, ...(ref ? { ref } : {}), ...(path ? { path, revision: state.summary.revision } : {}) }, undefined, signal);
       if (signal.aborted || revision !== generation || settings.getSnapshot().sessionId !== id) return;
       emit({ loading: false, ...(path ? { diff: value } : { summary: value }) });
-    } catch (error) { if (!signal.aborted && revision === generation && settings.getSnapshot().sessionId === id) emit({ loading: false, error: error.message }); }
+    } catch (error) { if (!signal.aborted && revision === generation && settings.getSnapshot().sessionId === id) emit({ loading: false, error: error.message, errorCode: error.code || '' }); }
   };
   const unsubscribe = settings.subscribe(() => {
     const current = settings.getSnapshot(), id = current.sessionId, product = current.data?.product?.id;
     if (id !== state.sessionId || product !== productId) {
       productId = product; controller?.abort(); ++generation;
-      emit({ sessionId: id, scope: 'unstaged', ref: '', summary: null, diff: null, loading: false, saving: false, error: '' });
+      emit({ sessionId: id, scope: 'unstaged', ref: '', summary: null, diff: null, loading: false, saving: false, error: '', errorCode: '' });
     }
   });
   return {
@@ -46,18 +46,26 @@ export function createGitReviewState(settings, request = fetch) {
       const allowed = hunk === undefined ? state.summary.files.find(file => file.path === path)?.actions : state.diff?.hunkActions?.[hunk];
       if (!allowed?.includes(action) || (hunk !== undefined && state.diff?.diff?.path !== path)) throw new Error('此比较不支持该文件操作。');
       const revision = ++generation, summary = state.summary;
-      emit({ saving: true, error: '' });
+      emit({ saving: true, error: '', errorCode: '' });
       try {
         const result = await api(id, {}, { scope: summary.scope, ...(summary.ref ? { ref: summary.ref } : {}), revision: summary.revision, path, action, ...(hunk === undefined ? {} : { hunk }) });
         if (revision === generation && settings.getSnapshot().sessionId === id) emit({ summary: result.summary, diff: null, saving: false });
         return result;
       } catch (error) {
-        if (revision === generation && settings.getSnapshot().sessionId === id) emit({ saving: false, error: error.message, ...(error.code === 'revision-conflict' ? { summary: null, diff: null } : {}) });
+        if (revision === generation && settings.getSnapshot().sessionId === id) emit({ saving: false, error: error.message, errorCode: error.code || '', ...(error.code === 'revision-conflict' ? { summary: null, diff: null } : {}) });
         throw error;
       }
     },
     dispose() { controller?.abort(); ++generation; unsubscribe(); listeners.clear(); },
   };
+}
+
+export function gitReviewErrorHint(code, message) {
+  // Match the native Git diagnostic, not arbitrary transport or Git failures.
+  if (code === 'GIT_FAILED' && /^fatal: not a git repository(?: \(or any of the parent directories\))?(?::|$)/.test(message)) {
+    return '当前目录不属于 Git 仓库；选择仓库后审阅。';
+  }
+  return null;
 }
 
 export function reviewHunkRows(hunk) {

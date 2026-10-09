@@ -1,10 +1,16 @@
 # Oh My Agents Above All
 
-![OMAA — 五种代理工作方式，运行在 DSH 上](assets/marketing/omaa-launch-2026-10-06-v2.png)
+![OMAA — 五种代理工作方式，运行在 DSH 上](assets/marketing/omaa-workspace-2026-10-10.png)
+
+上图为品牌插画，不是产品界面；五产品的真实 DSH Web 实拍见[界面截图](docs/frontend-gallery.md)。
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前源码为 **OMAA `0.2.1-alpha.2.omaa.0.15.0` 未发布候选**，Node.js 要求 `>=22.19`，开发 SDK 为官方 DSH `0.2.1-alpha.2`。本次前端验收绑定实际 a2 SDK 与冻结工件；rc.2／alpha.1 的 0.15 独立 SDK 构建与验收正在准备，历史 0.14.2 结果不能替代本次验证。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md) · [会话工作台](docs/frontend-workbench.md)。
+当前源码为 **OMAA `0.2.1-alpha.2.omaa.0.15.0` 未发布候选**，Node.js 要求 `>=22.19`，开发 SDK 为官方 DSH `0.2.1-alpha.2`。本次前端验收绑定实际 a2 SDK 与冻结工件；rc.2／alpha.1 的 0.15 已分别使用对应 SDK 与锁文件独立构建，完成五产品明暗、模式、运行／原生停止／冷重开及主题交接代表验收；最终配对工件仍按冻结 SHA 验收，历史 0.14.2 结果不作为本次验证。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md) · [会话工作台](docs/frontend-workbench.md)。
+
+实际 DSH Web 界面示例（OMAA 0.15 候选、独立 OMAA、合成本地模型；[五产品明暗实拍与版本](docs/frontend-gallery.md)）：
+
+![Codex — 原生 DSH Web 中的会话与审阅](docs/images/frontend-015/codex-light.png)
 
 本轮前端候选配对 **OMD `0.13.0`**，尚未创建 tag 或 Release。候选验收使用与实际宿主匹配的本地 `.tgz`、锁定 SDK 和 SHA-256。公开安装仍使用已发布 OMAA `0.13.1` 与 OMD `0.10.0`，不包含本轮新能力；具体文件名见[安装指南](docs/install.md)。
 
@@ -25,7 +31,7 @@ dsh web
 dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.2.omd.0.13.0.tgz file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.2.omaa.0.15.0.tgz
 ```
 
-独立使用 OMAA 时可只添加 OMAA 文件。rc.2／alpha.1 须等待本次独立 SDK 构建与实际验收的对应工件，不混用 a2 包。
+独立使用 OMAA 时可只添加 OMAA 文件。rc.2／alpha.1 使用本次独立 SDK 构建与实际验收的对应工件，不混用 a2 包。
 
 
 已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，可使用桌面原生插件管理器，或与桌面实际 SDK 对应的官方 CLI 和准确 profile 安装；不要以另一宿主的 Web CLI 代替。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
