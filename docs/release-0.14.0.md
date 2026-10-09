@@ -14,3 +14,7 @@
 | `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.14.0.tgz` | `trisoul_x-0.2.1-alpha.1.omd.0.12.0.tgz` |
 
 候选记录固定源码提交、完整 payload 与 SHA-256；本地验证不等于远端发行、真实付费模型、官方桌面 App、Windows/Linux 或硬件电脑操作通过。完整实际范围见[验证记录](verification.md)。
+
+已知原生宿主限制：两宿主原版 DSH 与固定 IUI、未安装 OMD／OMAA 的独立复现确认，卸载旧预设后，Web 复用旧空白会话的 `storedPreset` 会失败；默认仍为 `standard`，未指定旧 session id 的新标准会话可用。公开 select 在冷激活时失败，同 id 切 standard 冲突，宿主没有可等待完成的 pre-uninstall API。本候选没有修复原生宿主，不宣称缺失预设自动恢复通过，不删除或迁移会话、草稿和附件。其他卸载后的数据与第三方插件保留按各自真实报告核对。
+
+配对 OMD 的 Loader 在显式移除条目及其已有子条目退出期间临时标记运行条目，防止 bundle 重组将全量 effective patch 误写入 `cordis.yml`。原始 options 保持不变，失败也等待已有清理完成，显式原生配置写入继续生效。新增保护的验收以最终工件身份及对应真实五预设／IUI／配对卸载报告为准，较早结果不能替代。

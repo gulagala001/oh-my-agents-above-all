@@ -155,8 +155,12 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   await reveal(runCards.first(), 3);
   await runCards.first().getByRole('button', { name: '查看运行与产物', exact: true }).click();
   await until(async () => await page.getByRole('combobox', { name: '工作流运行', exact: true }).inputValue() === first.result.runId);
+  await page.getByRole('button', { name: /Actual parameters/ }).waitFor();
+  await until(async () => await page.locator('.omaa-zcode-help[role="status"]').count() === 0);
   await runCards.last().getByRole('button', { name: '查看运行与产物', exact: true }).click();
   await until(async () => await page.getByRole('combobox', { name: '工作流运行', exact: true }).inputValue() === second.result.runId);
+  await page.getByRole('button', { name: /Actual parameters/ }).waitFor();
+  await until(async () => await page.locator('.omaa-zcode-help[role="status"]').count() === 0);
   await page.screenshot({ path: join(evidenceDir, 'actual-run.png') });
   await readCard.getByRole('textbox', { name: '参数 count', exact: true }).fill('-0');
   await readCard.getByRole('textbox', { name: '参数 data', exact: true }).fill('{"nested":[-0,false,0,null]}');
