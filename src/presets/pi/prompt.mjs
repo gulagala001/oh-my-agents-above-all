@@ -3,8 +3,8 @@ import { normalizeBuildSystemPromptOptions, formatSkillsForPrompt } from '../../
 
 export const product = Object.freeze({
   id: 'pi', name: 'Pi Coding Agent',
-  sourceCommit: 'cd32f7725fdbddbaecdff5b1e68491563394e0ca',
-  sourceVersion: 'v1.0.2',
+  sourceCommit: 'abe508e1b89912adde45528136c3221eb69acdd7',
+  sourceVersion: 'v1.1.0',
   coreTools: ['read', 'bash', 'edit', 'write'],
 });
 
@@ -35,8 +35,9 @@ const guidelines = {
 function section(name, content) { return `<${name}>\n${content}\n</${name}>`; }
 function escapeContext(text) { return String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
 
-export function promptOptions({ tools = new Set(), cwd, customTools = [] } = {}) {
+export function promptOptions({ tools = new Set(), cwd, customTools = [], hiddenTools = [] } = {}) {
   return normalizeBuildSystemPromptOptions({ cwd, selectedTools: [...tools],
+    hiddenTools,
     toolSnippets: { ...snippets, ...Object.fromEntries(customTools.filter(t => t.promptSnippet).map(t => [t.name, t.promptSnippet])) },
     toolGuidelines: { ...guidelines, ...Object.fromEntries(customTools.map(t => [t.name, t.promptGuidelines ?? []])) },
   });
@@ -44,14 +45,17 @@ export function promptOptions({ tools = new Set(), cwd, customTools = [] } = {})
 
 export function buildPromptSections(input) {
   const options = normalizeBuildSystemPromptOptions(input);
-  const active = new Set(options.selectedTools);
+  const declaredTools = options.selectedTools.filter(name => !options.hiddenTools.includes(name));
+  const active = new Set(declaredTools);
   const toolSnippets = options.toolSnippets;
-  const names = Object.keys(toolSnippets).filter(name => active.has(name));
+  const names = declaredTools.filter(name => toolSnippets[name]);
   const rules = [];
-  if (active.has('bash') && active.has('pwsh')) rules.push('Use bash or PowerShell for file operations like listing, searching, and finding files');
-  else if (active.has('pwsh')) rules.push('Use PowerShell for file operations like listing, searching, and finding files');
-  else if (active.has('bash')) rules.push('Use bash for file operations like ls, rg, find');
-  for (const name of Object.keys(options.toolGuidelines).filter(name => active.has(name))) for (const rule of options.toolGuidelines[name]) {
+  if (!['grep', 'glob', 'find', 'ls'].some(name => active.has(name))) {
+    if (active.has('bash') && active.has('pwsh')) rules.push('Use bash or PowerShell for file operations like listing, searching, and finding files');
+    else if (active.has('pwsh')) rules.push('Use PowerShell for file operations like listing, searching, and finding files');
+    else if (active.has('bash')) rules.push('Use bash for file operations like ls, rg, find');
+  }
+  for (const name of declaredTools) for (const rule of options.toolGuidelines[name] ?? []) {
     const normalized = rule.trim(); if (normalized && !rules.includes(normalized)) rules.push(normalized);
   }
   for (const rule of options.promptGuidelines) {
@@ -76,7 +80,9 @@ export function buildPromptSections(input) {
   }
   if (options.appendSystemPrompt) sections.addendum = section('addendum', options.appendSystemPrompt);
   if (options.contextFiles.length) sections.project_context = section('project_context', 'Project-specific instructions and guidelines:\n' + options.contextFiles.map(file => '<project_instructions path="' + escapeContext(file.path).replaceAll('"', '&quot;') + '">\n' + file.content + '\n</project_instructions>').join('\n'));
-  const skillFileReadTool = ['read', 'bash'].find(tool => active.has(tool));
+  const readers = ['read', 'bash'];
+  const skillFileReadTool = readers.find(tool => active.has(tool))
+    ?? (readers.some(tool => options.selectedTools.includes(tool)) ? 'indirect' : undefined);
   if (skillFileReadTool && options.skills.length) {
     const text = formatSkillsForPrompt(options.skills, skillFileReadTool).trim();
     if (text) sections.skills = section('skills', text);

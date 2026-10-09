@@ -17,7 +17,10 @@ export function renderPromptFrame(frame, options = frame.options) {
     if (typeof options.forceSystemPrompt !== 'string') throw Error('Pi forced system prompt must be text.');
     return [{ name: 'omaa:pi-forced-prompt', text: options.forceSystemPrompt }];
   }
-  const pi = buildPromptSections(options);
+  // Native request declarations are authoritative. The current host adapter
+  // does not implement prepareLoadout, so extensions cannot hide a declared
+  // tool by editing this derived prompt field alone.
+  const pi = buildPromptSections({ ...options, hiddenTools: frame.options.hiddenTools });
   const { addendum = '', project_context = '', ...persona } = pi;
   const body = Object.values(persona).join('\n\n');
   const prefix = applySharedIdentity(body, 'pi', frame.identity, { child: frame.child, userSystem: Boolean(options.customPrompt) });

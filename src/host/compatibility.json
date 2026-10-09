@@ -5,7 +5,7 @@
     {
       "version": "0.2.0-rc.2",
       "loaderVersion": "1.0.5",
-      "omdVariant": "rc2",
+      "omdVariant": "rc2-0-12",
       "omdBaselines": [
         {
           "version": "0.2.0-rc.2.omd.0.6.1",
@@ -18,13 +18,18 @@
         {
           "version": "0.2.0-rc.2.omd.0.10.0",
           "commit": "bb5afae4088183c09e349f98b6bc13a891412be3"
+        },
+        {
+          "version": "0.2.0-rc.2.omd.0.12.0",
+          "commit": "2fd426ff3fff63c58bacbde705034290c5b5f653",
+          "unpublished": true
         }
       ]
     },
     {
       "version": "0.2.1-alpha.1",
       "loaderVersion": "1.0.6-alpha.1",
-      "omdVariant": "alpha",
+      "omdVariant": "alpha-0-12",
       "omdBaselines": [
         {
           "version": "0.2.1-alpha.1.omd.0.6.1",
@@ -37,6 +42,11 @@
         {
           "version": "0.2.1-alpha.1.omd.0.10.0",
           "commit": "de86711d2341e5239b2d95adde62bf48acf54cef"
+        },
+        {
+          "version": "0.2.1-alpha.1.omd.0.12.0",
+          "commit": "44e259f38674bed0f1468afef0baabc9a1d32330",
+          "unpublished": true
         }
       ]
     }

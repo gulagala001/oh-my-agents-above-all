@@ -106,7 +106,11 @@ world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执�
 
 按名运行先读取一次对应文件，按原版声明检查全部未知／缺失／类型错误并应用默认值，再按保存的 facade 标记调用 `create_workflow` 或原有 native `workflow`。`string/number/boolean/json` 保留原版语义，number 要求有限值，default 与 caller value 共用检查。模型/API、权限、作业和子会话继续由宿主负责；native JavaScript 路径保留既有 run-start/run-end 记录，TypeScript 路径使用 native jobs 和子会话 journal，不生成原厂第二种执行日志。`phases` 的 title/detail/provider/model 信息用于 native JavaScript；Actor 的阶段写在脚本里，默认继承当前 DSH 模型配置。
 
-每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；0.8.0 已接入产物；0.9.0 已接入上述 Amend；完整 journal/replay 和专用保存管理界面仍有差异，不靠文件扩展名宣称等价。
+原生保存工具结果卡展示项目／全局来源、源文件与坏定义诊断；读取卡展示实际 facade、声明参数、必填状态和默认值。可勾选并填写 string／number／boolean／json 参数，显式 false、0 和空字符串均保留；未传入的参数由运行时最新定义应用默认值。“读取定义”和“发送运行请求”提交到当前 ZCode 会话，沿用原生工具循环和权限；Ask／Plan 可读，运行按钮仅在执行模式可用。切会话、离开当前对话或会话繁忙时不从旧回调发送；已提交只显示请求已接受，实际 ZCode Actor 运行结果返回后可打开对应运行与产物。原生 JavaScript 运行显示其真实结果和 runId，其运行记录由宿主管理，不提供不适用的 ZCode 产物工作台跳转。旧卡片不保证保存文件仍未改变，后端每次运行重新读取并校验当前定义。
+
+填写界面拒绝非有限数字和超出安全范围的显式整数；校验后的 number／json 字面材料保留在用户请求中，包括 `-0` 和科学计数写法，string／boolean 正常编码。默认值继续省略并交给当前后端定义处理，不扩展任意精度计算契约。六个 ZCode 工具结果卡采用宿主公共槽位的低优先级注册，默认优先级的同名第三方结果卡保持优先；不兼容的结果结构只显示原始文本，不提供读取、运行或产物跳转按钮。
+
+每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；0.8.0 已接入产物；0.9.0 已接入上述 Amend；完整 journal/replay 和独立保存管理页面仍有差异，不靠文件扩展名宣称等价。
 
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 

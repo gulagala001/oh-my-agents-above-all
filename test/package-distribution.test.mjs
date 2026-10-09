@@ -175,6 +175,58 @@ test('old release verification derives representatives from that tag instead of 
   assert.match(result.stdout, /18 attachments, 6 identical tarballs/);
 });
 
+test('unpublished candidate verification binds full committed payload without remote calls or a release tag', async t => {
+  const { root, source, assets } = await releaseFixture(t, { integrated: true });
+  await run('git', ['init', '-q', root]);
+  await run('git', ['-C', root, 'add', 'package.json', 'src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'compat']);
+  await run('git', ['-C', root, '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Distribution Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'unpublished source fixture']);
+  const commit = (await run('git', ['-C', root, 'rev-parse', 'HEAD'])).stdout.trim();
+  const args = ['--source-commit', commit, '--assets', join(root, 'dist')];
+  await mkdir(join(root, 'bin'));
+  await writeFile(join(root, 'bin/gh'), '#!/bin/sh\nexit 97\n', { mode: 0o755 });
+  const env = { ...process.env, PATH: join(root, 'bin') + ':' + process.env.PATH };
+  await writeFile(join(root, 'lib/placeholder.txt'), 'Later uncommitted worktree content.\n');
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /Verified unpublished local candidate.*complete committed OMAA source/);
+  assert.equal((await run('git', ['-C', root, 'tag', '--list'])).stdout, '', 'a local candidate needs no manufactured tag');
+  await assert.rejects(command(root, 'verify-release.mjs', [...args, '--repo', 'fixture/omaa', '--tag', 'v' + source.version], env), /Usage/);
+  const omaa = assets.find(row => row.name === source.name);
+  const manifest = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', omaa.filename), 'package/package.json'])).stdout);
+  // Every sidecar is freshly rehashed: the independent committed source must
+  // still reject altered, missing, extra and linked runtime files.
+  const stage = join(root, 'candidate-altered'); await mkdir(stage);
+  await run('tar', ['-xzf', join(root, 'dist', omaa.filename), '-C', stage]);
+  const files = async directory => {
+    const result = {};
+    const walk = async (path, prefix = '') => { for (const entry of await readdir(path, { withFileTypes: true })) {
+      const relative = prefix + entry.name;
+      if (entry.isDirectory()) await walk(join(path, entry.name), relative + '/');
+      else if (relative !== 'package.json') result[relative] = await readFile(join(path, entry.name));
+    } };
+    await walk(directory); return result;
+  };
+  const payload = await files(join(stage, 'package'));
+  for (const [label, change, pattern] of [
+    ['altered', value => { value['lib/placeholder.txt'] = Buffer.from('Tampered runtime.'); }, /differs from committed source payload/],
+    ['missing', value => { delete value['lib/placeholder.txt']; }, /missing committed source files/],
+    ['extra', value => { value['lib/unreviewed.txt'] = Buffer.from('New file.'); }, /Unexpected candidate archive file/],
+  ]) {
+    const modified = { ...payload }; change(modified);
+    await rm(join(root, 'archive', omaa.filename), { recursive: true, force: true });
+    await archive(root, omaa, manifest, undefined, modified);
+    await assert.rejects(command(root, 'verify-release.mjs', args, env), pattern, label);
+  }
+  await rm(join(root, 'archive', omaa.filename), { recursive: true, force: true });
+  await archive(root, omaa, manifest, undefined, payload);
+  const member = join(root, 'archive', omaa.filename, 'package/lib/placeholder.txt');
+  await rm(member); await symlink('elsewhere', member);
+  const tarball = join(root, 'dist', omaa.filename);
+  await run('tar', ['-czf', tarball, '-C', join(root, 'archive', omaa.filename), 'package']);
+  const hash = sha(await readFile(tarball));
+  await writeFile(tarball + '.sha256', `${hash}  ${omaa.filename}\n`);
+  await save(tarball + '.metadata.json', { ...omaa, sha256: hash });
+  await assert.rejects(command(root, 'verify-release.mjs', args, env), /Unsafe or duplicate candidate archive member/);
+});
+
 
 test('OMD overlay still requires its reviewed native host baseline', async t => {
   const { root } = await fixture(t), row = validationHosts[0];

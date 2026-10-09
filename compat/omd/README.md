@@ -1,33 +1,31 @@
 # OMD 配对附件
 
-本版 OMAA `0.13.1` 配对 OMD `0.10.0`。OMD 官方分宿主源码已整合完整 OMAA 薄桥接；这里的审定规则采用 `integrated-baseline` 模式，核对并保留官方发行 payload，输出配对 tgz、SHA256 和来源 metadata。OMAA 自身由 `scripts/package.mjs` 打包，安装仍使用宿主原生插件入口。
+当前未发布 OMAA `0.14.0` 候选配对 OMD `0.12.0`。两宿主 OMD 延续已整合的 OMAA 薄桥接；`integrated-baseline` 按固定源码提交的完整发行 payload 核验，只追加 `omaa-compat.json` 与 manifest 白名单项。
 
-| DSH 宿主 | 官方 OMD 基线 | 审定规则 |
+| DSH 宿主 | 未发布 OMD 基线 | 审定规则 |
 | --- | --- | --- |
-| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.10.0` | [alpha.json](alpha.json) |
-| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.10.0` | [rc2.json](rc2.json) |
+| `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.12.0` | [alpha-0-12.json](alpha-0-12.json) |
+| `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.12.0` | [rc2-0-12.json](rc2-0-12.json) |
 
-每个规则中的 `sourceCommit`、`sourceTag` 和文件 SHA 固定绑定该宿主的官方来源。两端各自保留 SDK、工厂、vendor、客户端与锁定来源，完整输入／输出 OMD 版本必须相同。基线来自 [OMD 源码与发行](https://github.com/gulagala001/oh-my-dsh)。
+规则绑定完整 `sourceCommit`、manifest SHA、SDK、工厂、vendor、客户端、发行白名单与每文件 SHA。候选未发布，`sourceTag:null` 不冒充存在的发行 tag；历史 [alpha.json](alpha.json)／[rc2.json](rc2.json) 的 `0.10.0` 规则保持原字节。
 
-准备对应宿主的官方 `0.10.0` tgz：
+先从规则中的固定 commit 生成隔离 `git archive` 源码快照，再运行 `npm pack --ignore-scripts`。不可从混入未提交文件的工作树重新计算规则并声称来源已绑定。使用对应 tgz 构建：
 
 ```sh
 pnpm install --frozen-lockfile
-node scripts/package-omd-compat.mjs --base /absolute/path/official-alpha.tgz --host-version 0.2.1-alpha.1 --omd-version 0.10.0
-node scripts/package-omd-compat.mjs --base /absolute/path/official-rc2.tgz --host-version 0.2.0-rc.2 --omd-version 0.10.0
+node scripts/package-omd-compat.mjs --base /absolute/path/committed-alpha.tgz --host-version 0.2.1-alpha.1 --omd-version 0.12.0
+node scripts/package-omd-compat.mjs --base /absolute/path/committed-rc2.tgz --host-version 0.2.0-rc.2 --omd-version 0.12.0
 ```
 
-从源码生产官方输入时，先检出规则中的固定 commit，并运行 `npm pack --ignore-scripts`，再把所得官方 tgz 交给配对构建器。源码树包含内部模拟器和测试材料，官方 pack 按已审定的 `.npmignore` 排除；配对构建器严格拒绝把这些额外源码文件当作发行 payload。CI 与 tag 发行复用这一条路径。
+省略 `--omd-version` 时从当前宿主审定基线完整版本推导。输入／输出版本必须等于该基线；未知文件、内容漂移、链接、SDK／manifest 差异均停止，不重建或放宽原生工厂。`.npmignore` 排除内部模拟器、测试和维护文件；配对构建器只接收实际发行包，不接收整棵源码。
 
-输出默认进入 `dist/`，`--out-dir` 可指定其他目录。构建只在临时目录处理官方发行白名单，完成或失败后清理临时目录，保持输入包和用户 profile。需要本地 Node、npm、git、tar 及本仓库锁定依赖；不会自动下载或执行其他产品客户端。
+输出默认 `dist/`，可用 `--out-dir` 指定新目录。完成或失败后均清理临时 staging，不改输入包和用户 profile。准备配对附件后，本地 `verify-release.mjs --source-commit <OMAA完整提交> --assets <目录>` 校验四包十二附件；该入口不执行远端发行验证。公开发布前必须先让固定源码实际可获取，再审定真实 source tag 与完整 tag／Release 契约。
 
-`*.json` 记录完整 manifest SHA、官方发行文件白名单与逐文件 SHA。`integrated-baseline` 明确声明 `patch:null`、空字节 SHA、空 additions/patchedFiles；构建保留原客户端、皮肤、发行说明、`lib/host` 和 `vendor`，仅追加 `omaa-compat.json` 与其 manifest 白名单项。来源 metadata、包内兼容记录及 overlay SHA 精确绑定规则原始字节；准备和发布校验还复核包内完整 payload，不能靠重算外部 sidecars 接受内容漂移。
-
-OMD 的版本检查／更新在 OMAA 启用时委托给同一配对发行服务；OMAA 禁用但仍安装时暂停这条路径，卸载后恢复原独立更新方式。安装后重载当前 profile。
+来源 metadata、包内兼容记录与 overlay SHA 精确绑定规则原始字节，完整 payload 不可通过重新计算 sidecars 绕过。OMD 更新在 OMAA 启用时委托同一配对服务，OMAA 禁用时暂停，卸载后恢复独立路径。安装仍使用宿主原生插件管理器。
 
 ## 历史发行模式
 
-历史 OMAA `v0.2.1-alpha.1.omaa.0.13.0` 配对两宿主的官方 OMD `0.9.0`，使用当时的 `integrated-baseline` 规则。原 tag 的 manifest、逐文件 SHA 与附件继续按其固定来源核验，不借用本版 `0.10.0` 的规则。
+历史 OMAA `v0.2.1-alpha.1.omaa.0.13.0` 配对两宿主的官方 OMD `0.9.0`，使用当时的 `integrated-baseline` 规则。原 tag 的 manifest、逐文件 SHA 与附件继续按其固定来源核验，不借用当前候选 `0.12.0` 的规则。
 
 历史 OMAA `v0.2.1-alpha.1.omaa.0.12.1` 配对 OMD `0.8.1`，以两端官方 `0.6.1` 为底稿，通过审定 overlay 添加桥接。旧 tag 保存当时的 `alpha.patch`、`rc2.patch`、additions、基线及修改后文件 SHA；幂等校验静态回查该 tag 的规则，不借用本版基线，也不执行 tag 中的代码。历史来源如下：
 
