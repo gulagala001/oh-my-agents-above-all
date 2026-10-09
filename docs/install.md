@@ -2,7 +2,7 @@
 
 OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。无需安装或登录 Codex、Grok Build、Cursor、Pi、ZCode 的官方客户端；各产品的已实现能力与明确差异见 [验证记录](verification.md) 和 [产品资料](products/)。
 
-当前源码为未发布 OMAA `0.14.0` 候选，配对 OMD `0.12.0`。候选没有 tag／Release；仅使用已冻结的本地文件及同名 SHA-256／metadata，两个宿主的完整文件名见[候选说明](release-0.14.0.md)。在隔离 profile 验收时使用 `dsh plugin --profile candidate add file:/absolute/path/对应包.tgz`，不要把未发布版本写成在线安装 URL。
+当前源码为未发布 OMAA `0.14.1` 候选，配对 OMD `0.12.0`。候选没有 tag／Release；仅使用已冻结的本地文件及同名 SHA-256／metadata，两个宿主的完整文件名见[候选说明](release-0.14.1.md)。在隔离 profile 验收时使用 `dsh plugin --profile candidate add file:/absolute/path/对应包.tgz`，不要把未发布版本写成在线安装 URL。
 
 以下公开版安装步骤对应 OMAA `0.13.1`／OMD `0.10.0`，继续有效。
 

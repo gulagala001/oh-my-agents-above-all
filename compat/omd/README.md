@@ -1,13 +1,13 @@
 # OMD 配对附件
 
-当前未发布 OMAA `0.14.0` 候选配对 OMD `0.12.0`。两宿主 OMD 延续已整合的 OMAA 薄桥接；`integrated-baseline` 按固定源码提交的完整发行 payload 核验，只追加 `omaa-compat.json` 与 manifest 白名单项。
+当前未发布 OMAA `0.14.1` 候选配对 OMD `0.12.0`。两宿主 OMD 延续已整合的 OMAA 薄桥接；`integrated-baseline` 按固定源码提交的完整发行 payload 核验，只追加 `omaa-compat.json` 与 manifest 白名单项。
 
 | DSH 宿主 | 未发布 OMD 基线 | 审定规则 |
 | --- | --- | --- |
 | `0.2.1-alpha.1` | `0.2.1-alpha.1.omd.0.12.0` | [alpha-0-12.json](alpha-0-12.json) |
 | `0.2.0-rc.2` | `0.2.0-rc.2.omd.0.12.0` | [rc2-0-12.json](rc2-0-12.json) |
 
-规则绑定完整 `sourceCommit`、manifest SHA、SDK、工厂、vendor、客户端、发行白名单与每文件 SHA。候选未发布，`sourceTag:null` 不冒充存在的发行 tag；历史 [alpha.json](alpha.json)／[rc2.json](rc2.json) 的 `0.10.0` 规则保持原字节。
+规则绑定完整 `sourceCommit`、manifest SHA、SDK、工厂、vendor、客户端、发行白名单与每文件 SHA。候选未发布，`sourceTag:null` 不冒充存在的发行 tag；[alpha.json](alpha.json)／[rc2.json](rc2.json) 保留兼容性工程的 `0.11.0` 未发行基线；公开 `0.10.0` 来源和规则按对应历史 tag 回查，当前配对不借用这些旧规则。
 
 先从规则中的固定 commit 生成隔离 `git archive` 源码快照，再运行 `npm pack --ignore-scripts`。不可从混入未提交文件的工作树重新计算规则并声称来源已绑定。使用对应 tgz 构建：
 

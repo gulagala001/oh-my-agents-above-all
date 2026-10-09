@@ -18,7 +18,9 @@ function nativeResult(snapshot, name) {
   return { call, event, value: JSON.parse(textOf(event.data.message)) };
 }
 
-test('installed ZCode workbench clicks native artifacts, Actor lineage, retune and Stop with exact run authority', { timeout: 300000 }, async t => {
+const enabled = process.env.OMAA_ZCODE_WORKBENCH === '1' || Boolean(process.env.OMAA_TEST_HOST_PACKAGE);
+test('installed ZCode workbench clicks native artifacts, Actor lineage, retune and Stop with exact run authority', { timeout: 300000,
+  skip: !enabled && 'Set OMAA_ZCODE_WORKBENCH=1 with an explicit frozen host-matching package to run this native acceptance.' }, async t => {
   assert(process.env.OMAA_TEST_HOST_PACKAGE, 'This acceptance test requires an explicit frozen host-matching package');
   const evidenceDir = resolve(process.env.OMAA_WORKBENCH_EVIDENCE_DIR || 'work/rea-upgrade/zcode-workbench-ui');
   await mkdir(evidenceDir, { recursive: true });

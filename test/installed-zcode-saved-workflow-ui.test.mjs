@@ -21,6 +21,24 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   const metadata = { text: { type: 'string', required: true }, count: { type: 'number', default: 0 }, enabled: { type: 'boolean', default: false }, data: { type: 'json', default: null } };
   const saved = { name: 'reuse', scope: 'project', description: 'Project reusable parameter fixture', whenToUse: 'Explicit parameter reuse', args: metadata, facade: 'zcode',
     script: `await artifact.markdown('params', JSON.stringify(args), {primary:true, title:'Actual parameters'}); return args;` };
+  const globalPath = join(f.userHome, '.zcode/workflows/reuse.dwf.ts');
+  const setPermission = async mode => {
+    const result = await f.call('commands/execute', { agentId: sessionId, line: '/permission ' + mode, submittedAttachments: [] });
+    assert.equal(result?.result?.kind, 'success', JSON.stringify(result));
+  };
+  await setPermission('read-only');
+  let deniedStep = 0;
+  f.replyWith(payload => {
+    if (!payload.tools?.length) return textReply('Fixture title');
+    if (deniedStep++ === 0) return toolReply('skill', { name: 'zcode-workflows' });
+    if (deniedStep === 2) return toolReply('save_workflow', { ...saved, scope: 'global' });
+    return textReply('The native read-only policy denied the requested write.');
+  });
+  const denied = await f.prompt(sessionId, 'Attempt the explicitly requested definition in this isolated fixture home and report the native permission outcome.');
+  assert.equal(toolResult(denied, 'save_workflow').isError, true);
+  await assert.rejects(readFile(globalPath), { code: 'ENOENT' });
+  await setPermission('danger-full-access');
+  assert((await f.snapshot(sessionId)).records.some(row => row.event?.type === 'sandbox/mode' && row.event.data.mode === 'danger-full-access'), 'the native command must actually authorize the isolated global write');
   let step = 0;
   f.replyWith(payload => {
     if (!payload.tools?.length) return textReply('Fixture title');
@@ -31,7 +49,8 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   });
   const initial = await f.prompt(sessionId, 'Load the workflow skill and save these explicitly requested project and global definitions for reuse.');
   assert.equal(JSON.parse(textOf(toolResult(initial, 'save_workflow'))).shadowing, 'hides_global');
-  const projectPath = join(f.workspace, '.zcode/workflows/reuse.dwf.ts'), globalPath = join(f.userHome, '.zcode/workflows/reuse.dwf.ts');
+  await setPermission('workspace-write');
+  const projectPath = join(f.workspace, '.zcode/workflows/reuse.dwf.ts');
   assert.match(await readFile(globalPath, 'utf8'), /Global reusable/); assert.match(await readFile(projectPath, 'utf8'), /Project reusable/);
   await writeFile(join(f.workspace, '.zcode/workflows/broken.dwf.ts'), '/* zcode-workflow\nmispeled: true\n*/\nreturn {};');
   const single = async (name, args, prompt) => {
@@ -53,8 +72,12 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   t.after(async () => { try { if (t.passed === false && !page.isClosed()) { await page.screenshot({ path: join(evidenceDir, 'failure.png') }); t.diagnostic((await page.locator('body').innerText()).slice(-6000)); } } finally { await browser.close(); } });
   await page.goto(f.origin); await page.getByRole('button', { name: /^(Continue|继续)$/ }).click();
   await page.getByText('ZCode saved reuse fixture', { exact: true }).first().click();
-  const reveal = async (card, turnIndex) => {
-    await (turnIndex === undefined ? page.getByText(/^Completed in/).last() : page.getByText(/^Completed in/).nth(turnIndex)).click();
+  const reveal = async card => {
+    const turn = await card.locator('xpath=ancestor::*[@data-chat-turn][1]').getAttribute('data-chat-turn');
+    assert.match(turn, /^\d+$/, 'the native renderer must identify the actual tool result turn');
+    const turnProcess = page.locator(`[data-chat-flow-kind="turn-process"][data-chat-turn="${turn}"]`);
+    const collapsed = page.locator(`[data-turn-process-hidden][data-chat-turn="${turn}"]`);
+    if (await collapsed.count()) await turnProcess.getByText(/^Completed in/).click();
     if (!(await card.locator('.omaa-saved-title').isVisible())) {
       await card.locator('xpath=ancestor::*[@data-step-process][1]').locator('button[data-process-activity]').first().click();
     }
@@ -152,7 +175,7 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   await page.getByRole('combobox', { name: '工作流运行', exact: true }).waitFor();
   assert.equal(await page.getByRole('combobox', { name: '工作流运行', exact: true }).inputValue(), second.result.runId);
   await page.getByRole('button', { name: /Actual parameters/ }).waitFor();
-  await reveal(runCards.first(), 3);
+  await reveal(runCards.first());
   await runCards.first().getByRole('button', { name: '查看运行与产物', exact: true }).click();
   await until(async () => await page.getByRole('combobox', { name: '工作流运行', exact: true }).inputValue() === first.result.runId);
   await page.getByRole('button', { name: /Actual parameters/ }).waitFor();

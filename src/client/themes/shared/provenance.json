@@ -30,14 +30,27 @@
       "source": "src/client/skins/codex-desktop/integration.jsx",
       "path": "codex-integration.jsx",
       "sourceSha256": "63e8fa707304defc316a19145b7ff89eff9a563a5810dd9acfadb470604900c8",
-      "sha256": "17516797d3ededb4e2cb55b7867f8f8516859a06527990a0c11d998fb0c0dfa4",
-      "adaptation": "Only local slot helper import and the OMAA registration id differ."
+      "sha256": "6eaaee57a9247807a83c83b7299cd0c270eab7ad54c63cb78293e400bbde91aa",
+      "bytes": 3884,
+      "adaptationSource": {
+        "repository": "https://github.com/gulagala001/oh-my-agents-above-all",
+        "commit": "c87de200f011d2293060fb9e5ca1c560cb023ee2",
+        "path": "src/client/themes/shared/codex-integration.jsx"
+      },
+      "adaptation": "The original OMD source hash is retained. In addition to the local slot helper import and OMAA registration id, the compatibility fix uses entry-preserving component decoration and falls back to the host renderer when its store, action or translation contract is unavailable. The geometry and original theme asset are unchanged."
     },
     {
       "source": "vendor/opencu/src/client/slot-decoration.mjs",
       "path": "slot-decoration.mjs",
       "sourceSha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a",
-      "sha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a"
+      "sha256": "81fe4f0630759121f73938b18094c99de8a893f5c8883027f814f019c2128bca",
+      "bytes": 3744,
+      "adaptationSource": {
+        "repository": "https://github.com/gulagala001/oh-my-agents-above-all",
+        "commit": "c87de200f011d2293060fb9e5ca1c560cb023ee2",
+        "path": "src/client/themes/shared/slot-decoration.mjs"
+      },
+      "adaptation": "The original OpenCU snapshot source hash is retained. The compatibility fix replaces shadow registration with in-place component decoration, preserving the declaring slot entry and metadata, publishing changes through a synchronous non-winning registration/disposal, and restoring inactive wrapper layers on disposal."
     }
   ],
   "redistributionLicense": "Apache-2.0",

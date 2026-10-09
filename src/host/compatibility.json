@@ -23,6 +23,11 @@
           "version": "0.2.0-rc.2.omd.0.12.0",
           "commit": "65917ffa7cabf9b914f6fbb51f8b2ad8daaae581",
           "unpublished": true
+        },
+        {
+          "version": "0.2.0-rc.2.omd.0.11.0",
+          "commit": "01736a37ee2d75df9d5ebe149be97825d4569bd2",
+          "unpublished": true
         }
       ]
     },
@@ -46,6 +51,11 @@
         {
           "version": "0.2.1-alpha.1.omd.0.12.0",
           "commit": "0256ee8998e8881cd2363950eaba19de02ed9236",
+          "unpublished": true
+        },
+        {
+          "version": "0.2.1-alpha.1.omd.0.11.0",
+          "commit": "3d5de286dada669c0eabd69077798e77cd600e0a",
           "unpublished": true
         }
       ]

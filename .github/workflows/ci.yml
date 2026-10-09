@@ -67,6 +67,7 @@ jobs:
           test/host-range.test.mjs
           test/package-distribution.test.mjs
           test/npm-runner.test.mjs
+          test/workflow-controller.test.mjs
       - name: Pack one candidate source entry for all native hosts
         run: |
           mkdir -p dist/source-entry
@@ -93,7 +94,15 @@ jobs:
           }
           JS
       - name: Prepare verified paired release assets
-        run: node scripts/release-assets.mjs --omd-version 0.12.0
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import { validationHosts, splitReleaseVersion } from './src/host/compatibility.mjs';
+          const versions = new Set(validationHosts.map(row => splitReleaseVersion(JSON.parse(readFileSync(`compat/omd/${row.omdVariant}.json`, 'utf8')).baseVersion, 'omd').feature.join('.')));
+          if (versions.size !== 1) throw new Error('Validation hosts must share one reviewed OMD release');
+          execFileSync(process.execPath, ['scripts/release-assets.mjs', '--omd-version', [...versions][0]], { stdio: 'inherit' });
+          JS
       - uses: actions/upload-artifact@v7
         with:
           name: omaa-release-packages
@@ -208,6 +217,29 @@ jobs:
             test/installed-pi-start.test.mjs \
             test/installed-pi-lifecycle.test.mjs \
             | tee dist/host-reports/native-deep.tap
+      - name: Verify optional failure isolation and live workflow replacement
+        env:
+          OMAA_WORKFLOW_AVAILABILITY: '1'
+          OMAA_TEST_SAFE: '1'
+          OMAA_TEST_PUBLIC_STORE: ${{ runner.temp }}/omaa-public-store
+        run: |
+          export OMAA_TEST_HOST_CLI="$OMAA_HOST_CLI"
+          export OMAA_TEST_HOST_VERSION="$OMAA_HOST_VERSION"
+          export OMAA_TEST_HOST_PACKAGE="$OMAA_HOST_VARIANT_PACKAGE"
+          export OMAA_TEST_OMD_PACKAGE="$OMAA_HOST_OMD_PACKAGE"
+          node --test --test-concurrency=1 test/workflow-availability.test.mjs
+      - name: Verify both native installation orders and optional enhancement lifecycle
+        env:
+          OMAA_COEXIST: '1'
+          OMAA_TEST_SAFE: '1'
+          OMAA_TEST_PUBLIC_STORE: ${{ runner.temp }}/omaa-public-store
+        run: |
+          export OMAA_TEST_HOST_CLI="$OMAA_HOST_CLI"
+          export OMAA_TEST_HOST_VERSION="$OMAA_HOST_VERSION"
+          export OMAA_TEST_HOST_PACKAGE="$OMAA_HOST_VARIANT_PACKAGE"
+          export OMAA_TEST_OMD_PACKAGE="$OMAA_HOST_OMD_PACKAGE"
+          export OMAA_COEXIST_REPORT="$GITHUB_WORKSPACE/dist/host-reports/coexist.json"
+          node --test --test-concurrency=1 test/omd-coexist.test.mjs
       - name: Verify the host-aligned variant's native installation and SDK routing
         env:
           OMAA_HOST_VARIANT_INSTALL: '1'

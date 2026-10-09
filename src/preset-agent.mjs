@@ -13,7 +13,6 @@ const readOnly = new Set(['read', 'read_image', 'glob', 'grep', 'ask_user_questi
 export function apply(ctx, config) {
   const build = builders[config.product];
   if (!build) throw new Error('Unknown OMAA product: ' + config.product);
-  if (ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function') throw new Error('此 Oh My DSH 版本缺少 OMAA 兼容接口。请安装与当前 DSH 匹配的兼容 OMD，或使用没有旧 OMD 的独立 DSH profile。');
   ctx.tools.presentAs('native');
   const piDelegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
   const enhancedTool = name => name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || name === 'computer_use' || name === 'computer_use_reset' || config.product === 'pi' && piDelegation.has(name);
