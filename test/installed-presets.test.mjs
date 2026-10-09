@@ -2,12 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { installedHost, until, textReply, toolReply } from './fixtures/installed-host.mjs';
+import { execFileSync } from 'node:child_process';
+import { installedHost, fixtureEnvironment, until, textReply, toolReply } from './fixtures/installed-host.mjs';
 import { products } from '../src/shared/products.mjs';
 
 const modelText = payload => payload.messages.filter(message => message.role === 'system').map(message => typeof message.content === 'string' ? message.content : message.content.map(part => part.text ?? '').join('\n')).join('\n');
 const toolsOf = payload => new Set(payload.tools?.map(tool => tool.function.name) ?? []);
 const markerRequest = (fixture, marker, after = 0) => fixture.requests.slice(after).find(payload => payload.tools?.length && JSON.stringify(payload.messages).includes(marker));
+// Dynamic source text (e.g. Grok scratch_dir) must use the installed host's
+// isolated environment, not the test runner's HOME or temporary directory.
+function expectedPrompt(f, id, tools) {
+  return execFileSync(process.execPath, ['--input-type=module', '-e', `
+    import { readFileSync } from 'node:fs';
+    const { url, tools, ...context } = JSON.parse(readFileSync(0, 'utf8'));
+    const { buildPrompt } = await import(url);
+    process.stdout.write(buildPrompt({ ...context, tools: new Set(tools) }));
+  `], { input: JSON.stringify({ url: new URL('../src/presets/' + id + '/prompt.mjs', import.meta.url).href,
+    tools: [...tools], cwd: f.workspace, platform: process.platform }),
+    env: fixtureEnvironment(f.home, f.evidence.isolation.safeEnvironment), encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024 });
+}
+
 
 test('packed presets run on original DSH, preserve native tool/session lifecycle and mode guards', { timeout: 300000 }, async t => {
   const f = await installedHost(t);
@@ -39,8 +53,7 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
     await f.prompt(created.sessionId, marker);
     const payload = markerRequest(f, marker, from); assert(payload, product.id + ' never reached loopback model');
     const tools = toolsOf(payload);
-    const module = await import(`../src/presets/${product.id}/prompt.mjs`);
-    const complete = module.buildPrompt({ tools, cwd: f.workspace, platform: process.platform });
+    const complete = expectedPrompt(f, product.id, tools);
     assert(modelText(payload).includes(complete), product.id + ' complete adapted source prompt missing from actual provider payload');
     for (const name of ['read', 'write', 'edit', process.platform === 'win32' ? 'pwsh' : 'bash']) assert(tools.has(name), product.id + ': missing ' + name + '; provider tools: ' + [...tools].join(', '));
     if (product.id === 'pi') {
@@ -112,8 +125,7 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
   const sectionHeadings = text => text.split('\n').filter(line => /^#{1,3} |^<[\w:-]+>/.test(line));
   assert.deepEqual(sectionHeadings(stockAfterText), sectionHeadings(stockBeforeText), 'ordinary DSH core sections changed');
   for (const product of products) {
-    const module = await import(`../src/presets/${product.id}/prompt.mjs`);
-    assert(!stockAfterText.includes(module.buildPrompt({ tools: toolsOf(stockAfter), cwd: f.workspace, platform: process.platform })), 'ordinary DSH acquired an OMAA product persona');
+    assert(!stockAfterText.includes(expectedPrompt(f, product.id, toolsOf(stockAfter))), 'ordinary DSH acquired an OMAA product persona');
   }
   assert.deepEqual([...toolsOf(stockAfter)].sort(), [...toolsOf(stockBefore)].sort(), 'ordinary DSH tools changed');
   assert.deepEqual(f.errors, []);
