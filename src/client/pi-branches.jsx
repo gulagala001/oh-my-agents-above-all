@@ -18,7 +18,7 @@ export function PiBranches({ settings, uiWorkspace, sessions, visible = true }) 
   const busy = state.loading || state.saving, canFork = !busy && !state.result?.sessionId && !current.loading && !current.saving && !current.error && !current.data.running && data?.canFork;
   const selectedPoint = point !== '' && data?.points.some(value => String(value.seq) === point) ? point : '';
   const run = operation => { setError(''); Promise.resolve().then(operation).catch(error => { if (settings.getSnapshot().sessionId === id) setError(error.message); }); };
-  return <section className="omaa-pi-branches" aria-label="Pi 分支导航">
+  return <section className="omaa-pi-branches" aria-busy={busy || undefined} aria-label="Pi 分支导航">
     <style>{css}</style>
     <header><h3>分支树</h3><button type="button" disabled={busy} onClick={() => run(() => controller.refresh())}>刷新分支</button></header>
     <p className="omaa-pi-branch-help">每条分支是一个原生 DSH 会话，共享工作目录；切换分支不会还原文件。</p>

@@ -101,7 +101,11 @@ test('session controls preserve authoritative settings through native transition
       stages.afterLateSave = snapshot();
       const failedRead = settings.refresh(); await tick(); calls.at(-1).resolve({ error: '读取失败' }, 500); await failedRead; await tick();
       stages.failedReadDisabled = [...panel.querySelectorAll('select:not([aria-label="明暗模式"]),input')].every(control => control.disabled);
+      stages.failedSameSessionAppearance = snapshot();
       try { await settings.update({ theme: 'host' }); stages.staleWrite = 'accepted'; } catch (error) { stages.staleWrite = error.message; }
+      const retryRead = settings.refresh(); await tick(); stages.retryPendingAppearance = snapshot();
+      calls.at(-1).resolve(value({ product: { id: 'cursor', name: 'Cursor', preset: 'omaa-cursor' } })); await retryRead; await tick();
+      stages.retryConfirmedAppearance = snapshot();
       const appearanceSave = runtime.setAppearance('dark');
       try { await runtime.setAppearance('light'); stages.appearanceBusy = 'accepted'; } catch (error) { stages.appearanceBusy = error.message; }
       appearanceRequests.at(-1)(false);
@@ -138,6 +142,9 @@ test('session controls preserve authoritative settings through native transition
   assert.equal(result.afterLateSave.data.product.id, 'cursor');
   assert.equal(result.afterLateSave.data.theme, 'product');
   assert.equal(result.failedReadDisabled, true);
+  assert.equal(result.failedSameSessionAppearance.theme, null, 'failed reread relinquishes the previous confirmed theme');
+  assert.equal(result.retryPendingAppearance.theme, null, 'retry does not remount a stale theme before its response');
+  assert.equal(result.retryConfirmedAppearance.theme, 'cursor-cli');
   assert.match(result.staleWrite, /重新读取/);
   assert.match(result.appearanceBusy, /正在保存/);
   assert.match(result.appearanceFailure, /未保存/);

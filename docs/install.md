@@ -2,7 +2,14 @@
 
 OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。无需安装或登录 Codex、Grok Build、Cursor、Pi、ZCode 的官方客户端；各产品的已实现能力与明确差异见 [验证记录](verification.md) 和 [产品资料](products/)。
 
-当前源码为未发布 OMAA `0.14.1` 候选，配对 OMD `0.12.0`。候选没有 tag／Release；仅使用已冻结的本地文件及同名 SHA-256／metadata，两个宿主的完整文件名见[候选说明](release-0.14.1.md)。在隔离 profile 验收时使用 `dsh plugin --profile candidate add file:/absolute/path/对应包.tgz`，不要把未发布版本写成在线安装 URL。
+当前源码为未发布 OMAA `0.2.1-alpha.2.omaa.0.15.0` 前端候选，配对 OMD `0.13.0`。使用与实际宿主匹配的冻结本地工件、SHA-256 与 SDK；没有本次 tag／Release。a2 原生 Web 正在执行本次验收，rc.2／alpha.1 的独立 SDK 构建与实际验收尚未完成，旧 0.14.2 记录不代替本次支持结论。交互与验证边界见[会话工作台](frontend-workbench.md)。
+
+```sh
+# 已核对实际运行的是官方 DSH 0.2.1-alpha.2；替换为冻结文件的真实路径。
+dsh plugin --profile candidate add file:/absolute/path/trisoul_x-0.2.1-alpha.2.omd.0.13.0.tgz file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.2.omaa.0.15.0.tgz
+```
+
+独立使用 OMAA 可只添加 OMAA 文件。不同 SDK 的附件必须分别完整构建与验收；仅转换包名或 peer 声明不提供兼容性。下述 GitHub 入口保留公开旧版，未发布候选不使用在线安装 URL。
 
 以下公开版安装步骤对应 OMAA `0.13.1`／OMD `0.10.0`，继续有效。
 
@@ -79,13 +86,13 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 ## 维护发行附件
 
-构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。当前候选配对 OMD 0.12.0，完成对应的 OMAA 与兼容 OMD 打包后，运行：
+构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。当前前端候选配对 OMD 0.13.0；完成每个宿主的独立 SDK 构建、安装与前端验收后，再运行：
 
 ```sh
-node scripts/release-assets.mjs --omd-version 0.12.0
+node scripts/release-assets.mjs --omd-version 0.13.0
 ```
 
-脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。当前两个代表生成四个包、十二份附件，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
+脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。工件数量以本次实际完成验收的代表宿主与生成清单为准，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
 
 
 未发布候选可对已固定的本地源码提交核验完整配对资产：
