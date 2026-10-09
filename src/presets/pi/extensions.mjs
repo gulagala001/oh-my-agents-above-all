@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { startGuest } from './extensions/transport.mjs';
 import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
 import { piHistoryEntries, readPiHistory } from './history.mjs';
+import { currentDirectory, ensureDirectory } from '../../host/working-directory.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -50,18 +51,18 @@ export function apply(ctx) {
   const sessionState = session => [...states].find(([agent]) => agent.session.id === session.id) ?? [];
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
   const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!enhanced(tool.name) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
-  const catalogSnapshot = (agent, state) => {
+  const catalogSnapshot = (agent, state, cwd = currentDirectory(ctx, agent.session)) => {
     const tools = visible(agent, state);
     const model = typeof agent.options?.model === 'string' ? { id: agent.options.model, provider: agent.options.provider } : undefined;
-    return { cwd: agent.session.header.cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
+    return { cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
       isIdle: agent.status === 'idle' && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
       sessionId: agent.session.id,
       activeTools: tools.map(t => t.name), allTools: ctx.tools.schemas(agent).map(t => ({ ...t, label: t.name })),
       commands: ctx.commands.list(agent).map(c => ({ name: c.name, description: c.description ?? '' })), flags: {},
       systemPrompt: state.prompt ?? '', ...(model ? { model } : {}) };
   };
-  const snapshot = async (agent, state, signal) => {
-    const catalog = catalogSnapshot(agent, state);
+  const snapshot = async (agent, state, signal, cwd) => {
+    const catalog = catalogSnapshot(agent, state, cwd);
     const history = await readPiHistory(ctx.get('sessionQuery'), agent.session.id, {
       signal, content: piContent, argumentsFor: (name, args) => piArguments({ name, arguments: args }),
       projections: ctx.get('sessions')?.messageProjections ?? [],
@@ -151,13 +152,14 @@ export function apply(ctx) {
     if (method === 'exec') {
       const command = args.command, commandArgs = args.args ?? [], options = args.options ?? {};
       if (typeof command !== 'string' || !command || !Array.isArray(commandArgs) || commandArgs.some(v => typeof v !== 'string')) throw Error('exec 需要程序与字符串参数');
-      if (options.cwd !== undefined && options.cwd !== agent.session.header.cwd) throw Error('扩展 exec 的工作目录由当前会话固定');
+      const cwd = currentDirectory(ctx, agent.session);
+      if (options.cwd !== undefined && options.cwd !== cwd) throw Error('扩展 exec 的工作目录由当前会话固定');
       const ms = options.timeout ?? 120000; if (!Number.isFinite(ms) || ms <= 0 || ms > 3600000) throw Error('exec timeout 无效');
       const fused = AbortSignal.any([signal, AbortSignal.timeout(ms)]), program = await ctx.subprocess.resolveExecutable(command, undefined, fused);
       const policy = currentPolicy(agent), argv = [program, ...commandArgs];
       const confined = policy.mode === 'danger-full-access' ? { argv } : await ctx.sandbox.confine(argv, policy, fused);
       assertPolicy(agent, state);
-      const child = ctx.subprocess.spawn({ argv: confined.argv, cwd: agent.session.header.cwd, stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: fused });
+      const child = ctx.subprocess.spawn({ argv: confined.argv, cwd, stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: fused });
       child.stdin?.on('error', () => {}); child.stdin?.end(options.input);
       const collect = async stream => { let total = 0; const chunks = []; for await (const chunk of stream) { total += chunk.length; if (total > 256 * 1024) { child.terminate(); throw Error('扩展 exec 输出超过 256 KiB'); } chunks.push(chunk); } return Buffer.concat(chunks).toString('utf8'); };
       try { const [result, stdout, stderr] = await Promise.all([child.done, collect(child.stdout), collect(child.stderr)]); return { stdout, stderr, code: result.exitCode ?? 1, killed: Boolean(result.signal || fused.aborted) }; }
@@ -269,7 +271,8 @@ export function apply(ctx) {
   async function ensure(agent, signal) {
     let state = states.get(agent) ?? makeState(agent);
     if (state.disposal) await state.disposal;
-    if (state.loading) { await state.loading; return state; }
+    if (state.loading) await state.loading;
+    const cwd = await ensureDirectory(ctx, agent, signal);
     const policy = currentPolicy(agent), configured = settings.settings.read();
     const versions = [];
     for (const file of configured.files) {
@@ -277,15 +280,15 @@ export function apply(ctx) {
       if (!stat || stat.type !== 'file' || stat.size > 256 * 1024) throw Error('Pi 扩展文件不存在或超过 256 KiB: ' + file);
       versions.push(stat.version);
     }
-    const policyKey = JSON.stringify(policy), key = JSON.stringify([configured, policyKey, versions]);
+    const policyKey = JSON.stringify(policy), key = JSON.stringify([configured, policyKey, versions, cwd]);
     if (key === state.key && !state.guest?.stopped) return state;
     const load = async () => {
       await state.dispose(); state.key = key; state.policyKey = policyKey; delete state.error;
       if (!configured.files.length) return;
       state.status = 'loading';
       try {
-        state.guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd: agent.session.header.cwd, signal, api });
-        const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: await snapshot(agent, state, signal) }, { signal, timeoutMs: 30000 });
+        state.guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd, signal, api });
+        const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: await snapshot(agent, state, signal, cwd) }, { signal, timeoutMs: 30000 });
         syncRegistrations(agent, state, descriptors);
         state.status = 'ready';
         await notifyEvent(agent, state, 'session_start', {}, signal);
