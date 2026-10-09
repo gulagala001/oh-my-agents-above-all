@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { executionDirectories } from '../../host/working-directory.mjs';
 import { prepareTypedWorkflow } from './typed-compiler.mjs';
 import { createActors, installLiteralActorPersona } from './actors.mjs';
 import { createSavedWorkflowStore } from './saved-workflows.mjs';
@@ -118,10 +119,12 @@ export function apply(ctx) {
     const progress = event => job?.append(JSON.stringify(event) + '\n');
     const runProgress = createRunProgress({ store: ctx.omaa.workflowArtifacts, parent, runId, signal, stopReason: () => record.stopReason });
     const cache = createRunCache({ store: ctx.omaa.workflowArtifacts, parent, runId, imported: options.imported });
+    const directories = options.directories ? Promise.resolve(options.directories) : executionDirectories(ctx, parent, signal, policy.workspaceRoot);
+    void directories.catch(() => {});
     const actors = createActors({ ctx, parent, sites: prepared.sites, askSpecs: prepared.askSpecs, signal, progress, runProgress,
-      cache, imported: options.imported, concurrency });
-    const world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec });
-    const artifacts = createArtifacts({ ctx, parent, prepared, runId, store: ctx.omaa.workflowArtifacts, signal, check, fatal, actor: exec });
+      cache, imported: options.imported, concurrency, directories });
+    const world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec, directories });
+    const artifacts = createArtifacts({ ctx, parent, prepared, runId, store: ctx.omaa.workflowArtifacts, signal, check, fatal, actor: exec, directories });
     runs.set(runId, record);
     let narration = Promise.resolve();
     const functions = {
@@ -170,10 +173,11 @@ export function apply(ctx) {
       const errorValue = (error, kind = signal.aborted && !fatalError ? 'abort' : 'exception') => ({ kind, name: error.name,
         message: error.message, ...(error.code ? { code: error.code } : {}) });
       try {
+        const location = await directories; check();
         await ctx.omaa.workflowArtifacts.begin({ runId, sessionId: parent.id, name: options.name,
           graph: prepared.graph, causalityGraph: prepared.causalityGraph, displayGraph: prepared.displayGraph, jobId: job?.id,
           resumedFrom: options.resumedFrom,
-          execution: { version: RUN_CACHE_VERSION, script: prepared.script, args: options.args ?? {}, actors: [], world: [],
+          execution: { version: RUN_CACHE_VERSION, cwd: location.cwd, script: prepared.script, args: options.args ?? {}, actors: [], world: [],
             ...(options.maxConcurrency === undefined ? {} : { maxConcurrency: options.maxConcurrency }) } }, () => {
           record.stopReason = 'user';
           if (job) ctx.jobs.kill(job.id, parent.id, 'Workflow stopped from its artifact panel.');
@@ -182,7 +186,7 @@ export function apply(ctx) {
         if (options.resumedFrom) await ctx.omaa.workflowArtifacts.mutate(parent.id, options.resumedFrom, value => { value.supersededBy = runId; });
         await runProgress.start(); check(); ready.resolve();
         outcome = await ctx.ptcRuntime.run(ctx.ptcRuntime.resolve({ program: programFor(prepared.lowered), bindings: [{ global: 'zcodeHost', functions }],
-          cwd: parent.session.header.cwd, sandboxPolicy: policy, signal, timeoutMs: null }));
+          cwd: (await directories).cwd, sandboxPolicy: policy, signal, timeoutMs: null }));
         await narration;
         if (fatalError) outcome = { ...outcome, error: errorValue(fatalError) };
       } catch (error) {
@@ -288,13 +292,14 @@ export function apply(ctx) {
         const prepared = prepareTypedWorkflow(script);
         if (!prepared.ok) return { ok: false, runId: args.run_id, diagnostics: prepared.diagnostics,
           response: 'The predecessor was not stopped. Fix the revised TypeScript before amending it.' };
-        await importCompletedRun({ ctx, parent, store, record: before, signal: exec.signal });
+        const directories = await executionDirectories(ctx, parent, exec.signal);
+        await importCompletedRun({ ctx, parent, store, record: before, signal: exec.signal, directories });
         exec.signal.throwIfAborted();
         const runId = randomUUID();
         const settled = await store.stopAndWait(parent.id, args.run_id);
-        const imported = await importCompletedRun({ ctx, parent, store, record: settled, signal: exec.signal });
+        const imported = await importCompletedRun({ ctx, parent, store, record: settled, signal: exec.signal, directories });
         return launch(exec, prepared, { runId, resumedFrom: args.run_id, imported, name: args.name ?? before.name,
-          args: args.args ?? before.execution.args, maxConcurrency: maxConcurrency ?? before.execution.maxConcurrency }, args.run_in_background !== false);
+          args: args.args ?? before.execution.args, maxConcurrency: maxConcurrency ?? before.execution.maxConcurrency, directories }, args.run_in_background !== false);
       } finally { amending.delete(args.run_id); }
     },
   });

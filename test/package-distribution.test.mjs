@@ -8,7 +8,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostManifest, omdBuildMode, reviewedPatchBytes, emptyPatchSha256 } from '../scripts/host-manifest.mjs';
-import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+import { LOADER_RANGE, validationHosts as currentValidationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+
+// These synthetic archive fixtures describe an older, complete release. A
+// pending SDK build has no paired OMD baseline and is not a tagged release.
+const HOST_RANGE = '>=0.2.0-rc.2 <=0.2.1-alpha.1';
+const validationHosts = currentValidationHosts.filter(row => !row.validationPending);
 
 const run = promisify(execFile), repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -20,12 +25,16 @@ async function fixture(t) {
   await mkdir(join(root, 'scripts')); await mkdir(join(root, 'src/host'), { recursive: true });
   for (const script of ['package.mjs', 'release-assets.mjs', 'verify-release.mjs', 'package-omd-compat.mjs', 'npm-runner.mjs', 'host-manifest.mjs']) await cp(join(repo, 'scripts', script), join(root, 'scripts', script));
   for (const name of ['compatibility.mjs', 'compatibility.json']) await cp(join(repo, 'src/host', name), join(root, 'src/host', name));
+  await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts });
   await symlink(join(repo, 'node_modules'), join(root, 'node_modules'), 'dir');
   for (const directory of ['lib', 'docs']) { await mkdir(join(root, directory)); await writeFile(join(root, directory, 'placeholder.txt'), 'distribution fixture\n'); }
   for (const name of ['README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md']) await writeFile(join(root, name), 'distribution fixture\n');
   await writeFile(join(root, 'src/AGENTS.md'), 'local only');
   const source = await json(join(repo, 'package.json'));
   source.version = alignedVersion(validationHosts.at(-1).version, 'omaa', '0.13.1');
+  for (const field of ['devDependencies', 'peerDependencies']) for (const name of Object.keys(source[field] ?? {})) {
+    if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) source[field][name] = field === 'devDependencies' ? validationHosts.at(-1).version : HOST_RANGE;
+  }
   await save(join(root, 'package.json'), source); return { root, source };
 }
 async function hostCli(root, version, loaderVersion, output = version) {

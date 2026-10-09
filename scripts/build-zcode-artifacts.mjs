@@ -56,6 +56,15 @@ function adaptImports(source, mappings) {
   return source;
 }
 
+function adaptWorkspaceRoot(source) {
+  const call = 'resolveWithinWorkspace(deps.cwd, given)';
+  if (source.split(call).length !== 2) throw new Error('Fixed artifact workspace boundary was not found');
+  return 'import { resolve as resolvePath } from "node:path";\n' + source
+    .replace('readonly cwd: string;', 'readonly cwd: string; readonly workspaceRoot?: string;')
+    .replace(call, 'resolveWithinWorkspace(deps.workspaceRoot ?? deps.cwd, resolvePath(deps.cwd, given))')
+    .replace('realpath(deps.cwd)', 'realpath(deps.workspaceRoot ?? deps.cwd)');
+}
+
 // types.ts has many unrelated engine declarations. Extract exactly this original
 // pure formatter; type-only names vanish during transpilation.
 function extractRefToString(source) {
@@ -108,7 +117,7 @@ export async function buildZCodeArtifacts() {
     },
     {
       name: 'publish',
-      source: adaptImports(await original(cli + 'bootstrap/src/app/workflow-artifact-publish.ts'), {
+      source: adaptImports(adaptWorkspaceRoot(await original(cli + 'bootstrap/src/app/workflow-artifact-publish.ts')), {
         '@zcode/contracts': './zcode-fs-contracts.mjs',
         '@zcode/dynamic-workflow': sharedImport,
         './workflow-world-read.js': './zcode-world-read.mjs',

@@ -90,7 +90,13 @@ export async function buildZCodeWorldReads() {
   ]) {
     let source = await readFile(join(snapshots, 'bootstrap/src/app', input), 'utf8');
     source = replaceImport(source, '@zcode/dynamic-workflow', './zcode-world-shared.mjs');
-    if (input === 'workflow-world-read.ts') source = replaceImport(source, './workflow-git-world-read.js', './zcode-git-world-read.mjs');
+    if (input === 'workflow-world-read.ts') {
+      source = replaceImport(source, './workflow-git-world-read.js', './zcode-git-world-read.mjs');
+      const call = 'assertWithinWorkspace("read", deps.cwd, arg)';
+      if (source.split(call).length !== 2) throw new Error('Fixed world-read workspace boundary was not found');
+      source = source.replace('readonly cwd: string;', 'readonly cwd: string; readonly workspaceRoot?: string;')
+        .replace(call, 'assertWithinWorkspace("read", deps.workspaceRoot ?? deps.cwd, resolvePath(deps.cwd, arg))');
+    }
     const generated = await transform(source, { loader: 'ts', format: 'esm', target: 'es2022' });
     const target = join(outputRoot, output);
     await writeFile(target, banner + generated.code);

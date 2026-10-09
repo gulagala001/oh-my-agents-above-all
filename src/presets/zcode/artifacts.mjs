@@ -1,11 +1,15 @@
 import { executeArtifactPublish } from '../../../lib/zcode-artifact-publish.mjs';
+import { currentDirectory, executionDirectories } from '../../host/working-directory.mjs';
 import { validateArtifactSpec } from '../../../lib/zcode-artifact-spec.mjs';
 import { primaryConflict, primaryConflictMessage } from '../../../lib/zcode-artifact-primary.mjs';
 import { ARTIFACT_CAPS, REPORT_CAPS, WorkflowError, canonicalJson, refToString } from '../../../lib/zcode-artifact-shared.mjs';
 import { createFileSystemError } from '../../../lib/zcode-fs-contracts.mjs';
 import { NO_ARTIFACT_CHANGE } from '../../host/zcode-artifacts.mjs';
 
-export function createArtifacts({ ctx, parent, prepared, runId, store, signal, check, fatal, actor }) {
+export function createArtifacts({ ctx, parent, prepared, runId, store, signal, check, fatal, actor, directories }) {
+  let cwd = currentDirectory(ctx, parent.session), workspaceRoot = parent.session.header.cwd;
+  const directoryReady = (directories ?? executionDirectories(ctx, parent, signal)).then(value => { cwd = value.cwd; workspaceRoot = value.workspaceRoot; });
+  void directoryReady.catch(() => {});
   const sites = new Map(prepared.sites.artifacts.map(site => [site.id, site.op]));
   const reportSites = new Set(prepared.sites.reports.map(site => site.id));
   const ordinals = new Map(), pending = new Set(); let publishing = Promise.resolve();
@@ -53,11 +57,12 @@ export function createArtifacts({ ctx, parent, prepared, runId, store, signal, c
           };
           const request = { runId, siteId, ordinal: instance.ordinal, id, op, version, opts,
             ...(op === 'file' ? { path: payload } : { content: payload }) };
-          const value = await executeArtifactPublish({ cwd: parent.session.header.cwd, parentSessionId: parent.id,
+          if (op === 'file') { await directoryReady; check(); }
+          const value = await executeArtifactPublish({ cwd, workspaceRoot, parentSessionId: parent.id,
             artifactStore: { writeToolResultArtifact: write, writeToolResultBinaryArtifact: write },
             fileSystemPort: { async readBinaryFile({ path, maxBytes }) {
-              check(); const cwd = parent.session.header.cwd;
-              const root = await ctx.fs.resolve(cwd, { cwd, signal }), target = await ctx.fs.resolve(path, { cwd, signal });
+              check();
+              const root = await ctx.fs.resolve(workspaceRoot, { signal }), target = await ctx.fs.resolve(path, { cwd, signal });
               if (!ctx.fs.contains(root, target)) throw failure('ArtifactPathOutsideWorkspace', 'Artifact source resolves outside the native workspace.');
               const info = await ctx.fs.stat(target, signal);
               if (!info || info.type !== 'file') throw createFileSystemError({ code: !info ? 'not_found' : info.type === 'directory' ? 'is_directory' : 'not_file', path, message: 'Source is not a regular file' });

@@ -1,4 +1,5 @@
 import { applySharedIdentity, omdIdentityPrompt } from './host/identity.mjs';
+import { currentDirectory } from './host/working-directory.mjs';
 import { buildPrompt as codex, buildCompactionPrompt as codexCompact } from './presets/codex/prompt.mjs';
 import { buildPrompt as grok, buildCompactionPrompt as grokCompact } from './presets/grok/prompt.mjs';
 import { buildPrompt as cursor, buildCompactionPrompt as cursorCompact } from './presets/cursor/prompt.mjs';
@@ -26,7 +27,7 @@ export function apply(ctx, config) {
   ctx.systemPrompt.section({ name: 'deployment:persona-prefix', order: 0, interpolate: false,
     text: ({ agent }) => {
       const child = agent?.session.header.origin === 'subagent';
-      const text = build({ tools: activeTools(agent), cwd: agent?.session.header.cwd ?? process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
+      const text = build({ tools: activeTools(agent), cwd: agent ? currentDirectory(ctx, agent.session) : process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
       return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx), { child });
     } });
   ctx.tools.guard(exec => {

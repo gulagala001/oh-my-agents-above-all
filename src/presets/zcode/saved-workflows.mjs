@@ -1,3 +1,4 @@
+import { currentDirectory } from '../../host/working-directory.mjs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -18,9 +19,9 @@ const sourceError = () => new Error('Provide exactly one script source: script f
 const nativeFailure = result => new Error(result.error?.message ?? result.content.filter(part => part.type === 'text').map(part => part.text).join('\n'));
 
 export function createSavedWorkflowStore(ctx, exec, home = homedir()) {
-  const cwd = exec.agent.session.header.cwd, fs = ctx.fs;
+  const projectRoot = exec.agent.session.header.cwd, cwd = currentDirectory(ctx, exec.agent.session), fs = ctx.fs;
   const roots = scope => [
-    ...(cwd ? [{ scope: 'project', path: join(cwd, SAVED_WORKFLOW_PROJECT_DIR) }] : []),
+    ...(projectRoot ? [{ scope: 'project', path: join(projectRoot, SAVED_WORKFLOW_PROJECT_DIR) }] : []),
     { scope: 'global', path: fs.processPathFromHostPath?.(join(home, SAVED_WORKFLOW_GLOBAL_DIR)) ?? join(home, SAVED_WORKFLOW_GLOBAL_DIR) },
   ].filter(root => scope === undefined || root.scope === scope);
   const locate = (name, scope) => {

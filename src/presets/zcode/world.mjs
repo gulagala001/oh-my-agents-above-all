@@ -1,5 +1,6 @@
 import { basename, isAbsolute, join, relative } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
+import { currentDirectory, executionDirectories } from '../../host/working-directory.mjs';
 import { resolveRgPath } from '@deepseek-ai/dsh-tool-fs-search';
 import { executeWorldRead, toWorkspaceRelative } from '../../../lib/zcode-world-read.mjs';
 import { WorkflowError, WORLD_READ_CAPS } from '../../../lib/zcode-world-shared.mjs';
@@ -10,12 +11,20 @@ import { createGlobMatcher, VCS_DIRECTORIES_TO_EXCLUDE, createRipgrepSearchPlan,
 
 // Original world-read code owns argument validation, shapes and limits. These
 // ports only bind its observations to the current native execution world.
-export function createWorldReads({ ctx, parent, prepared, signal, check, actor }) {
-  const cwd = parent.session.header.cwd, calls = new Set(), processes = new Set();
+export function createWorldReads({ ctx, parent, prepared, signal, check, actor, directories }) {
+  let cwd = currentDirectory(ctx, parent.session), workspaceRoot = parent.session.header.cwd;
+  const directoryReady = (directories ?? executionDirectories(ctx, parent, signal)).then(value => { cwd = value.cwd; workspaceRoot = value.workspaceRoot; });
+  void directoryReady.catch(() => {});
+  const calls = new Set(), processes = new Set();
   const sites = new Map(prepared.sites.worldReads.map(site => [site.id, site.op]));
   const assert = () => { check(); if (!cwd) throw new WorkflowError('DriverError', 'World operations require a native workspace directory.'); };
   const fileError = (code, path, message) => createFileSystemError({ code, path, message });
-  const resolve = async path => { assert(); return ctx.fs.resolve(path, { cwd, signal }); };
+  const resolve = async path => {
+    await directoryReady; assert();
+    const target = await ctx.fs.resolve(path, { cwd, signal }), root = await ctx.fs.resolve(workspaceRoot, { signal });
+    if (!ctx.fs.contains(root, target)) throw new WorkflowError('DriverError', 'World path is outside the native workspace.');
+    return target;
+  };
   function deadline(control, milliseconds) {
     const until = Date.now() + milliseconds;
     let timer;
@@ -172,7 +181,6 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor }
       return finishTextSearchResult({ path: request.path, pattern, mode: 'content', startedAt, request, files: [...files], entries, numMatches });
     },
   };
-  const deps = { cwd, fileSystemPort, declaredRunCommands: prepared.declaredRunCommands };
   function argumentsFor({ siteId, op, arguments: wrapped }) {
       assert();
       if (sites.get(siteId) !== op || !Array.isArray(wrapped)) throw new WorkflowError('DriverError', 'Invalid compiled world-read site.');
@@ -185,7 +193,9 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor }
   return {
     argumentsFor,
     async execute(request) {
+      await directoryReady;
       const args = argumentsFor(request), op = request.op;
+      const deps = { cwd, workspaceRoot, fileSystemPort, declaredRunCommands: prepared.declaredRunCommands };
       const call = executeWorldRead({ ...deps, executionPort: { run: request => run(request, { readOnly: op !== 'run' }) } }, op, args); calls.add(call);
       try { return { ok: true, value: await call }; }
       catch (error) { return { ok: false, error: { name: error.name || 'Error', code: error.code || 'DriverError', message: error.message } }; }

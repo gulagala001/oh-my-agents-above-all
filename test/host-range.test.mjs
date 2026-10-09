@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { alignedVersion, supportsHostVersion, splitReleaseVersion, compareFeatures, validationHosts } from '../src/host/compatibility.mjs';
 
-test('compatibility is bounded by an API interval, with representative hosts inside it', () => {
-  for (const version of ['0.2.0-rc.2', '0.2.0-rc.3', '0.2.0', '0.2.1-alpha.1']) assert(supportsHostVersion(version), version);
-  for (const version of ['0.1.7-rc.2', '0.2.0-rc.1', '0.2.1-alpha.2', '0.3.0', 'latest', 'v0.2.0-rc.2']) assert(!supportsHostVersion(version), version);
-  assert(validationHosts.every(row => supportsHostVersion(row.version)));
+test('the a2 SDK build admits its exact host without claiming support for historical or future SDKs', () => {
+  assert(supportsHostVersion('0.2.1-alpha.2'));
+  for (const version of ['0.1.7-rc.2', '0.2.0-rc.1', '0.2.0-rc.2', '0.2.0-rc.3', '0.2.0', '0.2.1-alpha.1', '0.2.1-alpha.3', '0.3.0', 'latest', 'v0.2.1-alpha.2']) assert(!supportsHostVersion(version), version);
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(splitReleaseVersion(manifest.version).host, '0.2.1-alpha.2');
+  for (const [name, version] of Object.entries(manifest.peerDependencies)) if (name.startsWith('@deepseek-ai/dsh-')) assert.equal(version, '0.2.1-alpha.2', name);
 });
 
 test('release syntax accepts new host generations and preserves formal/prerelease prefixes', () => {
@@ -23,6 +25,11 @@ test('release syntax accepts new host generations and preserves formal/prereleas
 
 test('current integrated OMD rules share the runtime update baseline and retain reviewed history', () => {
   for (const row of validationHosts) {
+    if (row.validationPending) {
+      assert.equal(row.unpublished, true);
+      assert.deepEqual(row.omdBaselines, [], 'a pending build must not invent a reviewed integrated baseline');
+      continue;
+    }
     const rule = JSON.parse(readFileSync(new URL('../compat/omd/' + row.omdVariant + '.json', import.meta.url), 'utf8'));
     assert.equal(rule.hostVersion, row.version);
     assert.equal(rule.mode, 'integrated-baseline');
