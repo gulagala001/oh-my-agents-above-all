@@ -2,7 +2,7 @@
 
 OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。无需安装或登录 Codex、Grok Build、Cursor、Pi、ZCode 的官方客户端；各产品的已实现能力与明确差异见 [验证记录](verification.md) 和 [产品资料](products/)。
 
-当前源码为未发布 OMAA `0.2.1-alpha.2.omaa.0.15.0` 前端候选，配对 OMD `0.13.0`。使用与实际宿主匹配的冻结本地工件、SHA-256 与 SDK；没有本次 tag／Release。a2 原生 Web 正在执行本次验收，rc.2／alpha.1 的独立 SDK 构建与实际验收尚未完成，旧 0.14.2 记录不代替本次支持结论。交互与验证边界见[会话工作台](frontend-workbench.md)。
+当前源码为未发布 OMAA `0.2.1-alpha.2.omaa.0.15.0` 前端候选，配对 OMD `0.13.0`。使用与实际宿主匹配的冻结本地工件、SHA-256 与 SDK；没有本次 tag／Release。a2 及 rc.2／alpha.1 的独立 SDK 前端基线已实际验收，最终小幅客户端与配对 OMD 工件继续按各冻结 SHA 验收；旧 0.14.2 记录不代替本次支持结论。交互与验证边界见[会话工作台](frontend-workbench.md)。
 
 ```sh
 # 已核对实际运行的是官方 DSH 0.2.1-alpha.2；替换为冻结文件的真实路径。

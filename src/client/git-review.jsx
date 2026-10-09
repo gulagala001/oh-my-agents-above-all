@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { assertGitSession, createGitReviewState, reviewDraftsFor, reviewHunkRows, sendReviewFeedback, sendReviewFeedbackBatch } from './git-review-state.mjs';
+import { assertGitSession, createGitReviewState, gitReviewErrorHint, reviewDraftsFor, reviewHunkRows, sendReviewFeedback, sendReviewFeedbackBatch } from './git-review-state.mjs';
 import { checkpointFileAddress, checkpointReviewAddress } from './checkpoint-navigation.mjs';
 import css from './git-review.css';
 
@@ -24,6 +24,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
   if (!enabled || !visible) return null;
   const summary = state.sessionId === id ? state.summary : null, diff = state.diff?.diff;
   const busy = state.loading || state.saving || sending || draftState.sending;
+  const diagnostic = state.error || error, errorHint = state.error && gitReviewErrorHint(state.errorCode, state.error);
   const canWrite = !busy && !current.loading && !current.saving && !current.error && !current.data.running && !current.data.pendingMode && current.data.mode === 'default';
   const run = operation => { setError(''); Promise.resolve().then(operation).catch(error => { if (settings.getSnapshot().sessionId === id) setError(error.message); }); };
   const navigate = operation => run(() => { assertGitSession(settings, id); if (sidebarRight.mounted.getSnapshot() !== id) throw new Error('会话已切换。'); operation(); });
@@ -138,6 +139,9 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
       <button type="button" disabled={!canWrite} onClick={submitDrafts}>{draftState.sending ? '正在提交反馈…' : '批量发送并继续修改'}</button>
     </section>}
     {!canWrite && !busy && <p className="omaa-git-caption">暂存、撤回和反馈发送仅在停止运行的执行模式下可用。</p>}
-    {(state.error || error) && <p role="alert" className="omaa-error">{state.error || error}</p>}
+    {diagnostic && (errorHint ? <div role="alert" className="omaa-error omaa-git-error">
+      <p>{errorHint}</p>
+      <details><summary>原始 Git 诊断</summary><pre>{diagnostic}</pre></details>
+    </div> : <p role="alert" className="omaa-error">{diagnostic}</p>)}
   </section>;
 }

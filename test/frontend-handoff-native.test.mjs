@@ -18,7 +18,7 @@ for (const order of ['omaa-first','omd-first']) test(`native frontend preserves 
   t.after(async () => {
     if (page && !page.isClosed()) { await page.screenshot({ path: join(directory, verified ? 'final.png' : 'failure.png'), fullPage: true }); await writeFile(join(directory, 'page.txt'), await page.locator('body').innerText()); }
     await browser?.close();
-    await writeFile(join(directory, 'verification.json'), JSON.stringify({ verified, order, checks, errors, responses, fixture: f?.evidence, scope: 'Official native a2 + frozen OMAA/OMD trial packages, owned local provider/HOME/CFT; no hardware or real account actions.' }, null, 2) + '\n');
+    await writeFile(join(directory, 'verification.json'), JSON.stringify({ verified, order, checks, errors, responses, fixture: f?.evidence, scope: `Official native ${f?.evidence.version} + frozen OMAA/OMD packages, owned local provider/HOME/CFT; no hardware or real account actions.` }, null, 2) + '\n');
   });
   f = await installedHost(t, { safeEnvironment: true, omdPackagePath: process.env.OMAA_TEST_OMD_PACKAGE });
   t.after(async () => { await assert.rejects(access(f.root), { code: 'ENOENT' }); assert.equal(f.evidence.cleanup.rootRemoved, true); assert(f.evidence.cleanup.stopReceipts.every(value => !value.forced)); await writeFile(join(directory, 'cleanup.json'), JSON.stringify(f.evidence.cleanup, null, 2) + '\n'); });
@@ -70,7 +70,12 @@ for (const order of ['omaa-first','omd-first']) test(`native frontend preserves 
     await expandSessions();
   };
   const row = id => page.locator(`[role="treeitem"][data-row-key="session:${id}"]`);
-  const select = async id => { await row(id).click(); await until(async () => await row(id).getAttribute('aria-selected') === 'true'); };
+  const select = async id => {
+    // Native session hydration can publish Show more after the shell. Wait for
+    // the real target row while expanding the public list, never fabricate it.
+    await until(async () => { await expandSessions(); return await row(id).isVisible(); });
+    await row(id).click(); await until(async () => await row(id).getAttribute('aria-selected') === 'true');
+  };
   const markers = async label => {
     await expandSessions();
     const actual = await page.evaluate(() => ({ areas: [...document.querySelectorAll('[data-omd-surface]')].map(value => value.dataset.omdSurface), hookCount: document.querySelectorAll('[data-omd-nav-part]').length, owner: document[Symbol.for('omd.omaa.appearance.v1')]?.getSnapshot(), nativeTree: document.querySelectorAll('[role="treeitem"][data-row-key^="session:"]').length }));
