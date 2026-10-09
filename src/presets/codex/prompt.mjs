@@ -6,7 +6,7 @@ export const product = Object.freeze({
   id: 'codex',
   name: 'Codex',
   source: 'openai/codex',
-  sourceCommit: '3d2ee51ca2d5db578f328aa75e20aa22c0197c9a',
+  sourceCommit: 'c1382380de69521303b416720a52f42d51af6248',
   promptSource: 'models-manager/models.json → gpt-6-astra.model_messages.instructions_template',
 })
 
@@ -25,6 +25,9 @@ export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default'
     'You have two channels for staying in conversation with the user:\n- You share updates in the `commentary` channel.\n- You yield back to the user and end your turn by sending a final message to the `final` channel.',
     'You share progress updates in assistant messages while working. You yield back to the user and end your turn by sending a final answer. Follow the host message format; do not write channel labels into the response.')
   prompt = prompt.replaceAll('`commentary` channel', 'progress messages').replaceAll('`final` channel', 'final answer')
+  prompt = replaceExact(prompt,
+    'If authorized by a skill or plugin, name and link the skill or plugin in the final channel.',
+    'If authorized by a skill or plugin, name and link the skill or plugin in the final answer.')
   prompt = replaceExact(prompt,
     'When available, you can use the `functions.request_user_input_async` tool',
     has('ask_user_question') ? 'When available, you can use the `ask_user_question` tool' : 'You can use direct conversation')

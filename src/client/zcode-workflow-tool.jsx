@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 const css = `.omaa-zcode-tool{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);min-width:0}.omaa-zcode-tool-head{display:flex;align-items:center;gap:7px;min-width:0}.omaa-zcode-tool button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer;border-radius:5px;padding:3px 5px}.omaa-zcode-tool button:hover{background:var(--dsw-alias-interactive-bg-hover)}.omaa-zcode-tool button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}.omaa-zcode-tool-title{display:flex;align-items:center;gap:7px;min-width:0;flex:1;text-align:left}.omaa-zcode-tool-title>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.omaa-zcode-tool small{font-size:11px;color:var(--dsw-alias-label-tertiary)}.omaa-zcode-tool[data-error] .omaa-zcode-tool-status,.omaa-zcode-tool .omaa-zcode-tool-error{color:var(--dsw-alias-state-error-primary)}.omaa-zcode-tool .omaa-zcode-tool-artifacts{color:var(--dsw-alias-brand-primary);font-size:11px;white-space:nowrap}.omaa-zcode-tool-body{margin:4px 0 4px 4px;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-markdown-code-block);overflow:hidden}.omaa-zcode-tool-body section{padding:9px 12px}.omaa-zcode-tool-body section+section{border-top:1px solid var(--dsw-alias-border-l2)}.omaa-zcode-tool-body pre{margin:5px 0 0;max-height:260px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace}.omaa-zcode-tool-inspect{font-size:11px!important}`;
+const statusLabels = new Map(Object.entries({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' }));
 
 function resultText(block) {
   const parts = (block.content || []).map(value => value.type === 'text' ? value.text : JSON.stringify(value, null, 2));
@@ -54,7 +55,7 @@ export function ZCodeWorkflowTool({ phase, block, useDisclosure, inspect, openAr
   const result = phase === 'result' ? workflowToolResult(block) : {};
   const failed = phase === 'result' && (block.isError || result.value?.ok === false || result.status === 'failed');
   const stopped = phase === 'result' && (block.error?.code === 'interrupted' || result.value?.error?.kind === 'abort' || result.status === 'killed' || result.status === 'cancelled');
-  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : ({ backgrounded: '已启动后台任务', running: '运行中', submitted: '已提交', completed: '已完成', failed: '失败', cancelled: '已取消', killed: '已中断' })[result.status] || '已完成';
+  const status = phase === 'preparing' ? '准备中' : phase === 'start' ? '执行中' : stopped ? '已中断' : failed ? '失败' : result.value?.status === 'retuned' ? '已调整并发' : statusLabels.get(result.status) || result.status || '已完成';
   const args = argumentReader(block, phase);
   const savedName = args?.value?.('saved')?.name;
   const name = args?.textPrefix?.('name', 100) || (typeof savedName === 'string' && savedName) || args?.textPrefix?.('path', 100) || 'ZCode 工作流';

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { startGuest } from './extensions/transport.mjs';
 import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
+import { piHistoryEntries, readPiHistory } from './history.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -42,25 +43,6 @@ function content(blocks) {
   if (!Array.isArray(blocks) || blocks.some(p => p?.type === 'text' ? typeof p.text !== 'string' : p?.type !== 'image' || !p.attachment)) throw Error('Pi 扩展结果须为文字或已入账的原生图片');
   return blocks.map(p => p.type === 'text' ? { type: 'text', text: p.text } : { type: 'image', attachment: p.attachment });
 }
-function nativeBranch(agent) {
-  const entries = [], calls = new Map();
-  for (const event of agent.session.snapshotEvents()) {
-    let message;
-    if (event.type === 'tool/call') { calls.set(event.data.callId, event.data.name); continue; }
-    const sourceMessage = event.data.message ?? event.data;
-    if (event.type === 'user/message') message = sourceMessage.source?.kind === 'pi-extension'
-      ? { role: 'custom', content: sourceMessage.content ?? [], customType: sourceMessage.source.customType,
-        display: sourceMessage.source.display, details: sourceMessage.source.details, timestamp: sourceMessage.source.timestamp }
-      : { role: 'user', content: sourceMessage.content ?? [] };
-    else if (event.type === 'assistant/message') message = { role: 'assistant', content: (sourceMessage.content ?? []).filter(p => p.type !== 'reasoning') };
-    else if (event.type === 'tool/result') message = { role: 'toolResult', toolCallId: sourceMessage.toolCallId,
-      toolName: event.data.name ?? calls.get(sourceMessage.toolCallId), content: sourceMessage.content ?? [], isError: Boolean(sourceMessage.isError), details: event.data.meta?.piExtension?.details ?? {} };
-    if (message) entries.push({ type: 'message', id: String(event.seq), parentId: entries.at(-1)?.id ?? null, timestamp: new Date(event.time ?? 0).toISOString(), message });
-  }
-  // A bounded read-only projection, never another session manager/journal.
-  return entries.slice(-100).map(entry => ({ ...entry, message: { ...entry.message, content: entry.message.content.filter(p => p.type === 'text').map(p => ({ ...p, text: p.text.slice(0, 4000) })) } }));
-}
-
 export function apply(ctx) {
   const settings = ctx.omaa.piExtensions, states = new Map();
   // Registry service access can return a traced Agent face. Resolve journal
@@ -68,15 +50,24 @@ export function apply(ctx) {
   const sessionState = session => [...states].find(([agent]) => agent.session.id === session.id) ?? [];
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
   const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!enhanced(tool.name) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
-  const snapshot = (agent, state) => {
-    const tools = visible(agent, state), branch = nativeBranch(agent);
+  const catalogSnapshot = (agent, state) => {
+    const tools = visible(agent, state);
     const model = typeof agent.options?.model === 'string' ? { id: agent.options.model, provider: agent.options.provider } : undefined;
     return { cwd: agent.session.header.cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
       isIdle: agent.status === 'idle' && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
-      sessionId: agent.session.id, sessionHeader: { ...agent.session.header }, sessionBranch: branch, sessionEntries: branch,
+      sessionId: agent.session.id,
       activeTools: tools.map(t => t.name), allTools: ctx.tools.schemas(agent).map(t => ({ ...t, label: t.name })),
       commands: ctx.commands.list(agent).map(c => ({ name: c.name, description: c.description ?? '' })), flags: {},
       systemPrompt: state.prompt ?? '', ...(model ? { model } : {}) };
+  };
+  const snapshot = async (agent, state, signal) => {
+    const catalog = catalogSnapshot(agent, state);
+    const history = await readPiHistory(ctx.get('sessionQuery'), agent.session.id, {
+      signal, content: piContent, argumentsFor: (name, args) => piArguments({ name, arguments: args }),
+      projections: ctx.get('sessions')?.messageProjections ?? [],
+    });
+    return { ...catalog, sessionHeader: history.header, sessionCursor: history.cursor,
+      sessionEntries: history.entries, sessionBranch: history.branch };
   };
   const currentPolicy = agent => ctx.sandboxPolicy.resolve({ session: agent.session });
   const assertPolicy = (agent, state) => {
@@ -111,7 +102,7 @@ export function apply(ctx) {
     if (method === 'syncRegistrations') {
       if (state.status !== 'ready' || state.disposal && context.eventName !== 'session_shutdown') throw Error('扩展注册仅可在当前已加载的回调中更改');
       syncRegistrations(agent, state, args.descriptors);
-      const { allTools, activeTools, commands } = snapshot(agent, state);
+      const { allTools, activeTools, commands } = catalogSnapshot(agent, state);
       return { allTools, activeTools, commands };
     }
     if (method === 'ui.notify') { settings.notify(agent, args.text ?? args.message, args.type); return; }
@@ -258,8 +249,9 @@ export function apply(ctx) {
         void (async () => {
         const guest = state.guest;
         if (shutdown && guest && !guest.stopped && state.status === 'ready' && state.events.has('session_shutdown')) {
-          try { const response = await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: snapshot(agent, state) },
-            { context: { agent, state, eventName: 'session_shutdown' }, signal: AbortSignal.timeout(2000), timeoutMs: 2000 });
+          try { const signal = AbortSignal.timeout(2000);
+            const response = await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: await snapshot(agent, state, signal) },
+            { context: { agent, state, eventName: 'session_shutdown' }, signal, timeoutMs: 2000 });
             for (const error of response?.errors ?? []) ctx.logger.warn('Pi extension shutdown: ' + error.error); }
           catch (error) { ctx.logger.warn('Pi extension shutdown: ' + error.message); }
         }
@@ -293,7 +285,7 @@ export function apply(ctx) {
       state.status = 'loading';
       try {
         state.guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd: agent.session.header.cwd, signal, api });
-        const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: snapshot(agent, state) }, { signal, timeoutMs: 30000 });
+        const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: await snapshot(agent, state, signal) }, { signal, timeoutMs: 30000 });
         syncRegistrations(agent, state, descriptors);
         state.status = 'ready';
         await notifyEvent(agent, state, 'session_start', {}, signal);
@@ -306,7 +298,7 @@ export function apply(ctx) {
     if (!state.guest || state.guest.stopped) throw Error('Pi 扩展进程未运行');
     assertPolicy(agent, state);
     state.calls++;
-    try { return await state.guest.call({ type: 'invoke', ...call, snapshot: snapshot(agent, state) }, { context: { agent, state, exec, eventName: call.eventName }, signal }); }
+    try { return await state.guest.call({ type: 'invoke', ...call, snapshot: await snapshot(agent, state, signal) }, { context: { agent, state, exec, eventName: call.eventName }, signal }); }
     finally { state.calls--; }
   }
   async function notifyEvent(agent, state, eventName, event, signal) {
@@ -316,42 +308,14 @@ export function apply(ctx) {
     for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 ' + eventName + '：' + error.error, 'error');
   }
   async function runMessages(agent, run, signal) {
-    const calls = new Map(), messages = [];
-    for (const event of agent.session.snapshotEvents(run.firstSeq + 1)) {
-      if (event.seq > run.endSeq) break;
-      if (event.type === 'tool/call') { calls.set(event.data.callId, event.data.name); continue; }
-      if (event.surfaceOp !== 'append' || !['user/message', 'assistant/message', 'tool/result'].includes(event.type)) continue;
-      const source = event.data.message ?? event.data;
-      const blocks = [];
-      for (const part of source.content ?? []) {
-        if (part.type === 'text' || part.type === 'image') blocks.push(...(await piContent([part], signal)).map(value => ({ ...part, ...value })));
-        else if (part.type === 'reasoning') blocks.push({ ...part, type: 'thinking', thinking: part.text });
-        else if (part.type === 'tool-call') {
-          let argumentsValue = part.arguments;
-          try { argumentsValue = JSON.parse(argumentsValue); } catch {}
-          if (argumentsValue && typeof argumentsValue === 'object' && !Array.isArray(argumentsValue)) argumentsValue = piArguments({ name: part.name, arguments: argumentsValue });
-          blocks.push({ ...part, type: 'toolCall', arguments: argumentsValue });
-        } else blocks.push(json(part)); // Preserve native-only attachments/blocks.
-      }
-      const timestamp = event.time;
-      if (event.type === 'user/message') messages.push(source.source?.kind === 'pi-extension'
-        ? { role: 'custom', customType: source.source.customType, display: source.source.display, details: source.source.details, content: blocks, timestamp: source.source.timestamp ?? timestamp }
-        : { role: 'user', content: blocks, timestamp });
-      else if (event.type === 'tool/result') messages.push({ role: 'toolResult', toolCallId: source.toolCallId,
-        toolName: event.data.name ?? calls.get(source.toolCallId), content: blocks, isError: Boolean(source.isError),
-        details: event.data.meta?.piExtension?.details ?? {}, timestamp });
-      else {
-        const response = source.source?.replayState?.response;
-        const finish = event.data.stream?.findLast(item => item.chunk?.type === 'finish')?.chunk.reason;
-        const usage = event.data.usage;
-        messages.push({ role: 'assistant', content: blocks, timestamp,
-          api: response?.kind === 'pi-ai' ? response.api : 'dsh', provider: source.source?.provider, model: source.source?.model,
-          stopReason: response?.kind === 'pi-ai' ? response.stopReason : ({ 'tool-calls': 'toolUse', 'max-tokens': 'length', error: 'error', aborted: 'aborted', completed: 'stop' })[finish?.kind],
-          ...(usage ? { usage: { ...usage, input: usage.inputTokens, output: usage.outputTokens, totalTokens: usage.totalTokens } } : {}) });
-      }
-    }
-    return messages;
+    const observation = await ctx.get('sessionQuery').observeSession(agent.session.id, { projectionMode: 'none', signal });
+    try {
+      const events = observation.events.filter(event => event.seq > run.firstSeq && event.seq <= run.endSeq
+        && (event.type === 'tool/call' || event.surfaceOp === 'append'));
+      return (await piHistoryEntries(events, { content: piContent, signal, argumentsFor: (name, args) => piArguments({ name, arguments: args }) })).map(entry => entry.message);
+    } finally { observation[Symbol.dispose](); }
   }
+
   const clearRunPrompt = state => { state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; };
   async function beginLifecycle(agent, state, signal) {
     const run = state.lifecycleRun ??= { firstSeq: state.pendingLifecycleSeq ?? -1, turnIndex: 0, lastStep: null };

@@ -4,12 +4,14 @@
 
 ## 来源与生效层
 
-- 固定仓库：[openai/codex，3d2ee51ca2d5db578f328aa75e20aa22c0197c9a](https://github.com/openai/codex/tree/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a)，已有版本记录 `0.153.4`，Apache-2.0。官方 LICENSE 原文已保存。
-- 当前底稿：[models-manager/models.json](https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/models.json) 中 `gpt-6-astra.model_messages.instructions_template`，完整 21,261 字符；按 JSON 字符串解码后保存为 `sources/instructions_template.md`，未概括重写。模型目录仅确定提示词出处，不强制 DSH 使用该模型。
+- 固定仓库：[openai/codex，c1382380de69521303b416720a52f42d51af6248](https://github.com/openai/codex/tree/c1382380de69521303b416720a52f42d51af6248)，正式 tag `rust-v0.162.0`，版本 `0.162.0`，Apache-2.0。官方 LICENSE 原文已保存。
+- 当前底稿：[models-manager/models.json](https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/models.json) 中 `gpt-6-astra.model_messages.instructions_template`，完整 21,420 字符；按 JSON 字符串解码后保存为 `sources/instructions_template.md`，未概括重写。模型目录仅确定提示词出处，不强制 DSH 使用该模型。
 - 同一对象的 `persistent_instructions`、模式、审批和多代理动态文本完整留在 `model-messages.json`。它们是独立条件层，不全部注入主提示词。`persistent_instructions.md` 要求异步用户消息、唤醒描述、等待与长期跟进，并含固定截止日；没有对应实现时不启用。
 - `fallback-prompt.md` 是源码回退提示词；`core/gpt-5.2-codex_prompt.md` 是旧模型文本，不能因为文件名包含 Codex 就把它当作当前模板。
 - `buildCompactionPrompt()` 导出 `compact.md` 的完整官方指令，供 DSH 原生 compaction-basic 的现有摘要调用使用；压缩引擎、事务与工具配对仍由 DSH 负责。`compact-summary-prefix.md`、`review-rubric.md` 留作比较资料，不自动切换会话结构或要求 JSON 交稿。
 - 每个文件的来源 URL、提取 selector、字节数和 SHA-256 在 `sources/source.json`。`models.json` 保留整个固定上游文件，便于核对提取结果及后续升级差异。
+
+本次以正式 `rust-v0.162.0` 更新完整保存文件，主模板只变化消息授权这一句：允许用户明确指令，或明确调用的 skill/plugin 所授权的消息操作；后一种情况在最终答复列出名称和链接。DSH 仅把新句中的 `final channel` 原位改为 `final answer`，其余已审阅适配保留。持久模板、压缩指令、review rubric 和 fallback 原文不变。独立 Default 模式条件文本删去两句旧指导，`instructions_variables` 字段移除；这些条件层仍只保存，不自动注入。源码的模型人格 fallback 整理及计划指令文件移动已保留为来源证据，不复制原厂模型选择或运行器。
 
 ## 行为与宿主适配
 

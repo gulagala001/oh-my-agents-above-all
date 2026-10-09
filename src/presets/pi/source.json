@@ -1,15 +1,15 @@
 {
   "id": "pi",
   "repository": "https://github.com/earendil-works/pi",
-  "commit": "cd32f7725fdbddbaecdff5b1e68491563394e0ca",
-  "version": "v1.0.2",
+  "commit": "abe508e1b89912adde45528136c3221eb69acdd7",
+  "version": "v1.1.0",
   "license": "MIT",
-  "retrievedAt": "2026-10-05",
+  "retrievedAt": "2026-10-09",
   "files": [
     {
       "path": "LICENSE",
       "snapshot": "sources/LICENSE",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/LICENSE",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/LICENSE",
       "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
       "bytes": 1069,
       "license": "MIT"
@@ -17,7 +17,7 @@
     {
       "path": "packages/coding-agent/README.md",
       "snapshot": "sources/packages/coding-agent/README.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/README.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/README.md",
       "sha256": "fbc7abec7d0829ac8bc4b217e950794e1ba4d8d1b3e0850f970da318ad72e863",
       "bytes": 4080,
       "license": "MIT"
@@ -25,15 +25,15 @@
     {
       "path": "packages/coding-agent/docs/extensions.md",
       "snapshot": "sources/packages/coding-agent/docs/extensions.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/extensions.md",
-      "sha256": "da717a338c68708cb3e45b44c491287fde44059184dec2351d8d1dd430f73f76",
-      "bytes": 19852,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/extensions.md",
+      "sha256": "bd2ed1f728173c1defc035e90c3894c308ae153fa08575c12b4a9988e11f8108",
+      "bytes": 20085,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/docs/compaction.md",
       "snapshot": "sources/packages/coding-agent/docs/compaction.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/compaction.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/compaction.md",
       "sha256": "190b8c651148504613aea98b0637807c536ed0362948fda1bcd1ae137d75ff4a",
       "bytes": 23951,
       "license": "MIT"
@@ -41,7 +41,7 @@
     {
       "path": "packages/coding-agent/docs/rpc.md",
       "snapshot": "sources/packages/coding-agent/docs/rpc.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/rpc.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/rpc.md",
       "sha256": "37a03d180115460a0a275022f4aeabef1e5345458df6a9b6e8a6de18474de720",
       "bytes": 8897,
       "license": "MIT"
@@ -49,7 +49,7 @@
     {
       "path": "packages/coding-agent/docs/rpc-commands.md",
       "snapshot": "sources/packages/coding-agent/docs/rpc-commands.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/rpc-commands.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/rpc-commands.md",
       "sha256": "4deeee367852f4633ef594bc079f9e9fb14640a4e3ba8a69b7c89b6f54740838",
       "bytes": 21482,
       "license": "MIT"
@@ -57,47 +57,47 @@
     {
       "path": "packages/coding-agent/src/core/system-prompt.ts",
       "snapshot": "sources/packages/coding-agent/src/core/system-prompt.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/system-prompt.ts",
-      "sha256": "e9cf234637f792c44e71764b8daff13bc15b0e77aa5574ec9728365ac9f61807",
-      "bytes": 9547,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/system-prompt.ts",
+      "sha256": "5e28c82634113d0cca7ff5da6fa94e27aaae80e461cd5664ced9dbcef6f89089",
+      "bytes": 10161,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/skills.ts",
       "snapshot": "sources/packages/coding-agent/src/core/skills.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/skills.ts",
-      "sha256": "055dbfde974fd1951267dd6f9204b5d713ff0004e0991eb870fce9158c6e359a",
-      "bytes": 14687,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/skills.ts",
+      "sha256": "8dcc644dbabbb34238f609ecf191c0da370d74873ccaccaf3c3cd0e7703d9431",
+      "bytes": 14941,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/agent-session.ts",
       "snapshot": "sources/packages/coding-agent/src/core/agent-session.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/agent-session.ts",
-      "sha256": "fa1a4f2d84efd0aab8f4a74301d1106395130d3cc59bd665c558280f27dceb03",
-      "bytes": 158139,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "19186bf8a79876131a296fe17333c6276a671f8f48401df238c9814eeba0f5df",
+      "bytes": 160323,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/resource-loader.ts",
       "snapshot": "sources/packages/coding-agent/src/core/resource-loader.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/resource-loader.ts",
-      "sha256": "45daa19ad4aa08856cf1eb9b026230b918eb25e163c7dc9ab5cf8add6825955a",
-      "bytes": 47634,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/resource-loader.ts",
+      "sha256": "dbe87c11983b8dac949377904f4cf0511155771498ba88d2fefb0cd0d5dd9e28",
+      "bytes": 48061,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/extensions/types.ts",
       "snapshot": "sources/packages/coding-agent/src/core/extensions/types.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/types.ts",
-      "sha256": "837425f97af6921ae2f4c151d3386419479df6e9a209740e197bb3c3162525e2",
-      "bytes": 82743,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/extensions/types.ts",
+      "sha256": "d9a24065cc9830dc8bdc8d2e41299ad6ce125b3d156a0de1674faeabcb439122",
+      "bytes": 83476,
       "license": "MIT"
     },
     {
       "path": "packages/agent/src/agent.ts",
       "snapshot": "sources/packages/agent/src/agent.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/agent/src/agent.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/agent/src/agent.ts",
       "sha256": "7024a3145a6ebc951a0f030164adb1dfb12d33d6e0dbbac15ef0efda49c87457",
       "bytes": 19748,
       "license": "MIT"
@@ -105,15 +105,15 @@
     {
       "path": "packages/agent/src/agent-loop.ts",
       "snapshot": "sources/packages/agent/src/agent-loop.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/agent/src/agent-loop.ts",
-      "sha256": "e773e822a2587caf314e6bb66ea6370fce3468b7eecd26d6a67afe673f81eabc",
-      "bytes": 29088,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/agent/src/agent-loop.ts",
+      "sha256": "28a2b03e34a7e32f004aa851e54d3b5be9dad71c392205614cbc9abdf3a9020a",
+      "bytes": 29513,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/compaction/compaction.ts",
       "snapshot": "sources/packages/coding-agent/src/core/compaction/compaction.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/compaction.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/compaction/compaction.ts",
       "sha256": "d5aebd41333957b57fa3f1bee2a18b3c00b5d47bb1b4af6f913cf8cd791099c8",
       "bytes": 35513,
       "license": "MIT"
@@ -121,7 +121,7 @@
     {
       "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
       "snapshot": "sources/packages/coding-agent/src/core/compaction/branch-summarization.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/compaction/branch-summarization.ts",
       "sha256": "0279195d2cddfe99d4e42a1327d18c7f55ff15a8807d2c5d6cd465b2ab163011",
       "bytes": 12714,
       "license": "MIT"
@@ -129,7 +129,7 @@
     {
       "path": "packages/coding-agent/src/core/compaction/utils.ts",
       "snapshot": "sources/packages/coding-agent/src/core/compaction/utils.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/compaction/utils.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/compaction/utils.ts",
       "sha256": "cc0baada8a2e31bcf1dbc18948c69ba2264fb2ad4d2c583ceb772fd3c3233674",
       "bytes": 5809,
       "license": "MIT"
@@ -137,7 +137,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/index.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/index.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/index.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
       "bytes": 6784,
       "license": "MIT"
@@ -145,15 +145,15 @@
     {
       "path": "packages/coding-agent/src/core/tools/read.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/read.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/read.ts",
-      "sha256": "297d26092979651091f44de8862a6fd55aaf59e7252f8fb8dd3d7cb3f9771518",
-      "bytes": 9451,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/read.ts",
+      "sha256": "c3c64f7105599455d3066568074796e2ddb143cb210da4981b0eb632aa3d2811",
+      "bytes": 10550,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/tools/bash.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/bash.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/bash.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/bash.ts",
       "sha256": "de2b54d4f4bfbb844ce6d8077f63d715f7d8e80079dd9689b561e45b6679c81b",
       "bytes": 15678,
       "license": "MIT"
@@ -161,7 +161,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/edit.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/edit.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/edit.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/edit.ts",
       "sha256": "31a368c14cf5437ecac157765660001b16063302d9bd746303d6d1b1dcb5625d",
       "bytes": 8564,
       "license": "MIT"
@@ -169,7 +169,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/write.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/write.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/write.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/write.ts",
       "sha256": "2ee0a438c24cf83fefd733e349d55a21aa5b633c18934b2c80759fcf14b6f297",
       "bytes": 3554,
       "license": "MIT"
@@ -177,7 +177,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/grep.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/grep.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/grep.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/grep.ts",
       "sha256": "88be3d00217d1a1caf8a9e7bb2b8d2e6d96edfa4b790c2cf76c746ab36b8841b",
       "bytes": 11550,
       "license": "MIT"
@@ -185,7 +185,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/find.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/find.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/find.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/find.ts",
       "sha256": "b06bcae6821a0e9fda1b63be613a7ce28eb0e66e1d01d16564e59e83f9ce10ea",
       "bytes": 11178,
       "license": "MIT"
@@ -193,7 +193,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/ls.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/ls.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/ls.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/ls.ts",
       "sha256": "3d0a5457e4f5b9e9967c44608b76b060374d047e80d6871ecec4459b612cb6a3",
       "bytes": 5840,
       "license": "MIT"
@@ -201,7 +201,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/powershell.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/powershell.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/powershell.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/powershell.ts",
       "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
       "bytes": 2348,
       "license": "MIT"
@@ -209,7 +209,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/truncate.ts",
       "snapshot": "sources/packages/coding-agent/src/core/tools/truncate.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/truncate.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/truncate.ts",
       "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
       "bytes": 9255,
       "license": "MIT"
@@ -217,7 +217,7 @@
     {
       "path": "packages/coding-agent/src/core/prompt-templates.ts",
       "snapshot": "sources/packages/coding-agent/src/core/prompt-templates.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/prompt-templates.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/prompt-templates.ts",
       "sha256": "11db52a6bea6f3f094c6f533d4a3162462bdef4693f238ba1a8a1be6729d4545",
       "bytes": 9551,
       "license": "MIT"
@@ -225,7 +225,7 @@
     {
       "path": "packages/coding-agent/src/utils/frontmatter.ts",
       "snapshot": "sources/packages/coding-agent/src/utils/frontmatter.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/utils/frontmatter.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/utils/frontmatter.ts",
       "sha256": "99142d78b94e658e0be65cf05046be8069b3700168a683e0af64219ad903bcd6",
       "bytes": 1203,
       "license": "MIT"
@@ -233,7 +233,7 @@
     {
       "path": "packages/coding-agent/docs/prompt-templates.md",
       "snapshot": "sources/packages/coding-agent/docs/prompt-templates.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/prompt-templates.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/prompt-templates.md",
       "sha256": "ad5113cce0d05ef0ac77b3c71f9ebe41ea68c072275f9273b9616e4924feda42",
       "bytes": 2490,
       "license": "MIT"
@@ -241,7 +241,7 @@
     {
       "path": "packages/coding-agent/docs/skills.md",
       "snapshot": "sources/packages/coding-agent/docs/skills.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/skills.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/skills.md",
       "sha256": "5b9805525b194474ef1fe5455a0917ef15ed7f710aa9bec2eee11879556469e5",
       "bytes": 4793,
       "license": "MIT"
@@ -249,7 +249,7 @@
     {
       "path": "packages/coding-agent/src/core/package-manager.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/package-manager.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/package-manager.ts",
       "sha256": "c571e652abec58e1302177137e6640c228afa1d68089afd904d3073693691863",
       "bytes": 87256,
       "license": "MIT"
@@ -257,7 +257,7 @@
     {
       "path": "packages/coding-agent/src/core/pi-manifest.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/pi-manifest.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/pi-manifest.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/pi-manifest.ts",
       "sha256": "cdeed96fef83e03043bb25081ad4b7abd26e739dfa464a0e1763c6473330bac3",
       "bytes": 959,
       "license": "MIT"
@@ -265,15 +265,15 @@
     {
       "path": "packages/coding-agent/docs/settings.md",
       "snapshot": "sources/upstream/packages/coding-agent/docs/settings.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/settings.md",
-      "sha256": "dae0b70c2f852ff57b4a34947d5059f7bac18038ca7e1fae4c4ba97bcbd574c3",
-      "bytes": 13063,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/settings.md",
+      "sha256": "40883e4a63d6aaeb58e659f1151d02c8c26982fc109658fa72fb35a94ea109d2",
+      "bytes": 13348,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/docs/packages.md",
       "snapshot": "sources/upstream/packages/coding-agent/docs/packages.md",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/docs/packages.md",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/docs/packages.md",
       "sha256": "5fe4a3009d7260fe1e2f54b64086fc3c8b4d678232bfa2dbc7e91fe588fc9ea5",
       "bytes": 6106,
       "license": "MIT"
@@ -281,7 +281,7 @@
     {
       "path": "packages/coding-agent/src/core/extensions/loader.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/extensions/loader.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/loader.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/extensions/loader.ts",
       "sha256": "0177db97c7e35ea39cdab53124c04dbf6e045ac379670bcae0b4e1269002eb3a",
       "bytes": 28124,
       "license": "MIT"
@@ -289,7 +289,7 @@
     {
       "path": "packages/coding-agent/src/core/extensions/runner.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/extensions/runner.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/extensions/runner.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/extensions/runner.ts",
       "sha256": "2a3bd7f81623928070eb956cdac37b861a787297046f9ce7af0522ff6d41a98a",
       "bytes": 51725,
       "license": "MIT"
@@ -297,7 +297,7 @@
     {
       "path": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
       "sha256": "bae3cdd9f2aa21fb168ef42a47584f3b19536c0815ec14d94389af530eef9358",
       "bytes": 2153,
       "license": "MIT"
@@ -305,7 +305,7 @@
     {
       "path": "packages/ai/src/utils/typebox-helpers.ts",
       "snapshot": "sources/upstream/packages/ai/src/utils/typebox-helpers.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/src/utils/typebox-helpers.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/ai/src/utils/typebox-helpers.ts",
       "sha256": "caf756258ce20c793dc8002cb8130a8efce18a7b5262ba0c54832b96f5a76e9f",
       "bytes": 789,
       "license": "MIT"
@@ -313,7 +313,7 @@
     {
       "path": "packages/coding-agent/examples/extensions/hello.ts",
       "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/hello.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/hello.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/examples/extensions/hello.ts",
       "sha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934",
       "bytes": 640,
       "license": "MIT"
@@ -321,7 +321,7 @@
     {
       "path": "packages/coding-agent/examples/extensions/protected-paths.ts",
       "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/protected-paths.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/protected-paths.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/examples/extensions/protected-paths.ts",
       "sha256": "9ca66b1f3b1b9a61cc5ddc660f92cca2ea66c4264a1bdb6b00e0da5844399fe2",
       "bytes": 808,
       "license": "MIT"
@@ -329,7 +329,7 @@
     {
       "path": "packages/coding-agent/examples/extensions/input-transform.ts",
       "snapshot": "sources/upstream/packages/coding-agent/examples/extensions/input-transform.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/examples/extensions/input-transform.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/examples/extensions/input-transform.ts",
       "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
       "bytes": 1444,
       "license": "MIT"
@@ -337,7 +337,7 @@
     {
       "path": "packages/ai/src/utils/validation.ts",
       "snapshot": "sources/upstream/packages/ai/src/utils/validation.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/src/utils/validation.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/ai/src/utils/validation.ts",
       "sha256": "460786b57dead200e411b9afec916a5049c96ebcff4da082096456ac06d44fb7",
       "bytes": 9902,
       "license": "MIT"
@@ -345,15 +345,15 @@
     {
       "path": "packages/ai/package.json",
       "snapshot": "sources/upstream/packages/ai/package.json",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/ai/package.json",
-      "sha256": "d7b35ad32c3172d9b71503fe59e42032f63cc3609d3fee070ea434b4f5fb2998",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/ai/package.json",
+      "sha256": "a8f10d5157b335379ae00edf9c25ae7a15bfc0f3a76107d4376a3779bb5b2995",
       "bytes": 2721,
       "license": "MIT"
     },
     {
       "path": "packages/coding-agent/src/core/messages.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/core/messages.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/messages.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/messages.ts",
       "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
       "bytes": 5206,
       "license": "MIT"
@@ -361,9 +361,9 @@
     {
       "path": "packages/coding-agent/src/modes/interactive/components/custom-message.ts",
       "snapshot": "sources/upstream/packages/coding-agent/src/modes/interactive/components/custom-message.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/modes/interactive/components/custom-message.ts",
-      "sha256": "321af8afdff8da4924a7dbf5623b5637eb160ea7d73a70e6662d8125249bde9b",
-      "bytes": 3099,
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/modes/interactive/components/custom-message.ts",
+      "sha256": "bbf3ec1bdfe63c18f2dc448796cb86853486ed214c0bdbfde80e080517d381c5",
+      "bytes": 3139,
       "license": "MIT"
     }
   ],
@@ -438,6 +438,12 @@
       "original": "Project context and skills dynamic loading, normalized cwd",
       "adapted": "cwd rendered; project instructions and skills provided by host sections",
       "reason": "Avoid duplicate stale copies; preserve native DSH context ownership"
+    },
+    {
+      "source": "system-prompt.ts hiddenTools and buildRules",
+      "original": "Only declared selected tools contribute snippets/rules; hidden read/bash retains skills with an indirect file-loading hint; available grep/find/ls suppress shell search guidance.",
+      "adapted": "Pure prompt renderer follows visible selected-tool order and indirect hints; native pwsh and glob map actual host tools. Native extension frames derive hiddenTools from the host-owned loadout, currently empty because prepareLoadout is unsupported.",
+      "reason": "Prompt text must match actual native request declarations; mutable prompt options cannot hide declared tools or imply an indirect executor."
     }
   ],
   "compactionPrompt": {
@@ -452,7 +458,8 @@
     "Pi full-history context/context_with_system and remaining lifecycle callbacks, broader extension APIs, native custom TUI rendering and exact original structured-section transcript deltas",
     "Pi output truncation artifact contracts",
     "Remote npm/git package installation, full Pi extension API beyond the opt-in native guest profile, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
-    "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately"
+    "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately",
+    "v1.1.0 prepareLoadout/ToolLoadout.getPromptGuidelines, hidden indirect tool execution, tool_execution_start/end including durationMs, agent_settled.aborted and editable turn_end/agent_before_settle/full-history replacement remain unsupported; saved official types are reference data, not an implemented event surface."
   ],
   "nativeAbsences": [
     "Default plan mode",
@@ -461,7 +468,7 @@
   ],
   "adaptedPrompt": {
     "module": "prompt.mjs",
-    "sha256": "1ce31aa898b407c5f4081a3aa526ee8f420c93be7c319997ee911e2cacc4c3c9"
+    "sha256": "5e143c6d0b2fdc6fdfbfc0c8f85436034589960b5011edbc8c36072a1c075521"
   },
   "resourceAdapter": {
     "module": "resources.mjs",
@@ -485,7 +492,8 @@
       "Fixed 0.2.1-alpha.1 private roots extension selects cwd.pi plus cwd-to-gitroot ancestor.agents and user directories, with CLI project-first precedence. Bounded native FS directory selection filters native scan inputs and returned candidate paths; actual parsing/get/watch/resource bases remain the same FileSystemSkillProvider. Bundle stops recursion; ignored SKILL does not stop it; Pi root flat files / agents nonroot flat files; dot/node_modules skipped.",
       "Skill and prompt discovery uses upstream ignore@7.0.8 with exact prefixIgnorePattern and .gitignore/.ignore/.fdignore ordering, root-relative paths, directory pruning and negation. Rules inherit within each independent resource root, not from workspace ancestors. Native fs permissions/cancellation and 64 KiB per-rule / 256 KiB aggregate bounds remain authoritative. Native opaque versions detect rule/configuration/explicit-path changes at assembly and invalidate only through the Pi provider registration control; unchanged rules use stat without rescanning skill trees.",
       "Project cwd.pi/settings.json and user agentDir/settings.json skills/prompts use their own base directories, absolute/tilde paths, native resource discovery and upstream minimatch@10.2.6 filter dimensions/order. Explicit project settings precede project auto roots, then explicit user settings, user auto roots, and package resources. Settings globs filter discovered plain entries; package manifest globs are enumerated through bounded native fs.",
-      "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract."
+      "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract.",
+      "v1.1.0 disabledBuiltinExtensions filters original builtin: extension paths even when CLI/settings enable them. OMAA has no original built-in extension loader; existing local resource discovery and explicit factory allowlist remain its actual scope, with no inert disabledBuiltinExtensions setting."
     ],
     "sha256": "32da4dd5e184cf85a7142ae94fccf1e6c3f379dd2de99f208053c8b46265188c",
     "helpers": [
@@ -508,7 +516,7 @@
     ],
     "auditReference": {
       "path": "packages/coding-agent/src/core/package-manager.ts",
-      "url": "https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts",
+      "url": "https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/package-manager.ts",
       "sections": [
         "resourcePrecedenceRank173-185",
         "collectSkillEntries347-423",
@@ -535,7 +543,7 @@
       },
       {
         "module": "extensions/wire.mjs",
-        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
+        "sha256": "ea7a0f8b3fc002f32511549b04644cdfdce4645fd50d2bb0f67ec947d6b62864"
       }
     ],
     "source": [
@@ -626,13 +634,13 @@
   },
   "extensionHostAdapter": {
     "module": "extensions.mjs",
-    "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf",
+    "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742",
     "transport": {
       "module": "extensions/transport.mjs",
       "sha256": "3a04e0271b9895af70416bdce510c9cd73e9fa61093b44a914d199c8ee7730cd",
       "wire": {
         "module": "extensions/wire.mjs",
-        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
+        "sha256": "ea7a0f8b3fc002f32511549b04644cdfdce4645fd50d2bb0f67ec947d6b62864"
       }
     },
     "hostIntegration": "Explicit local entry allowlist; native scoped tools/commands, fs versions, subprocess/sandbox, userQuestions and attachments. Extension-only callback guest; native model/API, inbox and journal remain authoritative.",
@@ -648,13 +656,13 @@
       "agent_end"
     ],
     "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback. test/installed-pi-start.test.mjs covers awaited input before template/assembly, chained mutable options/getSystemPrompt, forced leading prompt transitions, custom native source metadata, dynamic add/replace/loadout, one-at-a-time steer, queued follow-up and durable cold queued literal input.",
-    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, custom TUI renderer, sendMessage or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view remains bounded, callback actions scoped, dependency installation absent. agent_start/turn_start/agent_end are awaited notifications adapted to native activity/request steps; editable turn_end and agent_before_settle remain unsupported. Native journal turn/end precedes idle-reserved runMaintenance and native whenIdle/teardown waits for end callbacks. Native retry and original Pi low-level run/pre-settle semantics differ."
+    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. No full-history context/context_with_system replacement, custom TUI renderer, sendMessage or appendEntry. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view covers all supported native messages at one immutable observation, with raw entries separate from current projection; it is not a full Pi JSONL tree, callback actions scoped, dependency installation absent. agent_start/turn_start/agent_end are awaited notifications adapted to native activity/request steps; editable turn_end and agent_before_settle remain unsupported. Native journal turn/end precedes idle-reserved runMaintenance and native whenIdle/teardown waits for end callbacks. Native retry and original Pi low-level run/pre-settle semantics differ."
   },
   "beforeAgentStartAdapter": {
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf"
+        "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742"
       },
       {
         "module": "extensions/guest.mjs",
@@ -674,12 +682,12 @@
       },
       {
         "module": "extension-prompt.mjs",
-        "sha256": "c14376fb1a0b795a4a3cae0e35822f1ddd39842594897448480b17d918b7a8b5"
+        "sha256": "20a42d0905c54e4666821385d767290f28eeaea17d511a1a07671a469f109db6"
       }
     ],
     "pureHelpers": {
       "module": "../../../lib/pi-prompt-helpers.mjs",
-      "sha256": "206f4d79654b4a658e188eea79f99a8f951334ea55dfd15ae98a74a1e5290d33",
+      "sha256": "5f9ba802fdead4783c7b6f5b09d01bce9317617daccc43fec9f912eb3579acc7",
       "builder": "scripts/build-pi-prompt-helpers.mjs",
       "source": [
         "packages/coding-agent/src/core/system-prompt.ts",
@@ -690,7 +698,7 @@
         "formatSkillsForPrompt",
         "escapeXml"
       ],
-      "reproducibility": "Strict fixed manifest SHA and TS AST pure-function extraction; main build checks generated output; no original agent/model runtime."
+      "reproducibility": "Strict v1.1.0 manifest SHA and TS AST pure-function extraction; main build checks generated output; hiddenTools clone and indirect skill-reader text retained; no original agent/model runtime."
     },
     "hostIntegration": "Native claimed events -> shared steering selection -> awaited input -> nonrecursive templates -> awaited start hook -> native pre-step admission. source.pi.input retains source/template/streaming choices. source.pi.runPrompt retains force presence for cold head cleanup; no second prompt history or queue.",
     "lifecycle": "Once per fresh user run, not per tool/steer/queued streaming follow-up. End-only callback continuation retains accepted force; new human input during end maintenance starts fresh before_agent_start/force. Quiet end clears the override. Fresh or cleared force uses startsRequestSeries; normal in-history updates preserve native semantics.",
@@ -733,7 +741,7 @@
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "e2375e70384cbd825d74579eba878694504ba8c2f269ec90b8fcceb4faa26baf"
+        "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742"
       },
       {
         "module": "extensions/guest.mjs",
@@ -749,7 +757,7 @@
       },
       {
         "module": "extensions/wire.mjs",
-        "sha256": "6271415899c8874e92e511554a4a31f4e905af71e7320264a96cab81498a685f"
+        "sha256": "ea7a0f8b3fc002f32511549b04644cdfdce4645fd50d2bb0f67ec947d6b62864"
       }
     ],
     "source": [
@@ -766,18 +774,40 @@
     "adaptations": [
       "agent_start has type only; turn_start has turnIndex from zero and dispatch timestamp; agent_end has current-scope actual append-origin messages. Startup/step registrations reassemble the first-request tools and native guard. Pure notification handler errors are reported and later handlers continue.",
       "End-only continuation retains accepted force; fresh human input during end maintenance starts its own before_agent_start and force. Native retry and original Pi low-level prompt/continue run and pre-settlement boundaries differ.",
-      "End messages retain full text/image/toolCall/thinking and original native-only block structures; native attachments supply image bytes. Original Pi replay api/stopReason is retained when present, otherwise native finish reasons are mapped. Native usage is retained with corresponding token fields; no invented SDK costs or guarantee of complete Pi signatures. ctx.sessionManager remains a bounded 100-entry/4000-text-character-per-entry read-only view.",
+      "End messages retain full text/image/toolCall/thinking and original native-only block structures; native attachments supply image bytes. Original Pi replay api/stopReason is retained when present, otherwise native finish reasons are mapped. Native usage is retained with corresponding token fields; no invented SDK costs or guarantee of complete Pi signatures. ctx.sessionManager reads complete supported native messages and current projection from one immutable observation; the 128 MiB transport limit remains explicit.",
       "User-cancel end notification exposes an already-aborted ctx.signal; host forbids exec/executeTool/sendUserMessage/UI questions from resuming work, while notify and read-only APIs remain available. Disposed activity does not start end maintenance. This stop-notification restriction is an OMAA adaptation.",
       "Strict bidirectional wire transport limits complete JSON messages to 128 MiB and individual JSONL frames to 2 MiB, validating sequence, bytes, canonical base64, UTF-8 and completeness without truncation. Registration payloads retain a separate budget."
     ],
     "limits": "No editable turn_end/agent_before_settle BoundaryResult, draft entries, context preview/edit/compaction or continuation-control parity. Native user turn is not a Pi turn. No original Pi loop, complete SessionManager, SDK cost calculation or all-signature parity.",
     "verification": {
-      "status": "native-alpha-fixture-passed",
+      "status": "native-dual-host-fixture-passed",
       "evidence": [
         "test/installed-pi-lifecycle.test.mjs: final 6.8s PASS in one native alpha host with scripted provider; startup/step ordering and first-request tools/guard, pure-handler error continuation, new human force during end maintenance, end-only force retention, full >2 MiB multilingual message, cancelled notification signal and blocked continuation.",
-        ".cache/pi-lifecycle-native-evidence.json"
+        ".cache/pi-lifecycle-native-evidence.json",
+        "work/rea-upgrade/rc2-native-products-final.log and final-014-native-alpha.log: actual installed rc.2 and alpha.1 candidate lifecycle checks passed with isolated localhost providers."
       ],
-      "limits": "rc.2 core loop/Session received read-only byte comparison only. No claim of rc.2 real execution, Desktop all-hook coverage, Windows or real-model quality. Main-model source review fixed the late-dispose window by retaining the actual native signal, including handled queued input without a provider request; no dedicated disposed-window fixture is claimed."
+      "limits": "Mac arm64 scripted providers verify native lifecycle contracts; Desktop all-hook coverage, Windows and real-model quality are not claimed. Late-dispose handling retains the actual native signal; no dedicated disposed-window fixture is claimed."
+    }
+  },
+  "tag": "v1.1.0",
+  "historyAdapter": {
+    "module": "history.mjs",
+    "sha256": "bf839a4550fbb8ce7bfa5429796863c7b77622c54450430c49f9e1f2800e3e73",
+    "hostIntegration": "Public SessionQuery observeSession projection:none captures one immutable cut; public foldSurface plus registered native projections supplies the current ordered message view. Observation is disposed after adaptation. No journal writes or second loop.",
+    "adaptations": [
+      "getEntries supplies all supported native user/assistant/tool-result messages without the previous 100-message/4000-character truncation; getBranch uses the same cut and current projection order.",
+      "Native image attachments supply actual bytes; thinking, native-only blocks, actual usage and tool call/result identity are retained. argumentsRaw keeps exact native input alongside the adapted object. Getter clones cannot mutate the native journal.",
+      "Tool identity follows native dispatch links, including content-only result replacement chains with stable message IDs. Image conversion is shared only inside one immutable observation; later cuts and other sessions re-read native attachments."
+    ],
+    "limits": "Supported DSH message view, not every Pi JSONL entry or writable SessionManager/tree. No editable context/pre-settle API, invented costs or complete signature parity. Callback transport rejects JSON over 128 MiB rather than truncating.",
+    "verification": {
+      "status": "native-dual-host-fixture-passed",
+      "evidence": [
+        "test/pi-history-readonly.test.mjs: actual native cut, projection replacement order and append race; complete message conversion",
+        "test/installed-pi-history.test.mjs: >100 real messages, full multilingual text, valid native image, tool pairing, immutable guest clones and cold restoration",
+        "work/rea-upgrade/pi-boundaries/rc2/history-installed-evidence.json and final-014-native-alpha.log: actual host-matching packed candidates, real image bytes and cold restoration."
+      ],
+      "limits": "macOS arm64 official rc.2 and alpha.1 SDK hosts with isolated localhost providers; no complete Pi JSONL tree, Desktop, Windows or real-provider quality claim."
     }
   }
 }

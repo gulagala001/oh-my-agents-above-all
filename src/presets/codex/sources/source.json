@@ -1,9 +1,9 @@
 {
   "product": "Codex",
   "repository": "https://github.com/openai/codex",
-  "commit": "3d2ee51ca2d5db578f328aa75e20aa22c0197c9a",
-  "upstreamVersion": "0.153.4",
-  "retrievedAt": "2026-10-05",
+  "commit": "c1382380de69521303b416720a52f42d51af6248",
+  "upstreamVersion": "0.162.0",
+  "retrievedAt": "2026-10-09",
   "license": "Apache-2.0",
   "selectedPrompt": "instructions_template.md",
   "modelProfileSource": "gpt-6-astra",
@@ -11,22 +11,22 @@
   "files": [
     {
       "file": "sources/models.json",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/models.json",
-      "sha256": "d7136a413cfac1b5b1686d9e0dcc5c80ca05bebed5e9fc3911376561d0ef6ee8",
-      "bytes": 515145,
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/models.json",
+      "sha256": "943ca7fe1d19ed019054158303f0dbbd80b3bef43b3aa425a71aa7cb3fb52c2b",
+      "bytes": 472072,
       "kind": "official-source"
     },
     {
       "file": "sources/instructions_template.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/models.json",
-      "sha256": "152dfaeeb552876190962be1c12c93d426840ff12691f648261554a7675a6698",
-      "bytes": 21269,
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/models.json",
+      "sha256": "35bd51b5f577cb7b24cd5f4629e49e37cb724ab57754ce6f8f202001635bab8a",
+      "bytes": 21428,
       "kind": "official-json-field",
       "selector": "models[slug=gpt-6-astra].model_messages.instructions_template"
     },
     {
       "file": "sources/persistent_instructions.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/models.json",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/models.json",
       "sha256": "30747e79e50efb64f91cfff3d5ef1882e347081e81448918d5f7d5358e98c523",
       "bytes": 5741,
       "kind": "official-json-field",
@@ -34,57 +34,57 @@
     },
     {
       "file": "sources/model-messages.json",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/models.json",
-      "sha256": "bdd4447c7094c60021b9120cafb210bd55895c4394f42bcb949a9a1f0e8deaab",
-      "bytes": 62789,
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/models.json",
+      "sha256": "41092ada47f49ca18dcce6741fc302938eafa6e050c9b17d2f6e52b09ecb3a79",
+      "bytes": 62503,
       "kind": "official-json-object",
       "selector": "models[slug=gpt-6-astra].model_messages"
     },
     {
       "file": "sources/fallback-prompt.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/prompt.md",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/prompt.md",
       "sha256": "ac8ae107a0d72fe3476b430afb161ea4e67da2e446d778aefc44828160559807",
       "bytes": 20903,
       "kind": "official-source"
     },
     {
       "file": "sources/compact.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/prompts/templates/compact/prompt.md",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/prompts/templates/compact/prompt.md",
       "sha256": "ab0c334d4faca17e3afbb9b16967c1b2fdcc7242a9a0880af57949fa236d6d07",
       "bytes": 426,
       "kind": "official-source"
     },
     {
       "file": "sources/compact-summary-prefix.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/prompts/templates/compact/summary_prefix.md",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/prompts/templates/compact/summary_prefix.md",
       "sha256": "e9b088e794a6bb9082ac053fcc760bd818d7e720ee4bcdc72c6e480de7b7cb0e",
       "bytes": 399,
       "kind": "official-source"
     },
     {
       "file": "sources/review-rubric.md",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/prompts/templates/review/rubric.md",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/prompts/templates/review/rubric.md",
       "sha256": "ec60e7f36a1d1c2679ce095c0205ecc56f7dd8fb57707a13ef362072390f219f",
       "bytes": 7685,
       "kind": "official-source"
     },
     {
       "file": "sources/update_plan_instructions.rs",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/core/src/context/update_plan_instructions.rs",
-      "sha256": "672b41a3ddaef3e07d277b7fd8821fae08dbcc439d21619ca54bc4838c8131f2",
-      "bytes": 2197,
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/prompts/src/update_plan_instructions.rs",
+      "sha256": "9bd837cc7760dc670ba7454f251a2a039b3d5a5e2bc6e16b916c9d400393337b",
+      "bytes": 2204,
       "kind": "official-source"
     },
     {
       "file": "sources/model_info.rs",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/codex-rs/models-manager/src/model_info.rs",
-      "sha256": "b98f7d769c8c10830554475b4c52b718683f7084cba8d9933db8727f7c2006f9",
-      "bytes": 9332,
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/codex-rs/models-manager/src/model_info.rs",
+      "sha256": "fc0835fbab3ee497df0e28364cfb2e537ed25c8ac7ad4516cb940702d6fbd51b",
+      "bytes": 6057,
       "kind": "official-source"
     },
     {
       "file": "sources/LICENSE",
-      "url": "https://github.com/openai/codex/blob/3d2ee51ca2d5db578f328aa75e20aa22c0197c9a/LICENSE",
+      "url": "https://github.com/openai/codex/blob/c1382380de69521303b416720a52f42d51af6248/LICENSE",
       "sha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
       "bytes": 10926,
       "kind": "license"
@@ -104,5 +104,6 @@
     "persistent_instructions.md (requires a separately implemented persistence mode and async user messaging)",
     "review-rubric.md (source reference; not an automatic JSON final response requirement)"
   ],
-  "compaction": "compact.md is returned unchanged by buildCompactionPrompt for the existing DSH summary call."
+  "compaction": "compact.md is returned unchanged by buildCompactionPrompt for the existing DSH summary call.",
+  "tag": "rust-v0.162.0"
 }

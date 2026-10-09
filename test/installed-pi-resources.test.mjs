@@ -44,7 +44,7 @@ test('installed Pi loads project system/addendum, expands template inputs once, 
   await writeFile(join(f.workspace, '.pi/skills/.fdignore'), '!pi-kept/\n');
   await writeFile(join(f.workspace, '.pi/skills/pi-hidden/SKILL.md'), '---\nname: pi-hidden\ndescription: PI_IGNORED_CATALOG_MUST_NOT_LOAD\n---\nPI_IGNORED_BODY');
   await writeFile(join(f.workspace, '.pi/skills/pi-kept/SKILL.md'), '---\nname: pi-kept\ndescription: PI_NEGATED_CATALOG\n---\nPI_NEGATED_BODY');
-  await mkdir(join(f.workspace, '.git'));
+  await mkdir(join(f.workspace, '.git'), { recursive: true });
   await f.install(); await f.boot();
   const session = await f.create('omaa-pi');
   const start = f.requests.length;

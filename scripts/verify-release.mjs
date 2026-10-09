@@ -10,7 +10,7 @@ import { hostManifest, omdCompatibility, hasReviewedOmdManifest, omdBuildMode, r
 import { splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const usage = 'Usage: node scripts/verify-release.mjs --repo owner/name --tag TAG --assets DIR';
+const usage = 'Usage: node scripts/verify-release.mjs (--repo owner/name --tag TAG | --source-commit COMMIT) --assets DIR';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const requireMatch = (condition, message) => { if (!condition) throw new Error(message); };
 function command(program, args, label, maxBuffer = 4 * 1024 * 1024) {
@@ -27,22 +27,49 @@ async function regularBytes(file) {
   return readFile(file);
 }
 
+function verifyCandidateOmaaPayload(tarball, commit, manifest, trackedFiles) {
+  const excluded = new Set(['AGENTS.md', 'CLAUDE.md', 'AI_README.md', 'COMPUTER_USE_HANDOFF.md', 'COMPUTER_USE_BASELINE.md', 'WINDOWS_HANDOFF.md', 'PROMPT_MAINTENANCE.md', 'PROMPT_CHANGES.md', '.cache', 'test', 'node_modules', '.git']);
+  const sourceFiles = trackedFiles.filter(path => manifest.files.some(root => path === root || path.startsWith(root + '/'))
+    && !path.split('/').some(part => excluded.has(part)));
+  const required = new Set(['package.json', ...sourceFiles]), seen = new Set(), inventory = new Set();
+  const members = command('tar', ['-tzf', tarball], 'Candidate archive inventory', 32 * 1024 * 1024).toString('utf8').trimEnd().split('\n');
+  const details = command('tar', ['-tvzf', tarball], 'Candidate archive member types', 32 * 1024 * 1024).toString('utf8').trimEnd().split('\n');
+  requireMatch(members.length === details.length, 'Candidate archive member listings differ.');
+  for (let i = 0; i < members.length; i++) {
+    const member = members[i].replace(/\/$/, ''), type = details[i][0];
+    requireMatch(!/[\x00-\x1f\x7f\\]/.test(member) && !member.split('/').some(part => !part || part === '.' || part === '..')
+      && (member === 'package' || member.startsWith('package/')) && !seen.has(member) && ['-', 'd'].includes(type), 'Unsafe or duplicate candidate archive member.');
+    seen.add(member);
+    const relative = member === 'package' ? '' : member.slice(8);
+    if (type === 'd') requireMatch(!relative || [...required].some(path => path.startsWith(relative + '/')), 'Unexpected candidate archive directory.');
+    else { requireMatch(required.has(relative), 'Unexpected candidate archive file: ' + relative); inventory.add(relative); }
+  }
+  requireMatch(inventory.size === required.size && [...required].every(path => inventory.has(path)), 'Candidate archive is missing committed source files.');
+  for (const path of sourceFiles) {
+    const expected = command('git', ['show', `${commit}:${path}`], 'Candidate source payload lookup', 32 * 1024 * 1024);
+    const actual = command('tar', ['-xOf', tarball, 'package/' + path], 'Candidate archive payload lookup', 32 * 1024 * 1024);
+    requireMatch(actual.equals(expected), 'Candidate archive differs from committed source payload: ' + path);
+  }
+}
+
 async function main() {
   const options = {}, args = process.argv.slice(2);
   for (let i = 0; i < args.length; i += 2) {
-    requireMatch(['--repo', '--tag', '--assets'].includes(args[i]) && args[i + 1] && !args[i + 1].startsWith('--') && !Object.hasOwn(options, args[i]), usage);
+    requireMatch(['--repo', '--tag', '--assets', '--source-commit'].includes(args[i]) && args[i + 1] && !args[i + 1].startsWith('--') && !Object.hasOwn(options, args[i]), usage);
     options[args[i]] = args[i + 1];
   }
   const repo = options['--repo'], tag = options['--tag'];
-  requireMatch(typeof repo === 'string' && /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo) && typeof tag === 'string' && /^v[0-9A-Za-z.-]+$/.test(tag) && options['--assets'], usage);
-  splitReleaseVersion(tag.slice(1), 'omaa');
+  const candidate = options['--source-commit'];
+  requireMatch(options['--assets'] && (candidate ? /^[a-f0-9]{40}$/.test(candidate) && repo === undefined && tag === undefined
+    : typeof repo === 'string' && /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo) && typeof tag === 'string' && /^v[0-9A-Za-z.-]+$/.test(tag)), usage);
+  if (!candidate) splitReleaseVersion(tag.slice(1), 'omaa');
   const assetsDir = resolve(options['--assets']);
   const api = (endpoint, extra = []) => command('gh', ['api', '--method', 'GET', '-H', 'Accept: application/vnd.github+json', endpoint, ...extra], 'GitHub API request');
   const jsonApi = endpoint => parseJson(api(endpoint), 'GitHub API response');
-  const localCommit = command('git', ['rev-parse', '--verify', `refs/tags/${tag}^{commit}`], 'Local release tag lookup').toString('utf8').trim();
+  const localCommit = command('git', ['rev-parse', '--verify', candidate ? `${candidate}^{commit}` : `refs/tags/${tag}^{commit}`], 'Local source lookup').toString('utf8').trim();
   const sourceJson = path => parseJson(command('git', ['show', `${localCommit}:${path}`], 'Tagged source lookup'), path);
   const source = sourceJson('package.json');
-  requireMatch(tag === `v${source.version}`, 'Release tag differs from the tagged source version.');
+  requireMatch(candidate ? localCommit === candidate : tag === `v${source.version}`, 'Release tag or candidate commit differs from the source.');
   const releaseVersion = splitReleaseVersion(source.version, 'omaa');
   const taggedFiles = command('git', ['ls-tree', '-r', '--name-only', localCommit], 'Tagged file inventory').toString('utf8').trim().split('\n');
   let representatives, taggedPolicy;
@@ -79,30 +106,37 @@ async function main() {
   requireMatch(rules.some(row => row.hostVersion === releaseVersion.host), 'Tagged OMAA host is absent from compatibility baselines.');
   const packageCount = rules.length * 2, attachmentCount = packageCount * 3;
 
-  let remote = jsonApi(`repos/${repo}/git/ref/tags/${encodeURIComponent(tag)}`).object;
-  const visited = new Set();
-  while (remote?.type === 'tag') {
-    requireMatch(/^[a-f0-9]{40}$/.test(remote.sha) && !visited.has(remote.sha) && visited.size < 16, 'Invalid remote annotated tag chain.');
-    visited.add(remote.sha);
-    remote = jsonApi(`repos/${repo}/git/tags/${remote.sha}`).object;
+  const localNames = (await readdir(assetsDir)).sort();
+  let remoteAssets = [];
+  if (!candidate) {
+    requireMatch(rules.every(rule => rule.sourceTag !== null), 'Unpublished OMD candidate rules cannot verify a remote release.');
+    let remote = jsonApi(`repos/${repo}/git/ref/tags/${encodeURIComponent(tag)}`).object;
+    const visited = new Set();
+    while (remote?.type === 'tag') {
+      requireMatch(/^[a-f0-9]{40}$/.test(remote.sha) && !visited.has(remote.sha) && visited.size < 16, 'Invalid remote annotated tag chain.');
+      visited.add(remote.sha);
+      remote = jsonApi(`repos/${repo}/git/tags/${remote.sha}`).object;
+    }
+    requireMatch(remote?.type === 'commit' && remote.sha === localCommit, 'Remote release tag points to a different source commit.');
+    // GitHub's by-tag REST endpoint excludes drafts, even for their owner. gh's
+    // release resolver supports both drafts and public releases; still validate
+    // its destination before retrieving the authoritative numeric-ID record.
+    const lookup = parseJson(command('gh', ['release', 'view', tag, '--repo', repo, '--json', 'apiUrl,tagName'], 'Release lookup'), 'Release lookup');
+    requireMatch(lookup.tagName === tag && typeof lookup.apiUrl === 'string', 'Release lookup differs from the requested tag.');
+    const releasePrefix = `https://api.github.com/repos/${repo}/releases/`;
+    requireMatch(lookup.apiUrl.startsWith(releasePrefix) && /^[1-9]\d*$/.test(lookup.apiUrl.slice(releasePrefix.length)), 'Invalid release API destination.');
+    const release = jsonApi(lookup.apiUrl.slice('https://api.github.com/'.length));
+    requireMatch(release.tag_name === tag && Number.isSafeInteger(release.id), 'Release tag or ID differs from the requested release.');
+    const pages = parseJson(api(`repos/${repo}/releases/${release.id}/assets?per_page=100`, ['--paginate', '--slurp']), 'Release asset inventory');
+    requireMatch(Array.isArray(pages) && pages.every(Array.isArray), 'Invalid release asset inventory.');
+    remoteAssets = pages.flat();
   }
-  requireMatch(remote?.type === 'commit' && remote.sha === localCommit, 'Remote release tag points to a different source commit.');
-  // GitHub's by-tag REST endpoint excludes drafts, even for their owner. gh's
-  // release resolver supports both drafts and public releases; still validate
-  // its destination before retrieving the authoritative numeric-ID record.
-  const lookup = parseJson(command('gh', ['release', 'view', tag, '--repo', repo, '--json', 'apiUrl,tagName'], 'Release lookup'), 'Release lookup');
-  requireMatch(lookup.tagName === tag && typeof lookup.apiUrl === 'string', 'Release lookup differs from the requested tag.');
-  const releasePrefix = `https://api.github.com/repos/${repo}/releases/`;
-  requireMatch(lookup.apiUrl.startsWith(releasePrefix) && /^[1-9]\d*$/.test(lookup.apiUrl.slice(releasePrefix.length)), 'Invalid release API destination.');
-  const release = jsonApi(lookup.apiUrl.slice('https://api.github.com/'.length));
-  requireMatch(release.tag_name === tag && Number.isSafeInteger(release.id), 'Release tag or ID differs from the requested release.');
-  const pages = parseJson(api(`repos/${repo}/releases/${release.id}/assets?per_page=100`, ['--paginate', '--slurp']), 'Release asset inventory');
-  requireMatch(Array.isArray(pages) && pages.every(Array.isArray), 'Invalid release asset inventory.');
-  const remoteAssets = pages.flat(), localNames = (await readdir(assetsDir)).sort();
-  requireMatch(localNames.length === attachmentCount && remoteAssets.length === attachmentCount, `Expected exactly ${attachmentCount} local and remote release attachments.`);
+  requireMatch(localNames.length === attachmentCount && (candidate || remoteAssets.length === attachmentCount), `Expected exactly ${attachmentCount} local${candidate ? '' : ' and remote release'} attachments.`);
+  if (!candidate) {
   requireMatch(isDeepStrictEqual(remoteAssets.map(asset => asset.name).sort(), localNames), 'Local and remote release attachment inventories differ.');
+  }
   const inventory = new Map(remoteAssets.map(asset => [asset.name, asset]));
-  requireMatch(inventory.size === attachmentCount, 'Duplicate remote release attachment names.');
+  requireMatch(candidate || inventory.size === attachmentCount, 'Duplicate remote release attachment names.');
   const tarballs = localNames.filter(name => name.endsWith('.tgz'));
   requireMatch(tarballs.length === packageCount, `Expected ${packageCount} release tarballs.`);
   const pairs = new Set(), omdVersions = new Set();
@@ -139,6 +173,7 @@ async function main() {
         ? { hostRange: taggedPolicy.hostRange, loaderRange: taggedPolicy.loaderRange }
         : { hostRange: rule.hostVersion, loaderRange: rule.loaderVersion, files: source.files };
       requireMatch(isDeepStrictEqual(manifest, hostManifest(source, rule.hostVersion, rule.loaderVersion, policy)), `Archive OMAA manifest differs from complete tagged source/host contract: ${name}`);
+      if (candidate) verifyCandidateOmaaPayload(join(assetsDir, name), localCommit, manifest, taggedFiles);
     } else {
       requireMatch(hasReviewedOmdManifest(manifest, rule), `Archive OMD manifest differs from the complete reviewed tagged baseline contract: ${name}`);
       requireMatch(metadata.nativeHostFactories === 'preserved', `OMD native preservation metadata differs: ${name}`);
@@ -146,26 +181,30 @@ async function main() {
       requireMatch(isDeepStrictEqual(compatibility, omdCompatibility(metadata, rule, rule.overlaySha256)), `Archive OMD compatibility differs from reviewed tagged source: ${name}`);
       await verifyIntegratedOmdPayload(join(assetsDir, name), rule);
     }
-    const tarballAsset = inventory.get(name);
-    requireMatch(tarballAsset.state === 'uploaded' && tarballAsset.size === bytes.length && tarballAsset.digest === `sha256:${hash}`, `Remote tarball size or digest differs: ${name}`);
-    for (const sidecar of ['sha256', 'metadata.json']) {
-      const asset = inventory.get(`${name}.${sidecar}`);
-      requireMatch(asset.state === 'uploaded' && Number.isSafeInteger(asset.id) && Number.isSafeInteger(asset.size) && asset.size > 0 && asset.size <= 4 * 1024 * 1024, `Invalid remote sidecar: ${name}.${sidecar}`);
-      const remoteBytes = command('gh', ['api', '--method', 'GET', '-H', 'Accept: application/octet-stream', `repos/${repo}/releases/assets/${asset.id}`], 'Release asset download');
-      requireMatch(remoteBytes.length === asset.size && asset.digest === `sha256:${sha(remoteBytes)}`, `Remote sidecar size or digest differs: ${name}.${sidecar}`);
-      if (sidecar === 'sha256') requireMatch(remoteBytes.equals(checksum), `Remote checksum differs: ${name}`);
-      else {
-        const remoteMetadata = parseJson(remoteBytes, `${name}.metadata.json (remote)`);
-        requireMatch(remoteMetadata && typeof remoteMetadata === 'object' && !Array.isArray(remoteMetadata), `Invalid remote metadata object: ${name}`);
-        // Only the top-level packaging timestamp may differ; all source fields remain exact.
-        const { createdAt: localCreatedAt, ...localFields } = metadata;
-        const { createdAt: remoteCreatedAt, ...remoteFields } = remoteMetadata;
-        requireMatch(isDeepStrictEqual(localFields, remoteFields), `Remote metadata differs beyond createdAt: ${name}`);
+    if (!candidate) {
+      const tarballAsset = inventory.get(name);
+      requireMatch(tarballAsset.state === 'uploaded' && tarballAsset.size === bytes.length && tarballAsset.digest === `sha256:${hash}`, `Remote tarball size or digest differs: ${name}`);
+      for (const sidecar of ['sha256', 'metadata.json']) {
+        const asset = inventory.get(`${name}.${sidecar}`);
+        requireMatch(asset.state === 'uploaded' && Number.isSafeInteger(asset.id) && Number.isSafeInteger(asset.size) && asset.size > 0 && asset.size <= 4 * 1024 * 1024, `Invalid remote sidecar: ${name}.${sidecar}`);
+        const remoteBytes = command('gh', ['api', '--method', 'GET', '-H', 'Accept: application/octet-stream', `repos/${repo}/releases/assets/${asset.id}`], 'Release asset download');
+        requireMatch(remoteBytes.length === asset.size && asset.digest === `sha256:${sha(remoteBytes)}`, `Remote sidecar size or digest differs: ${name}.${sidecar}`);
+        if (sidecar === 'sha256') requireMatch(remoteBytes.equals(checksum), `Remote checksum differs: ${name}`);
+        else {
+          const remoteMetadata = parseJson(remoteBytes, `${name}.metadata.json (remote)`);
+          requireMatch(remoteMetadata && typeof remoteMetadata === 'object' && !Array.isArray(remoteMetadata), `Invalid remote metadata object: ${name}`);
+          // Only the top-level packaging timestamp may differ; all source fields remain exact.
+          const { createdAt: localCreatedAt, ...localFields } = metadata;
+          const { createdAt: remoteCreatedAt, ...remoteFields } = remoteMetadata;
+          requireMatch(isDeepStrictEqual(localFields, remoteFields), `Remote metadata differs beyond createdAt: ${name}`);
+        }
       }
     }
   }
   requireMatch(pairs.size === packageCount && omdVersions.size === 1, 'Expected paired OMAA/OMD packages for every validation host with one OMD version.');
-  console.log(`Verified existing release ${tag}: source commit ${localCommit}, ${attachmentCount} attachments, ${packageCount} identical tarballs and checksums; metadata matches except createdAt.`);
+  console.log(candidate
+    ? `Verified unpublished local candidate: source commit ${localCommit}, ${attachmentCount} attachments, ${packageCount} tarballs, complete committed OMAA source and reviewed OMD payloads. Remote tags and releases were not checked.`
+    : `Verified existing release ${tag}: source commit ${localCommit}, ${attachmentCount} attachments, ${packageCount} identical tarballs and checksums; metadata matches except createdAt.`);
 }
 
 main().catch(error => { console.error(error.message); process.exitCode = 1; });

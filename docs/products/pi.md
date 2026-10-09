@@ -1,10 +1,21 @@
 # Pi Coding Agent 预设来源与适配
 
-固定官方来源：[earendil-works/pi v1.0.2，cd32f7725fdbddbaecdff5b1e68491563394e0ca](https://github.com/earendil-works/pi/tree/cd32f7725fdbddbaecdff5b1e68491563394e0ca)，MIT。`src/presets/pi/source.json` 维护完整来源文件清单、逐文件 SHA-256、原始路径、固定 URL、许可、工具映射及逐项适配；LICENSE 原文完整保留。
+固定官方来源：[earendil-works/pi v1.1.0，abe508e1b89912adde45528136c3221eb69acdd7](https://github.com/earendil-works/pi/tree/abe508e1b89912adde45528136c3221eb69acdd7)，MIT。`src/presets/pi/source.json` 维护完整来源文件清单、逐文件 SHA-256、原始路径、固定 URL、许可、工具映射及逐项适配；LICENSE 原文完整保留。
+
+本次正式 `v1.1.0` 更新的是已保存的 prompt、工具、资源及扩展参考文件，主题仍保留 v1.0.2 固定快照。纯 helper 和提示词 renderer 接入 `hiddenTools`：只有可见的已选工具贡献 snippets 和规则；隐藏 read/bash 时保留技能目录，加载提示不点名工具。有原生 grep/glob 时不再提示优先用 shell 搜索。原生扩展 frame 以宿主实际声明为准；当前 `prepareLoadout` 尚未实现，不能仅修改可变提示选项就隐藏原生工具。
+
+| v1.1.0 来源变化 | 本预设实际范围 |
+| --- | --- |
+| `hiddenTools`、`formatSkillsForPrompt(..., "indirect")` | 固定纯函数和 renderer 已适配；native 声明决定扩展 frame 的可见性，未提供原厂间接执行器。 |
+| `disabledBuiltinExtensions` | 仅原厂 loader 的 `builtin:` 扩展禁用规则；OMAA 没有该 loader，继续使用显式本地执行白名单，不提供无效同名开关。 |
+| `ToolLoadout.getPromptGuidelines()`、`tool_execution_end.durationMs`、`agent_settled.aborted` | 原始 types/实现完整保存，尚未接成原生扩展事件或 loadout API。 |
+| read 的程序化 `structuredContent`、MCP tool pattern 与默认工具 modifiers | 来源保留；工具返回值、MCP 和工具选择继续按 DSH 已实现契约，不宣称原厂 codemode parity。 |
+| 完整只读消息历史 | 使用同一个原生不可变观察，提供原始消息与当前投影消息；保留长文本、图片和工具配对。 |
+| 可编辑 context、`turn_end`/`agent_before_settle` | 仍依赖真实宿主事务与 pre-settle 边界，未通过字段补充或另建 loop 实现。 |
 
 ## 生效文本
 
-真实主提示词来源是 [`core/system-prompt.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/system-prompt.ts)，不是营销介绍或泄露样本。其默认结构为 preamble → tools → rules → docs → 可选 addendum/project_context/skills → cwd → 自定义 sections。工具 snippets 与 guidelines 来自具体 read/bash/edit/write 定义，原版默认四个工具，并按已选工具去重规则。上游 before_agent_start 可改变结构化 sections；section delta 记入 transcript，完整强制 prompt 是不同分支。OMAA 0.10.0 已接入该回调，系统选项归一化与技能渲染使用固定原版纯函数；完整强制 prompt 的原生记录差异见下文。
+真实主提示词来源是 [`core/system-prompt.ts`](https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/system-prompt.ts)，不是营销介绍或泄露样本。其默认结构为 preamble → tools → rules → docs → 可选 addendum/project_context/skills → cwd → 自定义 sections。工具 snippets 与 guidelines 来自具体 read/bash/edit/write 定义，原版默认四个工具，并按已选工具去重规则。上游 before_agent_start 可改变结构化 sections；section delta 记入 transcript，完整强制 prompt 是不同分支。OMAA 0.10.0 已接入该回调，系统选项归一化与技能渲染使用固定原版纯函数；完整强制 prompt 的原生记录差异见下文。
 
 `prompt.mjs` 的 `buildPrompt({tools,cwd,platform,mode})` 保留完整默认 preamble、工具段组织、read/write 规则、简洁及清楚路径原句、完整文档阅读要求和 cwd 结构。默认组合保留 read/bash/edit/write 四核心，额外提供宿主原生 read_image 和 skill 作为实际能力；Windows 用真实 pwsh 时沿用上游 PowerShell 规则。额外图片工具只在注册 read_image 时明确说明其真实分工。项目 AGENTS.md/CLAUDE.md 和技能正文由 DSH 原生上下文及技能服务承载。
 
@@ -12,7 +23,7 @@
 
 用户和项目 `prompts/` 直接子级的 `.md` 成为提示模板；同名按固定 CLI 的 PackageManager 默认优先级选择项目资源，再选择用户资源（同层 first-wins）。上游完整参数语法包括 `$1`、`$@`、`$ARGUMENTS`、`${1:-default}`、`${@:-default}`、`${@:N}`、`${@:N:L}`，引号参数和替换值不递归展开。普通输入、steer 和 queue 在原生 pre-step 中只展开一次，保留用户消息 id/source。启用扩展时依次等待异步 input、模板展开和 before_agent_start，预处理结果缓存后交给原生 pre-step 入账；未启用扩展时保持原有装配。合法宿主命令名在首次资源装配后进入原生斜杠命令列表；其他 Pi 文件名仍可直接输入展开。已有宿主命令优先。每次装配重新读取资源，文件修改在后续请求生效；单文件 64 KiB、资源 256 KiB、128 个模板和单目录 512 个条目有明确上限。
 
-技能目录遵循固定 CLI 的默认入口：当前 cwd 的 `.pi/skills`，从 cwd 向最近含 `.git` 的目录（含该目录）逐层发现 `.agents/skills`；没有仓库则到文件系统根。`.pi/skills` **不向祖先继承**。项目 `.pi` 优先于项目 `.agents`，同类祖先靠近 cwd 的优先；项目默认资源优先于用户 `~/.pi/agent/skills` 和 `~/.agents/skills`。依据固定 [package-manager.ts](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/package-manager.ts) 的 collectAncestorAgentsSkillDirs/addAutoDiscoveredResources/resourcePrecedenceRank，而非单独调用 loadSkills(includeDefaults:true) 的顺序。
+技能目录遵循固定 CLI 的默认入口：当前 cwd 的 `.pi/skills`，从 cwd 向最近含 `.git` 的目录（含该目录）逐层发现 `.agents/skills`；没有仓库则到文件系统根。`.pi/skills` **不向祖先继承**。项目 `.pi` 优先于项目 `.agents`，同类祖先靠近 cwd 的优先；项目默认资源优先于用户 `~/.pi/agent/skills` 和 `~/.agents/skills`。依据固定 [package-manager.ts](https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/package-manager.ts) 的 collectAncestorAgentsSkillDirs/addAutoDiscoveredResources/resourcePrecedenceRank，而非单独调用 loadSkills(includeDefaults:true) 的顺序。
 
 目录选择经 native FS 有界递归：128 个目录、12 层、2048 个条目，祖先最多 64 层；遇到 `SKILL.md` 即把目录视为一个 bundle，不继续钻进其支持文件。Pi 位置仅根级平铺 Markdown 生效，`.agents` 位置的非根级平铺 Markdown 生效；跳过 dot 目录和 node_modules。所选路径交给同一个 `FileSystemSkillProvider` 的原生 scan/get/watch/缓存/正文加载和资源基址，不另写技能解析器。`roots` 在宿主 d.ts 中是 **private**，这里是固定 0.2.1-alpha.1 的内部扩展，不宣称公共 API；升级须核对该契约。符号链接与特殊文件沿用实际 native FS/provider 行为。宿主默认 `.dsh/skills` 仍保留。
 
@@ -26,7 +37,7 @@
 
 例如，项目 `.pi/settings.json` 可写 `{"skills":["../shared-skills"],"prompts":["../review-prompts"],"packages":["../team-pi-package"]}`；原有本地资源无需复制到 OMAA 或安装另一个客户端。所有配置、manifest、资源与规则仍通过 native FS；这个资源发现层不自动执行第三方 JS/TS，也不自动安装包依赖。用户指定的可执行扩展使用下节独立的绝对文件白名单，不能由发现项目或 package 资源推定授权。npm/git/URL 来源明确诊断并跳过；`autoload:false` 跨作用域 delta 尚不支持，涉及同一包的声明整体跳过。主题包、gallery、installer 不在这个资源适配内。原生技能 provider 要求 Markdown；其他显式技能文件格式会诊断并跳过。配置每份 64 KiB、合计 256 KiB；两类配置路径合计 256 条，单列表 128 条；glob/模板扫描限 128 个目录、12 层、2048 个条目，模板单目录仍限 512 条。
 
-DSH edit 为单次 `file_path/old_string/new_string/replace_all`，Pi v1.0.2 原版为 `path/edits[{oldText,newText}]`，多处不重叠修改一次匹配原始文件。四条 edit guidelines 因这一真实差异原位改成宿主单次替换规则，保留唯一匹配、避免大块无关文本及合并相近修改的要求。Pi 的 `PI_*` 会话环境变量说明未装配，因为宿主没有提供它们；原版 2000 行/50KB 截断与临时全文文件也不作为 DSH 的承诺。
+DSH edit 为单次 `file_path/old_string/new_string/replace_all`，Pi v1.1.0 原版为 `path/edits[{oldText,newText}]`，多处不重叠修改一次匹配原始文件。四条 edit guidelines 因这一真实差异原位改成宿主单次替换规则，保留唯一匹配、避免大块无关文本及合并相近修改的要求。Pi 的 `PI_*` 会话环境变量说明未装配，因为宿主没有提供它们；原版 2000 行/50KB 截断与临时全文文件也不作为 DSH 的承诺。
 
 文档段原始内容完整保留，将安装目录 getReadmePath/getDocsPath/getExamplesPath 替换为固定 commit 的官方 raw URL；有命令或 web_fetch 工具时才装配，并说明如何取回文档。工具真实 schema 始终由 DSH 提供，主提示词不伪造参数或返回值。
 
@@ -47,13 +58,15 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 
 `before_agent_start` 对当前订阅快照按顺序等待回调，暴露可变 `systemPromptOptions` 和反映前序改动的 `ctx.getSystemPrompt()`；支持返回自定义消息及完整 `systemPrompt`。回调显式编辑 `selectedTools` 时使用该列表，否则采用最新 `setActiveTools`，同步新工具 snippets/guidelines。每次运行只触发一次，系统选项及 force 在后续工具步骤、steer 和排队 follow-up 中保持，回到 idle 后清空。自定义消息以原生 user/context 消息入账，`source.kind` 为 `pi-extension`，保留 `customType`、`display` 和 `details`。OMAA 0.11.0 新增该已接纳批次的默认消息展示，具体范围见下文。
 
-默认自定义消息展示依据固定原版 [`core/messages.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/core/messages.ts) 和 [`components/custom-message.ts`](https://github.com/earendil-works/pi/blob/cd32f7725fdbddbaecdff5b1e68491563394e0ca/packages/coding-agent/src/modes/interactive/components/custom-message.ts)。原版 `convertToLlm` 将 custom 消息投影为 user，**不检查 `display`**；`display:false` 是显示选择，仍进入模型上下文。OMAA 使用原生 `uiConversation` 自有 Event 与 keyed Chat renderer，显示 `[customType]` 和原生 Markdown，采用固定 Pi palette 的明暗 `customMessageBg/Text/Label` 颜色。内容数组只提取 text 并以换行拼接，与原版默认组件一致，不展示 image blocks 或 `details`；字符串直接作为 Markdown。`display:false` 将该展示节点隐藏，原生 journal 和模型消息不变；只接管 append-origin 消息，模型替换投影不会重复显示。
+默认自定义消息展示依据固定原版 [`core/messages.ts`](https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/core/messages.ts) 和 [`components/custom-message.ts`](https://github.com/earendil-works/pi/blob/abe508e1b89912adde45528136c3221eb69acdd7/packages/coding-agent/src/modes/interactive/components/custom-message.ts)。原版 `convertToLlm` 将 custom 消息投影为 user，**不检查 `display`**；`display:false` 是显示选择，仍进入模型上下文。OMAA 使用原生 `uiConversation` 自有 Event 与 keyed Chat renderer，显示 `[customType]` 和原生 Markdown，采用固定 Pi palette 的明暗 `customMessageBg/Text/Label` 颜色。内容数组只提取 text 并以换行拼接，与原版默认组件一致，不展示 image blocks 或 `details`；字符串直接作为 Markdown。`display:false` 将该展示节点隐藏，原生 journal 和模型消息不变；只接管 append-origin 消息，模型替换投影不会重复显示。
 
 消息沿用 DSH 过程分组，可随原生过程折叠；位置不等同原版 TUI 的独立消息行。Event 的 match 使用 rc.2 与 alpha.1 共用的函数形式，因为 rc.2 不支持 alpha 的 match table。该适配仅覆盖 `before_agent_start` 返回的已接纳批次，未增加唤醒 inbox 或 `sendMessage`，也不支持 `registerMessageRenderer` / 自定义 TUI 组件。原版 renderer 可获得完整 message、expanded/outputPad 和 theme，返回自有组件或回退默认展示；此接口没有移植。已在一个隔离的原生 alpha Web 会话中实际展开过程，核对类型标签、Markdown 标题/列表/代码、隐藏材料不显示，以及明暗主题切换。实际 provider 请求与原生事件仍保留隐藏文本和图片附件。桌面 rc.2 已只读核对同一事件与 renderer 接口，不据此宣称完整桌面或 Windows UI 验收。
 
 OMAA 0.12.0 增加串行等待的 `agent_start`、`turn_start` 与 `agent_end` 通知，普通 handler 异常报告后继续后续 handler。`agent_start` 仅含 type；`turn_start` 含从 0 开始的 turnIndex 和分发时 timestamp；`agent_end` 含 messages。适配按 DSH 实际 activity 与请求 step 工作，一个 step 包含一次 provider response 及其工具批次，不能把原生用户 turn 当作 Pi turn。开始通知中的工具注册和 active tools 修改在发出模型请求前重新装配并进入原生 guard；原生 journal 的 `turn/end` 先提交，idle 观察同步预占 `runMaintenance` 执行结束通知，原生 `whenIdle` 和 teardown 等待它。结束通知单独续投保持已接纳活动的 force；维护等待期间新的人工输入开启自己的 before_agent_start/force。原版低层 prompt/continue run、自动 retry 与 pre-settle 边界仍有差异，不宣称完全等价。
 
-结束通知的 messages 来自当前 scope 实际 append-origin user/assistant/tool-result 消息，保留完整 text/image/toolCall/thinking；原生专有块保留原有结构，图片经原生附件服务转换。Pi replay 有原始 api/stopReason 时沿用，否则按原生 finish reason 映射；native usage 保留并提供对应 token 字段，不猜费用，不声称 Pi SDK 成本或全部签名完全一致。这份完整结束消息不改变 `ctx.sessionManager` 的只读有界视图：后者仍最多 100 条、每条文本最多 4000 字符，不是完整 Pi SessionManager。
+结束通知的 messages 来自当前 scope 实际 append-origin user/assistant/tool-result 消息，保留完整 text/image/toolCall/thinking；原生专有块保留原有结构，图片经原生附件服务转换。Pi replay 有原始 api/stopReason 时沿用，否则按原生 finish reason 映射；native usage 保留并提供对应 token 字段，不猜费用，不声称 Pi SDK 成本或全部签名完全一致。
+
+`ctx.sessionManager.getEntries()` 读取当前会话原始日志中的全部已支持消息，`getBranch()` 读取同一个不可变观察的当前投影，遵循宿主的替换、删除及注册投影顺序。二者取消原有 100 条消息和每条 4000 字符截断，保留完整文本、thinking、真实附件图片、原生专有块及工具身份；`argumentsRaw` 保留原始工具参数字符串，避免将 JavaScript 数值精度当作原话。getter 返回独立副本，回调中的修改不能写回宿主。日志仅由原生服务维护，重启后仍从原生日志和附件恢复。这个视图覆盖 DSH user/assistant/tool-result 消息，不包括原厂 Pi 的全部 JSONL entry、可写 SessionManager 或独立分支树；传输总量仍受下文 128 MiB 限制，超过时明确失败。
 
 用户取消后的结束通知暴露已 aborted 的 `ctx.signal`；宿主拒绝 `exec`、`executeTool`、`sendUserMessage` 和 UI 问答续跑，通知与只读查询仍可用。disposed 不新建结束 maintenance。这个停止限制属于 OMAA 原生适配，原版上述事件本身未定义这一停止通知信号与 API 禁止组合。可编辑 `turn_end` / `agent_before_settle` 仍明确不支持；原版二者可替换 drafts、预览已投影上下文并请求下一 provider response，不能由这三个通知推定已实现。
 
@@ -61,7 +74,7 @@ OMAA 0.12.0 增加串行等待的 `agent_start`、`turn_start` 与 `agent_end` �
 
 完整 force 经 DSH 原生 journal 和 `startsRequestSeries` 首条系统消息归一化进入实际请求；原版 Pi force 仅作请求投影、不记入 transcript，两者记录语义不同。
 
-尚不支持可编辑 `turn_end` / `agent_before_settle`、`context` / `context_with_system` 完整历史替换、自定义 TUI/组件渲染、`sendMessage`、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是有界原生日志投影，不等于完整 Pi SessionManager。
+尚不支持可编辑 `turn_end` / `agent_before_settle`、`context` / `context_with_system` 完整历史替换、自定义 TUI/组件渲染、`sendMessage`、`appendEntry`、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments` / `prepareLoadout`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是完整的已支持原生消息视图，不等于完整 Pi SessionManager。
 
 OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已通过。before_agent_start 与异步输入链从 0.10.0 起提供，旧版本安装不包含它们。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
 
@@ -111,4 +124,10 @@ Pi 模型/provider 登录、账号、安装器、独立代理 RPC、原厂 JSONL
 
 `test/installed-pi-start.test.mjs` 的定向范围包括异步 input 后模板展开、串行 start 回调与前序系统快照、自定义消息元数据、工具/steer/排队 follow-up 的单次 start、force 与 idle 重置、回调异常后继续、动态工具显式选择及 setActiveTools、扩展投递默认不展开模板和冷恢复来源。该 fixture 不覆盖完整历史替换、Pi TUI 或全部第三方扩展；一个最终原生 alpha 用例已通过；使用脚本 provider，不据此声明全部扩展或真实模型长期质量。冷故障用例等待原生 JSONL 的 200 ms 批处理落盘窗口，排队恢复后仍保留默认不展开的字面输入；恢复期间排入同一 activity 的消息不误判为新启动钩子，回到 idle 后才开启下一次 hook。
 
-`test/installed-pi-lifecycle.test.mjs` 在单个原生 alpha 宿主和 scripted provider 中最终通过（6.8 秒），证据为 `.cache/pi-lifecycle-native-evidence.json`。实际核对开始/step 通知顺序与首请求工具注册及 guard、纯 handler 异常后继续、结束维护等待时人工新输入的新 force、仅结束回调续投保持 force、超过 2 MiB 的完整中文消息，以及用户取消后通知 signal 已 aborted 且不能续跑。rc.2 核心 loop/Session 仅做只读字节核对，不据此宣称该宿主真实执行、Desktop 全部 hook 或 Windows 已验收；主模型源码复读修复了 journal 已完成但尚未 idle 的 late-dispose 窗口，保留当前 native signal，包含 queued input 被 handled 而未请求模型的边缘；没有据此声称专门的 disposed 竞态 fixture 通过。
+本次来源升级另外通过 `test/preset-source-upgrade.test.mjs` 的固定版本、逐文件 hash、JSON 原字段、装配 hash 与纯 helper 重生成检查，以及 `test/pi-prompt-visibility.test.mjs` 的隐藏 snippets/规则、indirect 技能提示、真实工具顺序和 native frame 声明约束。隔离原生 alpha.1 的 presets、behaviors、resources 与 start fixture 已重跑；start 增加真实 before_agent_start 修改 `hiddenTools` 后原生 `read` 声明和提示仍一致的断言。没有据此扩大为 rc.2、Desktop、Windows 或原厂 prepareLoadout/执行事件的验收。
+
+`test/installed-pi-lifecycle.test.mjs` 在单个原生 alpha 宿主和 scripted provider 中最终通过（6.8 秒），证据为 `.cache/pi-lifecycle-native-evidence.json`。实际核对开始/step 通知顺序与首请求工具注册及 guard、纯 handler 异常后继续、结束维护等待时人工新输入的新 force、仅结束回调续投保持 force、超过 2 MiB 的完整中文消息，以及用户取消后通知 signal 已 aborted 且不能续跑。本轮 rc.2 的原生生命周期 fixture 已用对应 SDK 候选包实际通过；这仍不表示 Desktop 全部 hook 或 Windows 已验收。主模型源码复读修复了 journal 已完成但尚未 idle 的 late-dispose 窗口，保留当前 native signal，包含 queued input 被 handled 而未请求模型的边缘；没有据此声称专门的 disposed 竞态 fixture 通过。
+
+## 本轮完整历史核验
+
+`test/pi-history-readonly.test.mjs` 在原生不可变观察上核对超过 100 条消息、替换后的当前顺序和异步追加竞争，并回归复用工具调用 ID、链式结果替换、同一次观察的图片转换共享与错误释放。`test/installed-pi-history.test.mjs` 使用隔离宿主和本地 provider，核对完整多语言原话、真实图片字节、工具配对、getter 副本及重启恢复。独立审查在 rc.2/alpha.1 公共 SDK 上核对原版投影、取消和附件错误释放；rc.2 与 alpha.1 的隔离原生实装历史和生命周期定向回归均已通过，报告分别绑定实际宿主与候选包 SHA。未验证完整 Pi JSONL 树、全部扩展、Windows 或真实供应商长期质量。

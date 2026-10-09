@@ -7,7 +7,8 @@ import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const presetRoot = join(root, 'src/presets/pi');
-const commit = 'cd32f7725fdbddbaecdff5b1e68491563394e0ca';
+const commit = 'abe508e1b89912adde45528136c3221eb69acdd7';
+const tag = 'v1.1.0';
 const functions = [
   ['packages/coding-agent/src/core/system-prompt.ts', ['normalizeBuildSystemPromptOptions']],
   ['packages/coding-agent/src/core/skills.ts', ['formatSkillsForPrompt', 'escapeXml']],
@@ -42,7 +43,7 @@ function extractFunctions(source, path, names) {
 
 export async function buildPiPromptHelpers({ write = false, outputDir = join(root, 'lib') } = {}) {
   const manifest = JSON.parse(await readFile(join(presetRoot, 'source.json'), 'utf8'));
-  if (manifest.commit !== commit || manifest.license !== 'MIT') {
+  if (manifest.commit !== commit || manifest.version !== tag || manifest.tag !== tag || manifest.license !== 'MIT') {
     throw new Error('Fixed Pi source revision or license changed');
   }
   const license = await fixedSource(manifest, 'LICENSE');

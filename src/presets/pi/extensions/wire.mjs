@@ -4,8 +4,8 @@ export const MAX_FRAME_BYTES = 2 * 1024 * 1024;
 export const MAX_MESSAGE_BYTES = 128 * 1024 * 1024;
 const CHUNK_BYTES = 256 * 1024;
 
-// Full end-of-run messages must not be replaced with the bounded context
-// snapshot. Fragment transport bytes only; callbacks receive the same JSON.
+// Full native message views and end notifications must not be truncated.
+// Fragment transport bytes only; callbacks receive the same JSON.
 export function* encodeFrames(value) {
   const text = JSON.stringify(value), bytes = Buffer.byteLength(text);
   if (bytes > MAX_MESSAGE_BYTES) throw Error('Pi extension message exceeds 128 MiB');

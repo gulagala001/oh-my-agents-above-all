@@ -35,6 +35,7 @@ test('Pi awaited input and chained start hooks share a native run, retain custom
         event.systemPromptOptions.selectedTools = ['hook_added'];
       }
       if (event.prompt === 'SET_LOADOUT') pi.setActiveTools(['read']);
+      if (event.prompt === 'HIDE_PROMPT_TOOL') event.systemPromptOptions.hiddenTools = ['read'];
       return {message:{customType:'start-a',display:false,content:'START_A:'+event.prompt,details:{starts}},
         ...(event.prompt.startsWith('FORCE_RUN') ? {systemPrompt:'FORCED_FIRST {{literal}} $&'} : {})};
     });
@@ -127,6 +128,12 @@ test('Pi awaited input and chained start hooks share a native run, retain custom
   assert(system(setRequest).includes('- read: Read file contents'));
   assert(!system(setRequest).includes('- hook_added:'));
 
+  const hiddenFrom = f.requests.length; await f.prompt(sessionId, 'HIDE_PROMPT_TOOL');
+  const hiddenRequest = f.requests.slice(hiddenFrom).find(request => request.tools?.length);
+  assert.deepEqual(hiddenRequest.tools.map(tool => tool.function.name), ['read']);
+  assert(system(hiddenRequest).includes('- read: Read file contents'), 'prompt hiding alone cannot contradict actual native declarations');
+  assert(system(hiddenRequest).includes('Use read to examine files instead of cat or sed.'));
+
   const coldRelease = f.holdNextReply(), heldFrom = f.requests.length;
   await f.send(sessionId, 'COLD_QUEUE_BOUNDARY');
   await until(() => f.requests.slice(heldFrom).some(request => request.tools?.length));
@@ -158,7 +165,7 @@ test('Pi awaited input and chained start hooks share a native run, retain custom
     at: new Date().toISOString(), host: f.evidence.version, artifactSha256: f.evidence.artifact?.sha256,
     fixture: 'native DSH / scripted provider / owned local extension',
     requests: f.requests, nativeRecords: snapshot.records, queuedInput: queued,
-    checked: ['awaited input then template','chained options and literal forced heads','dynamic tool add/replace/loadout','one-at-a-time steer and shared follow-up run','handled has no model','durable queued literal after fault/cold recovery','fresh idle hook after recovery'],
+    checked: ['awaited input then template','chained options and literal forced heads','dynamic tool add/replace/loadout','prompt hiddenTools cannot contradict native declarations','one-at-a-time steer and shared follow-up run','handled has no model','durable queued literal after fault/cold recovery','fresh idle hook after recovery'],
   },null,2)+'\n',{mode:0o600});
   assert.deepEqual(f.errors, []);
 });

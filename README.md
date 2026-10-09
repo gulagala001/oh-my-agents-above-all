@@ -4,9 +4,9 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-本版为 **OMAA `0.2.1-alpha.1.omaa.0.13.1`**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
+当前源码为 **OMAA `0.2.1-alpha.1.omaa.0.14.0` 未发布候选**，Node.js 要求 `>=22.19`。源码入口采用 DSH `>=0.2.0-rc.2 <=0.2.1-alpha.1` 的有界兼容声明，运行时使用实际宿主 SDK；关键版本用于回归验收，随接口变化调整。[版本适配](docs/compatibility.md) · [验证记录](docs/verification.md)。
 
-本版对应 tag 为 `v0.2.1-alpha.1.omaa.0.13.1`，同一发行提供 rc.2 与 alpha.1 的专用附件，并配对 **OMD `0.10.0`**。rc.2 用户选择该发行下的 rc.2 OMAA `0.13.1` 与 rc.2 OMD `0.10.0`，无需更换 DSH；具体文件名见[安装指南](docs/install.md)。
+本轮候选配对 **OMD `0.12.0`**，分别保留 rc.2 与 alpha.1 的 SDK、原生组件及锁定来源；尚未创建 tag 或 Release。候选验收使用对应宿主的本地 `.tgz`。公开安装仍使用已发布 OMAA `0.13.1` 与 OMD `0.10.0`，不包含本轮新能力；具体文件名见[安装指南](docs/install.md)。
 
 与 OMD 同 profile 使用时，安装本版发行下对应宿主的 OMD `0.10.0`，其源码已包含 OMAA 兼容增强与外观协调接口。独立使用 OMAA 无需 OMD。Web／CLI 与 Desktop 均按正在运行的完整 DSH 版本选择附件；实际验收的平台与范围见[验证记录](docs/verification.md)。
 
@@ -19,6 +19,14 @@ dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.1
 dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.1.tgz
 dsh web
 ```
+当前候选的本地安装示例（尚未公开发行）：
+
+```sh
+dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.14.0.tgz
+```
+
+rc.2 使用对应的 `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.14.0.tgz`，不混用另一宿主的包。
+
 
 已有其它 CLI profile 时，安装与启动使用同一个 profile。DSH Desktop 的 profile 由应用管理，应在桌面原生插件管理器中安装 rc.2 附件，不能用上述 CLI 命令直接修改。安装完成后重载对应 profile；原来的模型/provider 配置继续生效。
 
@@ -78,7 +86,7 @@ dsh plugin --profile web remove oh-my-agents-above-all
 
 卸载插件不会删除 DSH 会话和工作区文件。插件偏好、文件检查点、有界 Pi 分支派生上下文及已保存的 Pi 扩展白名单保存在 `DSH_HOME/omaa`（默认 `~/.dsh/omaa`），不自动清除；原生会话 journal 仍由 DSH 管理。
 
-本版配对 OMD 为 `0.10.0`，在完整保留现行核心与 OMAA 薄桥接的基础上，新增按会话选择的主动异步压缩和显式原文搜索；默认仍为原版异步。OMAA `0.13.1` 为配对兼容补丁，保留 `0.13.0` 的五产品能力。构建使用 [审阅过的分宿主基线](compat/omd/README.md)：rc.2 与 alpha 各有对应原生 SDK、工厂、vendor 和锁文件的固定源码 commit。`integrated-baseline` 模式完整保留官方发行文件及客户端，只追加兼容来源记录，输出 `.tgz`、SHA256 与来源元数据。历史补丁模式继续用于原发行的来源核对。独立使用 OMAA 无需安装 OMD。
+当前候选配对 OMD `0.12.0`，保留完整原生插件共存基线与 OMAA 薄桥接。新增 Cursor 回合改动入口、Pi 完整只读消息历史、ZCode 保存定义与参数复用，并更新已核实的 Codex/Pi 固定来源。原有上下文、压缩、工作流与五产品能力继续按原生契约工作。构建使用 [审阅过的分宿主基线](compat/omd/README.md)：rc.2 与 alpha 各有对应原生 SDK、工厂、vendor 和锁文件的固定源码 commit。`integrated-baseline` 模式完整保留官方发行文件及客户端，只追加兼容来源记录，输出 `.tgz`、SHA256 与来源元数据。历史补丁模式继续用于原发行的来源核对。独立使用 OMAA 无需安装 OMD。
 
 ```sh
 node scripts/package-omd-compat.mjs --base /absolute/path/official-omd-alpha.tgz --host-version 0.2.1-alpha.1

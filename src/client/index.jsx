@@ -1,6 +1,8 @@
 import React, { useSyncExternalStore } from 'react';
 import { createSessionSettings, PresetControls } from './preset-controls.jsx';
 import { CheckpointControls } from './checkpoint-controls.jsx';
+import { CheckpointReviewChip } from './checkpoint-review-chip.jsx';
+import reviewChipCss from './checkpoint-review-chip.css';
 import { GitReview } from './git-review.jsx';
 import { PiBranches } from './pi-branches.jsx';
 import { applyThemes } from './themes/index.jsx';
@@ -11,6 +13,7 @@ import { applyPiExtensionNotices } from './pi-extensions.jsx';
 import { applyPiExtensionMessages } from './pi-extension-messages.jsx';
 import { ZCodeWorkflows } from './zcode-workflows.jsx';
 import { ZCodeWorkflowTool } from './zcode-workflow-tool.jsx';
+import { ZCodeSavedWorkflowTool } from './zcode-saved-workflow-tool.jsx';
 
 export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation', 'uiConversation'];
 
@@ -37,9 +40,9 @@ export function apply(ctx) {
         ctx.uiWorkspace.openSession({ parentSessionId: current.sessionId, childSessionId: actor.sessionId, mode: 'continuable' });
       }}/>
   }
-  const Chip = () => <PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/>
+  const Chip = props => <span className="omaa-composer-chips"><CheckpointReviewChip settings={settings} sidebarRight={ctx.sidebarRight} sessionId={props.sessionId}/><PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>
   ctx.effect(() => {
-    const tag = document.createElement('style'); tag.dataset.omaaControls = ''; tag.textContent = controlsCss + '\n' + updatesCss;
+    const tag = document.createElement('style'); tag.dataset.omaaControls = ''; tag.textContent = controlsCss + '\n' + updatesCss + '\n' + reviewChipCss;
     document.head.append(tag); return () => tag.remove();
   });
   ctx.slots.inject('settings.section', () => ctx.slots.register({ name: 'settings.section', id: 'omaa-presets', order: 17, label: () => 'Oh My Agents Above All' }, Settings));
@@ -50,7 +53,10 @@ export function apply(ctx) {
   const workflowPanelId = 'omaa/omaa-zcode-workflows';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: workflowPanelId, kind: 'omaa-zcode-workflows', title: () => '工作流产物', guide: [] }));
   ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: workflowPanelId }, WorkflowPanel));
-  for (const key of ['create_workflow', 'amend_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key,
+  for (const key of ['create_workflow', 'amend_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
     inject: sessionId => ({ openArtifacts: runId => ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } }) }),
   }, ZCodeWorkflowTool));
+  for (const key of ['save_workflow', 'list_saved_workflows', 'read_saved_workflow', 'run_saved_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
+    inject: sessionId => ({ sessionId, toolName: key, settings, sessions: ctx.sessions, sidebarRight: ctx.sidebarRight }),
+  }, ZCodeSavedWorkflowTool));
 }

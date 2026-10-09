@@ -2,18 +2,22 @@
 
 OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。无需安装或登录 Codex、Grok Build、Cursor、Pi、ZCode 的官方客户端；各产品的已实现能力与明确差异见 [验证记录](verification.md) 和 [产品资料](products/)。
 
-本版为 OMAA `0.13.1`，配对 OMD `0.10.0`。从 [本版 GitHub Release](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-alpha.1.omaa.0.13.1) 下载对应宿主的 `.tgz`、同名 `.sha256` 与 `.metadata.json`。先在 DSH 版本页面确认宿主完整版本；OMAA／OMD 功能版本与 DSH 宿主版本是不同字段。
+当前源码为未发布 OMAA `0.14.0` 候选，配对 OMD `0.12.0`。候选没有 tag／Release；仅使用已冻结的本地文件及同名 SHA-256／metadata，两个宿主的完整文件名见[候选说明](release-0.14.0.md)。在隔离 profile 验收时使用 `dsh plugin --profile candidate add file:/absolute/path/对应包.tgz`，不要把未发布版本写成在线安装 URL。
+
+以下公开版安装步骤对应 OMAA `0.13.1`／OMD `0.10.0`，继续有效。
+
+公开版为 OMAA `0.13.1`，配对 OMD `0.10.0`。从 [公开版 GitHub Release](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-alpha.1.omaa.0.13.1) 下载对应宿主的 `.tgz`、同名 `.sha256` 与 `.metadata.json`。先在 DSH 版本页面确认宿主完整版本；OMAA／OMD 功能版本与 DSH 宿主版本是不同字段。
 
 | DSH 宿主 | OMAA 附件 | 配对 OMD 附件 |
 | --- | --- | --- |
 | `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.13.1.tgz` | `trisoul_x-0.2.0-rc.2.omd.0.10.0.tgz` |
 | `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.1.tgz` | `trisoul_x-0.2.1-alpha.1.omd.0.10.0.tgz` |
 
-OMAA、配对 OMD 及其 sidecars 均从同一个本版 Release 选择。独立使用 OMAA 无需安装 OMD；同 profile 已有 OMD 或需要增强时，使用上表对应宿主的 OMD `0.10.0`。
+OMAA、配对 OMD 及其 sidecars 均从同一个公开版 Release 选择。独立使用 OMAA 无需安装 OMD；同 profile 已有 OMD 或需要增强时，使用上表对应宿主的 OMD `0.10.0`。
 
 发行主 tag 跟随源码 `package.json` 的完整版本；预发行宿主使用 `v<DSH宿主>.omaa.<三段版本>`，正式宿主使用 `v<DSH宿主>-omaa.<三段版本>`。同一发行按当前验收代表提供配对附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
 
-本版提供同一源码入口的[有界宿主适配](compatibility.md)，运行时按实际宿主解析 SDK 并选择更新附件。主 tag 的 alpha 前缀记录源码构建来源；rc.2 使用同一 Release 下的 rc.2 附件与 metadata，保持现有宿主。
+公开版提供同一源码入口的[有界宿主适配](compatibility.md)，运行时按实际宿主解析 SDK 并选择更新附件。主 tag 的 alpha 前缀记录源码构建来源；rc.2 使用同一 Release 下的 rc.2 附件与 metadata，保持现有宿主。
 
 下载后在附件所在目录核对哈希：
 
@@ -75,14 +79,22 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 ## 维护发行附件
 
-构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本版配对 OMD 0.10.0，完成 OMAA 与兼容 OMD 打包后，运行：
+构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。当前候选配对 OMD 0.12.0，完成对应的 OMAA 与兼容 OMD 打包后，运行：
 
 ```sh
-node scripts/release-assets.mjs --omd-version 0.10.0
+node scripts/release-assets.mjs --omd-version 0.12.0
 ```
 
 脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。当前两个代表生成四个包、十二份附件，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
 
+
+未发布候选可对已固定的本地源码提交核验完整配对资产：
+
+```sh
+node scripts/verify-release.mjs --source-commit <完整40位OMAA提交> --assets /absolute/path/paired-assets
+```
+
+该入口与 `--repo`／`--tag` 互斥，逐字节核对提交内 OMAA 源码、构建文件、完整白名单、双宿主 manifest 和已审定 OMD payload；不查询或制造远端 tag／Release。CI 的远端源码获取仍要求所审定的 OMD commit 实际存在于仓库，当前本地候选不宣称远端 CI 通过。
 
 已有同 tag 的 release 时，`.github/workflows/release.yml` 调用 `scripts/verify-release.mjs` 做幂等核对：tag 必须对应相同源码 commit，按该 tag 的宿主清单选择的资产 inventory、tgz SHA 和 checksum 必须一致，metadata 只允许顶层 `createdAt` 不同。全部一致才成功；任何差异拒绝，流程不会 overwrite 现有 release 附件。
 
