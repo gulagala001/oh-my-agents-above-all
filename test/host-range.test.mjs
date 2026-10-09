@@ -26,10 +26,10 @@ test('current integrated OMD rules share the runtime update baseline and retain 
     const rule = JSON.parse(readFileSync(new URL('../compat/omd/' + row.omdVariant + '.json', import.meta.url), 'utf8'));
     assert.equal(rule.hostVersion, row.version);
     assert.equal(rule.mode, 'integrated-baseline');
-    assert.equal(rule.baseVersion, alignedVersion(row.version, 'omd', '0.10.0'));
+    assert.equal(splitReleaseVersion(rule.baseVersion, 'omd').host, row.version);
     assert.equal(rule.sourceTag, 'v' + rule.baseVersion);
     assert(row.omdBaselines.some(baseline => baseline.version === rule.baseVersion && baseline.commit === rule.sourceCommit));
-    for (const version of ['0.6.1', '0.9.0']) assert(row.omdBaselines.some(baseline => baseline.version === alignedVersion(row.version, 'omd', version)), version + ' history');
+    for (const version of ['0.6.1', '0.9.0', '0.10.0']) assert(row.omdBaselines.some(baseline => baseline.version === alignedVersion(row.version, 'omd', version)), version + ' history');
     assert.equal(new Set(row.omdBaselines.map(baseline => baseline.version)).size, row.omdBaselines.length);
   }
 });

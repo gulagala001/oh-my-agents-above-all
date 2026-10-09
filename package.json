@@ -1,6 +1,6 @@
 {
   "name": "oh-my-agents-above-all",
-  "version": "0.2.1-alpha.1.omaa.0.13.1",
+  "version": "0.2.1-alpha.1.omaa.0.13.2",
   "private": true,
   "type": "module",
   "description": "DSH 五产品深度预设：Codex、Grok Build、Cursor、Pi、ZCode，独立主题与可选 OMD 增强",
@@ -50,6 +50,7 @@
     "./checkpoints": "./src/checkpoints.mjs",
     "./working-policy": "./src/working-policy.mjs",
     "./working-tools": "./src/working-tools.mjs",
+    "./workflow-controller": "./src/workflow-controller.mjs",
     "./pi-resources": "./src/presets/pi/resources.mjs",
     "./pi-steering": "./src/presets/pi/steering.mjs",
     "./pi-branches": "./src/presets/pi/branches.mjs",

@@ -67,6 +67,7 @@ jobs:
           test/host-range.test.mjs
           test/package-distribution.test.mjs
           test/npm-runner.test.mjs
+          test/workflow-controller.test.mjs
       - name: Pack one candidate source entry for all native hosts
         run: |
           mkdir -p dist/source-entry
@@ -93,7 +94,15 @@ jobs:
           }
           JS
       - name: Prepare verified paired release assets
-        run: node scripts/release-assets.mjs --omd-version 0.10.0
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import { validationHosts, splitReleaseVersion } from './src/host/compatibility.mjs';
+          const versions = new Set(validationHosts.map(row => splitReleaseVersion(JSON.parse(readFileSync(`compat/omd/${row.omdVariant}.json`, 'utf8')).baseVersion, 'omd').feature.join('.')));
+          if (versions.size !== 1) throw new Error('Validation hosts must share one reviewed OMD release');
+          execFileSync(process.execPath, ['scripts/release-assets.mjs', '--omd-version', [...versions][0]], { stdio: 'inherit' });
+          JS
       - uses: actions/upload-artifact@v7
         with:
           name: omaa-release-packages

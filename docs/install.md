@@ -2,14 +2,14 @@
 
 OMAA 使用 DSH 已配置的模型/API、原生工具循环、权限和会话。无需安装或登录 Codex、Grok Build、Cursor、Pi、ZCode 的官方客户端；各产品的已实现能力与明确差异见 [验证记录](verification.md) 和 [产品资料](products/)。
 
-本版为 OMAA `0.13.1`，配对 OMD `0.10.0`。从 [本版 GitHub Release](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-alpha.1.omaa.0.13.1) 下载对应宿主的 `.tgz`、同名 `.sha256` 与 `.metadata.json`。先在 DSH 版本页面确认宿主完整版本；OMAA／OMD 功能版本与 DSH 宿主版本是不同字段。
+本轮候选为 OMAA `0.13.2`，配对 OMD `0.11.0`，目前暂不发布。以下保留宿主对应的候选文件名与安装流程；公开版本从[现有发行列表](https://github.com/gulagala001/oh-my-agents-above-all/releases)获取，不将尚未发布的候选当作可下载发行。先在 DSH 版本页面确认宿主完整版本；OMAA／OMD 功能版本与 DSH 宿主版本是不同字段。
 
 | DSH 宿主 | OMAA 附件 | 配对 OMD 附件 |
 | --- | --- | --- |
-| `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.13.1.tgz` | `trisoul_x-0.2.0-rc.2.omd.0.10.0.tgz` |
-| `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.1.tgz` | `trisoul_x-0.2.1-alpha.1.omd.0.10.0.tgz` |
+| `0.2.0-rc.2` | `oh-my-agents-above-all-0.2.0-rc.2.omaa.0.13.2.tgz` | `trisoul_x-0.2.0-rc.2.omd.0.11.0.tgz` |
+| `0.2.1-alpha.1` | `oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.2.tgz` | `trisoul_x-0.2.1-alpha.1.omd.0.11.0.tgz` |
 
-OMAA、配对 OMD 及其 sidecars 均从同一个本版 Release 选择。独立使用 OMAA 无需安装 OMD；同 profile 已有 OMD 或需要增强时，使用上表对应宿主的 OMD `0.10.0`。
+OMAA、配对 OMD 及其 sidecars 均从同一个本版 Release 选择。独立使用 OMAA 无需安装 OMD；同 profile 已有 OMD 或需要增强时，使用上表对应宿主的 OMD `0.11.0`。
 
 发行主 tag 跟随源码 `package.json` 的完整版本；预发行宿主使用 `v<DSH宿主>.omaa.<三段版本>`，正式宿主使用 `v<DSH宿主>-omaa.<三段版本>`。同一发行按当前验收代表提供配对附件。选择当前宿主的文件，不因主 tag 含 alpha 前缀而升级现有 rc.2 桌面。
 
@@ -41,8 +41,8 @@ Windows 可使用 PowerShell 的 `Get-FileHash .\包名.tgz -Algorithm SHA256`�
 
 ```sh
 # 已安装 OMD 或需要增强时先安装兼容 OMD；独立使用 OMAA 可跳过这一行。
-dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.10.0.tgz
-dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.1.tgz
+dsh plugin --profile web add file:/absolute/path/trisoul_x-0.2.1-alpha.1.omd.0.11.0.tgz
+dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-alpha.1.omaa.0.13.2.tgz
 dsh web
 ```
 
@@ -57,7 +57,7 @@ dsh web
 兼容 OMD 的原有版本面板在 OMAA 启用时也使用这套配对检查与原生安装，避免直接跟随原 OMD 发行而丢失桥接。OMAA 禁用但仍安装时暂停这条更新路径；卸载 OMAA 后恢复 OMD 原来的独立更新方式。未经审阅的新宿主／OMD 来源或附件差异会明确拒绝，更新不会强升 DSH。
 
 
-同 profile 的 OMD 必须提供 OMAA enhancement/workflow composition 与外观协调接口，不能仅按版本大小认定兼容。本版配对 OMD `0.10.0` 使用已整合完整桥接的分宿主官方源码，完整保留对应原生工厂、vendor 与恢复行为，详见 [兼容构建](../compat/omd/README.md)。
+同 profile 的 OMD 必须提供 OMAA enhancement/workflow composition 与外观协调接口，不能仅按版本大小认定兼容。本版配对 OMD `0.11.0` 使用已整合完整桥接的分宿主官方源码，完整保留对应原生工厂、vendor 与恢复行为，详见 [兼容构建](../compat/omd/README.md)。
 
 OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；Ask/Plan 暂停高级编排。切换主题不改变模型/API。安装、更新或卸载 OMD 后重载当前 profile，重新选择工作流 composition。更新按同样的原生插件安装流程替换对应宿主包，保留 DSH 会话和工作区。
 
@@ -75,10 +75,10 @@ OMD 增强默认关闭，基础增强与 Pro/Ultra 在会话设置中启用；As
 
 ## 维护发行附件
 
-构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本版配对 OMD 0.10.0，完成 OMAA 与兼容 OMD 打包后，运行：
+构建和代表宿主打包步骤沿用 [CI 工作流](../.github/workflows/ci.yml)。本版配对 OMD 0.11.0，完成 OMAA 与兼容 OMD 打包后，运行：
 
 ```sh
-node scripts/release-assets.mjs --omd-version 0.10.0
+node scripts/release-assets.mjs --omd-version 0.11.0
 ```
 
 脚本从当前源码版本和代表宿主清单选择配对包，核对完整包内 manifest、宿主、SHA256 与元数据。当前两个代表生成四个包、十二份附件，输出到 `dist/release-assets`。可用 `--packages` 和 `--out` 指定目录；已有相同内容可重复准备，不覆盖不同内容或混入旧版本。CI 与本地发布使用同一入口，发布 tag 必须对应构建源码的完整版本。此步骤只准备附件，安装仍走宿主原生插件管理器。
