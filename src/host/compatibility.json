@@ -45,6 +45,7 @@
   ],
   "omdBridge": {
     "featureVersion": "0.17.3",
+    "updatePolicy": "patch",
     "interfaces": [
       "installOmaaEnhancement",
       "omaaWorkflowComposition",
