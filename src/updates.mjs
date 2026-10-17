@@ -6,7 +6,7 @@ const REPO = 'gulagala001/oh-my-agents-above-all';
 export const RELEASES_URL = `https://github.com/${REPO}/releases`;
 const API = `https://api.github.com/repos/${REPO}`;
 const OMD_REPO = 'gulagala001/oh-my-dsh';
-const BRIDGE_FEATURE = JSON.parse(readFileSync(new URL('./host/compatibility.json', import.meta.url), 'utf8')).omdBridge?.featureVersion;
+const OMD_BRIDGE = JSON.parse(readFileSync(new URL('./host/compatibility.json', import.meta.url), 'utf8')).omdBridge;
 const PACKAGE = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
 const RUNNING_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const fail = message => Object.assign(new Error(message), { statusCode: 409 });
@@ -70,8 +70,32 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     return { version, url, sha256: metadata.sha256, filename };
   }
   async function currentOfficialOmd() {
-    const version = alignedVersion(hostVersion, 'omd', BRIDGE_FEATURE), tag = `v${version}`;
-    const release = await read(`https://api.github.com/repos/${OMD_REPO}/releases/tags/${tag}`);
+    const baseline = alignedVersion(hostVersion, 'omd', OMD_BRIDGE.featureVersion);
+    let version = baseline, release;
+    if (OMD_BRIDGE.updatePolicy === 'patch') {
+      const minimum = splitReleaseVersion(baseline, 'omd').feature;
+      // Release order is not version order. Finish a bounded scan before
+      // reporting the newest compatible patch; never infer cross-minor support.
+      for (let page = 1; page <= 5; page++) {
+        const rows = await read(`https://api.github.com/repos/${OMD_REPO}/releases?per_page=30&page=${page}`);
+        if (!Array.isArray(rows) || rows.length > 30) throw fail('官方 OMD 发行列表无效');
+        for (const row of rows) {
+          if (row.draft !== false || !row.published_at) continue;
+          let candidate;
+          try { candidate = splitReleaseVersion(row.tag_name?.replace(/^v/, ''), 'omd'); } catch { continue; }
+          if (candidate.host !== hostVersion || candidate.feature[0] !== minimum[0]
+            || candidate.feature[1] !== minimum[1] || candidate.feature[2] < minimum[2]) continue;
+          const next = row.tag_name.replace(/^v/, '');
+          if (!release || compare(next, version, 'omd') > 0) { version = next; release = row; }
+        }
+        if (rows.length < 30) break;
+        if (page === 5) throw fail('官方 OMD 发行列表过长，尚未确认最新兼容版本');
+      }
+      if (!release) throw fail('尚未找到已发布且匹配当前宿主的官方 OMD 补丁');
+    } else {
+      release = await read(`https://api.github.com/repos/${OMD_REPO}/releases/tags/v${version}`);
+    }
+    const tag = `v${version}`;
     if (release.draft !== false || !release.published_at || release.tag_name !== tag
       || release.html_url !== `https://github.com/${OMD_REPO}/releases/tag/${tag}` || !Array.isArray(release.assets)) throw fail('官方 OMD 发行来源或 tag 无效');
     const filename = `${PACKAGE.omd}-${version}.tgz`, url = asset(release, filename, OMD_REPO);
@@ -90,7 +114,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
       object = (await read(`https://api.github.com/repos/${OMD_REPO}/git/tags/${object.sha}`)).object;
     }
     if (object?.type !== 'commit' || object.sha !== metadata.sourceCommit) throw fail('官方 OMD tag 与来源提交不一致');
-    return { version, url, sha256: metadata.sha256, filename, checksumsUrl: sumsUrl };
+    return { version, url, sha256: metadata.sha256, filename, checksumsUrl: sumsUrl, releaseNotesUrl: release.html_url };
   }
   async function inventory() {
     const manager = getManager?.();
@@ -135,8 +159,8 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
           if (!name.startsWith(`${PACKAGE.omd}-`) || !name.endsWith('.tgz')) return false;
           try { return splitReleaseVersion(name.slice(PACKAGE.omd.length + 1, -4), 'omd').host === hostVersion; } catch { return false; }
         });
-        if (omdNames.length > 1) throw fail('发行有多份兼容 OMD，无法确认配对版本');
-        const official = omd && /^0\.2\.1-rc\.[12]$/.test(hostVersion) && BRIDGE_FEATURE;
+        const official = omd && /^0\.2\.1-rc\.[12]$/.test(hostVersion) && OMD_BRIDGE?.featureVersion;
+        if (!official && omdNames.length > 1) throw fail('发行有多份兼容 OMD，无法确认配对版本');
         if (omd && !official && omdNames.length !== 1) throw fail('最新发行缺少当前宿主的配对兼容 OMD');
         const compat = official ? await currentOfficialOmd() : omdNames.length ? await readPackage(release, 'omd', omdNames[0].slice(PACKAGE.omd.length + 1, -4)) : null;
         pair = { omaa, omd: compat, tag: release.tag_name, url: release.html_url };
@@ -204,7 +228,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     return { currentVersion: currentOmdVersion, hostVersion, latestVersion: pair?.omd?.version ?? null,
       status: checkError || !pair?.omd || !currentOmdVersion ? 'unknown' : update ? 'update' : compare(currentOmdVersion, pair.omd.version, 'omd') > 0 ? 'ahead' : 'current',
       severity: update ? 'normal' : 'none', checkedAt, stale: view.stale, error: checkError || null,
-      releaseNotesUrl: pair?.url ?? RELEASES_URL, currentRelease: null,
+      releaseNotesUrl: pair?.omd?.releaseNotesUrl ?? pair?.url ?? RELEASES_URL, currentRelease: null,
       releases: update ? [{ version: pair.omd.version, title: 'OMAA 配对兼容更新', notes: [
         `与 OMAA ${pair.omaa.version} 配对；保留当前 DSH ${hostVersion}。`,
         '更新同时安装此配对中需要更新的 OMD／OMAA，完成后重启当前 DSH。',
