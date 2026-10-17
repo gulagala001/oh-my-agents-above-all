@@ -8,6 +8,12 @@ const policy = JSON.parse(readFileSync(new URL('./compatibility.json', import.me
 export const HOST_RANGE = policy.hostRange;
 export const LOADER_RANGE = policy.loaderRange;
 export const validationHosts = policy.validationHosts;
+export const buildHosts = policy.buildHosts;
+export function buildHost(version) {
+  const host = buildHosts.find(row => row.version === version);
+  if (!host) throw new Error(`DSH ${version} has no reviewed build configuration`);
+  return host;
+}
 export const supportsHostVersion = version => typeof version === 'string'
   && semver.valid(version) === version && semver.satisfies(version, HOST_RANGE, { includePrerelease: true });
 

@@ -1,48 +1,19 @@
-# 宿主版本适配
+# 版本适配与产品边界
 
-[项目介绍](../README.md) · [安装与更新](install.md) · [验证范围](verification.md)
+[项目介绍](../README.md) · [安装与更新](install.md)
 
-OMAA 与 OMD、相关插件按宿主 API 和能力边界持续适配。关键版本用于回归验收；支持范围会随官方接口、实际用户环境和验证结果调整。
+OMAA `0.15.3` 分别提供 DSH `0.2.1-rc.1` 与 `0.2.1-rc.2` 的精确 SDK 构建。两版均匹配 Cordis `4.0.5`、Schemastery `3.18.5`、Loader `1.0.6`，每套保留自己的依赖锁、宿主组件与生成配置。主分支默认 rc.2；rc.1 tag 保存对应的源码和冻结输入。包名、manifest 和下载入口使用完整宿主版本。
 
-## 本版宿主范围
+可选增强配对同宿主的 OMD `0.17.3`。基础五预设可独立运行；增强提供 OMD 的工具与工作方式，主题和身份沿用所选配置。工作流按实际 provider 切换，启停等待当前执行与清理。OMD 动态安装或卸载后重载 profile。
 
-本版 OMAA `0.13.1` 提供同一源码入口的有界宿主适配。源码的 DSH 兼容约束为 `>=0.2.0-rc.2 <=0.2.1-alpha.1`，loader 为 `>=1.0.5 <=1.0.6-alpha.1`。当前实际宿主回归代表为 `0.2.0-rc.2` 和 `0.2.1-alpha.1`；区间声明不表示每个版本均有单独运行记录，也不承诺范围外或未来宿主兼容。
+## 功能范围
 
-同一源码包在安装后通过宿主原生运行时解析 SDK，更新检查按实际运行宿主选择附件。源码版本的宿主前缀记录构建来源，不替代运行宿主识别。专用发行附件继续保留对应宿主的完整版本前缀。正式版宿主使用 `-omaa`／`-omd`，预发行宿主使用 `.omaa`／`.omd`。
+- 模型/API、权限、原生工具循环、停止恢复、会话和文件来自 DSH。五产品预设提供来源提示、已接入行为和各自主题，不启动原厂专有客户端或账号服务。
+- Codex 的云端、persistent runtime 和专有应用机制不包含在预设中。
+- Grok monitor 与 interval 调度使用宿主作业/会话生命周期，没有跨会话 durable 和原厂七天 TTL。
+- Cursor 的 MDC 规则与变更检查点适用于已记录的文件变更；不是任意 shell 的完整工作区快照。Composer、云代理和专有 IDE 上下文不包含在内。
+- Pi 使用精简默认模式、资源、steer 与原生会话分支；本地扩展须显式白名单。完整 TUI、自定义 renderer 和可编辑历史变换仍有差异。
+- ZCode 的 TypeScript Actor、保存工作流、产物与 Amend 通过 DSH 隔离 PTC 和原生 child 实现；没有原厂 journal/replay、逐条 Bash 审批或半转录续跑。
+- Computer Use 来自可选 OMD/OpenCU；系统授权、平台能力和操作边界遵循相应插件说明。
 
-本版 tag 为 `v0.2.1-alpha.1.omaa.0.13.1`。rc.2 与 alpha.1 均从同一 Release 选择对应宿主的 OMAA `0.13.1` 与配对 OMD `0.10.0`，完整文件名及 metadata 见[安装指南](install.md)。主 tag 的 alpha 前缀不要求 rc.2 用户升级 DSH。
-
-## OMD 与其他插件
-
-独立 OMAA 不要求 OMD。同 profile 的 OMD 需要提供增强、工作流组合与外观协调接口；这些能力须按实际接口检查，不能从 OMD 版本大小推断。缺桥接的旧 OMD 仍会明确阻止预设挂载；请安装当前宿主对应的兼容 OMD 或使用独立 profile。无需为此更换 DSH 宿主。
-
-本版配对 OMD `0.10.0` 采用[审阅过的分宿主官方基线](https://github.com/gulagala001/oh-my-agents-above-all/tree/main/compat/omd)。两端源码 commit 各自绑定对应宿主的 SDK、工厂、vendor 与锁文件；`integrated-baseline` 模式核对并保留全部官方发行文件。基础增强、Pro／Ultra、身份与主题分别验收，打包成功仍不代表运行验收通过。
-
-配对 OMD `0.10.0` 为功能版本，在完整保留现行核心、OMAA 薄桥接与外观协调的基础上，新增按会话选择的主动异步压缩和显式原文搜索；默认仍为原版异步压缩。OMAA `0.13.1` 只更新配对兼容基线，五产品预设与现有能力保持 `0.13.0` 的实现。
-
-新功能与修复要核对当前支持范围。真实接口缺失的功能明确限制；推荐插件按自己的兼容声明和运行证据判断，不能因 OMAA 通过就认定所有插件可用。
-
-## 维护与验收
-
-范围、loader 约束和代表宿主集中在 `src/host/compatibility.json`；`validationHosts` 是可调整的构建与回归样本。范围内非代表宿主的专用打包需显式 `--host-cli`，核对真实 CLI 与 loader，不能猜测 SDK 版本。
-
-原生回归使用隔离 DSH_HOME、本地模拟模型和实际 tarball，检查 SDK 共享、无版本豁免、五预设工具回合、设置、明暗主题、模式切换、停止、冷重启、启停及卸载。配对 OMD 另验两种安装顺序和增强开关。实际执行的范围与局限见[验证记录](verification.md)；打包成功、模拟模型和条件跳过不代替真实使用验收。
-
-显式原生矩阵入口：
-
-```sh
-OMAA_HOST_MATRIX=1 \
-OMAA_HOST_CLI=/absolute/path/dsh/lib/bin.js \
-OMAA_HOST_VERSION=0.2.0-rc.2 \
-OMAA_HOST_PACKAGE=/absolute/path/candidate.tgz \
-OMAA_HOST_BROWSER=/absolute/path/chromium \
-node --test test/host-compatibility.test.mjs
-```
-
-可额外设置 `OMAA_HOST_OMD_PACKAGE` 验证配对共存，`OMAA_HOST_REPORT` 保存证据。未启用矩阵时明确跳过；启用却缺必需参数会失败。CI 对代表宿主分别启动精确官方 CLI，验证同一源码包及对应专用附件。已发布资产的包内 manifest、来源与 SHA 校验在准备／发布阶段执行；原生更新 API 没有下载内容 SHA 参数，更新时的元数据检查不能称为下载字节校验。
-
-## 历史发行
-
-OMAA `v0.2.1-alpha.1.omaa.0.13.0` 配对两宿主的官方 OMD `0.9.0`，采用当时固定来源的 `integrated-baseline` 规则；原 tag、附件及其验证契约保持原样。
-
-OMAA `v0.2.1-alpha.1.omaa.0.12.1` 为历史发行，含 rc.2／alpha 专用附件并配对 OMD `0.8.1`；该旧 tag 的源码入口只声明 alpha。原 tag 继续按其当时的白名单、补丁和来源校验。当前不单独开展 `0.1.7` 回移，历史发行保留；这不是永久支持下限。
+宿主升级请先查看对应完整版本的发行。历史 alpha 与 `0.2.0-rc.2` 附件保留原入口；它们不表示新构建兼容旧宿主。Windows/Linux 与 macOS 的原生平台能力依 DSH 和所用工具而异，不以主题相同推定系统能力相同。

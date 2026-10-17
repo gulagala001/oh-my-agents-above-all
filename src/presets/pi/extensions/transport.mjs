@@ -18,11 +18,11 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
     env: { ELECTRON_RUN_AS_NODE: undefined, JITI_FS_CACHE: '0' },
     stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: life.signal });
   const decoder = new StringDecoder('utf8'), messages = frameDecoder();
-  const pending = new Map(); let buffer = '', stderr = '', stopped = false, closing;
+  const pending = new Map(); let buffer = '', stderr = '', stopped = false, closing, compression = false;
   child.stdin?.on('error', () => {});
   const send = value => {
     if (stopped) throw Error('Pi 扩展进程已停止');
-    for (const line of encodeFrames(value)) child.stdin.write(line);
+    for (const line of encodeFrames({ ...value, wireCompression: true }, { compress: compression })) child.stdin.write(line);
   };
   const close = () => {
     if (closing) return closing;
@@ -37,6 +37,7 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
     return closing;
   };
   const frame = async message => {
+    if (message.wireCompression === true) compression = true;
     if (message.type === 'result') {
       const entry = pending.get(message.id); if (!entry) return;
       pending.delete(message.id);

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { actorPersona } from '../../host/subagents.mjs';
 
 export const CONTINUITY_PROVIDER_PREFIX = 'omaa-zcode-continuity-';
 
@@ -11,7 +12,7 @@ export async function readActorPrefix(ctx, parent, source, signal) {
     const descriptor = observation.events.slice(observation.inheritedEventCount)
       .find(event => event.type === 'subagent/descriptor')?.data;
     if (!descriptor || descriptor.mode !== 'continuable' || !descriptor.label?.startsWith('ZCode Actor · ')
-      || descriptor.persona !== source.persona) throw Error('The source is not the requested native ZCode Actor persona.');
+      || actorPersona(observation.events.slice(observation.inheritedEventCount)) !== source.persona) throw Error('The source is not the requested native ZCode Actor persona.');
     const boundary = observation.events[source.eventCount - 1];
     if (!Number.isSafeInteger(source.eventCount) || source.eventCount < 1 || boundary?.type !== 'turn/end'
       || boundary.data.reason?.kind !== 'completed') throw Error('Actor continuity requires an exact completed task boundary.');

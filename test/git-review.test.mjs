@@ -66,3 +66,18 @@ test('commit and branch compare committed contents and reject symbolic-link writ
   await symlink(path.join(f.root, 'task.txt'), path.join(f.root, 'link.txt'));
   const summary = await f.review.inspect(f.session); assert.deepEqual(summary.files.find(f => f.path === 'link.txt').actions, []);
 });
+
+test('untracked detail retention preserves stale revisions, exact previews and guarded removal', async t => {
+  const f = await fixture(t), target = path.join(f.root, 'new task.txt');
+  await writeFile(target, 'original new file'); await writeFile(path.join(f.root, 'keep.txt'), 'keep unchanged');
+  const before = await f.review.inspect(f.session);
+  const detail = await f.review.inspect(f.session, { path: 'new task.txt', revision: before.revision });
+  assert.ok(detail.diff.hunks.some(hunk => hunk.lines.includes('+original new file')));
+  await writeFile(target, 'changed new file');
+  await assert.rejects(f.review.change(f.session, { path: 'new task.txt', revision: before.revision, action: 'revert' }), { code: 'revision-conflict' });
+  assert.equal(await readFile(target, 'utf8'), 'changed new file');
+  const current = await f.review.inspect(f.session);
+  await f.review.change(f.session, { path: 'new task.txt', revision: current.revision, action: 'revert' });
+  await assert.rejects(readFile(target), { code: 'ENOENT' });
+  assert.equal(await readFile(path.join(f.root, 'keep.txt'), 'utf8'), 'keep unchanged');
+});

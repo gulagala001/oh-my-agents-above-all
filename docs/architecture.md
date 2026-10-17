@@ -40,19 +40,13 @@ Pi 分支服务只调用原生 `sessionController.list/inspect/fork`，原生 pa
 
 `/omaa/api/session` 的 `enhancementWorkMode` 接受 `off | pro | ultracode`。非 `off` 自动开启增强；关闭增强同时把高级方式设为 `off`。OMAA 通过兼容 facade 复用 OMD 同一 `UltracodeControl`、持久化和全局 hooks，保持当前 provider/model，并选择该模型最高可用 reasoning effort。Ask/Plan 不启动 Pro/Ultra 工作流，回到执行模式可继续已保存方式。产品仍使用自己的提示词、压缩与工具循环；不额外挂载 OMD 主代理或 CC persona、ContextPipeline、Dream、todo/verify/BT 链。
 
-composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 profile；不承诺无重载热换 engine。接线状态与验收范围见 [增强边界](omd-enhancement-boundary.md) 和 [验证记录](verification.md)。
+composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 profile；不承诺无重载热换 engine。接线状态见 [增强边界](omd-enhancement-boundary.md) 和 [产品边界](compatibility.md)。
 
-## 兼容包生产
+## 分宿主构建
 
-OMAA 自身继续使用 `scripts/package.mjs` 从同一源码绑定 rc.2／alpha.1 宿主。配对 OMD `0.10.0` 已把 OMAA 薄桥接整合到官方源码；两端固定 commit 各自包含对应宿主的原生 SDK、工厂、vendor 和锁文件。`scripts/package-omd-compat.mjs` 根据审定规则选择 `integrated-baseline` 模式，核对完整 manifest、发行白名单及全部文件哈希，保留原客户端、`lib/host`、`vendor` 和发行说明，仅追加兼容来源记录。输入与输出的 OMD 完整版本必须相同。历史 tag 的 overlay 模式仍按原补丁和来源哈希核验。
-
-构建输出包含宿主前缀版本、tgz、SHA256 与来源元数据，供 GitHub Releases 附件交付。未知上游版本、漂移内容或补丁冲突均明确停止；不从另一个工作区整包复制，也不自动修改用户安装。审阅来源并更新对应规则后才接受新基线。
+当前 rc.1 与 rc.2 各自使用精确官方 SDK、冻结依赖与宿主组件；包、源码 tag 和生成配置保持完整宿主版本一致。OMD `0.17.3` 由主项目独立构建，OMAA 不生成或修改该包。历史 overlay 和 integrated-baseline 规则仅用于对应旧发行的来源核对。
 
 ## 维护上游版本
-
-1. 固定新 commit，更新对应 `sources` 原文及来源元数据，先阅读逐项差异与许可；不从网络自动覆盖正在使用的提示词。
-2. 只在对应产品的 `prompt.mjs` 修改真实宿主不兼容处，同步该产品适配记录。`pnpm prompts:inspect` 输出完整审阅文本与 hash 到本地 `.cache/prompt-review`；这份工具清单是审阅样例，运行时始终取实际注册 schema。
-3. 按变化复查已安装 DSH 的实际请求和相关行为；涉及 UI 再看截图与点击。宿主升级先核对工具、scope、会话及压缩契约，再同步 package 版本与清单。模型/API 配置由宿主维护。
 
 无项目草稿进入原生工作区时，由兼容 OMD 调用 OMAA 的设置迁移接口。后端从源会话读取增强、主题和工作模式，先启用增强再调用既有 OMD Pro/Ultra 模型控制器，并恢复 Ask/Plan；原生模型、权限与草稿提交仍由宿主负责。仅空闲未发送的目标可接收迁移；目标手动修改后拒绝覆盖，失败保留源草稿，重复请求通过私有迁移收据识别。新建草稿也可继承已有源会话设置，不复制消息或执行日志。
 
@@ -63,10 +57,6 @@ ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。�
 
 ## OMAA 0.9.0 的 ZCode 运行投影与修订
 
-OMAA 0.9.0 用严格固定 41 文件 closure 派生 `lib/zcode-run-projection.mjs`，仅包含三类 bounds 显示投影与原 workflowRuns reducer。真实 native site×ordinal、phase/birth、child accepted receipt、队列/dispatch/settled 事实由 `run-progress.mjs` 注入；未知 provider backoff 不推断。原版 Timeline/RunPhaseList 的 37 份 UI 代码、样式和中英 locale 完整保留，不是 ReactFlow，也不运行原 engine。单个 native graph fixture 与 alpha Web 点击已通过；不据此宣称所有平台或完整原厂运行态等价。
-
 OMAA 0.9.0 接入 `amend_workflow`：run 必须属于当前 session；先编译及核对归属／可读缓存，再停止并等待前驱结算，创建带 `resumedFrom`／`supersededBy` 的 successor。原 `ImportedActorState`、`ImportedWorldQueue`、persona/hash 算法从固定原文构建；完整结果存 native immutable attachment，metadata 保存连续 Actor 完成前缀、native canonical event offset、world 准入序号及关闭事实，独立于有界 display。首次 live 分歧通过专用 continuity provider 继承旧 Actor 的精确 completed event prefix；native manager 追加新 descriptor、真实 parent、当前委派权限并负责冷恢复。失败 ask 封住可导入前缀，不阻断脚本 catch 后的后续 live ask。
-
-`run_id + max_concurrency` 调整同一 live run，上限仅限制 live ask，Actor FIFO 与 native 容量分别生效；降低上限不取消已接受任务。重复 world 按准入顺序匹配，cached world.run 不再次执行效果；live world.run 关闭导入窗口，native 文件观察只记 dispatch，缺少真实 effect 分类的工具在进入管线时保守关闭。这不冒充原厂精确按入参的 mutating-tool 分类。在飞半转录续跑、same-run journal/replay 与原模型 pin 继承仍有差异；新任务使用当前 DSH 模型/API。旧 0.8 metadata 没有任务缓存，预检拒绝并保留旧 run。单个原生 fixture 已核对重启、复用、分歧前缀／poison 排除、world 顺序／不重放、失败后继续、跨 session 拒绝、cold continuation 与并发升降。
 
 图 CSS 与消息桥由 `scripts/build-zcode-graph-ui-assets.mjs` 可重复生成：默认 `--check` 只读核对，`--write` 重建，`--output-dir DIR` 可先生成到审阅目录。它固定核对 40 份原源与 commit、37 个 UI 代码依赖、原 Tailwind utility/wf 样式和实际消费 locale 键，明确保留 DSH 颜色/reset/Intl 桥。Tailwind 4.2.2 与 PostCSS 8.5.6 仅为锁定构建依赖，运行包没有这些依赖。主 build 使用相同 check 入口，三份产物已逐字节复现。

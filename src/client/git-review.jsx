@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { assertGitSession, createGitReviewState, reviewDraftsFor, reviewHunkRows, sendReviewFeedback, sendReviewFeedbackBatch } from './git-review-state.mjs';
+import { assertGitSession, createGitReviewState, gitReviewErrorHint, reviewDraftsFor, reviewHunkRows, sendReviewFeedback, sendReviewFeedbackBatch } from './git-review-state.mjs';
 import { checkpointFileAddress, checkpointReviewAddress } from './checkpoint-navigation.mjs';
 import css from './git-review.css';
 
@@ -24,6 +24,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
   if (!enabled || !visible) return null;
   const summary = state.sessionId === id ? state.summary : null, diff = state.diff?.diff;
   const busy = state.loading || state.saving || sending || draftState.sending;
+  const diagnostic = state.error || error, errorHint = state.error && gitReviewErrorHint(state.errorCode, state.error);
   const canWrite = !busy && !current.loading && !current.saving && !current.error && !current.data.running && !current.data.pendingMode && current.data.mode === 'default';
   const run = operation => { setError(''); Promise.resolve().then(operation).catch(error => { if (settings.getSnapshot().sessionId === id) setError(error.message); }); };
   const navigate = operation => run(() => { assertGitSession(settings, id); if (sidebarRight.mounted.getSnapshot() !== id) throw new Error('会话已切换。'); operation(); });
@@ -69,7 +70,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
     saveEditor(false);
     await drafts.submit(id, items => sendReviewFeedbackBatch(settings, sessions, id, items));
   });
-  return <section className="omaa-git-review" aria-label="Codex Git 审阅">
+  return <section className="omaa-git-review" aria-busy={busy || undefined} aria-label="Codex Git 审阅">
     <style>{css}</style>
     <header><h3>代码审阅</h3><button type="button" disabled={busy} onClick={() => run(() => store.read())}>刷新</button></header>
     <label className="omaa-git-scope">比较范围 <select aria-label="Git 比较范围" value={state.scope} disabled={busy} onChange={event => chooseScope(event.target.value)}>
@@ -85,7 +86,7 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
       <p className="omaa-git-caption">{summary.total} 个文件 · <span className="omaa-git-added">+{summary.added}</span> <span className="omaa-git-deleted">−{summary.deleted}</span>{summary.ref ? ` · ${summary.ref}` : ''}</p>
       {!summary.files.length && <p>此范围没有改动。</p>}
       <div className="omaa-git-files">{summary.files.map(file => <div className="omaa-git-file" key={file.path}>
-        <button type="button" className="omaa-git-path" title={file.path} disabled={busy} onClick={() => chooseFile(file.path)}>{file.display || file.path}</button>
+        <button type="button" className="omaa-git-path" title={file.path} aria-current={diff?.path === file.path ? 'true' : undefined} disabled={busy} onClick={() => chooseFile(file.path)}>{file.display || file.path}</button>
         <span className="omaa-git-counts">+{file.added} −{file.deleted}</span>
         {(file.actions || []).map(action => <button type="button" key={action} disabled={!canWrite} onClick={() => mutate(file.path, action)}>{labels[action]}</button>)}
       </div>)}</div>
@@ -138,6 +139,9 @@ export function GitReview({ settings, sidebarRight, sessions, visible = true }) 
       <button type="button" disabled={!canWrite} onClick={submitDrafts}>{draftState.sending ? '正在提交反馈…' : '批量发送并继续修改'}</button>
     </section>}
     {!canWrite && !busy && <p className="omaa-git-caption">暂存、撤回和反馈发送仅在停止运行的执行模式下可用。</p>}
-    {(state.error || error) && <p role="alert" className="omaa-error">{state.error || error}</p>}
+    {diagnostic && (errorHint ? <div role="alert" className="omaa-error omaa-git-error">
+      <p>{errorHint}</p>
+      <details><summary>原始 Git 诊断</summary><pre>{diagnostic}</pre></details>
+    </div> : <p role="alert" className="omaa-error">{diagnostic}</p>)}
   </section>;
 }

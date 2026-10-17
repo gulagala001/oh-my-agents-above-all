@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { validate, formatViolations } from '../../../lib/zcode-workflow-compiler.mjs';
+import { validate, formatViolations } from '../../../lib/zcode-workflow-validate.mjs';
 import { CONTINUITY_PROVIDER_PREFIX, createActorContinuity } from './continuity.mjs';
 import { inputHash } from '../../../lib/zcode-import-cache.mjs';
+import { startActivation, drainChildren, actorPersona } from '../../host/subagents.mjs';
+import { ensureDirectory } from '../../host/working-directory.mjs';
 
 const textOf = parts => (parts ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const copy = value => structuredClone(value);
@@ -13,19 +15,23 @@ export function installLiteralActorPersona(ctx) {
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     const assembly = await next();
     const session = context.agent?.session;
-    const descriptor = session?.snapshotEvents(session.inheritedEventCount).find(event => event.type === 'subagent/descriptor')?.data;
+    const events = session?.snapshotEvents(session.inheritedEventCount) ?? [];
+    const descriptor = events.find(event => event.type === 'subagent/descriptor')?.data;
+    const persona = actorPersona(events);
     if (descriptor?.mode !== 'continuable' || descriptor.provider !== 'spawn' && !descriptor.provider?.startsWith(CONTINUITY_PROVIDER_PREFIX)
-      || !descriptor.label?.startsWith(ZCODE_ACTOR_LABEL_PREFIX) || typeof descriptor.persona !== 'string') return assembly;
-    // The native descriptor owns the durable persona. Its text must survive
-    // cold activation without depending on a workflow's temporary variables.
-    return { ...assembly, sections: assembly.sections.map(section => section.name === 'deployment:persona-prefix' && section.text === descriptor.persona
-      ? { ...section, interpolate: false } : section) };
+      || !descriptor.label?.startsWith(ZCODE_ACTOR_LABEL_PREFIX) || typeof persona !== 'string') return assembly;
+    // Both the legacy native descriptor and the new plugin record retain the
+    // literal persona across cold activation and exact completed-prefix reuse.
+    return { ...assembly, sections: assembly.sections.map(section => section.name === 'deployment:persona-prefix'
+      ? { ...section, text: persona, interpolate: false } : section) };
   }, { global: true });
 }
 
 // Only orchestration lives here. Native continuable children own their model,
 // permission checks, tools, inbox, transcript, idle state and cold activation.
-export function createActors({ ctx, parent, sites, askSpecs, signal, progress, runProgress, cache, imported, concurrency }) {
+export function createActors({ ctx, parent, sites, askSpecs, signal, progress, runProgress, cache, imported, concurrency, directories }) {
+  const directory = directories ? directories.then(value => value.cwd) : ensureDirectory(ctx, parent, signal);
+  void directory.catch(() => {});
   const actors = new Map(), children = new Map(), disposers = [], staged = new WeakMap();
   const continuity = imported ? createActorContinuity(ctx, parent) : undefined;
   const actorSites = new Set(sites.actors.map(site => site.id));
@@ -186,10 +192,14 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
             const seed = actor.imported?.seed();
             const detach = seed && continuity.attach(actor.childId, { sessionId: seed.sourceSessionId, eventCount: seed.messageCount, persona });
             let receipt;
-            try { receipt = await ctx.subagents.startContinuable({ provider: seed ? continuity.name : 'spawn', label: ZCODE_ACTOR_LABEL_PREFIX + (reference.name || 'Actor'), childId: actor.childId,
-              request: { parent, prompt, ...(persona === undefined ? {} : { persona }) }, signal }); }
+            const cwd = await directory; check();
+            try { receipt = await startActivation(ctx, { provider: seed ? continuity.name : 'spawn', label: ZCODE_ACTOR_LABEL_PREFIX + (reference.name || 'Actor'), childId: actor.childId, delivery: 'caller',
+              request: { parent, prompt, ...(cwd === undefined ? {} : { cwd }), ...(persona === undefined ? {} : { persona }) }, signal }); }
             finally { detach?.(); }
             actor.created = true; pending.messageId = receipt.messageId;
+            // The a2 result is settled after native teardown; propagate an
+            // infrastructure rejection without leaving the pending ask hung.
+            receipt.result?.catch(error => pending.result.reject(error));
           } else {
             const agent = ctx.get('agents')?.get(actor.childId); if (agent) install(agent, actor);
             pending.messageId = await ctx.subagents.sendMessage(parent, actor.childId, prompt, { signal });
@@ -218,7 +228,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           actor.toolDispose?.(); actor.toolDispose = undefined; actor.toolPending = undefined;
         }
       });
-      actor.tail = work.catch(() => {});
+      actor.tail = work.then(() => {}, () => {});
       return work;
     },
     async close() {
@@ -226,7 +236,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
       for (const id of children.keys()) { try { ctx.subagents.interrupt(id, { kind: 'ancestor', agent: parent }); } catch {} }
       for (const actor of actors.values()) actor.pending?.result.reject(Error('Workflow closed.'));
       await Promise.allSettled([...actors.values()].map(a => a.tail));
-      await ctx.subagents.drainContinuableChildren(parent, [...children.keys()]);
+      await drainChildren(ctx, parent, [...children.keys()]);
       for (const actor of actors.values()) actor.toolDispose?.();
       for (const dispose of disposers.reverse()) dispose();
       continuity?.dispose();

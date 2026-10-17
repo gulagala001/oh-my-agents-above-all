@@ -8,7 +8,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hostManifest, omdBuildMode, reviewedPatchBytes, emptyPatchSha256 } from '../scripts/host-manifest.mjs';
-import { HOST_RANGE, LOADER_RANGE, validationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+import { LOADER_RANGE, validationHosts as currentValidationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+
+// These synthetic archive fixtures describe an older, complete release. A
+// pending SDK build has no paired OMD baseline and is not a tagged release.
+const HOST_RANGE = '>=0.2.0-rc.2 <=0.2.1-alpha.1';
+const validationHosts = currentValidationHosts.filter(row => !row.validationPending);
 
 const run = promisify(execFile), repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -20,12 +25,16 @@ async function fixture(t) {
   await mkdir(join(root, 'scripts')); await mkdir(join(root, 'src/host'), { recursive: true });
   for (const script of ['package.mjs', 'release-assets.mjs', 'verify-release.mjs', 'package-omd-compat.mjs', 'npm-runner.mjs', 'host-manifest.mjs']) await cp(join(repo, 'scripts', script), join(root, 'scripts', script));
   for (const name of ['compatibility.mjs', 'compatibility.json']) await cp(join(repo, 'src/host', name), join(root, 'src/host', name));
+  await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts });
   await symlink(join(repo, 'node_modules'), join(root, 'node_modules'), 'dir');
   for (const directory of ['lib', 'docs']) { await mkdir(join(root, directory)); await writeFile(join(root, directory, 'placeholder.txt'), 'distribution fixture\n'); }
   for (const name of ['README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md']) await writeFile(join(root, name), 'distribution fixture\n');
   await writeFile(join(root, 'src/AGENTS.md'), 'local only');
   const source = await json(join(repo, 'package.json'));
   source.version = alignedVersion(validationHosts.at(-1).version, 'omaa', '0.13.1');
+  for (const field of ['devDependencies', 'peerDependencies']) for (const name of Object.keys(source[field] ?? {})) {
+    if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) source[field][name] = field === 'devDependencies' ? validationHosts.at(-1).version : HOST_RANGE;
+  }
   await save(join(root, 'package.json'), source); return { root, source };
 }
 async function hostCli(root, version, loaderVersion, output = version) {
@@ -173,6 +182,58 @@ test('old release verification derives representatives from that tag instead of 
   await save(join(root, 'src/host/compatibility.json'), { hostRange: HOST_RANGE, loaderRange: LOADER_RANGE, validationHosts });
   const result = await command(root, 'verify-release.mjs', ['--repo', 'fixture/omaa', '--tag', tag, '--assets', join(root, 'dist')], env);
   assert.match(result.stdout, /18 attachments, 6 identical tarballs/);
+});
+
+test('unpublished candidate verification binds full committed payload without remote calls or a release tag', async t => {
+  const { root, source, assets } = await releaseFixture(t, { integrated: true });
+  await run('git', ['init', '-q', root]);
+  await run('git', ['-C', root, 'add', 'package.json', 'src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'compat']);
+  await run('git', ['-C', root, '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Distribution Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'unpublished source fixture']);
+  const commit = (await run('git', ['-C', root, 'rev-parse', 'HEAD'])).stdout.trim();
+  const args = ['--source-commit', commit, '--assets', join(root, 'dist')];
+  await mkdir(join(root, 'bin'));
+  await writeFile(join(root, 'bin/gh'), '#!/bin/sh\nexit 97\n', { mode: 0o755 });
+  const env = { ...process.env, PATH: join(root, 'bin') + ':' + process.env.PATH };
+  await writeFile(join(root, 'lib/placeholder.txt'), 'Later uncommitted worktree content.\n');
+  assert.match((await command(root, 'verify-release.mjs', args, env)).stdout, /Verified unpublished local candidate.*complete committed OMAA source/);
+  assert.equal((await run('git', ['-C', root, 'tag', '--list'])).stdout, '', 'a local candidate needs no manufactured tag');
+  await assert.rejects(command(root, 'verify-release.mjs', [...args, '--repo', 'fixture/omaa', '--tag', 'v' + source.version], env), /Usage/);
+  const omaa = assets.find(row => row.name === source.name);
+  const manifest = JSON.parse((await run('tar', ['-xOf', join(root, 'dist', omaa.filename), 'package/package.json'])).stdout);
+  // Every sidecar is freshly rehashed: the independent committed source must
+  // still reject altered, missing, extra and linked runtime files.
+  const stage = join(root, 'candidate-altered'); await mkdir(stage);
+  await run('tar', ['-xzf', join(root, 'dist', omaa.filename), '-C', stage]);
+  const files = async directory => {
+    const result = {};
+    const walk = async (path, prefix = '') => { for (const entry of await readdir(path, { withFileTypes: true })) {
+      const relative = prefix + entry.name;
+      if (entry.isDirectory()) await walk(join(path, entry.name), relative + '/');
+      else if (relative !== 'package.json') result[relative] = await readFile(join(path, entry.name));
+    } };
+    await walk(directory); return result;
+  };
+  const payload = await files(join(stage, 'package'));
+  for (const [label, change, pattern] of [
+    ['altered', value => { value['lib/placeholder.txt'] = Buffer.from('Tampered runtime.'); }, /differs from committed source payload/],
+    ['missing', value => { delete value['lib/placeholder.txt']; }, /missing committed source files/],
+    ['extra', value => { value['lib/unreviewed.txt'] = Buffer.from('New file.'); }, /Unexpected candidate archive file/],
+  ]) {
+    const modified = { ...payload }; change(modified);
+    await rm(join(root, 'archive', omaa.filename), { recursive: true, force: true });
+    await archive(root, omaa, manifest, undefined, modified);
+    await assert.rejects(command(root, 'verify-release.mjs', args, env), pattern, label);
+  }
+  await rm(join(root, 'archive', omaa.filename), { recursive: true, force: true });
+  await archive(root, omaa, manifest, undefined, payload);
+  const member = join(root, 'archive', omaa.filename, 'package/lib/placeholder.txt');
+  await rm(member); await symlink('elsewhere', member);
+  const tarball = join(root, 'dist', omaa.filename);
+  await run('tar', ['-czf', tarball, '-C', join(root, 'archive', omaa.filename), 'package']);
+  const hash = sha(await readFile(tarball));
+  await writeFile(tarball + '.sha256', `${hash}  ${omaa.filename}\n`);
+  await save(tarball + '.metadata.json', { ...omaa, sha256: hash });
+  await assert.rejects(command(root, 'verify-release.mjs', args, env), /Unsafe or duplicate candidate archive member/);
 });
 
 
@@ -376,10 +437,12 @@ test('integrated official-shaped baseline packs without patching or rebuilding a
   assert.deepEqual(await readdir(join(root, '.cache')), []);
 });
 
-test('current OMD 0.10 default preserves its integrated official payload', async t => {
-  const { root, row, base, files } = await integratedPackFixture(t, '0.10.0');
+test('current OMD default preserves its integrated official payload', async t => {
+  const rule = JSON.parse(await readFile(new URL('../compat/omd/' + validationHosts[0].omdVariant + '.json', import.meta.url), 'utf8'));
+  const feature = splitReleaseVersion(rule.baseVersion, 'omd').feature.join('.');
+  const { root, row, base, files } = await integratedPackFixture(t, feature);
   const result = JSON.parse((await command(root, 'package-omd-compat.mjs', ['--base', base, '--host-version', row.version])).stdout);
-  assert.equal(result.version, alignedVersion(row.version, 'omd', '0.10.0'));
+  assert.equal(result.version, alignedVersion(row.version, 'omd', feature));
   assert.equal(result.mode, 'integrated-baseline');
   for (const [file, bytes] of Object.entries(files)) assert.equal((await run('tar', ['-xOf', result.tarball, 'package/' + file])).stdout, bytes, file);
   assert.deepEqual(await readdir(join(root, '.cache')), []);

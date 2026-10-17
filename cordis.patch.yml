@@ -129,8 +129,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -320,8 +319,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -519,8 +517,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -609,7 +606,9 @@
               "group": true,
               "isolate": {
                 "sandboxPolicy": true,
-                "omaaPiExtensions": true
+                "omaaPiExtensions": true,
+                "omaaPiResources": true,
+                "omaaPiSteering": true
               },
               "config": [
                 {
@@ -690,8 +689,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]
@@ -876,8 +874,7 @@
                           "config": {
                             "provider": "spawn",
                             "toolName": "subagent",
-                            "modelSelectionSettings": true,
-                            "backgroundMode": "continuable"
+                            "modelSelectionSettings": true
                           }
                         }
                       ]

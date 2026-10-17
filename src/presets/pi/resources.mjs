@@ -1,4 +1,5 @@
 import { omdIdentityPrompt } from '../../host/identity.mjs';
+import { currentDirectory } from '../../host/working-directory.mjs';
 import path from 'node:path';
 import { homedir } from 'node:os';
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -175,8 +176,8 @@ export function apply(ctx, config = {}) {
     batch.push({ message, turn });
   });
   const load = async (agent, signal) => {
-    const catalog = await loadPiResources(ctx.fs, { cwd: agent.session.header.cwd, agentDir, signal });
-    const cwd = agent.session.header.cwd;
+    const cwd = currentDirectory(ctx, agent.session);
+    const catalog = await loadPiResources(ctx.fs, { cwd, agentDir, signal });
     configuredPaths.delete(cwd); configuredPaths.set(cwd, catalog.resourcePaths);
     if (configuredPaths.size > 16) configuredPaths.delete(configuredPaths.keys().next().value);
     catalogs.set(agent, catalog);
@@ -204,7 +205,7 @@ export function apply(ctx, config = {}) {
   const resources = {
     frame(agent, assembly, tools) {
       return promptFrame(assembly.sections.map(section => ({ name: section.name, text: renderPrompt({ ...assembly, sections: [section] }) })), {
-        tools: new Set(tools.map(tool => tool.name)), cwd: agent.session.header.cwd,
+        tools: new Set(tools.map(tool => tool.name)), cwd: currentDirectory(ctx, agent.session),
         customTools: ctx.get('omaaPiExtensions')?.promptTools(agent) ?? [], catalog: catalogs.get(agent) ?? {},
         identity: omdIdentityPrompt(ctx), child: agent.session.header.origin === 'subagent',
       });
@@ -237,7 +238,7 @@ export function apply(ctx, config = {}) {
   ctx.provide('omaaPiResources', resources);
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     if (!context.agent) return next();
-    const observed = observedSelections.get(context.agent.session.header.cwd);
+    const observed = observedSelections.get(currentDirectory(ctx, context.agent.session));
     if (observed && await piIgnoreRulesChanged(ctx.fs, observed.ignoreObservations, context.signal)) invalidateSkills?.();
     if (!preparedAssemblies.has(context.agent)) await resources.prepare(context.agent, context.signal);
     preparedAssemblies.delete(context.agent);

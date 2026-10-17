@@ -18,6 +18,6 @@
 .omaa-preset-controls :focus-visible,.omaa-preset-chip:focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
 /* DSH 0.2.1's native header is a grid; the pinned Codex adapter places the
    same children as one horizontal title bar, above its 58px-inset pane. */
-html.omd[data-omd-layout="codex-desktop"] .wSkVaW_header { display:flex; align-items:center; }
+html[data-omaa-theme="codex-desktop"][data-omd-layout="codex-desktop"] .wSkVaW_header { display:flex; align-items:center; }
 @container omaa-settings (max-width:280px) { .omaa-setting-row:has(select),.omaa-setting-row:has(.omaa-setting-value) { flex-direction:column; align-items:stretch; gap:6px; margin:12px 0; } .omaa-setting-row select,.omaa-setting-value { width:100%; } }
 @media(max-width:420px) { .omaa-preset-controls { padding:15px; } .omaa-setting-row { gap:10px; } }

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { HOST_RANGE, LOADER_RANGE, splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
-export const releaseFiles = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md'];
+export const releaseFiles = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'assets', 'scripts/public-files.mjs', 'CHANGELOG.md'];
 
 function validateFileAllowlist(files) {
   if (!Array.isArray(files) || !files.length || new Set(files).size !== files.length
@@ -18,6 +18,7 @@ export function hostManifest(source, hostVersion, loaderVersion, { hostRange = H
   validateFileAllowlist(files);
   const release = splitReleaseVersion(source.version, 'omaa'), manifest = structuredClone(source);
   manifest.version = alignedVersion(hostVersion, 'omaa', release.feature.join('.'));
+  manifest.engines = { ...manifest.engines, dsh: hostRange };
   manifest.files = [...files];
   for (const field of ['devDependencies', 'peerDependencies']) {
     for (const name of Object.keys(manifest[field] ?? {})) {

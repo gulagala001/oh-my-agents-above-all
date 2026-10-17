@@ -1,7 +1,7 @@
 {
   "source": "sources/instructions_template.md",
-  "sourceSha256": "152dfaeeb552876190962be1c12c93d426840ff12691f648261554a7675a6698",
-  "renderedSha256": "33c12b24957dff6c2b3f20939cdd16f3391afbd6b6e03657d5e7e19b3430dbe9",
+  "sourceSha256": "35bd51b5f577cb7b24cd5f4629e49e37cb724ab57754ce6f8f202001635bab8a",
+  "renderedSha256": "c2f35c3c6ad5e15b7802351dbf35f074f4f10cd9a8598e7041d2e6d6f00dea25",
   "reviewConfiguration": {
     "tools": [
       "read",

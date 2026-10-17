@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import ts from 'typescript';
 
@@ -32,6 +33,27 @@ async function embeddedLibs() {
   return { count: seen.size, contents: 'export const TS_LIB_VERSION = ' + JSON.stringify(version) + ';\nexport const TS_LIBS = {\n' + entries + '\n};' };
 }
 
+function adaptAnalysis(source) {
+  if (createHash('sha256').update(source).digest('hex') !== 'a70965143a76ddb95dc2ff2e3a08c790e55fcf8db09b0b93d3731014012ee643') {
+    throw new Error('Fixed ZCode analysis source changed');
+  }
+  const file = ts.createSourceFile('analyze.ts', source, ts.ScriptTarget.Latest, true);
+  const declarations = file.statements.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === 'analyzeWorkflowScript');
+  const declaration = declarations[0], first = declaration?.body?.statements[0];
+  if (file.parseDiagnostics.length || declarations.length !== 1 || declaration.parameters.length !== 1
+    || declaration.parameters[0].getText(file) !== 'scriptText: string' || declaration.type?.getText(file) !== 'AnalyzeResult'
+    || !first || first.getText(file) !== 'const workflow = createWorkflowProgram(scriptText);') {
+    throw new Error('Fixed ZCode analysis entry changed');
+  }
+  // Keep the complete original analysis body. Only its Program construction moves
+  // to the caller so schema synthesis and lowering can use that same invocation.
+  const body = source.slice(first.end, declaration.body.end - 1);
+  const replacement = 'export function analyzeWorkflowScript(scriptText: string): AnalyzeResult {\n'
+    + '  return analyzeWorkflowProgram(createWorkflowProgram(scriptText));\n}\n'
+    + 'export function analyzeWorkflowProgram(workflow: ReturnType<typeof createWorkflowProgram>): AnalyzeResult {' + body + '}';
+  return source.slice(0, declaration.getStart(file)) + replacement + source.slice(declaration.end);
+}
+
 export async function buildZCodeWorkflowCompiler() {
   const original = await readFile(join(sourceRoot, 'index.ts'), 'utf8');
   const file = ts.createSourceFile('index.ts', original, ts.ScriptTarget.Latest, true);
@@ -42,7 +64,8 @@ export async function buildZCodeWorkflowCompiler() {
   const entry = declarations.map(statement => statement.getText(file)).join('\n')
     + '\nexport { SchemaEmitter, SchemaRejection } from "./schema/emit.js";'
     + '\nexport { projectSiteGraph } from "./analysis/graph.js";'
-    + '\nexport { projectCausalityGraph } from "./analysis/causality-graph.js";';
+    + '\nexport { projectCausalityGraph } from "./analysis/causality-graph.js";'
+    + '\nexport { analyzeWorkflowProgram } from "./analysis/analyze.js";';
   const stdlib = await embeddedLibs(), output = join(root, 'lib/zcode-workflow-compiler.mjs');
   await mkdir(dirname(output), { recursive: true });
   const result = await build({
@@ -51,6 +74,10 @@ export async function buildZCodeWorkflowCompiler() {
     metafile: true, write: false,
     banner: { js: '// Derived from fixed Apache-2.0 ZCode compiler/analysis/schema/lowering sources; see THIRD_PARTY_NOTICES.md.' },
     plugins: [{ name: 'zcode-pure-compiler', setup(builder) {
+      builder.onLoad({ filter: /analyze[.]ts$/ }, async args => {
+        if (args.path !== join(sourceRoot, 'analysis/analyze.ts')) throw new Error('Unexpected ZCode analysis input');
+        return { contents: adaptAnalysis(await readFile(args.path, 'utf8')), loader: 'ts' };
+      });
       builder.onResolve({ filter: /libs\.generated\.js$/ }, args => {
         if (args.importer !== join(sourceRoot, 'compiler/compile.ts')) throw new Error('Unexpected embedded stdlib importer');
         return { path: 'typescript-es2022', namespace: 'zcode-stdlib' };
@@ -71,7 +98,16 @@ export async function buildZCodeWorkflowCompiler() {
   });
   const fileOutput = result.outputFiles.find(file => file.path === output);
   if (!fileOutput) throw new Error('ZCode compiler bundle was not emitted');
+  const validator = await readFile(join(sourceRoot, 'schema/validate.ts'), 'utf8');
+  if (createHash('sha256').update(validator).digest('hex') !== '915fd213e12d521ed585f061aa04e9c4777c6813457fcdf54d6da3acd2c4ec12') throw new Error('Fixed ZCode validator source changed');
+  const validation = await build({
+    stdin: { contents: validator, sourcefile: 'schema/validate.ts', resolveDir: sourceRoot, loader: 'ts' },
+    bundle: true, platform: 'node', format: 'esm', target: 'es2022', write: false, metafile: true,
+    banner: { js: '// Derived from fixed Apache-2.0 ZCode schema validator; see THIRD_PARTY_NOTICES.md.' },
+  });
+  if (Object.keys(validation.metafile.inputs).length !== 1) throw new Error('ZCode validator gained runtime dependencies');
   await writeFile(output, fileOutput.contents);
+  await writeFile(join(root, 'lib/zcode-workflow-validate.mjs'), validation.outputFiles[0].contents);
   return { output, stdlibFiles: stdlib.count, exports: Object.values(result.metafile.outputs)[0].exports };
 }
 

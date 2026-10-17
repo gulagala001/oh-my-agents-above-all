@@ -1,6 +1,6 @@
 # Pi Coding Agent 原生主题来源
 
-固定官方来源：`earendil-works/pi` v1.0.2，commit `cd32f7725fdbddbaecdff5b1e68491563394e0ca`，MIT。资产保留在 `src/client/themes/sources/pi/`；`packs.mjs` 的固定明暗映射已由 `themes/index.jsx` 与 `runtime.mjs` 注册并按会话挂载；五主题的明暗切换及实拍已核对。来源目录本身仍只存数据与证据，验证范围见 [验证记录](verification.md)。
+固定官方来源：`earendil-works/pi` v1.0.2，commit `cd32f7725fdbddbaecdff5b1e68491563394e0ca`，MIT。资产保留在 `src/client/themes/sources/pi/`；`packs.mjs` 的固定明暗映射已由 `themes/index.jsx` 与 `runtime.mjs` 注册并按会话挂载；五主题的明暗切换及实拍已核对。来源目录本身仍只存数据与证据，产品范围见 [产品边界](compatibility.md)。
 
 官方固定来源：
 
@@ -21,8 +21,6 @@ palette.json有dark/light各59个token（56个UI/角色/Markdown/syntax/thinking
 node scripts/extract-pi-theme.mjs
 node --test test/pi-theme-source.test.mjs
 ```
-
-脚本无网络，先验证所有快照hash后转换；生成只写pi/palette.json，不写共享注册。3项source回归全部通过：固定版本/hash/两份MIT notice、完整token覆盖与逐字重生一致、映射候选仅引用实际token。它们验证来源和转换，不能称像素还原或终端/Web实拍验收。
 
 | 原生token | dark browser hex | light browser hex |
 |---|---|---|

@@ -16,11 +16,66 @@ function truncate(text, size) {
   while (end > 0 && (buffer[end] & 0xc0) === 0x80) end--;
   return buffer.subarray(0, end).toString('utf8') + '...(truncated)';
 }
+export class MonitorBatch {
+  #text = '';
+  #bytes = 0;
+  #truncated = false;
+  get length() { return this.#text.length; }
+  push(lines) {
+    for (const line of lines) {
+      if (this.#truncated) break;
+      const text = (this.#text ? '\n' : '') + line, bytes = Buffer.byteLength(text);
+      if (this.#bytes + bytes > 3000) {
+        this.#text = truncate(this.#text + text, 3000); this.#truncated = true; break;
+      }
+      this.#text += text; this.#bytes += bytes;
+    }
+  }
+  flush() { const text = this.#text; this.#text = ''; this.#bytes = 0; this.#truncated = false; return text; }
+}
 export class MonitorLines {
-  pending = '';
+  #chunks = [];
+  #head = 0;
+  #bytes = 0;
+  #wellFormed = true;
+  get pending() { return this.#chunks.slice(this.#head).join(''); }
+  set pending(text) { this.#chunks = []; this.#head = 0; this.#bytes = Buffer.byteLength(text); this.#wellFormed = text.isWellFormed(); this.#append(text); }
+  #append(text) {
+    const last = this.#chunks.at(-1);
+    if (typeof last === 'string' && last.length + text.length <= 4096) { this.#chunks[this.#chunks.length - 1] += text; return; }
+    for (let start = 0; start < text.length;) {
+      let end = Math.min(start + 4096, text.length);
+      if (text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff && text.charCodeAt(end) >= 0xdc00 && text.charCodeAt(end) <= 0xdfff) end++;
+      this.#chunks.push(text.slice(start, end)); start = end;
+    }
+  }
   push(text) {
-    this.pending += text;
-    if (Buffer.byteLength(this.pending) > 1_048_576) this.pending = Buffer.from(this.pending).subarray(-1_048_576).toString('utf8');
+    if (!text) return [];
+    const last = this.#chunks.at(-1), previous = typeof last === 'string' ? last.charCodeAt(last.length - 1) : undefined, first = text.charCodeAt(0);
+    const bytes = Buffer.byteLength(text);
+    this.#bytes += bytes - (previous >= 0xd800 && previous <= 0xdbff && first >= 0xdc00 && first <= 0xdfff ? 2 : 0);
+    this.#wellFormed &&= text.isWellFormed();
+    this.#append(text);
+    if (this.#bytes > 1_048_576) {
+      if (!this.#wellFormed || bytes > 1_048_576) this.pending = Buffer.from(this.pending).subarray(-1_048_576).toString('utf8');
+      else {
+        let excess = this.#bytes - 1_048_576;
+        while (excess > 0) {
+          const buffer = Buffer.from(this.#chunks[this.#head]);
+          if (buffer.length <= excess) { excess -= buffer.length; this.#bytes -= buffer.length; this.#chunks[this.#head++] = null; continue; }
+          const tail = buffer.subarray(excess);
+          let start = 0;
+          while ((tail[start] & 0xc0) === 0x80) start++;
+          // Preserve Buffer's replacement characters when the byte cap cuts a code point.
+          this.#chunks[this.#head] = tail.subarray(start).toString('utf8');
+          if (start) this.#chunks.splice(this.#head, 0, '\ufffd'.repeat(start));
+          this.#bytes += start * 2 - excess;
+          break;
+        }
+        if (this.#head >= 1024) { this.#chunks = this.#chunks.slice(this.#head); this.#head = 0; }
+      }
+    }
+    if (!text.includes('\n')) return [];
     const lines = this.pending.split('\n'); this.pending = lines.pop();
     return lines.map(line => line.trim()).filter(Boolean).map(line => truncate(line, 500));
   }
@@ -59,7 +114,7 @@ export function apply(ctx) {
     if (state.agent.status === 'idle') state.agent.followup(message); else state.agent.inject(message);
   };
   const kill = (state, reason) => {
-    state.disabled = true; clear(state);
+    state.disabled = true; clear(state); state.batch.flush(); state.lines.pending = '';
     if (state.stopRequested) return;
     state.stopRequested = true;
     try { ctx.jobs.kill(state.id, state.agent.id, reason); } catch (error) { ctx.logger.warn('Grok monitor stop: ' + error.message); }
@@ -67,7 +122,7 @@ export function apply(ctx) {
   const deliver = state => {
     state.debounce = undefined;
     if (state.disabled || !state.batch.length) return;
-    const batch = truncate(state.batch.join('\n'), 3000); state.batch = [];
+    const batch = state.batch.flush();
     const outcome = state.limiter.process();
     if (outcome.kind === 'allowed') { if (outcome.notice) notice(state, outcome.notice); notice(state, batch); }
     else if (outcome.kind === 'kill') { notice(state, outcome.notice); kill(state, 'monitor output rate exceeded for 30s'); }
@@ -76,9 +131,9 @@ export function apply(ctx) {
     if (state.disabled) return;
     const output = ctx.jobs.readAt(state.id, state.offset, state.agent.id);
     state.offset = output.next;
-    if (output.lossy) { state.lines.pending = ''; state.batch.push('[Monitor output gap: earlier bytes were dropped by the host output ring.]'); }
-    for (const chunk of output.chunks) if (chunk.channel !== 'stderr') state.batch.push(...state.lines.push(chunk.text));
-    if (final) state.batch.push(...state.lines.flush());
+    if (output.lossy) { state.lines.pending = ''; state.batch.push(['[Monitor output gap: earlier bytes were dropped by the host output ring.]']); }
+    for (const chunk of output.chunks) if (chunk.channel !== 'stderr') state.batch.push(state.lines.push(chunk.text));
+    if (final) state.batch.push(state.lines.flush());
     if (state.batch.length && !state.debounce) {
       state.debounce = setTimeout(() => deliver(state), 200); state.debounce.unref();
     }
@@ -100,8 +155,8 @@ export function apply(ctx) {
       if (event.type === 'output') collect(state);
       else if (event.type === 'settled') {
         if (event.cause !== 'teardown' && event.job.status !== 'killed') collect(state, true);
-        state.disabled = true; clear(state); monitors.delete(id);
-      } else if (event.type === 'stopping') { state.disabled = true; state.stopRequested = true; clear(state); }
+        state.disabled = true; clear(state); state.batch.flush(); state.lines.pending = ''; monitors.delete(id);
+      } else if (event.type === 'stopping') { state.disabled = true; state.stopRequested = true; clear(state); state.batch.flush(); state.lines.pending = ''; }
     } catch (error) { kill(state, 'monitor observer failed'); ctx.logger.warn('Grok monitor: ' + error.message); }
   });
   ctx.effect(() => () => { for (const state of monitors.values()) kill(state, 'monitor scope disposed'); monitors.clear(); }, 'Grok monitor teardown');
@@ -118,7 +173,7 @@ export function apply(ctx) {
       if (!exec.agent) throw new Error('monitor requires a session agent');
       const shell = ctx.tools.get('bash', exec.agent) ? 'bash' : ctx.tools.get('pwsh', exec.agent) ? 'pwsh' : undefined;
       if (!shell) throw new Error('monitor requires a native command tool');
-      const state = { agent: exec.agent, shell, description: args.description, id: undefined, offset: 0, lines: new MonitorLines(), batch: [], limiter: new MonitorRateLimiter(), disabled: false };
+      const state = { agent: exec.agent, shell, description: args.description, id: undefined, offset: 0, lines: new MonitorLines(), batch: new MonitorBatch(), limiter: new MonitorRateLimiter(), disabled: false };
       const persistent = args.persistent === true, timeout = persistent ? 0 : args.timeout_ms ?? duration;
       if (!persistent && timeout > duration) throw new Error('persistent must be true when timeout_ms exceeds 36000000ms');
       const stopOnAbort = () => { if (state.id) kill(state, 'monitor call cancelled'); };

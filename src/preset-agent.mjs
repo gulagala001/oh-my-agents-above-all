@@ -1,4 +1,5 @@
 import { applySharedIdentity, omdIdentityPrompt } from './host/identity.mjs';
+import { currentDirectory } from './host/working-directory.mjs';
 import { buildPrompt as codex, buildCompactionPrompt as codexCompact } from './presets/codex/prompt.mjs';
 import { buildPrompt as grok, buildCompactionPrompt as grokCompact } from './presets/grok/prompt.mjs';
 import { buildPrompt as cursor, buildCompactionPrompt as cursorCompact } from './presets/cursor/prompt.mjs';
@@ -13,7 +14,6 @@ const readOnly = new Set(['read', 'read_image', 'glob', 'grep', 'ask_user_questi
 export function apply(ctx, config) {
   const build = builders[config.product];
   if (!build) throw new Error('Unknown OMAA product: ' + config.product);
-  if (ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function') throw new Error('此 Oh My DSH 版本缺少 OMAA 兼容接口。请安装与当前 DSH 匹配的兼容 OMD，或使用没有旧 OMD 的独立 DSH profile。');
   ctx.tools.presentAs('native');
   const piDelegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
   const enhancedTool = name => name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || name === 'computer_use' || name === 'computer_use_reset' || config.product === 'pi' && piDelegation.has(name);
@@ -27,7 +27,7 @@ export function apply(ctx, config) {
   ctx.systemPrompt.section({ name: 'deployment:persona-prefix', order: 0, interpolate: false,
     text: ({ agent }) => {
       const child = agent?.session.header.origin === 'subagent';
-      const text = build({ tools: activeTools(agent), cwd: agent?.session.header.cwd ?? process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
+      const text = build({ tools: activeTools(agent), cwd: agent ? currentDirectory(ctx, agent.session) : process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
       return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx), { child });
     } });
   ctx.tools.guard(exec => {

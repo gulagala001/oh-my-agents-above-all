@@ -1,70 +1,26 @@
-name: Prepare GitHub release
-
+name: Check release inventory
 on:
   push:
     tags: ['v*.omaa.*', 'v*-omaa.*']
   workflow_dispatch:
-
 permissions:
   contents: read
-
-concurrency:
-  group: omaa-release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  packages:
-    uses: ./.github/workflows/ci.yml
-    permissions:
-      contents: read
-  release:
-    needs: packages
+  public-files:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      - uses: pnpm/action-setup@v6
-        with:
-          version: '11.23.0'
-      - name: Install locked verifier dependencies without package scripts
-        run: pnpm install --prod --frozen-lockfile --ignore-scripts
-      - name: Match the full source version and existing release tag
-        id: version
+      - name: Check tagged public files and version identity
         env:
           REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          source_version="$(node -p 'require("./package.json").version')"
-          release_tag="v${source_version}"
-          if [ "$REF_TYPE" = tag ] && [ "$REF_NAME" != "$release_tag" ]; then
-            echo "Release tag must be ${release_tag}, found ${REF_NAME}" >&2
-            exit 1
+          node scripts/public-files.mjs
+          if [ "$REF_TYPE" = tag ]; then
+            test "$REF_NAME" = "v$(node -p 'require("./package.json").version')"
           fi
-          test "$(git rev-parse "${release_tag}^{commit}")" = "$(git rev-parse HEAD)"
-          echo "tag=${release_tag}" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@v7
-        with:
-          name: omaa-release-packages
-          path: release-assets
-      - name: Verify tarball checksums
-        working-directory: release-assets
-        run: sha256sum --check --strict *.tgz.sha256
-      - name: Verify an existing release or create a draft with both host packages
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-        run: |
-          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
-            node scripts/verify-release.mjs --repo "$GH_REPO" --tag "$RELEASE_TAG" --assets release-assets
-            exit 0
-          fi
-          gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --title "OMAA ${RELEASE_TAG#v}" --generate-notes

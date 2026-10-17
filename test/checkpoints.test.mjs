@@ -12,7 +12,7 @@ async function fixture(t) {
   await fs.mkdir(workspace); t.after(() => fs.rm(root, { recursive: true, force: true }));
   const events = [{ seq: 0, type: 'user/message', data: { content: [{ type: 'text', text: 'Keep the conversation' }] } }, { seq: 1, type: 'turn/start', data: { turn: 1 } }];
   const session = { id: randomUUID(), header: { cwd: workspace }, snapshotEvents: () => events };
-  const options = { isIdle: () => true };
+  const options = { isIdle: () => true, writable: () => true };
   const store = createCheckpointStore(directory, options);
   const capture = (file, run, args = {}) => store.captureExecution({ name: 'write', arguments: { file_path: file, content: 'fixture', ...args }, callId: randomUUID(), agent: { session }, signal: new AbortController().signal }, run);
   return { root, workspace, directory, session, events, store, options, capture, target: file => path.join(workspace, file), restore: args => store.restore(session.id, session, { turn: 1, ...args }), inspect: args => store.inspect(session.id, session, args) };
@@ -108,7 +108,7 @@ test('a later failure returns the actual restored and remaining file lists witho
   const f = await fixture(t);
   for (const file of ['a.txt', 'b.txt']) { await fs.writeFile(f.target(file), 'before'); await f.capture(file, () => fs.writeFile(f.target(file), 'after')); }
   const { readFileSync } = await import('node:fs');
-  const partial = createCheckpointStore(f.directory, { isIdle: () => readFileSync(f.target('a.txt'), 'utf8') === 'after' });
+  const partial = createCheckpointStore(f.directory, { writable: () => true, isIdle: () => readFileSync(f.target('a.txt'), 'utf8') === 'after' });
   const result = await partial.restore(f.session.id, f.session, { turn: 1 });
   assert.equal(result.ok, false); assert.equal(result.partial, true);
   assert.deepEqual(result.restored, ['a.txt']); assert.deepEqual(result.changed, ['a.txt']); assert.deepEqual(result.notRestored, ['b.txt']);

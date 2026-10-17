@@ -40,7 +40,7 @@ async function serial(key, run) {
 }
 async function binding(session) {
   if (typeof session?.header?.cwd !== 'string') fail('INVALID_SESSION', '缺少原生会话工作目录');
-  const root = await fs.realpath(session.header.cwd), repo = await fs.realpath((await git(root, ['rev-parse', '--show-toplevel'])).trim());
+  const root = await fs.realpath(executionContext.getStore()?.cwd ?? session.header.cwd), repo = await fs.realpath((await git(root, ['rev-parse', '--show-toplevel'])).trim());
   if (!inside(repo, root)) fail('UNSAFE_PATH', '工作目录不在 Git 仓库内');
   const gitDir = await fs.realpath((await git(root, ['rev-parse', '--absolute-git-dir'])).trim());
   const policyRoot = executionContext.getStore()?.policy?.workspaceRoot;
@@ -111,17 +111,19 @@ function untrackedPatch(file, text, mode, objectId) {
   // Empty files are staged as real empty new files, without an invented hunk.
   return patch;
 }
-async function state(session, scope = 'unstaged', ref) {
+async function state(session, scope = 'unstaged', ref, detail) {
   const bound = await binding(session), selected = await resolveScope(bound, scope, ref);
+  const dirtyPatch = git(bound.repo, ['diff', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true });
+  const indexedPatch = git(bound.repo, ['diff', '--cached', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true });
   const [stats, patch, head, dirty, indexed, untrackedText] = await Promise.all([
     git(bound.repo, [...selected.args, '--numstat', '-z', '--', bound.prefix || '.']),
-    git(bound.repo, [...selected.args, '--binary', '--', bound.prefix || '.'], { bytes: true }),
+    scope === 'unstaged' ? dirtyPatch : scope === 'staged' ? indexedPatch
+      : git(bound.repo, [...selected.args, '--binary', '--', bound.prefix || '.'], { bytes: true }),
     git(bound.repo, ['rev-parse', '--verify', 'HEAD']).then(s => s.trim()).catch(() => 'unborn'),
-    git(bound.repo, ['diff', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true }),
-    git(bound.repo, ['diff', '--cached', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true }),
+    dirtyPatch, indexedPatch,
     scope === 'unstaged' ? git(bound.repo, ['ls-files', '--others', '--exclude-standard', '-z', '--', bound.prefix || '.']) : '',
   ]);
-  const files = parseStats(stats, bound), seen = new Set(files.map(f => f.path)), untracked = new Map();
+  const files = parseStats(stats, bound), seen = new Set(files.map(f => f.path)), untracked = new Map(), untrackedRevisions = [];
   for (const file of files) {
     const value = await regular(bound, file.path).catch(error => error.code === 'UNSAFE_PATH' ? { unsafe: true } : Promise.reject(error));
     if (value?.binary) file.binary = true;
@@ -132,9 +134,11 @@ async function state(session, scope = 'unstaged', ref) {
     const file = bound.prefix ? gitPath.slice(bound.prefix.length + 1) : gitPath;
     const value = await regular(bound, file).catch(error => error.code === 'UNSAFE_PATH' ? { unsafe: true } : Promise.reject(error));
     if (!value || seen.has(file)) continue;
-    untracked.set(file, value); files.push({ path: file, display: file, added: value.text ? value.text.split('\n').length - (value.text.endsWith('\n') ? 1 : 0) : 0, deleted: 0, status: 'untracked', ...(value.binary ? { binary: true } : {}), ...(value.oversized ? { oversized: true } : {}), ...(value.unsafe ? { unsafe: true } : {}) });
+    untrackedRevisions.push([file, value.bytes ? [digest(value.bytes), value.stat.mode] : [value.stat?.size, value.stat?.mtimeMs, value.stat?.ctimeMs, value.unsafe]]);
+    if (file === detail) untracked.set(file, value);
+    files.push({ path: file, display: file, added: value.text ? value.text.split('\n').length - (value.text.endsWith('\n') ? 1 : 0) : 0, deleted: 0, status: 'untracked', ...(value.binary ? { binary: true } : {}), ...(value.oversized ? { oversized: true } : {}), ...(value.unsafe ? { unsafe: true } : {}) });
   }
-  const revision = digest(JSON.stringify({ root: bound.root, scope, ref: selected.ref, head, patch: digest(patch), dirty: digest(dirty), indexed: digest(indexed), untracked: [...untracked].map(([file, value]) => [file, value.bytes ? [digest(value.bytes), value.stat.mode] : [value.stat?.size, value.stat?.mtimeMs, value.stat?.ctimeMs, value.unsafe]]) }));
+  const revision = digest(JSON.stringify({ root: bound.root, scope, ref: selected.ref, head, patch: digest(patch), dirty: digest(dirty), indexed: digest(indexed), untracked: untrackedRevisions }));
   files.sort((a, b) => a.display.localeCompare(b.display));
   return { bound, selected, files, revision, untracked };
 }
@@ -172,7 +176,7 @@ export function createGitReview({ writable, execution }) {
   return {
     async inspect(session, options = {}) {
       return executionContext.run(environment(session), async () => {
-      const value = await state(session, options.scope, options.ref), canWrite = writable(session);
+      const value = await state(session, options.scope, options.ref, options.path), canWrite = writable(session);
       if (options.revision && options.revision !== value.revision) fail('revision-conflict', '文件或索引已变化，请刷新比较');
       if (!options.path) return summary(session, value, canWrite);
       const result = await comparison(value, options.path), file = value.files.find(f => f.path === options.path), allowed = actions(file, value.selected.scope, canWrite, value.bound);
@@ -187,7 +191,7 @@ export function createGitReview({ writable, execution }) {
       return serial(bound.repo, async () => {
         if (!writable(session)) fail('READ_ONLY', '请先停止任务并切到默认模式；宿主权限也须允许写入');
         if (typeof request.revision !== 'string' || !/^[a-f0-9]{64}$/.test(request.revision)) fail('INVALID_REVISION', '请刷新比较后操作');
-        const value = await state(session, request.scope, request.ref);
+        const value = await state(session, request.scope, request.ref, request.path);
         if (value.revision !== request.revision) fail('revision-conflict', '文件或索引已变化，请刷新比较');
         const file = value.files.find(f => f.path === request.path);
         if (!file || !actions(file, value.selected.scope, true, value.bound).includes(request.action)) fail('INVALID_ACTION', '当前文件或宿主工作目录权限不支持该操作');

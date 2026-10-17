@@ -1,3 +1,4 @@
+import { currentDirectory } from '../../host/working-directory.mjs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -7,7 +8,7 @@ import { SavedWorkflowMetaSchema, isValidSavedWorkflowName, SAVED_WORKFLOW_FILE_
 import { parseSavedWorkflow, serializeSavedWorkflow, SAVED_WORKFLOW_SENTINEL } from '../../../lib/zcode-saved-codec.mjs';
 import { validateWorkflowArgs } from '../../../lib/zcode-saved-args.mjs';
 import { SAVE_WORKFLOW_TOOL_DESCRIPTION } from '../../../lib/zcode-save-description.mjs';
-import { prepareTypedWorkflow, ZCODE_FACADE_MARKER } from './typed-compiler.mjs';
+import { prepareTypedWorkflow, ZCODE_FACADE_MARKER } from './typed-prepare.mjs';
 
 const MAX_BYTES = 256 * 1024, MAX_ENTRIES = 256;
 const nameSchema = { type: 'string', minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9_.-]+$' };
@@ -18,9 +19,9 @@ const sourceError = () => new Error('Provide exactly one script source: script f
 const nativeFailure = result => new Error(result.error?.message ?? result.content.filter(part => part.type === 'text').map(part => part.text).join('\n'));
 
 export function createSavedWorkflowStore(ctx, exec, home = homedir()) {
-  const cwd = exec.agent.session.header.cwd, fs = ctx.fs;
+  const projectRoot = exec.agent.session.header.cwd, cwd = currentDirectory(ctx, exec.agent.session), fs = ctx.fs;
   const roots = scope => [
-    ...(cwd ? [{ scope: 'project', path: join(cwd, SAVED_WORKFLOW_PROJECT_DIR) }] : []),
+    ...(projectRoot ? [{ scope: 'project', path: join(projectRoot, SAVED_WORKFLOW_PROJECT_DIR) }] : []),
     { scope: 'global', path: fs.processPathFromHostPath?.(join(home, SAVED_WORKFLOW_GLOBAL_DIR)) ?? join(home, SAVED_WORKFLOW_GLOBAL_DIR) },
   ].filter(root => scope === undefined || root.scope === scope);
   const locate = (name, scope) => {
@@ -129,7 +130,7 @@ export function installSavedWorkflowTools(ctx) {
       } else if (script.trimStart().startsWith(SAVED_WORKFLOW_SENTINEL)) throw new Error('Pass only the script body; metadata belongs in description, whenToUse and args.');
       if (Buffer.byteLength(script) > MAX_BYTES) throw new Error('Workflow body exceeds the 256 KiB limit.');
       if (args.facade === 'zcode') {
-        const prepared = prepareTypedWorkflow(script);
+        const prepared = await prepareTypedWorkflow(script, exec.signal);
         if (!prepared.ok) return { ok: false, name: args.name, scope: args.scope, path: target.path, diagnostics: prepared.diagnostics, response: 'Nothing was saved; fix the TypeScript or unsupported facade calls.' };
         if (!script.trimStart().startsWith(ZCODE_FACADE_MARKER)) script = ZCODE_FACADE_MARKER + '\n' + script;
       } else {

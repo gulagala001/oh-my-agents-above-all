@@ -44,6 +44,17 @@ test('revision conflict clears the invalid comparison and never retries a write'
   await assert.rejects(saving, /已变化/); assert.equal(f.calls.length, 2); assert.equal(f.store.getSnapshot().summary, null); f.store.dispose();
 });
 
+test('native Git error code and diagnostic remain exact and clear on refresh or session change', async () => {
+  const f = fixture(), diagnostic = 'fatal: not a git repository (or any of the parent directories): .git';
+  const loading = f.store.read(); f.calls[0].finish({ error: diagnostic, code: 'GIT_FAILED' }, 400); await loading;
+  assert.equal(f.store.getSnapshot().error, diagnostic); assert.equal(f.store.getSnapshot().errorCode, 'GIT_FAILED');
+  const refresh = f.store.read(); assert.equal(f.store.getSnapshot().errorCode, '');
+  f.calls[1].finish(summary()); await refresh; assert.equal(f.store.getSnapshot().error, '');
+  const late = f.store.read(); f.update({ sessionId: 'b' });
+  f.calls[2].finish({ error: diagnostic, code: 'GIT_FAILED' }, 400); await late;
+  assert.equal(f.store.getSnapshot().errorCode, ''); assert.equal(f.store.getSnapshot().error, ''); f.store.dispose();
+});
+
 test('Ask, Plan, pending modes and running state cannot admit file writes', async () => {
   const f = fixture(); const loading = f.store.read(); f.calls[0].finish(summary()); await loading;
   for (const data of [{ mode: 'ask' }, { mode: 'plan' }, { mode: 'default', pendingMode: true }, { mode: 'default', running: true }]) {

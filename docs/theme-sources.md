@@ -1,6 +1,6 @@
 # 可回查的主题资产来源
 
-`sources/` 只保存资产与证据，不注册主题或修改 DOM。目录外的 `packs.mjs`、`themes/index.jsx` 与 `runtime.mjs` 已实际注册 Codex、Grok Build、Cursor Agent 对话、Pi Coding Agent、ZCode 五主题，按真实会话挂载并共享独占外观协调。五主题明暗、切换与实拍已核对，范围见 [验证记录](verification.md)。
+`sources/` 只保存资产与证据，不注册主题或修改 DOM。目录外的 `packs.mjs`、`themes/index.jsx` 与 `runtime.mjs` 已实际注册 Codex、Grok Build、Cursor Agent 对话、Pi Coding Agent、ZCode 五主题，按真实会话挂载并共享独占外观协调。五主题明暗、切换与实拍已核对，范围见 [产品边界](compatibility.md)。
 
 所有文件位于 `src/client/themes/sources/`，`index.json` 记录每份文件的大小与 SHA-256。公开源码快照带许可文本；闭源 Cursor 没有复制 bundle 片段、图标或截图像素。`extract.py` 可以在断网环境下从保留的源码快照重新提取 Grok/ZCode JSON。
 
@@ -57,4 +57,4 @@ CLI 快照中未验证的精确颜色/几何仍明确为空；桌面主题不以
 
 ## 验证与交付边界
 
-主题来源回归检查 hash、角色、颜色转换、映射与共存。原版 DSH 安装、五主题实拍/明暗/模式/reload 及真实模型代表性任务另有实际执行证据；来源测试不替代这些结果，也不证明原厂视觉或模型等价。范围见 [verification.md](verification.md)。
+主题来源回归检查 hash、角色、颜色转换、映射与共存。原版 DSH 安装、五主题实拍/明暗/模式/reload 及真实模型代表性任务另有实际执行证据；来源测试不替代这些结果，也不证明原厂视觉或模型等价。范围见 [产品边界](compatibility.md)。

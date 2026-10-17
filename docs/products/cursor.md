@@ -34,7 +34,7 @@
 
 scoped MDC 规则已在真实安装的 DSH 验证：首个模型请求即包含 alwaysApply 和用户 `@manual` 明确选择的规则；成功 `read` 后下一请求加入匹配文件的 glob 规则；Agent Requested 先只列说明，调用原生注册的 `cursor_rule` 后下一请求才加入正文。`{{literal}}` 原文不会插值。入口为 `test/installed-behaviors.test.mjs`，不是只模拟提示词字符串的单元测试。
 
-Agent/Ask/Plan 权限、计划 Markdown 审阅、文件差异 review 和 [checkpoint 恢复](checkpoints.md) 使用真实 DSH 状态与工具；本轮原版安装与 Web 已核对实际 write 卡片、恢复按钮、精确字节冷恢复、冲突和认证/预设 guard；共享原生 Plan 审阅按钮闭环已在 Cursor 会话中实点核对，见 [验证记录](../verification.md)。原生 `session/prompt` 的 steer/queue 已在 Pi 预设的两项 read 工具真实批次中验证：steer 在两项结果之后投递到当前 turn，queue 在该 turn 完成后开始下一 turn。产品界面的独立快捷键和复杂队列控件不由这个 API 验证推定等价。
+Agent/Ask/Plan 权限、计划 Markdown 审阅、文件差异 review 和 [checkpoint 恢复](checkpoints.md) 使用真实 DSH 状态与工具；本轮原版安装与 Web 已核对实际 write 卡片、恢复按钮、精确字节冷恢复、冲突和认证/预设 guard；共享原生 Plan 审阅按钮闭环已在 Cursor 会话中实点核对，见 [产品边界](../compatibility.md)。原生 `session/prompt` 的 steer/queue 已在 Pi 预设的两项 read 工具真实批次中验证：steer 在两项结果之后投递到当前 turn，queue 在该 turn 完成后开始下一 turn。产品界面的独立快捷键和复杂队列控件不由这个 API 验证推定等价。
 
 当前不宣称复制专有 Instant Grep、代码索引/语义检索、Composer 模型、编辑器光标/打开文件、云代理/项目协调器或 Cursor 账号服务。用户上下文只取 DSH 已提供的工作目录、附件与明确授权内容。计划生成不能隐藏修改代码，checkpoint 恢复应明确只恢复已记录文件变化并保留消息。
 
@@ -42,7 +42,7 @@ Agent/Ask/Plan 权限、计划 Markdown 审阅、文件差异 review 和 [checkp
 
 [官方审阅流程](https://cursor.com/learn/reviewing-testing) 包含观察修改、停止并调整方向，以及任务完成后的 Review / Find Issues。OMAA 的检查点面板已直接打开 DSH 原生回合审阅器，提供文件选择、行号、并排/统一比较和长行折行；不再另画简化文本 diff。文件旁的「预览当前文件」打开原生文档预览，比较记录与当前文件明确分开；恢复删除的新文件不提供误导性的预览按钮。
 
-导航和恢复在执行时核对当前会话及 Cursor 预设，导航使用 `sidebarRight.openResourceIn` 的明确会话目标。运行中可选择已加载的完成回合、查看原生记录比较或预览当前文件；恢复和 Find Issues 仍须先停止。面板不增加轮询，不将旧回合比较称为实时编辑 diff。切换会话后保留的旧回调会拒绝操作。历史比较失效时面板照实提示，恢复仍按已捕获字节及冲突检查执行。`test/checkpoint-browser.test.mjs` 已在实际打包安装的 DSH 验证：两文件审阅、文件选择、并排/统一和折行按钮、原生打开文件、当前预览、恢复后的磁盘字节和预览更新，以及切换到 Codex 后没有 Cursor 恢复控制。恢复后回合比较仍显示原回合记录，不伪装成当前内容。定向竞态回归另见 `test/checkpoint-navigation.test.mjs`。实拍在本地 `.cache/cursor-native-review.png`、`cursor-current-preview.png` 和 `cursor-restored-review.png`，不是发行资产。
+Cursor 输入工具栏还提供紧凑的「回合 N 改动 · N 个文件」入口，打开同一 DSH 原生审阅资源。它仅在当前会话设置已确认且停止运行后，显示最新仍有原生比较的回合；文件数来自该回合实际 `summary.files`，不代表实时编辑器或全分支累计改动。读取期间显示读取状态，失败可重新读取；无可用比较、运行中、切换产品或会话时隐藏，并取消迟到的读取结果。
 
 检查点的「查找本回合问题」与「查找此文件问题」进入实际只读 Ask 模式，把所选回合、原生事件位置及文件目标经原生会话提交给当前模型。检查读取当前文件并参考本回合记录，明确文件可能已经变化；不直接把旧 diff 当作当前内容。检查后保持 Ask，用户切回执行模式可继续修复，停止/继续仍用宿主入口。迟到或跨会话回调拒绝提交，模式未真正生效时不发起检查。
 

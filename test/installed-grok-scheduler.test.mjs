@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { installedHost, until, textReply, toolReply } from './fixtures/installed-host.mjs';
 
@@ -14,6 +14,18 @@ const toolValue = (payload, name) => {
 
 test('installed Grok interval scheduler persists native schedules, preserves prompt-update phase and actually fires', { timeout: 180000 }, async t => {
   const f = await installedHost(t); await f.install(); await f.boot();
+  const optional = (await f.call('pluginManager/listBundles', {})).find(bundle => bundle.name === '@deepseek-ai/dsh-experimental-schedule-bundle');
+  const switches = [];
+  if (optional && !optional.enabled) {
+    const off = await f.create('omaa-grok'), start = f.requests.length;
+    f.replyWith(() => textReply('Native schedule remains disabled.'));
+    await f.prompt(off.sessionId, 'NATIVE_SCHEDULE_OFF');
+    assert(f.requests.slice(start).filter(request => request.tools?.length).every(request => !request.tools.some(tool => tool.function.name.startsWith('scheduler_'))));
+    const enabled = await f.call('pluginManager/setBundleEnabled', { name: optional.name, enabled: true });
+    assert(['applied', 'restart-required'].includes(enabled.application), JSON.stringify(enabled));
+    switches.push({ action: 'enable', result: enabled });
+    if (enabled.application === 'restart-required') { await f.stop(); await f.boot(); }
+  }
   const session = await f.create('omaa-grok');
   const catalog = async () => (await f.call('schedule/catalog', {})).filter(task => task.sessionId === session.sessionId);
   const invoke = async (name, args, marker) => {
@@ -24,6 +36,12 @@ test('installed Grok interval scheduler persists native schedules, preserves pro
     return { snapshot, requests: f.requests.slice(from), value: f.requests.slice(from).map(payload => toolValue(payload, name)).findLast(Boolean) };
   };
   const created = await invoke('scheduler_create', { interval: '1s', prompt: 'SCHEDULER_ACTUAL_FIRE: write scheduled-native.txt with NATIVE_SCHEDULE_SENTINEL.' }, 'SCHEDULER_CREATE_REAL');
+  await mkdir('work/rea-upgrade/grok-scheduler', { recursive: true });
+  await writeFile(`work/rea-upgrade/grok-scheduler/${f.evidence.version}-first-native.json`, JSON.stringify({
+    host: f.evidence.version, value: created.value,
+    tools: created.requests.filter(request => request.tools?.length).map(request => request.tools.map(tool => tool.function.name)),
+    events: created.snapshot.records.filter(row => ['tool/call', 'tool/result'].includes(row.event?.type)),
+  }, null, 2) + '\n');
   assert(created.value?.id); const id = created.value.id;
   const first = (await catalog()).find(task => task.id === id);
   assert.equal(first.kind, 'every'); assert.equal(first.everySeconds, 60);
@@ -78,9 +96,29 @@ test('installed Grok interval scheduler persists native schedules, preserves pro
   const oneShot = await invoke('scheduler_create', { interval: '60s', prompt: 'One-shot compatibility request', recurring: false }, 'SCHEDULER_ONE_SHOT');
   assert.equal((await catalog()).find(task => task.id === oneShot.value.id).kind, 'after');
   await invoke('scheduler_delete', { id: oneShot.value.id }, 'SCHEDULER_ONE_SHOT_CLEANUP');
+  if (optional) {
+    const kept = await invoke('scheduler_create', { interval: '1h', prompt: 'Native future record retained across the optional service switch.' }, 'SCHEDULER_SWITCH_RECORD');
+    const before = (await catalog()).find(task => task.id === kept.value.id);
+    const disabled = await f.call('pluginManager/setBundleEnabled', { name: optional.name, enabled: false });
+    assert(['applied', 'restart-required'].includes(disabled.application), JSON.stringify(disabled));
+    switches.push({ action: 'disable', result: disabled });
+    if (disabled.application === 'restart-required') { await f.stop(); await f.boot(); }
+    const start = f.requests.length; f.replyWith(() => textReply('Native schedule is off again.'));
+    await f.prompt(session.sessionId, 'SCHEDULER_SWITCH_OFF');
+    assert(f.requests.slice(start).filter(request => request.tools?.length).every(request => !request.tools.some(tool => tool.function.name.startsWith('scheduler_'))));
+    const enabled = await f.call('pluginManager/setBundleEnabled', { name: optional.name, enabled: true });
+    assert(['applied', 'restart-required'].includes(enabled.application), JSON.stringify(enabled));
+    switches.push({ action: 'reenable', result: enabled });
+    if (enabled.application === 'restart-required') { await f.stop(); await f.boot(); }
+    assert.equal((await catalog()).find(task => task.id === kept.value.id).scheduledAt, before.scheduledAt);
+    await invoke('scheduler_delete', { id: kept.value.id }, 'SCHEDULER_SWITCH_CLEANUP');
+  }
   f.replyWith();
   const pi = await f.create('omaa-pi'), piFrom = f.requests.length;
   await f.prompt(pi.sessionId, 'PI_NO_SCHEDULER_SCOPE');
   assert(f.requests.slice(piFrom).every(payload => !payload.tools?.some(tool => tool.function?.name.startsWith('scheduler_'))));
   assert.deepEqual(f.errors, []);
+  await writeFile(`work/rea-upgrade/grok-scheduler/${f.evidence.version}-verified.json`, JSON.stringify({ host: f.evidence.version,
+    optionalBundle: optional?.name, switches, realFirstOccurrence: true, coldIdentityPreserved: true,
+    limits: 'Real native 60-second first occurrence with isolated local provider; no original Grok scheduler or real accounts.' }, null, 2) + '\n');
 });
