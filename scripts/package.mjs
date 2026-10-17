@@ -3,7 +3,7 @@ import { cp, mkdir, mkdtemp, readFile, writeFile, rm, realpath } from 'node:fs/p
 import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
 import semver from 'semver';
-import { HOST_RANGE, LOADER_RANGE, validationHosts, supportsHostVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+import { HOST_RANGE, LOADER_RANGE, validationHosts, buildHosts, supportsHostVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -22,7 +22,7 @@ for (let i = 0; i < args.length; i += 2) {
 const release = splitReleaseVersion(source.version, 'omaa');
 const hostVersion = options['--host-version'] ?? release.host;
 if (!supportsHostVersion(hostVersion)) throw new Error(`Unsupported host version ${hostVersion}; current range is ${HOST_RANGE}.`);
-const representative = validationHosts.find(row => row.version === hostVersion);
+const representative = validationHosts.find(row => row.version === hostVersion) ?? buildHosts.find(row => row.version === hostVersion);
 let loaderVersion = representative?.loaderVersion;
 if (options['--host-cli']) {
   const cli = await realpath(resolve(options['--host-cli']));
