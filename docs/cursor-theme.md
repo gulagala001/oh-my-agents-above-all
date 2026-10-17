@@ -44,7 +44,7 @@
 
 ## CLI 事实的适用边界
 
-目标与当前状态见 [计划](plan.md)。下述官方界面量测只作资料，不要求 OMAA 用户安装或登录 Cursor。
+目标与当前状态见 [版本适配](compatibility.md)。下述官方界面量测只作资料，不要求 OMAA 用户安装或登录 Cursor。
 
 CLI 观测只说明前景/背景与 ANSI 色位依赖终端上下文，不能解释 IDE/Agents Window 的正文、工具、计划或输入布局。浏览器没有原用户终端 palette 时，不能声称与 Terminal.app、iTerm 或 Ghostty 像素同色；也不能硬编码猜测的 green/cyan HEX 并署名为 Cursor 固定颜色。
 

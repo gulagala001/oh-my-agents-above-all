@@ -40,6 +40,8 @@ report(first); return {first, second};`;
   assert(outcome?.ok, JSON.stringify(results));
   assert.deepEqual(outcome.value, { first: { value: 'FIXTURE_ACTOR_FACT', round: 1 }, second: { value: 'FIXTURE_ACTOR_FACT', round: 2 } });
   assert(outcome.reports.some(r => r.value.round === 1));
+  const firstRequest = f.requests.find(request => request.tools?.some(tool => tool.function.name === 'submit_result'));
+  assert(firstRequest.messages.filter(message => message.role === 'system').map(textOf).join('\n').includes('literal {{customer_name}} template text.'), 'first Actor request must preserve its literal persona');
   const histories = await Promise.all(outcome.actors.map(async item => {
     const projections = await f.rpc('session/projections', { sessionId: item.childId });
     const page = await f.rpc('session/page', { address: { kind: 'subagent', parentSessionId: sessionId, childSessionId: item.childId, mode: 'continuable' }, throughSeq: projections.asOfSeq, maxMessages: 100 });

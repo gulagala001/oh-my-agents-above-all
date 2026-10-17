@@ -53,15 +53,13 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 此路径使用原生 workflow 工具调用的权限边界与当前授权，不提供原厂 workflow journal/replay、Bash 逐条工具审批或 escalation。0.9.0 的运行投影与 successor-run Amend 见下文。world 调用本身沿用原生工具界面，产物另有下述右栏。既有 OMAA 0.6 与 Actor 验证记录保持原范围。
 
-`test/installed-zcode-world.test.mjs` 的一个隔离原版 DSH 安装 fixture 已实际通过，记录在本地 `.cache/zcode-world-installed-check.log`。它覆盖 native 文件观测与原厂 glob 语义、UTF-16 BOM/CRLF 读取、宿主 bundled ripgrep、Git、相对可执行路径、非零退出结果、超限拒绝、native workspace-write 与后台工作在父会话切换 Ask 后取消。这是单个 fixture 的执行证据，不证明全部模型、跨平台/asar 运行、原厂 workflow 全能力或动态图界面等价。
-
 `read_session_context` 读取用户明确引用的原生 session id，使用公开 `sessionController.inspect`，支持冷历史且不激活/修改原会话。原厂相关度评分、中文 query 拆词、tail/chunk 选择、上下文格式及预算函数来自固定完整 `session-context/read-session-context.ts`，在 build 时仅替换 native message/part 边界并编译，不概括重写算法。读取只收集可见用户/助手文本与实际工具结果，忽略系统注入和思维块；历史内容作为背景材料。默认使用当前已配置 DSH 模型做有界提取，大历史按原策略选择最多五块后合成；提取不可用返回有界原文，标明 fallback。原厂 lite 模型路线改为现有 DSH route，原生日志查询和历史层不替换。
 
 ## 桌面交互依据与验证范围
 
 官方 desktop context 明确本地 URL、绝对文件链接及 inline code comment 指令。保存的 UI 来源还包括 plan-guidance renderer、edit diff renderer、ToolSummaryRow、create-workflow renderer 和 WorkflowPermissionBlock，可分别回查计划展示、文件差异、工具折叠/状态和 workflow 审批。它们是固定官方源码证据，**来源本身不是截图/点击验收**；预设主题已有独立来源，新增产物界面的实际 Web 验证见下节。
 
-本轮直接检查所有保存原文的 hash、bytes 和固定 Git blob SHA1，装配及摘要保留；原版 DSH 安装后的工具/模式/停止恢复、原生 `/compact`、Web 主题/模式与共享原生 Plan 流程已核对。新增原生 workflow 的实际结构化子代理返回、随包技能 gate、冷会话回查和只读 Git filter 防护通过 `installed-zcode-tools`。已配置 `space-bunny-free` 完成复杂多文件工程，再以同一原生 session 冷恢复、压缩和追加 `--report` 需求，原合同、测试和冻结材料保留，详见 [复杂工程记录](../verification/configured-project.md)。这些代表性证据不证明全部服务、原厂 workflow facade或模型等价。
+本轮直接检查所有保存原文的 hash、bytes 和固定 Git blob SHA1，装配及摘要保留；原版 DSH 安装后的工具/模式/停止恢复、原生 `/compact`、Web 主题/模式与共享原生 Plan 流程已核对。新增原生 workflow 的实际结构化子代理返回、随包技能 gate、冷会话回查和只读 Git filter 防护通过 `installed-zcode-tools`。已配置 `space-bunny-free` 完成复杂多文件工程，再以同一原生 session 冷恢复、压缩和追加 `--report` 需求，原合同、测试和冻结材料保留，详见 [产品边界](../compatibility.md)。这些代表性证据不证明全部服务、原厂 workflow facade或模型等价。
 
 
 ## OMAA 0.8.0 的工作流产物
@@ -76,15 +74,9 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 独立“工作流产物”右栏可从工具结果“查看产物”进入，按 run 导航并请求真实 native Stop。可见时读取采用单飞、pending 重读及过期响应过滤。Chart 保留完整原厂 ChartView，使用固定 Recharts 3.8.0，以 lazy 和局部错误边界加载；Table/Metrics/Board 使用原 parse/fold/palette 并适配 DSH CSS。0.8.0 的 graph 只展示真实静态 graph/causality JSON；0.9.0 新增下述原版运行投影与 Amend，仍不提供原厂 engine journal/replay。
 
-一个最终原生 fixture `test/installed-zcode-artifacts.test.mjs` 已实际通过，本地记录为 `.cache/zcode-artifacts-installed-check.log`：覆盖 spec 调用后变更不影响快照、两个成功版本、工作区后改与冷重启内容保持、四种声明与分页/table upsert、文件过大/逃逸/缺失/primary 的可 catch 错误、跨 session 拒读、非法 spec 导致 run 失败及读取不追加 native 事件。此轮未扩五预设矩阵。
-
-已配置 `opencode-zen/space-bunny-free` 完成一个实际产物任务：真实加载技能并调用 `create_workflow`，发布 Chart、Table 和 primary Markdown，返回 `delivery` 的 `{id,version:1}`。结果记录为本地 `.cache/zcode-artifacts-live-result.json` 的 `outcome`。在原生 alpha Web UI 实点工具结果“查看产物”打开对应 run；完整原版 ChartView 显示两点图，Table 的同 key 数据只保留一行且 value 为 3；实点“打开原生预览”读取 native `attachments/v1` 中不可变 `delivery.md`。实拍入口为 `.cache/zcode-artifact-chart.jpg` 与 `.cache/zcode-artifact-preview.jpg`。这是一个真实模型任务与该 Web 流程的有限证据；UI 全面验收、Desktop/Windows 产物 UI 和其他模型仍未全面验证，不推导原厂能力等价。
-
 ### OMAA 0.9.0 的原版运行投影与时间线
 
 OMAA 0.9.0 保留固定 `29628c9` 的 41 文件显示/reducer closure，以及 37 份原版 UI 代码、样式与中英 locale；Timeline 和 WorkflowRunPhaseList 是真实原版组件，不是 ReactFlow。`scripts/build-zcode-run-projection.mjs` 在严格 SHA closure 下派生 `lib/zcode-run-projection.mjs`，保留三类 graph bounds 投影及原 workflowRuns reducer，不导入原执行 engine。
-
-`run-progress.mjs` 只把实际 site×ordinal、phase、Actor birth、native child accepted receipt、队列、dispatch 与 settled 事实送入投影；未知 provider backoff 不猜测。样式由锁定的 Tailwind 4.2.2／PostCSS 8.5.6 可重复脚本生成，两者仅用于 build。lucide-react 固定 1.17.0，原 peer 支持 React 18；实际许可为 ISC，包含 Feather 派生图标的 MIT 原文。原版 graph fixture 和 alpha Web 时间线／Actor 点击已通过，证据见文末；Desktop/Windows 新图尚未验收。
 
 ### OMAA 0.9.0 的修订与完成前缀缓存
 
@@ -96,8 +88,6 @@ world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执�
 
 未声明 phase 的 ask/world 现已避免把 undefined 带入原生 lossless JSON 传输，修复无 phase 的正常调用失败。
 
-一个最终原生 fixture 已核对重启后缓存、首个 ask 免模型调用、首次分歧新 child、旧 poison 后缀排除与 literal persona、cold continuation、并发 world 顺序／不重复效果、失败后继续、跨 session 拒绝、并发升降且不取消已有任务。本地 `.cache/zcode-amend-native-check.log`；不据此宣称所有模型、平台、在飞转录或原厂完整回放等价。
-
 ## 保存与按名复用工作流
 
 `list_saved_workflows`、`read_saved_workflow`、`save_workflow`、`run_saved_workflow` 接入固定官方保存定义契约。项目档在 `cwd/.zcode/workflows/<name>.dwf.ts`，全局档在 `~/.zcode/workflows/<name>.dwf.ts`；同名项目优先，指定 scope 可查另一档。列表只扫描一层，报告坏文件并保留其余定义。名字按原版 1–64 字符与字符集限制；metadata 是原版严格 YAML block comment，正文逐字保留。原版 codec 与参数校验由固定源码生成，metadata 的 Zod 3 record 调用仅适配到宿主 Zod 4。
@@ -106,10 +96,12 @@ world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执�
 
 按名运行先读取一次对应文件，按原版声明检查全部未知／缺失／类型错误并应用默认值，再按保存的 facade 标记调用 `create_workflow` 或原有 native `workflow`。`string/number/boolean/json` 保留原版语义，number 要求有限值，default 与 caller value 共用检查。模型/API、权限、作业和子会话继续由宿主负责；native JavaScript 路径保留既有 run-start/run-end 记录，TypeScript 路径使用 native jobs 和子会话 journal，不生成原厂第二种执行日志。`phases` 的 title/detail/provider/model 信息用于 native JavaScript；Actor 的阶段写在脚本里，默认继承当前 DSH 模型配置。
 
-每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；0.8.0 已接入产物；0.9.0 已接入上述 Amend；完整 journal/replay 和专用保存管理界面仍有差异，不靠文件扩展名宣称等价。
+原生保存工具结果卡展示项目／全局来源、源文件与坏定义诊断；读取卡展示实际 facade、声明参数、必填状态和默认值。可勾选并填写 string／number／boolean／json 参数，显式 false、0 和空字符串均保留；未传入的参数由运行时最新定义应用默认值。“读取定义”和“发送运行请求”提交到当前 ZCode 会话，沿用原生工具循环和权限；Ask／Plan 可读，运行按钮仅在执行模式可用。切会话、离开当前对话或会话繁忙时不从旧回调发送；已提交只显示请求已接受，实际 ZCode Actor 运行结果返回后可打开对应运行与产物。原生 JavaScript 运行显示其真实结果和 runId，其运行记录由宿主管理，不提供不适用的 ZCode 产物工作台跳转。旧卡片不保证保存文件仍未改变，后端每次运行重新读取并校验当前定义。
+
+填写界面拒绝非有限数字和超出安全范围的显式整数；校验后的 number／json 字面材料保留在用户请求中，包括 `-0` 和科学计数写法，string／boolean 正常编码。默认值继续省略并交给当前后端定义处理，不扩展任意精度计算契约。六个 ZCode 工具结果卡采用宿主公共槽位的低优先级注册，默认优先级的同名第三方结果卡保持优先；不兼容的结果结构只显示原始文本，不提供读取、运行或产物跳转按钮。
+
+每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；0.8.0 已接入产物；0.9.0 已接入上述 Amend；完整 journal/replay 和独立保存管理页面仍有差异，不靠文件扩展名宣称等价。
 
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 
 TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已实际核对 typed 保存/按名运行、两次真实 submit_result、同一原生日志、整宿主重启后的字面角色续问；另一个短用例核对后台运行在父会话切到 Ask 后停止并等待 child drain。已配置 Space Bunny Free 的短任务实际读取一次 fact.txt，再在同一 Actor 中只凭历史返回第二个类型化结果，两次正确；它不证明所有模型或复杂编排质量。
-
-OMAA 0.9.0 图接线的一个最终原生 fixture 已核对原三输入有界 display、Actor 在出生时分配 site × ordinal（反序 ask 不颠倒身份）、phase 出生快照、同一 native child 两问与 world-read 终态。另一个已配置 Space Bunny Free 短任务实际返回预期 Actor 回复与文件内容；alpha Web 原 Timeline／PhaseList 已点击展开，Actor 卡片打开真实 continuable child，父会话面包屑可返回。证据为本地 `.cache/zcode-graph-native-check.log`、`.cache/zcode-graph-ui-result.json` 与 timeline／actor 实拍；没有据此宣称完整 in-flight/backoff、桌面或 Windows 新图验收，新的 Amend 卡片与前次／后续按钮已在隔离 alpha Web 实点；证据见 [验证记录](../verification.md)。

@@ -59,10 +59,10 @@ export function createThemeRuntime(ctx, settings, adapterCss, layouts = {}, resp
   const sync = () => {
     if (disposed) return;
     const current = settings.getSnapshot();
-    if (current.data?.product) {
+    if (!current.error && current.data?.product) {
       const { product, theme } = current.data;
       selection = { id: theme === 'product' ? productThemes[product.id] : theme, preset: product.preset, productId: product.id };
-    } else if (!(current.data === null && current.loading && current.sessionId && current.agentPreset && current.agentPreset === selection?.preset)) {
+    } else if (!(current.data === null && !current.error && current.loading && current.sessionId && current.agentPreset && current.agentPreset === selection?.preset)) {
       selection = undefined;
     }
     // Only the renderer selection crosses an ID transition. Session settings

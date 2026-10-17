@@ -107,6 +107,7 @@ export function createSessionSettings(ctx, request = fetch) {
         if (!disposed && state.sessionId === sessionId && revision === ticket) {
           state = { ...state, saving: false, pendingPatch: undefined, error: error.message }; emit();
         }
+        throw error;
       } finally {
         if (!disposed && state.sessionId === sessionId && revision === ticket && refreshAfterSave) {
           refreshAfterSave = false; scheduleRefresh();
@@ -132,11 +133,14 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
   const enhancementWorkMode = state.pendingPatch?.enhancementWorkMode ?? workModeOf(data);
   const activeWorkMode = workModeAvailable(data) && data.enhancementWorkModeActive === true && enhancementWorkMode !== 'off'
     ? enhancementWorkModes.find(([id]) => id === workModeOf(data))?.[1] : '';
-  const compactProduct = product ?? (state.loading ? productForPreset(state.agentPreset) : undefined);
+  const compactProduct = product ?? productForPreset(state.agentPreset);
   const compactName = compactProduct?.id === 'pi' ? 'Pi' : compactProduct?.id === 'grok' ? 'Grok' : compactProduct?.name;
-  const compactStatus = product ? (data.mode !== 'default' ? modeLabel(data.mode) : activeWorkMode || (data.enhancementActive ? 'OMD' : '')) : '';
+  const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.running ? 'running' : data?.pendingMode ? 'pending' : 'ready';
+  const phaseLabel = { error: '读取失败', saving: '保存中', loading: '读取中', running: '执行中', pending: '待确认' }[phase];
+  const compactStatus = phaseLabel || (product ? (data.mode !== 'default' ? modeLabel(data.mode) : activeWorkMode || (data.enhancementActive ? 'OMD' : '')) : '');
   if (compact) return compactProduct ? <button type="button" className="omaa-preset-chip" aria-label={`${compactProduct.name} 预设设置`}
-    title={product ? `${product.name} · ${modeLabel(data.mode)}${activeWorkMode ? ' · OMD ' + activeWorkMode : data.enhancementActive ? ' · OMD 增强' : ''}` : `${compactProduct.name} · 正在读取会话设置…`}
+    data-state={phase} aria-busy={state.loading || state.saving || undefined}
+    title={`${compactProduct.name} · ${phaseLabel || modeLabel(data?.mode)}${state.error ? ' · 点击重新读取' : activeWorkMode ? ' · OMD ' + activeWorkMode : data?.enhancementActive ? ' · OMD 增强' : ''}`}
     onClick={openPanel}><span className="omaa-preset-chip-name">{compactName}</span>{compactStatus && <small>{compactStatus}</small>}<span className="omaa-preset-chip-chevron" aria-hidden="true">⌄</span></button> : null;
   const disabled = !product || state.loading || state.saving || Boolean(state.error || data?.running);
   const change = patch => { setLocalError(''); void settings.update(patch, state.sessionId).catch(error => {
@@ -148,11 +152,12 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     try { await runtime.setAppearance(event.target.value); if (settings.getSnapshot().sessionId === sessionId) setLocalError(''); }
     catch (error) { if (settings.getSnapshot().sessionId === sessionId) setLocalError(error.message); }
   };
-  return <section className="omaa-preset-controls" aria-label="Oh My Agents Above All 预设设置">
-    <header><h2>{product?.name ?? 'Oh My Agents Above All'}</h2><p>{product ? (data.running ? '正在执行 · 停止后可调整本会话设置' : '本会话设置') : '在新会话中选择 Codex、Grok Build、Cursor、Pi 或 ZCode 预设。'}</p></header>
+  const guidance = { codex: '围绕对话实现与审阅代码；行级反馈会发送到当前会话。', grok: '监控与定时任务沿用 DSH 原生后台任务，进度与结果保留在对话中。', cursor: '计划、问答与执行共用对话；文件检查点在下方审阅与恢复。', pi: '保持 Pi 的紧凑执行流程；模型、终端工具与停止操作使用 DSH 原生控制。', zcode: '对话发起工作流；图、Actor、脚本、产物与保存定义在工作台中查看。' };
+  return <section className="omaa-preset-controls" data-product={product?.id} data-state={phase} aria-busy={state.loading || state.saving || undefined} aria-label="Oh My Agents Above All 预设设置">
+    <header><div className="omaa-preset-heading"><h2>{product?.name ?? 'Oh My Agents Above All'}</h2>{product && <span className="omaa-session-state" data-state={phase}>{phaseLabel || '本会话'}</span>}</div><p>{product ? (data.running ? '正在执行 · 使用对话中的停止按钮，停止后可调整设置。' : guidance[product.id]) : '在新会话中选择 Codex、Grok Build、Cursor、Pi 或 ZCode 预设。'}</p></header>
     {state.loading && <p role="status" className="omaa-help">正在读取会话设置…</p>}
     {state.saving && <p role="status" className="omaa-help">正在保存会话设置…</p>}
-    {(state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{state.error || localError || appearanceState.error}</p>}
+    {(!state.loading && state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{!state.loading && state.error || localError || appearanceState.error}</p>}
     {product && <>
       {product.id === 'pi' ? <div className="omaa-setting-row"><span>工作模式</span><span className="omaa-setting-value">执行（Pi 默认模式）</span></div>
         : <label className="omaa-setting-row"><span>工作模式</span><select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || data.pendingMode}
@@ -164,14 +169,15 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
       {(data.theme === 'cursor-cli' || data.theme === 'product' && product.id === 'cursor') && <p className="omaa-help">参考 Cursor IDE / Agents Window 的 Agent 对话布局；明暗颜色沿用当前 DSH，并非官方固定配色。</p>}
       <label className="omaa-setting-row"><span>OMD 增强</span><input type="checkbox" role="switch" aria-label="OMD 增强" checked={state.pendingPatch?.enhancement ?? Boolean(data.enhancement)} disabled={disabled || !data.omdAvailable}
         onChange={event => change({ enhancement: event.target.checked })}/></label>
-      <p className="omaa-help">{data.omdIncompatible ? '当前 OMD 版本缺少兼容接口，请升级兼容 OMD 或使用独立 DSH profile。' : !data.omdAvailable ? '安装并启用 Oh My DSH 后可开启增强。' : data.enhancementActive ? 'OMD 增强已启用。' : 'OMD 增强关闭。'}</p>
+      <p className="omaa-help">{data.omdIncompatible ? '当前 OMD 版本缺少兼容接口，请升级兼容 OMD 或使用独立 DSH profile。' : !data.omdAvailable ? 'OMD 增强暂未就绪。请确认已安装并启用 Oh My DSH，再检查状态。' : data.enhancementActive ? 'OMD 增强已启用。' : 'OMD 增强关闭。'}</p>
+      {!data.omdAvailable && <button type="button" className="omaa-retry" disabled={state.loading || state.saving} onClick={() => { void settings.refresh(); }}>检查增强状态</button>}
       <div className="omaa-enhancement-work-mode">
         <label className="omaa-setting-row"><span>增强工作方式</span><select aria-label="增强工作方式" value={enhancementWorkMode}
           disabled={disabled || !workModeAvailable(data) || data.mode !== 'default' || data.pendingMode}
           onChange={event => change({ enhancementWorkMode: event.target.value })}>
           {enhancementWorkModes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></label>
-        <p className="omaa-help">普通增强使用基础工具；Pro 偏重实现与精炼，Ultra 保留更全面的编排。选择 Pro 或 Ultra 会同时开启增强。</p>
+        <p className="omaa-help">普通使用基础增强；Pro 偏重实现与精炼，Ultra 保留完整编排。Pro / Ultra 会同时开启增强。</p>
         {!workModeAvailable(data) ? <p className="omaa-help">当前 OMD 尚未提供兼容的 Pro / Ultra 工作方式。</p>
           : data.mode !== 'default' || data.pendingMode ? <p className="omaa-help">进入执行模式后可切换增强工作方式。</p>
           : enhancementWorkMode !== 'off' && <p role="status" className="omaa-help">{activeWorkMode ? `${activeWorkMode} 已启用。` : `${enhancementWorkModes.find(([id]) => id === enhancementWorkMode)?.[1]} 已选择，当前尚未启用。`}</p>}

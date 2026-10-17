@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 .cache/
 coverage/
 dist/
@@ -31,3 +31,12 @@ PROMPT_CHANGES.md
 
 # This is a public task fixture, not the local repository work agreement.
 !test/fixtures/configured-project/project/AGENTS.md
+
+# Local research, acceptance logs and indexing state.
+.codegraph/
+codegraph.json
+docs/plan.md
+docs/verification.md
+docs/verification/
+docs/images/**/source.json
+assets/marketing/*.source.json

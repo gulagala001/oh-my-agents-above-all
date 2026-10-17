@@ -1,7 +1,32 @@
-import test from 'node:test';
+import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createUpdates } from '../src/updates.mjs';
-import { validationHosts, alignedVersion } from '../src/host/compatibility.mjs';
+import { validationHosts as currentValidationHosts, alignedVersion, splitReleaseVersion } from '../src/host/compatibility.mjs';
+
+const validationHosts = currentValidationHosts.filter(row => !row.validationPending);
+let archiveRoot, createArchivedUpdates;
+before(async () => {
+  // Historical pair tests use their own complete policy. The pending a2 build
+  // must not admit old SDKs or invent a reviewed a2 OMD release baseline.
+  archiveRoot = await mkdtemp(join(tmpdir(), 'omaa-update-archive-'));
+  await mkdir(join(archiveRoot, 'src/host'), { recursive: true });
+  for (const path of ['src/updates.mjs', 'src/host/compatibility.mjs']) await cp(new URL('../' + path, import.meta.url), join(archiveRoot, path));
+  await writeFile(join(archiveRoot, 'src/host/compatibility.json'), JSON.stringify({ hostRange: '>=0.2.0-rc.2 <=0.2.1-alpha.1', loaderRange: '>=1.0.5 <=1.0.6-alpha.1', validationHosts }));
+  await writeFile(join(archiveRoot, 'package.json'), JSON.stringify({ type: 'module', version: '0.2.1-alpha.1.omaa.0.14.1' }));
+  await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), join(archiveRoot, 'node_modules'), 'dir');
+  ({ createUpdates: createArchivedUpdates } = await import(pathToFileURL(join(archiveRoot, 'src/updates.mjs')).href));
+});
+after(async () => { if (archiveRoot) await rm(archiveRoot, { recursive: true, force: true }); });
+
+test('the pending a2 SDK build rejects old hosts before any update request or native installation', () => {
+  for (const hostVersion of ['0.2.0-rc.2', '0.2.1-alpha.1']) assert.throws(() => createUpdates({ hostVersion,
+    fetchImpl: () => { throw Error('Unexpected network request'); }, getManager: () => { throw Error('Unexpected native installation'); } }), /兼容范围/);
+});
 
 const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
@@ -33,7 +58,7 @@ function fixture({ partialFailure = false, metadataHost = host, draft = false, m
       return { application: 'restart-required', bundle: names[product] };
     },
   };
-  const service = createUpdates({ currentVersion: bundles[0].version, ...(runtimeHost ? { hostVersion: runtimeHost } : {}), getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
+  const service = createArchivedUpdates({ currentVersion: bundles[0].version, ...(runtimeHost ? { hostVersion: runtimeHost } : {}), getOmdVersion: () => `${host}.omd.0.7.1`, getManager: () => manager,
     isRunning: () => running, fetchImpl: async url => {
       const unpaired = { ...release, tag_name: 'v0.2.2-alpha.1.omaa.0.4.0', html_url: `https://github.com/${repo}/releases/tag/v0.2.2-alpha.1.omaa.0.4.0`, assets: [] };
       const value = url.includes('/releases?') ? [release, ...(laterUnpaired ? [unpaired] : [])] : metadata.get(url);
@@ -103,30 +128,33 @@ test('updating OMD cannot combine a newer installed OMAA with an older release p
   assert.equal(f.calls.length, 0, 'neither member of an incompatible pair is installed');
 });
 
-test('current OMAA 0.13.1 pair accepts each host reviewed OMD 0.10 source and rejects commit drift', async t => {
+test('current OMAA pair accepts each reviewed host source and rejects commit drift', async t => {
+  const source = JSON.parse(readFileSync(new URL('../package.json', import.meta.url)));
+  const feature = splitReleaseVersion(source.version, 'omaa').feature.join('.');
   for (const row of validationHosts) {
-    const baseline = row.omdBaselines.find(item => item.version === alignedVersion(row.version, 'omd', '0.10.0'));
+    const rule = JSON.parse(readFileSync(new URL('../compat/omd/' + row.omdVariant + '.json', import.meta.url)));
+    const baseline = row.omdBaselines.find(item => item.version === rule.baseVersion);
     assert(baseline, 'current pair must have a reviewed runtime source');
     for (const drift of [false, true]) {
-      const releaseTag = 'v0.2.1-alpha.1.omaa.0.13.1', metadata = new Map();
+      const releaseTag = 'v' + source.version, metadata = new Map();
       const release = { tag_name: releaseTag, draft: false, prerelease: true, published_at: '2026-10-08T00:00:00Z',
         html_url: `https://github.com/${repo}/releases/tag/${releaseTag}`, assets: [] };
       for (const product of ['omaa', 'omd']) {
-        const version = alignedVersion(row.version, product, product === 'omaa' ? '0.13.1' : '0.10.0');
+        const version = product === 'omaa' ? alignedVersion(row.version, 'omaa', feature) : baseline.version;
         const filename = `${names[product]}-${version}.tgz`, url = `https://github.com/${repo}/releases/download/${releaseTag}/${filename}`;
         for (const suffix of ['', '.metadata.json', '.sha256']) release.assets.push({ name: filename + suffix, browser_download_url: url + suffix, state: 'uploaded' });
         metadata.set(url + '.metadata.json', { name: names[product], version, hostVersion: row.version, filename, sha256: 'a'.repeat(64),
           ...(product === 'omd' ? { baseVersion: baseline.version, sourceCommit: drift ? 'f'.repeat(40) : baseline.commit,
             nativeHostFactories: 'preserved', overlaySha256: 'b'.repeat(64) } : {}) });
       }
-      const service = createUpdates({ currentVersion: alignedVersion(row.version, 'omaa', '0.13.0'), hostVersion: row.version,
+      const service = createArchivedUpdates({ currentVersion: alignedVersion(row.version, 'omaa', '0.13.0'), hostVersion: row.version,
         getManager: () => ({ listBundles: async () => [{ name: names.omaa, version: alignedVersion(row.version, 'omaa', '0.13.0'), installed: true, enabled: true }] }),
         fetchImpl: async url => new Response(JSON.stringify(url.includes('/releases?') ? [release] : metadata.get(url)), { status: 200 }) });
       t.after(() => service.close());
       await service.check(true);
       const state = service.snapshot();
       if (drift) { assert.match(state.error, /来源尚未受支持/); assert.equal(state.latestVersion, null); }
-      else { assert.equal(state.error, ''); assert.equal(state.latestVersion, alignedVersion(row.version, 'omaa', '0.13.1'));
+      else { assert.equal(state.error, ''); assert.equal(state.latestVersion, alignedVersion(row.version, 'omaa', feature));
         assert.equal(state.latestOmdVersion, baseline.version); assert.equal(state.hostVersion, row.version); }
     }
   }

@@ -23,9 +23,14 @@ try {
       const host = packages.packageOf(name, pathToFileURL(cli).href);
       const plugin = packages.packageOf(name, pathToFileURL(owner.manifestPath).href);
       if (!host || !plugin) throw new Error('Native host routing did not resolve SDK ' + owner.name + ' -> ' + name);
+      // The CLI package exports its manifest/bin, with no importable main.
+      // This peer constrains the host executable; service peers still resolve
+      // their actual module entry, so SDK identity checks remain strict.
+      const moduleSpecifier = name === '@deepseek-ai/dsh' ? name + '/package.json' : name;
       peers[name] = { hostPath: await realpath(host.manifestPath), pluginPath: await realpath(plugin.manifestPath),
         hostVersion: host.version, pluginVersion: plugin.version, declaredPeerSpecifier,
-        hostModule: await realpath(createRequire(host.manifestPath).resolve(name)), pluginModule: await realpath(ownerRequire.resolve(name)),
+        moduleSurface: name === '@deepseek-ai/dsh' ? 'cli-package-manifest' : 'runtime-module',
+        hostModule: await realpath(createRequire(host.manifestPath).resolve(moduleSpecifier)), pluginModule: await realpath(ownerRequire.resolve(moduleSpecifier)),
         hostResolutionAnchor: await realpath(host.manifestPath), pluginResolutionAnchor: await realpath(owner.manifestPath),
         routingScope: resolution.entries.find(row => row.name === name)?.scope };
     }

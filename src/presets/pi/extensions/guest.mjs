@@ -25,8 +25,9 @@ console._stderr = process.stderr;
 for (const method of ['log', 'info', 'warn', 'error', 'debug', 'dir']) console[method] = (...args) => process.stderr.write(format(...args).slice(0, 65536) + '\n');
 const validId = id => typeof id === 'string' && id.length > 0 && id.length <= 128 || Number.isSafeInteger(id) && id >= 0;
 const errorText = error => String(error?.message ?? error).slice(0, 4096);
+let compression = false;
 function send(frame) {
-  for (const line of encodeFrames(frame)) writeProtocol(line);
+  for (const line of encodeFrames({ ...frame, wireCompression: true }, { compress: compression })) writeProtocol(line);
 }
 const pendingAPI = new Map(), active = new Map();
 let generation = 0, apiCounter = 0, callbackCounter = 0, runtime, loading = false;
@@ -289,6 +290,7 @@ async function processRequest(frame) {
   const context = { id: frame.id, phase: frame.type, snapshot: frame.snapshot ?? {}, controller: new AbortController(),
     pending: new Set(), voidErrors: [], finished: false };
   if (frame.callbackAbortReason) context.notificationSignal = AbortSignal.abort(new Error('Native activity canceled: ' + JSON.stringify(frame.callbackAbortReason)));
+  if (frame.wireCompression === true) compression = true;
   active.set(frame.id, context);
   try {
     const value = await callbackContext.run(context, () => frame.type === 'load' ? load(frame, context) : invoke(frame, context));

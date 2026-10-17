@@ -57,6 +57,7 @@ test('workflow view reads rc.2 raw arguments and live native preparing arguments
       stages.nativePriority = render('start', { args: nativeArgs, argsRaw: raw });
       stages.failed = render('result', { ...result, isError: true });
       stages.stopped = render('result', { ...result, error: { code: 'interrupted' } });
+      stages.unknown = render('result', { call: { argsRaw: raw }, content: [{ type: 'text', text: 'unrecognized host result' }] });
       return stages;
     } finally { root.unmount(); }
   });
@@ -80,5 +81,38 @@ test('workflow view reads rc.2 raw arguments and live native preparing arguments
   assert.equal(stages.nativePriority.name, 'Live native report');
   assert.equal(stages.failed.status, '失败');
   assert.equal(stages.stopped.status, '已中断');
+  assert.equal(stages.unknown.status, '原始结果', 'unknown payload is visible without claiming successful completion');
   assert.deepEqual(errors, []);
+});
+
+test('workflow navigation rejects duplicate opens and discards late failures after a different tool call', { timeout: 30000 }, async t => {
+  const bundle = await build({ stdin: { contents: `export { ZCodeWorkflowTool } from './src/client/zcode-workflow-tool.jsx'; export { default as React } from 'react'; export { createRoot } from 'react-dom/client'; export { flushSync } from 'react-dom';`, resolveDir: new URL('../', import.meta.url).pathname }, bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'workflowFixture', target: 'es2022' });
+  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
+  const page = await browser.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
+  await page.setContent('<div id="app"></div>'); await page.addScriptTag({ content: bundle.outputFiles[0].text });
+  await page.evaluate(() => {
+    const { React, createRoot, flushSync, ZCodeWorkflowTool } = workflowFixture;
+    const root = createRoot(document.getElementById('app')), calls = [];
+    function useDisclosure() { const [expanded, set] = React.useState(false); return { expanded, toggle: () => set(value => !value) }; }
+    window.renderNavigation = id => flushSync(() => root.render(React.createElement(ZCodeWorkflowTool, { phase: 'result', callId: id, block: { content: [{ type: 'text', text: JSON.stringify({ runId: id, status: 'completed' }) }] }, useDisclosure, openArtifacts: runId => new Promise((resolve, reject) => { calls.push(runId); window.rejectNavigation = reject; }) })));
+    window.navigationCalls = calls; window.unmountNavigation = () => root.unmount();
+  });
+  await page.evaluate(() => renderNavigation('first'));
+  await page.getByRole('button', { name: '查看产物', exact: true }).click();
+  assert.equal(await page.getByRole('button', { name: '正在打开…', exact: true }).isDisabled(), true);
+  await page.evaluate(() => {
+    const button = document.querySelector('.omaa-zcode-tool-artifacts');
+    const callback = Object.entries(button).find(([key]) => key.startsWith('__reactProps$'))[1].onClick;
+    window.oldNavigation = callback; callback();
+    renderNavigation('second'); rejectNavigation(new Error('late first failure'));
+  });
+  await page.getByRole('button', { name: '查看产物', exact: true }).waitFor();
+  await page.evaluate(() => oldNavigation());
+  assert.deepEqual(await page.evaluate(() => navigationCalls), ['first']);
+  assert.equal(await page.getByRole('alert').count(), 0);
+  await page.getByRole('button', { name: '查看产物', exact: true }).click();
+  await page.evaluate(() => rejectNavigation(new Error('current navigation failure')));
+  await page.getByRole('alert').filter({ hasText: 'current navigation failure' }).waitFor();
+  assert.equal(await page.getByRole('button', { name: '查看产物', exact: true }).isEnabled(), true);
+  await page.evaluate(() => unmountNavigation()); assert.deepEqual(errors, []);
 });

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { runNpmSync } from './npm-runner.mjs';
 import { hostManifest, releaseFiles } from './host-manifest.mjs';
+import { isPrivateFile } from './public-files.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
@@ -57,7 +58,7 @@ try {
   for (const file of files) {
     await cp(join(root, file), join(staging, file), {
       recursive: true,
-      filter: (path) => !localNames.has(basename(path)),
+      filter: (path) => !localNames.has(basename(path)) && !isPrivateFile(path.slice(root.length + 1)),
     });
   }
 
@@ -68,6 +69,7 @@ try {
   }));
   const filename = packed[0].filename;
   const tarball = join(dist, filename);
+  execFileSync(process.execPath, [join(root, 'scripts/public-files.mjs'), '--archive', tarball], { stdio: 'inherit' });
   const sha256 = createHash('sha256').update(await readFile(tarball)).digest('hex');
   await writeFile(`${tarball}.sha256`, `${sha256}  ${filename}\n`);
   const metadata = {

@@ -5,6 +5,8 @@ import { splitReleaseVersion as parseRelease, compareFeatures, alignedVersion, s
 const REPO = 'gulagala001/oh-my-agents-above-all';
 export const RELEASES_URL = `https://github.com/${REPO}/releases`;
 const API = `https://api.github.com/repos/${REPO}`;
+const OMD_REPO = 'gulagala001/oh-my-dsh';
+const BRIDGE_FEATURE = JSON.parse(readFileSync(new URL('./host/compatibility.json', import.meta.url), 'utf8')).omdBridge?.featureVersion;
 const PACKAGE = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
 const RUNNING_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const fail = message => Object.assign(new Error(message), { statusCode: 409 });
@@ -24,13 +26,13 @@ function published(release) {
   if (release.tag_name !== `v${version}` || release.html_url !== `${RELEASES_URL}/tag/${release.tag_name}`) throw fail('GitHub 发行来源或 tag 无效');
   return version;
 }
-function asset(release, filename) {
+function asset(release, filename, repository = REPO) {
   const found = release.assets.filter(row => row.name === filename && row.state === 'uploaded');
-  const expected = `https://github.com/${REPO}/releases/download/${release.tag_name}/${filename}`;
+  const expected = `https://github.com/${repository}/releases/download/${release.tag_name}/${filename}`;
   if (found.length !== 1 || found[0].browser_download_url !== expected) throw fail(`发行缺少匹配附件：${filename}`);
   return expected;
 }
-async function boundedJson(response, limit) {
+async function boundedText(response, limit) {
   if (!response.ok) { await response.body?.cancel(); throw fail(`GitHub 更新检查失败（HTTP ${response.status}）`); }
   if (Number(response.headers.get('content-length')) > limit) { await response.body?.cancel(); throw fail('GitHub 更新资料过大'); }
   const chunks = []; let bytes = 0;
@@ -39,7 +41,7 @@ async function boundedJson(response, limit) {
     if (bytes > limit) { await response.body?.cancel().catch(() => {}); throw fail('GitHub 更新资料过大'); }
     chunks.push(chunk);
   }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  return Buffer.concat(chunks).toString('utf8');
 }
 
 // Only discover public release metadata here. Package download, installation,
@@ -50,10 +52,12 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
   const shutdown = new AbortController();
   let pair = null, checkedAt = null, checkError = '', checking = null, job = null, closed = false;
   let currentOmdVersion = getOmdVersion(), state = { phase: 'idle', target: null, targetVersion: null, error: '', installed: [] };
-  const read = async (url, limit = 1024 * 1024) => boundedJson(await fetchImpl(url, {
+  const request = url => fetchImpl(url, {
     headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'OhMyAgentsAboveAll-Updates' },
     signal: AbortSignal.any([shutdown.signal, AbortSignal.timeout(10000)]), redirect: 'follow',
-  }), limit);
+  });
+  const read = async (url, limit = 1024 * 1024) => JSON.parse(await boundedText(await request(url), limit));
+  const readText = async (url, limit = 65536) => boundedText(await request(url), limit);
   async function readPackage(release, product, version) {
     if (splitReleaseVersion(version, product).host !== hostVersion) throw fail('发行附件与当前宿主不匹配');
     const filename = `${PACKAGE[product]}-${version}.tgz`;
@@ -64,6 +68,29 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     const baselines = validationHosts.find(row => row.version === hostVersion)?.omdBaselines ?? [];
     if (product === 'omd' && (!baselines.some(row => metadata.baseVersion === row.version && metadata.sourceCommit === row.commit) || metadata.nativeHostFactories !== 'preserved' || !/^[a-f0-9]{64}$/.test(metadata.overlaySha256))) throw fail('兼容 OMD 来源尚未受支持，请先审阅新的官方基线');
     return { version, url, sha256: metadata.sha256, filename };
+  }
+  async function currentOfficialOmd() {
+    const version = alignedVersion(hostVersion, 'omd', BRIDGE_FEATURE), tag = `v${version}`;
+    const release = await read(`https://api.github.com/repos/${OMD_REPO}/releases/tags/${tag}`);
+    if (release.draft !== false || !release.published_at || release.tag_name !== tag
+      || release.html_url !== `https://github.com/${OMD_REPO}/releases/tag/${tag}` || !Array.isArray(release.assets)) throw fail('官方 OMD 发行来源或 tag 无效');
+    const filename = `${PACKAGE.omd}-${version}.tgz`, url = asset(release, filename, OMD_REPO);
+    const metadata = await read(asset(release, 'metadata.json', OMD_REPO), 65536);
+    const sumsUrl = asset(release, 'SHA256SUMS', OMD_REPO);
+    if (metadata.schema !== 1 || metadata.name !== PACKAGE.omd || metadata.version !== version || metadata.hostVersion !== hostVersion
+      || metadata.file !== filename || !/^[a-f0-9]{64}$/.test(metadata.sha256) || !/^[a-f0-9]{40}$/.test(metadata.sourceCommit)) throw fail('官方 OMD 元数据与目标包不一致');
+    const sums = await readText(sumsUrl);
+    const matches = sums.split(/\r?\n/).filter(line => line === `${metadata.sha256}  ${filename}`);
+    if (matches.length !== 1) throw fail('官方 OMD checksum 与元数据不一致');
+    let object = (await read(`https://api.github.com/repos/${OMD_REPO}/git/ref/tags/${tag}`)).object;
+    const seen = new Set();
+    while (object?.type === 'tag') {
+      if (!/^[a-f0-9]{40}$/.test(object.sha) || seen.has(object.sha) || seen.size >= 8) throw fail('官方 OMD tag 链无效');
+      seen.add(object.sha);
+      object = (await read(`https://api.github.com/repos/${OMD_REPO}/git/tags/${object.sha}`)).object;
+    }
+    if (object?.type !== 'commit' || object.sha !== metadata.sourceCommit) throw fail('官方 OMD tag 与来源提交不一致');
+    return { version, url, sha256: metadata.sha256, filename, checksumsUrl: sumsUrl };
   }
   async function inventory() {
     const manager = getManager?.();
@@ -109,8 +136,9 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
           try { return splitReleaseVersion(name.slice(PACKAGE.omd.length + 1, -4), 'omd').host === hostVersion; } catch { return false; }
         });
         if (omdNames.length > 1) throw fail('发行有多份兼容 OMD，无法确认配对版本');
-        if (omd && omdNames.length !== 1) throw fail('最新发行缺少当前宿主的配对兼容 OMD');
-        const compat = omdNames.length ? await readPackage(release, 'omd', omdNames[0].slice(PACKAGE.omd.length + 1, -4)) : null;
+        const official = omd && /^0\.2\.1-rc\.[12]$/.test(hostVersion) && BRIDGE_FEATURE;
+        if (omd && !official && omdNames.length !== 1) throw fail('最新发行缺少当前宿主的配对兼容 OMD');
+        const compat = official ? await currentOfficialOmd() : omdNames.length ? await readPackage(release, 'omd', omdNames[0].slice(PACKAGE.omd.length + 1, -4)) : null;
         pair = { omaa, omd: compat, tag: release.tag_name, url: release.html_url };
         checkedAt = now(); checkError = '';
       } catch (error) { checkError = error.message; }
