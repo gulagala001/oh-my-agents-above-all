@@ -6,12 +6,12 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前版本为 **OMAA 0.15.3**，分别提供官方 DSH **0.2.1-rc.1** 与 **0.2.1-rc.2** 的独立构建。请选择与正在运行的完整宿主版本相同的包。Node.js 要求 `>=22.19`；可选增强配对 OMD `0.17.3`。
+当前版本为 **OMAA 0.15.4**，分别提供官方 DSH **0.2.1-rc.1** 与 **0.2.1-rc.2** 的独立构建。请选择与正在运行的完整宿主版本相同的包。Node.js 要求 `>=22.19`；可选增强以同宿主的 OMD `0.17.3` 为基线，更新限定在 `0.17.x` 补丁范围。
 
 | DSH 宿主 | OMAA 固定发行 | 配对 OMD |
 | --- | --- | --- |
-| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.15.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.15.3) | [0.2.1-rc.1.omd.0.17.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.17.3) |
-| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.15.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.15.3) | [0.2.1-rc.2.omd.0.17.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.17.3) |
+| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.15.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.15.4) | [0.2.1-rc.1.omd.0.17.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.17.4) |
+| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.15.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.15.4) | [0.2.1-rc.2.omd.0.17.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.17.4) |
 
 [安装与更新](docs/install.md) · [版本适配与产品边界](docs/compatibility.md) · [会话工作台](docs/frontend-workbench.md) · [更新记录](CHANGELOG.md)
 
@@ -20,7 +20,7 @@ OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、Z
 从上表的固定发行页下载对应 `.tgz` 与 `.sha256`，核对 SHA-256 后通过 DSH 原生插件管理器安装。独立使用 OMAA 只需一个包；需要增强时，在同一个 profile 安装对应 OMD。以下为 DSH `0.2.1-rc.2`、`web` profile 的例子，路径替换为实际位置：
 
 ```sh
-dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.15.3.tgz
+dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.15.4.tgz
 ```
 
 DSH Desktop 可直接使用原生插件管理器；CLI 安装应选桌面实际使用的相同宿主与 profile。安装后重载对应 profile，继续使用原有模型/provider 配置。

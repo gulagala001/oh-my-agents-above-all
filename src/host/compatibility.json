@@ -40,7 +40,8 @@
       "omaaWorkflowComposition",
       "omaaWorkMode",
       "omaaIdentityPrompt"
-    ]
+    ],
+    "updatePolicy": "patch"
   },
   "validationHosts": [
     {

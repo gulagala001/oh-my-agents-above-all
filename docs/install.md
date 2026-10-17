@@ -6,8 +6,8 @@ OMAA 使用 DSH 已配置的模型/API、工具循环、权限与会话。无需
 
 | DSH 宿主 | OMAA 固定发行 | 配对 OMD |
 | --- | --- | --- |
-| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.15.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.15.3) | [0.2.1-rc.1.omd.0.17.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.17.3) |
-| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.15.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.15.3) | [0.2.1-rc.2.omd.0.17.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.17.3) |
+| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.15.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.15.4) | [0.2.1-rc.1.omd.0.17.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.17.4) |
+| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.15.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.15.4) | [0.2.1-rc.2.omd.0.17.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.17.4) |
 
 
 每个发行页包含一个对应宿主的 `.tgz`、`.sha256` 和公开元数据。完整包版本必须与宿主前缀一致；不要将 rc.1 包用于 rc.2，或依据 GitHub 的 latest 选包。
@@ -19,10 +19,10 @@ OMAA 使用 DSH 已配置的模型/API、工具循环、权限与会话。无需
 Desktop 使用原生插件管理器添加下载的本地包。Web/CLI 在实际使用的 profile 中安装，例如 DSH `0.2.1-rc.2`：
 
 ```sh
-dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.15.3.tgz
+dsh plugin --profile web add file:/absolute/path/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.15.4.tgz
 ```
 
-对应 rc.1 将文件替换为 `oh-my-agents-above-all-0.2.1-rc.1.omaa.0.15.3.tgz`。需要 OMD 增强时，先添加同一宿主的 `trisoul_x-<DSH版本>.omd.0.17.3.tgz`，再添加 OMAA。独立使用 OMAA 无需 OMD。
+对应 rc.1 将文件替换为 `oh-my-agents-above-all-0.2.1-rc.1.omaa.0.15.4.tgz`。需要 OMD 增强时，先添加同一宿主的 `trisoul_x-<DSH版本>.omd.0.17.4.tgz`，再添加 OMAA。独立使用 OMAA 无需 OMD。
 
 安装与启动应使用同一个 profile。安装完成后重载该 profile，新会话中选择带有 `· OMAA` 的产品预设；原有模型/provider 配置继续生效。
 
