@@ -16,7 +16,7 @@ npm pack
 
 ## 发行
 
-包、tag 与宿主使用完整版本，如 `v0.2.1-rc.2.omaa.0.15.3`。每个 tag 对应一个宿主的 `.tgz`、SHA-256 与公开元数据，下载入口固定到该 tag。可选 OMD 直接从其同宿主发行页获取。
+包、tag 与宿主使用完整版本，如 `v0.2.1-rc.2.omaa.0.15.4`。每个 tag 对应一个宿主的 `.tgz`、SHA-256 与公开元数据，下载入口固定到该 tag。可选 OMD 直接从其同宿主发行页获取。
 
 `node scripts/public-files.mjs` 检查 Git 清单，`npm pack` 的 prepack 和 CI 检查实际包清单。归档可另用 `node scripts/public-files.mjs --archive /absolute/path/package.tgz` 检查。安装包仅包含产品源码、生成模块、必要文档、许可及来源；本地计划、真实会话、验收流水、凭据和缓存不公开。
 

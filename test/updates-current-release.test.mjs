@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createUpdates } from '../src/updates.mjs';
 
-const hostVersion = '0.2.1-rc.2', version = `${hostVersion}.omaa.0.15.3`, omdVersion = `${hostVersion}.omd.0.17.3`;
+const hostVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).engines.dsh;
+const otherHost = hostVersion === '0.2.1-rc.2' ? '0.2.1-rc.1' : '0.2.1-rc.2';
+const version = `${hostVersion}.omaa.0.15.3`, omdVersion = `${hostVersion}.omd.0.17.3`;
 const sha256 = 'a'.repeat(64), sourceCommit = 'b'.repeat(40);
 function fixture({ wrongCommit = false, patch = '0.17.3', currentPatch = '0.17.3', invalid = '', extras = [], pages = null } = {}) {
   const target = `${hostVersion}.omd.${patch}`, current = `${hostVersion}.omd.${currentPatch}`;
@@ -21,7 +24,7 @@ function fixture({ wrongCommit = false, patch = '0.17.3', currentPatch = '0.17.3
     [`https://api.github.com/repos/${omaaRepo}/releases?per_page=30`, [omaa]],
     [omaa.assets[2].browser_download_url, { name: 'oh-my-agents-above-all', version, hostVersion, filename: name, sha256 }],
     [omd.assets[2].browser_download_url, { schema: 1, name: 'trisoul_x', version: target,
-      hostVersion: invalid === 'host' ? '0.2.1-rc.1' : hostVersion, file: omdName, sha256, sourceCommit }],
+      hostVersion: invalid === 'host' ? otherHost : hostVersion, file: omdName, sha256, sourceCommit }],
     [omd.assets[1].browser_download_url, `${invalid === 'checksum' ? 'c'.repeat(64) : sha256}  ${omdName}\n`],
     [`https://api.github.com/repos/${omdRepo}/git/ref/tags/v${target}`, { object: { type: 'commit', sha: wrongCommit ? 'c'.repeat(40) : sourceCommit } }],
   ]);
@@ -61,7 +64,7 @@ test('current host resolves OMD independently of OMAA release attachments', asyn
 test('latest compatible patch uses numeric order and only updates OMD through its native transaction', async t => {
   const { updates, calls, omd } = fixture({ patch: '0.17.10', extras: [
     { version: `${hostVersion}.omd.0.17.9` }, { version: `${hostVersion}.omd.0.17.4` },
-    { version: '0.2.1-rc.1.omd.0.17.20' }, { version: `${hostVersion}.omd.0.18.0` },
+    { version: `${otherHost}.omd.0.17.20` }, { version: `${hostVersion}.omd.0.18.0` },
     { version: `${hostVersion}.omd.1.17.0` }, { version: `${hostVersion}.omd.0.17.2` },
     { version: `${hostVersion}.omd.0.17.11`, draft: true },
   ] }); t.after(() => updates.close());
