@@ -1,5 +1,5 @@
 {
-  "hostRange": "0.2.1-rc.2",
+  "hostRange": "0.2.1-rc.1",
   "loaderRange": "1.0.6",
   "buildHosts": [
     {
@@ -33,7 +33,7 @@
       "workingDirectory": true
     },
     {
-      "version": "0.2.1-rc.2",
+      "version": "0.2.1-rc.1",
       "commit": "687f282e8625c6b8d11ff58211a90524be2e4317",
       "loaderVersion": "1.0.6",
       "groupVersion": "1.0.5",
