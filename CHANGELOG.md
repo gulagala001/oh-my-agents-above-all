@@ -1,3 +1,57 @@
+## 0.16.1（DSH 0.2.1-rc.1 / rc.2）
+
+[中文](#zh) | [English](#en)
+
+<a id="zh"></a>
+
+## 中文
+
+本次更新包含自 0.15.4 以来的模式控制与会话转交改进，并把可选 OMD 增强的最低版本提升至已修复预设入口的 0.18.1。0.16.0 保持撤回。
+
+### 新增功能
+
+- 可选 OMD 增强面板提供 Ultra 的 Workflow／Agent Team／自由子模式，替代旧 Pro／Ultracode 名称。
+- ZCode 根据所选模式执行：Workflow 沿用工作流约束，Agent Team 使用 DSH 原生团队，自由模式按任务选择直接执行或委派。
+
+### 体验优化
+
+- 工作方式面板订阅实际模式投影，切换后及时更新状态；原生团队未启用时隐藏该选项，保留之前保存的选择。
+- 五个预设仍可独立使用；可选 OMD 增强默认关闭，不要求登录对应产品的官方客户端。
+
+### 问题修复
+
+- 跨工作区转交保留已保存的子模式，即使 Ultra 暂时关闭；失败时恢复原来的模式与子模式。
+- 修复设置保存与模式切换失败后的状态回退；前后端共同遵循原生 Agent Team 可用性。
+
+### 其他变更
+
+- 可选增强最低要求同一完整宿主版本的 OMD 0.18.1，更新限定为 0.18.x 补丁；提供 rc.1／rc.2 独立包和两种安装方法。
+
+<a id="en"></a>
+
+## English
+
+This release includes mode-control and session-transfer improvements since 0.15.4, and raises the optional OMD enhancement baseline to 0.18.1 with restored preset controls. Version 0.16.0 remains withdrawn.
+
+### New Features
+
+- The optional OMD enhancement panel provides Ultra Workflow, Agent Team and Free submodes, replacing the legacy Pro/Ultracode labels.
+- ZCode follows the selected mode: Workflow retains its workflow constraints, Agent Team uses native DSH teams, and Free chooses direct execution or delegation for the task.
+
+### Improvements
+
+- The mode panel follows the actual mode projection and updates promptly. When native teams are disabled, the option is hidden while the saved selection is retained.
+- All five presets remain independently usable. Optional OMD enhancements are off by default and do not require signing in to the corresponding official product clients.
+
+### Bug Fixes
+
+- Workspace transfers retain the saved submode even when Ultra is off, and restore the previous mode and submode if the transfer fails.
+- Fixes rollback after settings-save or mode-selection failures. Frontend and backend both respect native Agent Team availability.
+
+### Other Changes
+
+- Optional enhancements require OMD 0.18.1 for the exact same host version, with updates limited to 0.18.x patches. Separate rc.1/rc.2 packages and both installation methods are provided.
+
 # 更新记录
 
 ## 0.16.0 — 2026-10-18

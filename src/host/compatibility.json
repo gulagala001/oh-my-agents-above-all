@@ -44,7 +44,7 @@
     }
   ],
   "omdBridge": {
-    "featureVersion": "0.18.0",
+    "featureVersion": "0.18.1",
     "updatePolicy": "patch",
     "interfaces": [
       "installOmaaEnhancement",
