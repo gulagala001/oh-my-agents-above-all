@@ -22,3 +22,7 @@
 - 安装与下载入口按完整宿主版本固定；公开文件门禁接入打包与 CI。
 
 历史功能与来源见 [产品文档](docs/products/) 和 [来源说明](docs/product-sources.md)。
+
+## 市场同步记录（2026-10-18）
+
+[Awesome DSH Plugin 投稿／更新](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/7932)：本次投稿待审。本次维护同一仓库条目，向共用该数据源的下游不重复投稿。自动发现 topics 已配置，市场同步与外部审核尚未确认完成；当前安装请使用[安装指南](docs/install.md)中的固定 Release 地址。
