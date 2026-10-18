@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
+import ts from 'typescript';
 import { buildHost } from '../src/host/compatibility.mjs';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
 
@@ -119,3 +120,25 @@ await build({ entryPoints: [root + 'src/client/index.jsx'], outfile: root + 'lib
   footer: { js: 'return module.exports;}});' },
   plugins: [{ name: 'css-text', setup(builder) { builder.onLoad({ filter: /\.css$/ }, async args => ({ contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`, loader: 'js' })); } }],
 });
+// esbuild uses these property names only as module initializer labels. Keep
+// private dependency-store locations out of the distributable bundle.
+const clientPath = root + 'lib/client.js';
+const client = await readFile(clientPath, 'utf8');
+const clientAst = ts.createSourceFile('client.js', client, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+if (clientAst.parseDiagnostics.length) throw new Error('Cannot normalize an invalid client bundle');
+const labelEdits = [];
+function normalizeModuleLabels(node) {
+  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && /^(?:__esm|__commonJS)$/.test(node.expression.text)
+    && node.arguments[0] && ts.isObjectLiteralExpression(node.arguments[0])) {
+    for (const property of node.arguments[0].properties) {
+      if (!(ts.isMethodDeclaration(property) || ts.isPropertyAssignment(property)) || !ts.isStringLiteral(property.name)) continue;
+      const label = property.name.text, stable = label.replace(/^.*?\/node_modules\//, 'node_modules/');
+      if (stable !== label) labelEdits.push([property.name.getStart(clientAst), property.name.end, JSON.stringify(stable)]);
+    }
+  }
+  ts.forEachChild(node, normalizeModuleLabels);
+}
+normalizeModuleLabels(clientAst);
+let publicClient = client;
+for (const [start, end, label] of labelEdits.sort((a, b) => b[0] - a[0])) publicClient = publicClient.slice(0, start) + label + publicClient.slice(end);
+await writeFile(clientPath, publicClient);

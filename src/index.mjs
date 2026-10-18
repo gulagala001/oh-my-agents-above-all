@@ -40,6 +40,7 @@ async function mount(ctx) {
     },
     enhancementEnabled: session => Boolean(productForPreset(presetOf(session)) && preferences(session).enhancement && hub.enhancementAvailable(ctx.agents.get(session.id)) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function'),
     enhancementWorkModeFor: (session, agent) => hub.enhancementEnabled(session) && hub.workflowFor(agent)?.mode === 'omd' && hub.modeFor(session, agent) === 'default' ? ctx.get('trisoulX')?.omaaWorkMode?.current(session, agent) ?? 'off' : 'off',
+    enhancementWorkSubmodeFor: (session, agent) => ctx.get('trisoulX')?.omaaWorkMode?.submode?.(session, agent) ?? 'free',
     async inspect(sessionId) {
       const found = await ctx.get('sessionController')?.resolveAgent(sessionId);
       if (found?.error) throw found.error;
@@ -49,13 +50,13 @@ async function mount(ctx) {
       const omdIncompatible = Boolean(ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function');
       const workControl = ctx.get('trisoulX')?.omaaWorkMode;
       const workView = workControl?.inspect(session, agent);
-      const workAvailable = hub.workflowFor(agent)?.mode === 'omd' && typeof workControl?.select === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
+      const workAvailable = hub.workflowFor(agent)?.mode === 'omd' && typeof workControl?.select === 'function' && typeof workControl?.submode === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
       return { agent, session, value: { ...preferences(session), product: product ?? null, hostVersion,
         mode: hub.modeFor(session, agent),
         pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
         omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
         enhancementActive: hub.enhancementEnabled(session), enhancementWorkMode: hub.enhancementEnabled(session) ? workView?.savedMode ?? 'off' : 'off',
-        enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: Boolean(hub.enhancementEnabled(session) && workView?.enabled) } };
+        enhancementWorkSubmode: workView?.submode ?? 'free', enhancementTeamAvailable: workView?.teamAvailable === true, enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: Boolean(hub.enhancementEnabled(session) && workView?.enabled) } };
     },
     async update(sessionId, patch) {
       const { agent, session, value } = await hub.inspect(sessionId);
@@ -63,13 +64,15 @@ async function mount(ctx) {
       if (!product) throw new Error('请选择 OMAA 预设会话');
       if (agent?.status === 'running') throw new Error('请先停止当前任务，再修改预设设置');
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('无效的预设设置');
-      const workMode = patch.enhancementWorkMode;
-      if (workMode !== undefined && !['off', 'pro', 'ultracode'].includes(workMode)) throw new Error('增强工作方式无效');
-      if (workMode !== undefined && workMode !== 'off' && (!value.enhancementWorkModeAvailable || hub.modeFor(session, agent) !== 'default' || patch.mode === 'plan' || patch.mode === 'ask' || patch.enhancement === false)) throw new Error('Pro / Ultra 需要兼容 OMD 工作流和空闲执行模式');
+      const workMode = patch.enhancementWorkMode, workSubmode = patch.enhancementWorkSubmode;
+      if (workSubmode !== undefined && !['workflow', 'team', 'free'].includes(workSubmode)) throw new Error('Ultra 子模式无效');
+      if (workSubmode === 'team' && !value.enhancementTeamAvailable) throw new Error('请先在 DSH 中开启 Agent Team，再选择此子模式');
+      if (workMode !== undefined && !['off', 'ultra'].includes(workMode)) throw new Error('增强工作方式无效');
+      if ((workMode === 'ultra' || workSubmode !== undefined && (workMode ?? value.enhancementWorkMode) === 'ultra') && (!value.enhancementWorkModeAvailable || hub.modeFor(session, agent) !== 'default' || patch.mode === 'plan' || patch.mode === 'ask' || patch.enhancement === false)) throw new Error('Ultra 需要兼容 OMD 增强和空闲执行模式');
       const wantedPlan = patch.mode === 'plan';
       if (product.id === 'pi' && patch.mode !== undefined && patch.mode !== 'default') throw new Error('Pi 使用默认编程模式');
       if (patch.enhancement === true && !value.omdAvailable) throw new Error('请安装并启用兼容的 Oh My DSH 后开启增强');
-      const previous = preferences(session), { enhancementWorkMode: ignoredWorkMode, ...preferencePatch } = patch;
+      const previous = preferences(session), { enhancementWorkMode: ignoredWorkMode, enhancementWorkSubmode: ignoredWorkSubmode, ...preferencePatch } = patch;
       const next = validatePreferences(previous, { ...preferencePatch, ...(workMode && workMode !== 'off' ? { enhancement: true } : {}), ...(wantedPlan ? { mode: 'default' } : {}) }, products.map(p => p.theme));
       const controller = patch.mode !== undefined && agent ? hub.planController(agent) : undefined;
       if (wantedPlan && !controller) throw new Error('此预设未启用计划模式');
@@ -77,9 +80,9 @@ async function mount(ctx) {
       try { controller?.set(agent, wantedPlan); }
       catch (error) { store.set(session.id, previous); throw error; }
       const control = ctx.get('trisoulX')?.omaaWorkMode;
-      const wantedWorkMode = workMode ?? (patch.enhancement === false ? 'off' : undefined);
-      if (wantedWorkMode !== undefined && control && (wantedWorkMode !== 'off' || control.inspect(session, agent).savedMode !== 'off')) {
-        try { await control.select(sessionId, wantedWorkMode); }
+      const wantedWorkMode = workMode ?? (patch.enhancement === false ? 'off' : workSubmode !== undefined ? value.enhancementWorkMode : undefined);
+      if (wantedWorkMode !== undefined && control && (workSubmode !== undefined || wantedWorkMode !== 'off' || control.inspect(session, agent).savedMode !== 'off')) {
+        try { await control.select(sessionId, wantedWorkMode, workSubmode); }
         catch (error) { store.set(session.id, previous); throw error; }
       }
       await ctx.sessions.flush(session);
