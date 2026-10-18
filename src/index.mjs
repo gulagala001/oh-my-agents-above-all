@@ -49,14 +49,19 @@ async function mount(ctx) {
       const product = hub.product(session), plan = agent && hub.planController(agent)?.get(agent);
       const omdIncompatible = Boolean(ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function');
       const workControl = ctx.get('trisoulX')?.omaaWorkMode;
-      const workView = workControl?.inspect(session, agent);
+      const workView = await workControl?.inspect(session, agent);
+      const enhancementActive = hub.enhancementEnabled(session);
+      const currentWorkMode = enhancementActive ? workView?.currentMode ?? workControl?.current?.(session, agent) ?? workView?.mode ?? 'off' : 'off';
       const workAvailable = hub.workflowFor(agent)?.mode === 'omd' && typeof workControl?.select === 'function' && typeof workControl?.submode === 'function' && Boolean(agent?.ctx.get('tools')?.schemas(agent).find(tool => tool.name === 'workflow')?.parameters?.properties?.resumeFromRunId);
       return { agent, session, value: { ...preferences(session), product: product ?? null, hostVersion,
         mode: hub.modeFor(session, agent),
         pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
         omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
-        enhancementActive: hub.enhancementEnabled(session), enhancementWorkMode: hub.enhancementEnabled(session) ? workView?.savedMode ?? 'off' : 'off',
-        enhancementWorkSubmode: workView?.submode ?? 'free', enhancementTeamAvailable: workView?.teamAvailable === true, enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: Boolean(hub.enhancementEnabled(session) && workView?.enabled) } };
+        enhancementActive, enhancementWorkMode: enhancementActive ? workView?.savedMode ?? 'off' : 'off',
+        enhancementWorkSubmode: workView?.submode ?? 'free', enhancementWorkSavedSubmode: workView?.savedSubmode ?? workView?.submode ?? 'free',
+        enhancementWorkModeCurrent: currentWorkMode, enhancementWorkSubmodeCurrent: workView?.currentSubmode ?? workControl?.submode?.(session, agent) ?? workView?.submode ?? 'free',
+        enhancementWorkModePending: Boolean(enhancementActive && workView?.pending),
+        enhancementTeamAvailable: workView?.teamAvailable === true, enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: currentWorkMode !== 'off' } };
     },
     async update(sessionId, patch) {
       const { agent, session, value } = await hub.inspect(sessionId);
@@ -81,7 +86,7 @@ async function mount(ctx) {
       catch (error) { store.set(session.id, previous); throw error; }
       const control = ctx.get('trisoulX')?.omaaWorkMode;
       const wantedWorkMode = workMode ?? (patch.enhancement === false ? 'off' : workSubmode !== undefined ? value.enhancementWorkMode : undefined);
-      if (wantedWorkMode !== undefined && control && (workSubmode !== undefined || wantedWorkMode !== 'off' || control.inspect(session, agent).savedMode !== 'off')) {
+      if (wantedWorkMode !== undefined && control && (workSubmode !== undefined || wantedWorkMode !== 'off' || (await control.inspect(session, agent)).savedMode !== 'off')) {
         try { await control.select(sessionId, wantedWorkMode, workSubmode); }
         catch (error) { store.set(session.id, previous); throw error; }
       }

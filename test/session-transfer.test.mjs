@@ -18,14 +18,18 @@ async function fixture(t) {
   let failFlush = false;
   const planController = { get: agent => ({ active: plans.get(agent.session.id) ?? false }), set: (agent, active) => plans.set(agent.session.id, active) };
   const control = {
-    inspect: session => {
+    inspect: async session => {
       const savedSubmode = submodes.get(session.id) ?? 'free', available = teamAvailable.get(session.id) === true;
       return { savedMode: modes.get(session.id) ?? 'off', savedSubmode, submode: savedSubmode === 'team' && !available ? 'free' : savedSubmode, teamAvailable: available };
     },
     async select(id, mode, submode) {
       if (mode !== 'off') assert(store.get(id).enhancement && store.get(id).mode === 'default' && !plans.get(id), 'Ultra requires enabled OMAA execution before native selection');
       if (mode !== 'off' && submode === 'team' && !teamAvailable.get(id)) throw new Error('Agent Team is unavailable');
-      modes.set(id, mode); if (submode !== undefined) submodes.set(id, submode);
+      const before = await control.inspect(sessions[id]);
+      modes.set(id, mode); submodes.set(id, submode ?? (mode === 'off' ? before.savedSubmode : before.submode));
+    },
+    async restore(id, snapshot) {
+      modes.set(id, snapshot.savedMode); submodes.set(id, snapshot.savedSubmode);
     },
   };
   const transfer = createSessionTransfer({ store, workControl: () => control,
@@ -33,7 +37,7 @@ async function fixture(t) {
       modeFor: session => plans.get(session.id) ? 'plan' : store.get(session.id).mode, planController: () => planController },
     flush: async () => { if (failFlush) { failFlush = false; throw new Error('native flush failed'); } },
   });
-  return { store, modes, submodes, teamAvailable, plans, sessions, agents, transfer, fail: () => { failFlush = true; } };
+  return { store, modes, submodes, teamAvailable, plans, sessions, agents, transfer, control, fail: () => { failFlush = true; } };
 }
 const request = { sourceSessionId: 'source', targetSessionId: 'target', requestId: 'draft-request' };
 
@@ -89,4 +93,14 @@ test('failed draft transfer restores active Ultra with unavailable Team memory',
   f.modes.set('target', 'ultra'); f.submodes.set('target', 'team');
   f.fail(); await assert.rejects(f.transfer(request), /native flush failed/);
   assert.equal(f.modes.get('target'), 'ultra'); assert.equal(f.submodes.get('target'), 'team');
+});
+
+test('older bridges without snapshot restoration preserve an unavailable Team target before transfer', async t => {
+  const f = await fixture(t);
+  f.store.set('source', { ...defaults, enhancement: true });
+  f.modes.set('target', 'ultra'); f.submodes.set('target', 'team');
+  delete f.control.restore;
+  await assert.rejects(f.transfer(request), /目标设置已保留/);
+  assert.equal(f.modes.get('target'), 'ultra'); assert.equal(f.submodes.get('target'), 'team');
+  assert.equal(f.store.has('target'), false);
 });

@@ -16,12 +16,15 @@ export function apply(ctx, config) {
   if (!build) throw new Error('Unknown OMAA product: ' + config.product);
   ctx.tools.presentAs('native');
   const piDelegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
+  const nativeTeamCommunication = new Set(['send_message', 'interrupt_agent', 'list_agents']);
   const enhancedTool = name => name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || name === 'computer_use' || name === 'computer_use_reset' || config.product === 'pi' && piDelegation.has(name);
+  const needsEnhancement = (name, agent) => enhancedTool(name)
+    && !(nativeTeamCommunication.has(name) && agent && ctx.get('agentTeams')?.tryMembership?.(agent));
   const modeFor = agent => agent ? ctx.omaa.modeFor(agent.session, agent) : 'default';
   const activeTools = agent => {
     const names = ctx.tools.schemas(agent).map(tool => tool.name);
     const enabled = agent && ctx.omaa.enhancementEnabled(agent.session);
-    return new Set(names.filter(name => enabled || !enhancedTool(name)));
+    return new Set(names.filter(name => enabled || !needsEnhancement(name, agent)));
   };
   ctx.systemPrompt.section({ name: 'harness:identity', order: -1000, text: '', interpolate: false });
   ctx.systemPrompt.section({ name: 'deployment:persona-prefix', order: 0, interpolate: false,
@@ -31,7 +34,7 @@ export function apply(ctx, config) {
       return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx), { child });
     } });
   ctx.tools.guard(exec => {
-    if (enhancedTool(exec.name) && !ctx.omaa.enhancementEnabled(exec.agent.session)) return 'OMD enhancement is disabled for this session.';
+    if (needsEnhancement(exec.name, exec.agent) && !ctx.omaa.enhancementEnabled(exec.agent.session)) return 'OMD enhancement is disabled for this session.';
     const mode = modeFor(exec.agent);
     if (mode !== 'default' && ['bash', 'pwsh'].includes(exec.name)) {
       if (ctx.get('shell')?.sandboxMode === undefined) return `${mode} mode requires the host read-only shell executor; use file/search tools until it is available.`;

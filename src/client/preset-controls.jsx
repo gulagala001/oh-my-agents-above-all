@@ -137,8 +137,8 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
   const data = state.data, product = data?.product;
   const enhancementWorkMode = state.pendingPatch?.enhancementWorkMode ?? workModeOf(data);
   const enhancementWorkSubmode = state.pendingPatch?.enhancementWorkSubmode ?? workSubmodeOf(data);
-  const activeWorkMode = workModeAvailable(data) && data.enhancementWorkModeActive === true && enhancementWorkMode !== 'off'
-    ? workLabel(workModeOf(data), workSubmodeOf(data)) : '';
+  const activeWorkMode = workModeAvailable(data) && data.enhancementWorkModeActive === true
+    ? workLabel(data.enhancementWorkModeCurrent ?? workModeOf(data), data.enhancementWorkSubmodeCurrent ?? workSubmodeOf(data)) : '';
   const compactProduct = product ?? productForPreset(state.agentPreset);
   const compactName = compactProduct?.id === 'pi' ? 'Pi' : compactProduct?.id === 'grok' ? 'Grok' : compactProduct?.name;
   const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.running ? 'running' : data?.pendingMode ? 'pending' : 'ready';
@@ -191,6 +191,7 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
         <p className="omaa-help">Ultra 会同时开启增强。Workflow 使用工作流，自由按任务选择协作方式。Agent Team 由 DSH 原生开关和界面管理，未开启时隐藏此选项。</p>
         {!workModeAvailable(data) ? <p className="omaa-help">当前 OMD 尚未提供兼容的 Ultra 工作方式。</p>
           : data.mode !== 'default' || data.pendingMode ? <p className="omaa-help">进入执行模式后可切换增强工作方式。</p>
+          : data.enhancementWorkModePending ? <p role="status" className="omaa-help">{workLabel(enhancementWorkMode, enhancementWorkSubmode)} 已保存，下一轮生效。当前为{activeWorkMode || '普通'}。</p>
           : enhancementWorkMode !== 'off' && <p role="status" className="omaa-help">{activeWorkMode ? `${activeWorkMode} 已启用。` : `${workLabel(enhancementWorkMode, enhancementWorkSubmode)} 已选择，当前尚未启用。`}</p>}
       </div>
     </>}

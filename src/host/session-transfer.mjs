@@ -24,11 +24,15 @@ export function createSessionTransfer({ store, hub, workControl, flush }) {
       if (existed && !(receipt?.sourceSessionId === sourceSessionId && receipt?.requestId === requestId && same(receipt.preferences, before))) {
         throw new Error('目标会话设置已独立修改，草稿已保留');
       }
-      const control = workControl(), sourceWork = control?.inspect(source.session, source.agent);
+      const control = workControl(), sourceWork = await control?.inspect(source.session, source.agent);
       const desiredMode = desired.enhancement ? sourceWork?.savedMode ?? 'off' : 'off';
       const desiredSubmode = (desiredMode === 'off' ? sourceWork?.savedSubmode : sourceWork?.submode) ?? sourceWork?.submode ?? 'free';
-      const oldWork = control?.inspect(target.session, target.agent), oldMode = oldWork?.savedMode ?? 'off';
+      const oldWork = await control?.inspect(target.session, target.agent), oldMode = oldWork?.savedMode ?? 'off';
       const oldSubmode = oldWork?.savedSubmode ?? oldWork?.submode ?? 'free';
+      if (control && oldMode !== 'off' && oldSubmode === 'team' && oldWork.teamAvailable !== true
+        && typeof control.restore !== 'function' && (desiredMode !== oldMode || desiredSubmode !== oldSubmode)) {
+        throw new Error('当前 OMD 缺少恢复已保存 Agent Team 选择的接口，目标设置已保留');
+      }
       const wantedPlan = hub.modeFor(source.session, source.agent) === 'plan';
       const plan = hub.planController(target.agent), planBefore = plan?.get(target.agent);
       const oldPlan = planBefore?.pending ?? planBefore?.active ?? false;
@@ -49,13 +53,11 @@ export function createSessionTransfer({ store, hub, workControl, flush }) {
           // Compensation adds normal native mode changes; it never rewrites a
           // Session journal or hides an already-issued host operation.
           store.set(targetSessionId, { ...before, enhancement: true, mode: 'default' });
-          const currentWork = control?.inspect(target.session, target.agent);
+          const currentWork = await control?.inspect(target.session, target.agent);
           if (control && (currentWork.savedMode !== oldMode || (currentWork.savedSubmode ?? currentWork.submode ?? 'free') !== oldSubmode)) {
-            // Restore unavailable Team memory while off; enabling then uses the
-            // host's effective submode without overwriting that saved choice.
-            if (oldMode !== 'off' && oldSubmode === 'team' && oldWork.teamAvailable !== true) {
-              await control.select(targetSessionId, 'off', oldSubmode);
-              await control.select(targetSessionId, oldMode);
+            if (typeof control.restore === 'function') await control.restore(targetSessionId, oldWork);
+            else if (oldMode !== 'off' && oldSubmode === 'team' && oldWork.teamAvailable !== true) {
+              throw new Error('当前 OMD 缺少恢复已保存 Agent Team 选择的接口');
             } else await control.select(targetSessionId, oldMode, oldSubmode);
           }
           plan?.set(target.agent, oldPlan);
