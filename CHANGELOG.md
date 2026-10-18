@@ -7,6 +7,7 @@
 - Pi 作为真实原生团队成员时，即使未开启 OMD 增强，也可使用团队通信、打断与成员查询工具。
 - Ultra 面板分别显示当前生效状态和已保存、下一轮生效的选择，避免运行中的切换被显示为已经生效。
 - 状态查询与写后读取等待设置提交；跨工作区转交失败时恢复已保存的 Agent Team 选择，包括原生团队暂不可用的情况。
+- 将 ZCode 工作流指导中的中文示例改为英文，继续识别任何语言的明确工作流请求；工具、权限与模式行为不变。
 - 可选增强最低要求同一完整宿主版本的 OMD 0.18.2，更新继续限定为 0.18.x 补丁；rc.1／rc.2 使用各自的独立包。五个预设仍可独立使用。
 
 ### English
@@ -16,6 +17,7 @@ This patch fixes native Team communication and Ultra mode state, paired with OMD
 - Pi members of a real native team can communicate, interrupt members and list agents even when OMD enhancements are disabled.
 - The Ultra panel distinguishes the active mode from saved settings that take effect next turn, so a change during a running turn is no longer shown as already active.
 - State reads and reads after writes wait for committed settings. A failed workspace transfer restores the saved Agent Team choice, including when native teams are temporarily unavailable.
+- Workflow guidance now uses English throughout while continuing to recognize explicit workflow requests in any language; tool, permission and mode behavior is unchanged.
 - Optional enhancements require OMD 0.18.2 for the exact same host, with updates still limited to 0.18.x patches. Separate rc.1/rc.2 packages are provided; all five presets remain independently usable.
 
 ## 0.16.1（DSH 0.2.1-rc.1 / rc.2）
