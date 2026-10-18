@@ -44,7 +44,7 @@ composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 
 
 ## 分宿主构建
 
-当前 rc.1 与 rc.2 各自使用精确官方 SDK、冻结依赖与宿主组件；包、源码 tag 和生成配置保持完整宿主版本一致。OMD `0.17.3` 由主项目独立构建，OMAA 不生成或修改该包。历史 overlay 和 integrated-baseline 规则仅用于对应旧发行的来源核对。
+当前 rc.1 与 rc.2 各自使用精确官方 SDK、冻结依赖与宿主组件；包、源码 tag 和生成配置保持完整宿主版本一致。OMD `0.18.0` 由主项目独立构建，OMAA 不生成或修改该包。历史 overlay 和 integrated-baseline 规则仅用于对应旧发行的来源核对。
 
 ## 维护上游版本
 

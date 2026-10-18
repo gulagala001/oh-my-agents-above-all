@@ -14,7 +14,7 @@
 
 ## Codex：完整复制既有 OMD 纯资产
 
-源路径：`/Users/mac/Projects/trisoul_x/src/client/skins/bundled/codex-desktop.json`。目标 `sources/codex-desktop.json` 与源内容完整一致，资产 ID `codex-desktop`，版本 `1.0.1`，SHA-256：
+源路径：`OMD 仓库中的 src/client/skins/bundled/codex-desktop.json`。目标 `sources/codex-desktop.json` 与源内容完整一致，资产 ID `codex-desktop`，版本 `1.0.1`，SHA-256：
 
 `6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db`
 

@@ -4,7 +4,7 @@
   "status": "local-asset-verified",
   "asset": "codex-desktop.json",
   "source": {
-    "path": "/Users/mac/Projects/trisoul_x/src/client/skins/bundled/codex-desktop.json",
+    "path": "src/client/skins/bundled/codex-desktop.json",
     "repositoryHead": "5fb70726d1a387cb2a330b2cf6bb48ef68f45220",
     "sha256": "6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db",
     "assetId": "codex-desktop",
