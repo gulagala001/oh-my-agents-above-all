@@ -101,8 +101,8 @@ for (const order of ['omaa-first','omd-first']) test(`native frontend preserves 
     await until(async () => await panel.getByRole('switch', { name: 'OMD 增强', exact: true }).isEnabled());
     await panel.getByRole('switch', { name: 'OMD 增强', exact: true }).check();
     await until(async () => await panel.getByLabel('增强工作方式', { exact: true }).isEnabled());
-    await panel.getByLabel('增强工作方式', { exact: true }).selectOption('pro');
-    await until(async () => (await f.api(ids[product.id])).value.enhancementWorkMode === 'pro');
+    await panel.getByLabel('增强工作方式', { exact: true }).selectOption('ultra');
+    await until(async () => (await f.api(ids[product.id])).value.enhancementWorkMode === 'ultra');
     for (const mode of ['light','dark']) {
       await panel.getByLabel('明暗模式', { exact: true }).selectOption(mode); await page.locator(`html[data-appearance="${mode}"]`).waitFor();
       assert.equal((await markers(`${product.id}/${mode}/product`)).owner.owner, 'omaa');

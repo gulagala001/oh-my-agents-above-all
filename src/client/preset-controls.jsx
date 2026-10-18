@@ -4,7 +4,10 @@ import { productForPreset } from '../shared/products.mjs';
 
 const modes = [['default', '执行'], ['plan', '计划'], ['ask', '问答']];
 const modeLabel = mode => modes.find(([id]) => id === mode)?.[1] ?? '执行';
-const enhancementWorkModes = [['off', '普通'], ['pro', 'Pro'], ['ultracode', 'Ultra']];
+const enhancementWorkModes = [['off', '普通'], ['ultra', 'Ultra']];
+const enhancementWorkSubmodes = [['workflow', 'Workflow'], ['team', 'Agent Team'], ['free', '自由']];
+const workSubmodeOf = data => data?.enhancementWorkSubmode === 'team' && data.enhancementTeamAvailable !== true ? 'free' : enhancementWorkSubmodes.some(([id]) => id === data?.enhancementWorkSubmode) ? data.enhancementWorkSubmode : 'free';
+const workLabel = (mode, submode) => mode === 'ultra' ? `Ultra · ${enhancementWorkSubmodes.find(([id]) => id === submode)?.[1] ?? '自由'}` : '普通';
 const workModeOf = data => data?.enhancement && enhancementWorkModes.some(([id]) => id === data.enhancementWorkMode) ? data.enhancementWorkMode : 'off';
 const workModeAvailable = data => data?.omdAvailable === true && data.enhancementWorkModeAvailable === true;
 
@@ -66,7 +69,7 @@ export function createSessionSettings(ctx, request = fetch) {
     }
     if (!sessionId) return;
     const nextSignature = JSON.stringify([sessionId, row?.running, row?.projectionValues?.agentPreset,
-      row?.projectionValues?.plan, row?.projectionValues?.omdUltracode, row?.projectionValues?.modelSelection]);
+      row?.projectionValues?.plan, row?.projectionValues?.omdUltracode, row?.projectionValues?.omdWorkModes, row?.projectionValues?.modelSelection]);
     if (nextSignature === signature) return;
     signature = nextSignature;
     if (state.data && typeof row?.running === 'boolean' && state.data.running !== row.running) {
@@ -90,9 +93,11 @@ export function createSessionSettings(ctx, request = fetch) {
       if (state.loading || state.error) throw new Error('请先重新读取会话设置，再修改。');
       if (state.data.running) throw new Error('请先停止当前任务，再修改预设设置。');
       if (Object.hasOwn(patch, 'mode') && state.data.pendingMode) throw new Error('当前模式切换等待处理，请先在宿主提示中继续。');
-      if (Object.hasOwn(patch, 'enhancementWorkMode')) {
-        if (!enhancementWorkModes.some(([id]) => id === patch.enhancementWorkMode)) throw new Error('请选择普通、Pro 或 Ultra 工作方式。');
-        if (!workModeAvailable(state.data)) throw new Error('当前 OMD 尚未提供兼容的 Pro / Ultra 工作方式。');
+      if (Object.hasOwn(patch, 'enhancementWorkMode') || Object.hasOwn(patch, 'enhancementWorkSubmode')) {
+        if (Object.hasOwn(patch, 'enhancementWorkMode') && !enhancementWorkModes.some(([id]) => id === patch.enhancementWorkMode)) throw new Error('请选择普通或 Ultra 工作方式。');
+        if (Object.hasOwn(patch, 'enhancementWorkSubmode') && !enhancementWorkSubmodes.some(([id]) => id === patch.enhancementWorkSubmode)) throw new Error('请选择 Workflow、Agent Team 或自由子模式。');
+        if (patch.enhancementWorkSubmode === 'team' && state.data.enhancementTeamAvailable !== true) throw new Error('请先在 DSH 中开启 Agent Team，再选择此子模式。');
+        if (!workModeAvailable(state.data)) throw new Error('当前 OMD 尚未提供兼容的 Ultra 工作方式。');
         if (state.data.mode !== 'default' || state.data.pendingMode) throw new Error('请先进入执行模式，再切换增强工作方式。');
       }
       const sessionId = state.sessionId, ticket = ++revision;
@@ -131,8 +136,9 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
   }, [settings, state.sessionId, compact, visible]);
   const data = state.data, product = data?.product;
   const enhancementWorkMode = state.pendingPatch?.enhancementWorkMode ?? workModeOf(data);
+  const enhancementWorkSubmode = state.pendingPatch?.enhancementWorkSubmode ?? workSubmodeOf(data);
   const activeWorkMode = workModeAvailable(data) && data.enhancementWorkModeActive === true && enhancementWorkMode !== 'off'
-    ? enhancementWorkModes.find(([id]) => id === workModeOf(data))?.[1] : '';
+    ? workLabel(workModeOf(data), workSubmodeOf(data)) : '';
   const compactProduct = product ?? productForPreset(state.agentPreset);
   const compactName = compactProduct?.id === 'pi' ? 'Pi' : compactProduct?.id === 'grok' ? 'Grok' : compactProduct?.name;
   const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.running ? 'running' : data?.pendingMode ? 'pending' : 'ready';
@@ -177,10 +183,15 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
           onChange={event => change({ enhancementWorkMode: event.target.value })}>
           {enhancementWorkModes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></label>
-        <p className="omaa-help">普通使用基础增强；Pro 偏重实现与精炼，Ultra 保留完整编排。Pro / Ultra 会同时开启增强。</p>
-        {!workModeAvailable(data) ? <p className="omaa-help">当前 OMD 尚未提供兼容的 Pro / Ultra 工作方式。</p>
+        {enhancementWorkMode === 'ultra' && <label className="omaa-setting-row"><span>Ultra 子模式</span><select aria-label="Ultra 子模式" value={enhancementWorkSubmode}
+          disabled={disabled || !workModeAvailable(data) || data.mode !== 'default' || data.pendingMode}
+          onChange={event => change({ enhancementWorkMode: 'ultra', enhancementWorkSubmode: event.target.value })}>
+          {enhancementWorkSubmodes.filter(([value]) => value !== 'team' || data.enhancementTeamAvailable === true).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select></label>}
+        <p className="omaa-help">Ultra 会同时开启增强。Workflow 使用工作流，自由按任务选择协作方式。Agent Team 由 DSH 原生开关和界面管理，未开启时隐藏此选项。</p>
+        {!workModeAvailable(data) ? <p className="omaa-help">当前 OMD 尚未提供兼容的 Ultra 工作方式。</p>
           : data.mode !== 'default' || data.pendingMode ? <p className="omaa-help">进入执行模式后可切换增强工作方式。</p>
-          : enhancementWorkMode !== 'off' && <p role="status" className="omaa-help">{activeWorkMode ? `${activeWorkMode} 已启用。` : `${enhancementWorkModes.find(([id]) => id === enhancementWorkMode)?.[1]} 已选择，当前尚未启用。`}</p>}
+          : enhancementWorkMode !== 'off' && <p role="status" className="omaa-help">{activeWorkMode ? `${activeWorkMode} 已启用。` : `${workLabel(enhancementWorkMode, enhancementWorkSubmode)} 已选择，当前尚未启用。`}</p>}
       </div>
     </>}
     <label className="omaa-setting-row"><span>明暗模式</span><select aria-label="明暗模式" value={runtime.getAppearance()} disabled={appearanceState.appearanceSaving} onChange={appearance}>
