@@ -97,3 +97,25 @@ test('failed saves reject the caller, preserve confirmed values and require an a
   assert.equal(f.store.getSnapshot().error, ''); assert.equal(f.store.getSnapshot().data.mode, 'ask');
   f.store.dispose();
 });
+
+test('Ultra submode updates keep the two-part contract and reject retired choices', async () => {
+  const f = fixture(); await tick();
+  const base = value('zcode', { enhancement: true, omdAvailable: true, enhancementWorkModeAvailable: true, enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'free', enhancementTeamAvailable: true });
+  f.calls[0].resolve(base); await tick();
+  await assert.rejects(f.store.update({ enhancementWorkMode: 'pro' }), /普通或 Ultra/);
+  await assert.rejects(f.store.update({ enhancementWorkSubmode: 'ultracode' }), /子模式/);
+  const saving = f.store.update({ enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'team' }); await tick();
+  assert.deepEqual(JSON.parse(f.calls[1].options.body), { enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'team' });
+  f.calls[1].resolve({ ...base, enhancementWorkSubmode: 'team' }); await saving;
+  assert.equal(f.store.getSnapshot().data.enhancementWorkSubmode, 'team');
+  f.store.dispose();
+});
+
+test('unavailable Agent Team is rejected without sending a settings request', async () => {
+  const f = fixture(); await tick();
+  f.calls[0].resolve(value('zcode', { enhancement: true, omdAvailable: true, enhancementWorkModeAvailable: true, enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'free', enhancementTeamAvailable: false })); await tick();
+  await assert.rejects(f.store.update({ enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'team' }), /在 DSH 中开启 Agent Team/);
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.store.getSnapshot().data.enhancementWorkSubmode, 'free');
+  f.store.dispose();
+});

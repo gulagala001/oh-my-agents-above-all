@@ -15,7 +15,7 @@ Before writing or revising a script, load the \`zcode-workflows\` skill with the
 
 Use the actual workflow schema: supply the plain JavaScript body in script and the name, description and phases in meta. A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit. To revise a running workflow, stop its actual job before submitting a revised script; preserve useful completed results and report the new run identity. Follow the user's existing authorization and the host permission mode.`;
 
-export function workflowGuidanceFor(mode = 'off', tools = new Set()) {
+export function workflowGuidanceFor(mode = 'off', tools = new Set(), submode = 'free') {
   let guidance = workflowGuidance;
   if (tools.has('create_workflow')) {
     guidance = guidance.replace('Create and run a dynamic workflow: a JavaScript script that orchestrates multiple model-driven subagents with plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results.',
@@ -27,9 +27,12 @@ export function workflowGuidanceFor(mode = 'off', tools = new Set()) {
     guidance = guidance.replace('A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit.',
       'Check list_saved_workflows before writing a workflow from scratch. Use run_saved_workflow to run a fitting saved definition by name through its recorded facade; pass actual JSON arguments matching its declarations. Project definitions shadow global definitions unless scope is specified. Use read_saved_workflow or read to inspect a definition before revising it. Save only when the user asks or agrees: save_workflow stores the body and metadata in the selected project or global .zcode/workflows directory; choose facade="zcode" for TypeScript Actors or the default facade="native" for JavaScript, and pass script or script_path, never both.');
   }
-  if (!['pro', 'ultracode'].includes(mode)) return guidance;
-  return guidance.replace('- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.',
-    `- ${mode === 'pro' ? 'Pro' : 'Ultracode'} is enabled for this session and is the user's standing choice to use workflows for substantive work. Follow its workflow authoring reference; solo only on conversational or trivial turns. This standing choice supplies the explicit workflow authorization.`);
+  if (mode !== 'ultra') return guidance;
+  const ordinaryRule = '- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.';
+  if (submode === 'team') return guidance.replace(ordinaryRule, '- Ultra Team is enabled. Collaborate through the DSH native Agent Team capabilities already available in this session. Ultra does not enable Team or provide a separate team interface. A workflow is an optional aid when the task needs it; follow the active Ultra mode guidance.');
+  if (submode !== 'workflow') return guidance.replace(ordinaryRule, '- Ultra Free is enabled. Choose direct execution, subagent collaboration, or a workflow according to the task. A workflow is optional unless the user explicitly asks for one.');
+  return guidance.replace(ordinaryRule,
+    `- Ultra Workflow is enabled for this session and is the user's standing choice to use workflows for substantive work. Follow its workflow authoring reference; solo only on conversational or trivial turns. This standing choice supplies the explicit workflow authorization.`);
 }
 
 export function apply(ctx) {

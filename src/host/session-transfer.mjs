@@ -24,19 +24,21 @@ export function createSessionTransfer({ store, hub, workControl, flush }) {
       if (existed && !(receipt?.sourceSessionId === sourceSessionId && receipt?.requestId === requestId && same(receipt.preferences, before))) {
         throw new Error('目标会话设置已独立修改，草稿已保留');
       }
-      const control = workControl(), sourceMode = control?.inspect(source.session, source.agent)?.savedMode ?? 'off';
-      const desiredMode = desired.enhancement ? sourceMode : 'off';
-      const oldMode = control?.inspect(target.session, target.agent)?.savedMode ?? 'off';
+      const control = workControl(), sourceWork = control?.inspect(source.session, source.agent);
+      const desiredMode = desired.enhancement ? sourceWork?.savedMode ?? 'off' : 'off';
+      const desiredSubmode = (desiredMode === 'off' ? sourceWork?.savedSubmode : sourceWork?.submode) ?? sourceWork?.submode ?? 'free';
+      const oldWork = control?.inspect(target.session, target.agent), oldMode = oldWork?.savedMode ?? 'off';
+      const oldSubmode = oldWork?.savedSubmode ?? oldWork?.submode ?? 'free';
       const wantedPlan = hub.modeFor(source.session, source.agent) === 'plan';
       const plan = hub.planController(target.agent), planBefore = plan?.get(target.agent);
       const oldPlan = planBefore?.pending ?? planBefore?.active ?? false;
       if (wantedPlan && !plan) throw new Error('目标会话没有原生计划模式');
       try {
-        // Enable the compatible workflow before selecting Pro/Ultra. The saved
+        // Enable the compatible workflow before selecting Ultra. The saved
         // Ask/Plan mode is restored only after its native mode has transferred.
         store.set(targetSessionId, { ...desired, mode: 'default' });
         if (oldPlan && desiredMode !== 'off') plan.set(target.agent, false);
-        if (control && (desiredMode !== 'off' || oldMode !== 'off')) await control.select(targetSessionId, desiredMode);
+        if (control && (desiredMode !== 'off' || oldMode !== 'off' || desiredSubmode !== oldSubmode)) await control.select(targetSessionId, desiredMode, desiredSubmode);
         store.set(targetSessionId, desired);
         plan?.set(target.agent, wantedPlan);
         await flush(target.session);
@@ -47,7 +49,15 @@ export function createSessionTransfer({ store, hub, workControl, flush }) {
           // Compensation adds normal native mode changes; it never rewrites a
           // Session journal or hides an already-issued host operation.
           store.set(targetSessionId, { ...before, enhancement: true, mode: 'default' });
-          if (control && control.inspect(target.session, target.agent).savedMode !== oldMode) await control.select(targetSessionId, oldMode);
+          const currentWork = control?.inspect(target.session, target.agent);
+          if (control && (currentWork.savedMode !== oldMode || (currentWork.savedSubmode ?? currentWork.submode ?? 'free') !== oldSubmode)) {
+            // Restore unavailable Team memory while off; enabling then uses the
+            // host's effective submode without overwriting that saved choice.
+            if (oldMode !== 'off' && oldSubmode === 'team' && oldWork.teamAvailable !== true) {
+              await control.select(targetSessionId, 'off', oldSubmode);
+              await control.select(targetSessionId, oldMode);
+            } else await control.select(targetSessionId, oldMode, oldSubmode);
+          }
           plan?.set(target.agent, oldPlan);
           await flush(target.session);
         } catch (rollbackError) {

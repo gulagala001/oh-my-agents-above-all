@@ -75,7 +75,7 @@ test('five product components retain themes, fit narrow workbenches and recover 
     const root = createRoot(document.getElementById('app'));
     window.renderProduct = (id, mode = 'light', width = 360) => {
       const product = products.find(value => value.id === id); appearance = mode;
-      state = { sessionId: 'fixture-' + id, agentPreset: product.preset, data: { product, mode: 'default', theme: 'product', running: false, enhancement: true, enhancementActive: true, omdAvailable: true, enhancementWorkMode: 'pro', enhancementWorkModeAvailable: true, enhancementWorkModeActive: true }, loading: false, saving: false, error: '' };
+      state = { sessionId: 'fixture-' + id, agentPreset: product.preset, data: { product, mode: 'default', theme: 'product', running: false, enhancement: true, enhancementActive: true, omdAvailable: true, enhancementWorkMode: 'ultra', enhancementWorkSubmode: 'workflow', enhancementWorkModeAvailable: true, enhancementWorkModeActive: true }, loading: false, saving: false, error: '' };
       document.getElementById('app').style.width = width + 'px';
       flushSync(() => { for (const fn of listeners) fn(); for (const fn of themeListeners) fn(theme.getTheme()); });
       flushSync(() => root.render(React.createElement('div', { className: 'omaa-workbench', 'data-product': id },
