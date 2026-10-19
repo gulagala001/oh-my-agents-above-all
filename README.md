@@ -6,12 +6,12 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前版本为 **OMAA 0.16.3**，匹配官方 DSH **0.2.1-rc.2**。DSH rc.1 提供对应 OMAA 0.16.3。Node.js 要求 `>=22.19`；可选增强配对同宿主的 OMD **0.18.3**，更新限定在 `0.18.x` 补丁范围。
+当前版本为 **OMAA 0.16.4**，匹配官方 DSH **0.2.1-rc.2**。DSH rc.1 提供对应 OMAA 0.16.4。Node.js 要求 `>=22.19`；可选增强配对同宿主的 OMD **0.18.4**，更新限定在 `0.18.x` 补丁范围。
 
 | DSH 宿主 | OMAA 固定发行 | 配对 OMD |
 | --- | --- | --- |
-| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.16.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.3) | [0.2.1-rc.1.omd.0.18.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.18.3) |
-| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.16.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.3) | [0.2.1-rc.2.omd.0.18.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.18.3) |
+| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.16.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.4) | [0.2.1-rc.1.omd.0.18.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.18.4) |
+| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.16.4](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4) | [0.2.1-rc.2.omd.0.18.4](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.18.4) |
 
 [安装与更新](docs/install.md) · [版本适配与产品边界](docs/compatibility.md) · [会话工作台](docs/frontend-workbench.md) · [更新记录](CHANGELOG.md)
 

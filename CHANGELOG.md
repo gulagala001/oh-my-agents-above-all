@@ -1,3 +1,8 @@
+## 0.16.4（DSH 0.2.1-rc.1 / rc.2） — 2026-10-19
+
+- Ultra 参与智能体共同实现、修复并迭代到任务完成，主智能体负责整合和最终验收。三种子模式共用 OMD 完整质量要求，仅协作方式不同。
+- Ultra agents contribute to implementation, fixes and iteration until completion. The main agent owns integration and final verification; all three modes share the complete OMD quality guidance and differ only in collaboration method.
+
 ## 0.16.3（DSH 0.2.1-rc.1 / rc.2） — 2026-10-19
 
 ### 中文
