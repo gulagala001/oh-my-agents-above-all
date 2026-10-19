@@ -1,5 +1,6 @@
 import { applySharedIdentity, omdIdentityPrompt } from './host/identity.mjs';
 import { currentDirectory } from './host/working-directory.mjs';
+import { toolNeedsEnhancement } from './host/tool-enhancement.mjs';
 import { buildPrompt as codex, buildCompactionPrompt as codexCompact } from './presets/codex/prompt.mjs';
 import { buildPrompt as grok, buildCompactionPrompt as grokCompact } from './presets/grok/prompt.mjs';
 import { buildPrompt as cursor, buildCompactionPrompt as cursorCompact } from './presets/cursor/prompt.mjs';
@@ -15,11 +16,7 @@ export function apply(ctx, config) {
   const build = builders[config.product];
   if (!build) throw new Error('Unknown OMAA product: ' + config.product);
   ctx.tools.presentAs('native');
-  const piDelegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
-  const nativeTeamCommunication = new Set(['send_message', 'interrupt_agent', 'list_agents']);
-  const enhancedTool = name => name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || name === 'computer_use' || name === 'computer_use_reset' || config.product === 'pi' && piDelegation.has(name);
-  const needsEnhancement = (name, agent) => enhancedTool(name)
-    && !(nativeTeamCommunication.has(name) && agent && ctx.get('agentTeams')?.tryMembership?.(agent));
+  const needsEnhancement = (name, agent) => toolNeedsEnhancement(ctx, config.product, name, agent);
   const modeFor = agent => agent ? ctx.omaa.modeFor(agent.session, agent) : 'default';
   const activeTools = agent => {
     const names = ctx.tools.schemas(agent).map(tool => tool.name);

@@ -5,6 +5,7 @@ import { startGuest } from './extensions/transport.mjs';
 import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
 import { piHistoryEntries, readPiHistory } from './history.mjs';
 import { currentDirectory, ensureDirectory } from '../../host/working-directory.mjs';
+import { toolNeedsEnhancement } from '../../host/tool-enhancement.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -20,8 +21,6 @@ const applyCatalogEdits = (fresh, edits) => {
   for (const name of edits?.removed ?? []) delete value[name];
   return value;
 };
-const delegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
-const enhanced = name => delegation.has(name) || name === 'codegraph_index' || name.startsWith('mcp__codegraph__') || ['computer_use', 'computer_use_reset'].includes(name);
 
 function piArguments(exec) {
   const input = json(exec.arguments);
@@ -50,7 +49,7 @@ export function apply(ctx) {
   // observations by the stable native session identity, not proxy identity.
   const sessionState = session => [...states].find(([agent]) => agent.session.id === session.id) ?? [];
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
-  const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!enhanced(tool.name) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
+  const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!toolNeedsEnhancement(ctx, 'pi', tool.name, agent) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
   const catalogSnapshot = (agent, state, cwd = currentDirectory(ctx, agent.session)) => {
     const tools = visible(agent, state);
     const model = typeof agent.options?.model === 'string' ? { id: agent.options.model, provider: agent.options.provider } : undefined;

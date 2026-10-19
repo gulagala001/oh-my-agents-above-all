@@ -1,7 +1,7 @@
 import React, { useSyncExternalStore } from 'react';
 import { createSessionSettings, PresetControls } from './preset-controls.jsx';
 import { CheckpointControls } from './checkpoint-controls.jsx';
-import { CheckpointReviewChip } from './checkpoint-review-chip.jsx';
+import { ComposerChips } from './composer-chips.jsx';
 import reviewChipCss from './checkpoint-review-chip.css';
 import { GitReview } from './git-review.jsx';
 import { PiBranches } from './pi-branches.jsx';
@@ -24,7 +24,6 @@ export function apply(ctx) {
   applyPiExtensionNotices(ctx, settings);
   applyPiExtensionMessages(ctx);
   const getThemeRuntime = applyThemes(ctx, settings);
-  const openPanel = () => ctx.sidebarRight.openTab('omaa-preset');
   const Settings = () => <SettingsPage {...{ settings, getThemeRuntime }}/>
   function PanelControls(props) {
     const { tab } = props.useTabInfo();
@@ -41,7 +40,7 @@ export function apply(ctx) {
         ctx.uiWorkspace.openSession({ parentSessionId: current.sessionId, childSessionId: actor.sessionId, mode: 'continuable' });
       }}/>
   }
-  const Chip = props => <span className="omaa-composer-chips"><CheckpointReviewChip settings={settings} sidebarRight={ctx.sidebarRight} sessionId={props.sessionId}/><PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>
+  const Chip = props => <ComposerChips {...{ settings, getThemeRuntime }} sidebarRight={ctx.sidebarRight} sessionId={props.sessionId}/>
   ctx.effect(() => {
     const tag = document.createElement('style'); tag.dataset.omaaControls = ''; tag.textContent = controlsCss + '\n' + updatesCss + '\n' + reviewChipCss + '\n' + workbenchCss;
     document.head.append(tag); return () => tag.remove();
