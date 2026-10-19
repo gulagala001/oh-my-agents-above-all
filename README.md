@@ -6,12 +6,12 @@
 
 OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、ZCode** 五个独立深度预设。使用 DSH 已配置的模型/API、原生工具循环、权限与会话，装配完整来源提示词及产品适配，并提供各自的明暗主题。不需要安装或登录五个官方客户端。
 
-当前版本为 **OMAA 0.16.2**，匹配官方 DSH **0.2.1-rc.2**。DSH rc.1 提供对应 OMAA 0.16.2。Node.js 要求 `>=22.19`；可选增强配对同宿主的 OMD **0.18.2**，更新限定在 `0.18.x` 补丁范围。
+当前版本为 **OMAA 0.16.3**，匹配官方 DSH **0.2.1-rc.2**。DSH rc.1 提供对应 OMAA 0.16.3。Node.js 要求 `>=22.19`；可选增强配对同宿主的 OMD **0.18.3**，更新限定在 `0.18.x` 补丁范围。
 
 | DSH 宿主 | OMAA 固定发行 | 配对 OMD |
 | --- | --- | --- |
-| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.16.2](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.2) | [0.2.1-rc.1.omd.0.18.2](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.18.2) |
-| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.16.2](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.2) | [0.2.1-rc.2.omd.0.18.2](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.18.2) |
+| `0.2.1-rc.1` | [0.2.1-rc.1.omaa.0.16.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.3) | [0.2.1-rc.1.omd.0.18.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.1.omd.0.18.3) |
+| `0.2.1-rc.2` | [0.2.1-rc.2.omaa.0.16.3](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.3) | [0.2.1-rc.2.omd.0.18.3](https://github.com/gulagala001/oh-my-dsh/releases/tag/v0.2.1-rc.2.omd.0.18.3) |
 
 [安装与更新](docs/install.md) · [版本适配与产品边界](docs/compatibility.md) · [会话工作台](docs/frontend-workbench.md) · [更新记录](CHANGELOG.md)
 
@@ -31,7 +31,7 @@ OMAA 是 DSH 插件，提供 **Codex、Grok Build、Cursor、Pi Coding Agent、Z
 - Pi：加载 SYSTEM/APPEND、用户与项目规则、提示模板，以及项目/祖先 `.agents` 和深层技能资源；默认逐条 steer。Pi 分支面板可打开原生 parent 树、从已完成回合创建新会话，按需勾选离开分支摘要（默认关闭，使用当前模型）。分支共享目录，切换不回滚文件。
 - Pi 本地扩展：源码已实现用户明确指定绝对 TS/JS 文件的执行白名单，默认空、不自动运行项目发现文件。只在 DSH 原生 subprocess/sandbox 中运行扩展 factory 与回调，接入工具、命令、异步输入/工具事件、原生问答、通知及附件；0.10.0 补齐输入后模板展开与 `before_agent_start`，支持可变系统选项、串行回调、自定义消息及运行内 force；0.11.0 补齐自定义消息的类型、Markdown、明暗颜色和隐藏显示；0.12.0 增加串行 `agent_start` / `turn_start` / `agent_end` 通知、完整结束消息及严格分帧，并修复取消通知和人工新输入的 force 边界。模型、工具循环与账号仍由 DSH 负责。OMAA 0.5 提供该扩展入口及活动回调内的动态工具、命令、事件注册；使用方法与未支持 API 见 [Pi 文档](docs/products/pi.md)。
 - ZCode：项目／全局保存工作流、按名列举及复用、参数声明与默认值。用户明确点名工作流，或启用 Ultra / Workflow 后，使用实际工作流与结构化子代理结果，仍先加载 `zcode-workflows` 技能；Ultra / Agent Team 和自由不强制工作流；按用户引用的 session id 回查原生历史，可使用当前已配置模型提取上下文。
-- OMD 增强：默认关闭；基础增强提供 CodeGraph 和 Computer Use，可另选 Ultra 的 Workflow、Agent Team、自由子模式，默认自由。Ultra 复用 OMD 控制与持久化，优先当前模型声明的 xhigh、否则最高支持档，保留 provider/model；开启 Ultra 自动开启增强，关闭增强同时关闭 Ultra 并记住所选子模式。Ask/Plan 暂停 Ultra，恢复执行后可继续。Agent Team 由 DSH 开关与原生界面负责，OMD 不自动开启；未开启时隐藏该选项，原 Team 记忆保留并暂用自由。主题选择独立。
+- OMD 增强：默认关闭；基础增强提供 CodeGraph 和 Computer Use，可另选 Ultra 的 Workflow、Agent Team、自由子模式，默认自由。三种子模式遵循相同的质量与主动性要求，只改变协作形式；实质任务默认主动派发或复用智能体，自由可选现有子智能体、原生团队或工作流。Ultra 复用 OMD 控制与持久化，优先当前模型声明的 xhigh、否则最高支持档，保留 provider/model；开启 Ultra 自动开启增强，关闭增强同时关闭 Ultra 并记住所选子模式。Ask/Plan 暂停 Ultra，恢复执行后可继续。Agent Team 由 DSH 开关与原生界面负责，OMD 不自动开启；未开启时隐藏该选项，原 Team 记忆保留并暂用自由。主题选择独立。
 
 运行中的会话先使用原生停止入口，再修改预设设置。文件、diff、工具结果、附件和继续工作仍使用 DSH 的现有界面与生命周期。
 

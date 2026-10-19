@@ -1,4 +1,4 @@
-## 0.16.3（DSH 0.2.1-rc.2） — 2026-10-19
+## 0.16.3（DSH 0.2.1-rc.1 / rc.2） — 2026-10-19
 
 ### 中文
 
@@ -113,6 +113,6 @@ This release includes mode-control and session-transfer improvements since 0.15.
 
 历史功能与来源见 [产品文档](docs/products/) 和 [来源说明](docs/product-sources.md)。
 
-## 市场同步记录（2026-10-18）
+## 市场同步记录（2026-10-19）
 
-[Awesome DSH Plugin 投稿／更新](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/7932)：本次投稿待审。本次维护同一仓库条目，向共用该数据源的下游不重复投稿。自动发现 topics 已配置，市场同步与外部审核尚未确认完成；当前安装请使用[安装指南](docs/install.md)中的固定 Release 地址。
+[Awesome DSH Plugin 条目](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/7932)已收录，后续继续沿用同一条目，向共用该数据源的下游不重复投稿。自动发现 topics 已配置；新版同步由各市场独立处理，当前安装请使用[安装指南](docs/install.md)中的固定 Release 地址。
