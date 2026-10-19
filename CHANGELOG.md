@@ -1,3 +1,17 @@
+## 0.16.3（DSH 0.2.1-rc.2） — 2026-10-19
+
+### 中文
+
+- Ultra 实质任务默认主动协作；自由仅表示协作方式自由，Agent Team 保持原生团队，主智能体持续推进并负责整合，不固定人数或流程。
+- 修复 Pi 分支摘要和 ZCode 历史读取遗漏原生助手消息的问题，并正确保留工具参数与文件记录。
+- 修复 Pi 原生 Team 工具装配，子会话隐藏主会话的预设控制。
+
+### English
+
+- Ultra defaults to active collaboration for substantive work. Free leaves the collaboration method open, Team uses native teams, and the main agent continues working and integrates results without a fixed headcount or process.
+- Pi branch summaries and ZCode history reads retain native assistant messages, tool arguments and file records correctly.
+- Fixes Pi native Team tool assembly and hides main-session preset controls in child sessions.
+
 ## 0.16.2（DSH 0.2.1-rc.1 / rc.2） — 2026-10-18
 
 ### 中文

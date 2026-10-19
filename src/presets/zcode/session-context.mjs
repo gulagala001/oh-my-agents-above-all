@@ -8,7 +8,7 @@ function nativeMessages(events) {
   const calls = new Map(events.filter(event => event.type === 'tool/call').map(event => [event.data.callId, event.data]));
   const messages = [];
   for (const event of events) {
-    const message = event.type === 'tool/result' ? event.data?.message : event.data;
+    const message = event.type === 'assistant/message' || event.type === 'tool/result' ? event.data?.message : event.data;
     let role, text, id = message?.id ?? String(event.seq);
     if (event.type === 'user/message' && message?.source?.kind === 'user') { role = 'user'; text = plainText(message.content); }
     else if (event.type === 'assistant/message') { role = 'assistant'; text = plainText(message?.content); }

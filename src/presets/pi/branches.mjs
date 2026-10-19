@@ -37,11 +37,15 @@ function branchMaterial(events) {
   const parts = [], read = new Set(), modified = new Set();
   for (const event of events) {
     if (event.type === 'user/message' && event.data?.source?.kind === 'user') parts.push('[User]: ' + textOf(event.data.content));
-    else if (event.type === 'assistant/message') parts.push('[Assistant]: ' + textOf(event.data?.content));
+    else if (event.type === 'assistant/message') parts.push('[Assistant]: ' + textOf(event.data?.message?.content));
     else if (event.type === 'tool/call') {
-      const { name, arguments: args = {} } = event.data;
-      parts.push(`[Assistant tool calls]: ${name}(${Object.entries(args).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join(', ')})`);
-      const path = args.file_path;
+      const { name, arguments: rawArgs = {} } = event.data;
+      let args = rawArgs;
+      if (typeof args === 'string') { try { args = JSON.parse(args); } catch {} }
+      const fields = args && typeof args === 'object' && !Array.isArray(args) ? args : undefined;
+      const serialized = fields ? Object.entries(fields).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join(', ') : typeof rawArgs === 'string' ? rawArgs : JSON.stringify(rawArgs);
+      parts.push(`[Assistant tool calls]: ${name}(${serialized})`);
+      const path = fields?.file_path;
       if (typeof path === 'string') {
         if (name === 'read' || name === 'read_image') read.add(path);
         else if (name === 'write' || name === 'edit') modified.add(path);

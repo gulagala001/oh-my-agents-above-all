@@ -25,7 +25,7 @@ function replaceBlock(text, tag, body) {
   return text.slice(0, start) + (body ? `${opening}\n\n${body}\n\n${closing}` : '') + text.slice(end + closing.length)
 }
 
-export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default' } = {}) {
+export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', child = false, workMode = 'off' } = {}) {
   const has = name => tools.has(name)
   const shell = platform === 'win32' && has('pwsh') ? 'pwsh' : has('bash') ? 'bash' : has('pwsh') ? 'pwsh' : undefined
   let prompt = replaceExact(original,
@@ -86,7 +86,9 @@ export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default'
   if (has('web_search')) descriptions.push('### web_search\nSearch the web for current information and supporting sources. Use the actual query schema and cite the relevant source URLs.')
   if (has('web_fetch')) descriptions.push('### web_fetch\nFetch content from a specified URL. Read the actual page before relying on it as evidence.')
   if (has('ask_user_question')) descriptions.push('### ask_user_question\nAsk structured questions using the actual current schema. Ask when decisive information is missing or a preference materially improves the result. Follow the tool’s waiting behavior; do not assume it is an asynchronous interface.')
-  if (has('subagent')) descriptions.push('### subagent\nLaunch an available subagent for independent, scoped work when the benefit is clear and user or project instructions allow it. Use only the actual configured role and model fields; do not assume Cursor-specific agent types. Assign file ownership for changes and tell the worker to preserve other agents’ edits.')
+  if (has('subagent')) descriptions.push('### subagent\n' + (workMode === 'ultra' && !child
+    ? 'For substantive work, proactively delegate a scoped task or reuse an existing agent promptly while continuing useful work yourself. Follow the selected Ultra Free, Team, or Workflow collaboration strategy; Free leaves the method open and still defaults to collaboration. Respect explicit user restrictions. '
+    : 'Launch an available subagent for independent, scoped work when the benefit is clear and user or project instructions allow it. ') + 'Use only the actual configured role and model fields; do not assume Cursor-specific agent types. Assign file ownership for changes and tell the worker to preserve other agents’ edits.')
   if (has('job_list')) descriptions.push('### job_list\nList your background jobs with their actual ids and statuses before duplicating a long-running process.')
   if (has('job_output')) descriptions.push('### job_output\nRead output and status for the actual background job id. Check whether the job finished rather than treating a wait timeout as completion.')
   if (has('job_kill')) descriptions.push('### job_kill\nRequest cancellation of a running background job using its actual id. Inspect the returned state before claiming cancellation completed.')

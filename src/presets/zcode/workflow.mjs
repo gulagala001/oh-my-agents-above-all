@@ -29,10 +29,11 @@ export function workflowGuidanceFor(mode = 'off', tools = new Set(), submode = '
   }
   if (mode !== 'ultra') return guidance;
   const ordinaryRule = '- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.';
-  if (submode === 'team') return guidance.replace(ordinaryRule, '- Ultra Team is enabled. Collaborate through the DSH native Agent Team capabilities already available in this session. Ultra does not enable Team or provide a separate team interface. A workflow is an optional aid when the task needs it; follow the active Ultra mode guidance.');
-  if (submode !== 'workflow') return guidance.replace(ordinaryRule, '- Ultra Free is enabled. Choose direct execution, subagent collaboration, or a workflow according to the task. A workflow is optional unless the user explicitly asks for one.');
+  const collaboration = 'For substantive work, proactively delegate a scoped task or reuse an existing agent promptly while continuing useful work yourself; do not wait until all investigation or implementation is finished. Choose collaborators and responsibilities according to the task without a fixed headcount, role lineup, process, or review count. You may work alone on casual conversation, simple questions, or trivial mechanical actions. Respect explicit user restrictions and the actual tools available; if collaboration is unavailable, state the limitation and continue what is possible.';
+  if (submode === 'team') return guidance.replace(ordinaryRule, '- Ultra Team is enabled. ' + collaboration + ' Collaborate through the DSH native Agent Team capabilities already available in this session. Ultra does not enable Team or provide a separate team interface. A workflow is an optional aid when the task needs it; follow the active Ultra mode guidance.');
+  if (submode !== 'workflow') return guidance.replace(ordinaryRule, '- Ultra Free is enabled. ' + collaboration + ' Free lets you choose the collaboration method; it does not make substantive work solo by default. Choose among the available subagent, native Team, and workflow capabilities as appropriate. A workflow is optional unless the user explicitly asks for one.');
   return guidance.replace(ordinaryRule,
-    `- Ultra Workflow is enabled for this session and is the user's standing choice to use workflows for substantive work. Follow its workflow authoring reference; solo only on conversational or trivial turns. This standing choice supplies the explicit workflow authorization.`);
+    `- Ultra Workflow is enabled for this session and is the user's standing choice to use workflows for substantive work. ${collaboration} Follow its workflow authoring reference and delegate through the workflow. This standing choice supplies the explicit workflow authorization.`);
 }
 
 export function apply(ctx) {

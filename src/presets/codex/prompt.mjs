@@ -15,7 +15,7 @@ function replaceExact(text, before, after) {
   return text.replace(before, after)
 }
 
-export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default' } = {}) {
+export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', child = false, workMode = 'off', workSubmode = 'free' } = {}) {
   const has = name => tools.has(name)
   const shell = platform === 'win32' && has('pwsh') ? 'pwsh' : has('bash') ? 'bash' : has('pwsh') ? 'pwsh' : undefined
   let prompt = replaceExact(original,
@@ -84,7 +84,14 @@ export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default'
   if (has('ask_user_question')) capabilities.push('- Use `ask_user_question` for short questions when decisive information is missing or a preference materially improves the result. Follow the current schema and waiting behavior; no asynchronous execution or timeout behavior is implied by its name.')
   if (has('web_search')) capabilities.push('- Use `web_search` to look up current or uncertain external information and cite the supporting source.')
   if (has('web_fetch')) capabilities.push('- Use `web_fetch` to read a referenced page rather than relying on a search snippet.')
-  if (has('subagent')) capabilities.push('- Use `subagent` only when independent work has a clear benefit and current user or project instructions permit delegation. Give a scoped responsibility and report the evidence returned; use the current schema rather than assuming Codex agent roles.')
+  if (has('subagent')) capabilities.push(workMode === 'ultra' && !child
+    ? '- Use `subagent` according to the selected Ultra collaboration strategy. Give a scoped responsibility, assign file ownership for edits, preserve other agents’ work, and assess the evidence returned; use the current schema rather than assuming Codex agent roles.'
+    : '- Use `subagent` only when independent work has a clear benefit and current user or project instructions permit delegation. Give a scoped responsibility and report the evidence returned; use the current schema rather than assuming Codex agent roles.')
+  if (workMode === 'ultra' && !child) capabilities.push('- Ultra is enabled. For substantive work, proactively delegate a scoped task or reuse an existing agent promptly while continuing useful work yourself; do not wait until all investigation or implementation is finished. Follow the selected Ultra strategy: ' + (workSubmode === 'workflow'
+    ? 'Workflow delegates through the active workflow capabilities and authoring guidance.'
+    : workSubmode === 'team'
+      ? 'Team uses the DSH native Agent Team capabilities already available in this session; Ultra does not enable or provide another Team interface.'
+      : 'Free lets you choose the collaboration method; it does not make substantive work solo by default.') + ' Choose collaborators and responsibilities according to the task without a fixed headcount, role lineup, process, or review count. You may work alone on casual conversation, simple questions, or trivial mechanical actions. Respect explicit user restrictions and actual tool availability; if collaboration is unavailable, state the limitation and continue what is possible. Keep responsibility for integration and final verification yourself.')
   if (capabilities.length) prompt += `\n# Tools and task execution\n\n${capabilities.join('\n')}\n`
   if (cwd) prompt += `\nThe session working directory is ${JSON.stringify(String(cwd))}. Follow applicable AGENTS.md instructions for the files you touch.\n`
   if (mode === 'plan' || mode === 'ask') prompt += `\nThe current mode is ${mode === 'plan' ? 'Plan' : 'Ask'}. Research and ${mode === 'plan' ? 'produce a reviewable implementation plan' : 'answer the user’s question'} without changing project files or running mutating commands. Follow the host’s actual mode restrictions.\n`
