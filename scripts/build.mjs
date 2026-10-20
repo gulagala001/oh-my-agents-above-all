@@ -13,7 +13,7 @@ import { buildZCodeImportCache } from './build-zcode-import-cache.mjs';
 import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
 import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
 
-await buildPiPromptHelpers();
+await buildPiPromptHelpers({ write: true });
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 const nativeActivations = buildHost(manifest.devDependencies['@deepseek-ai/dsh']).activation === 'activation';
