@@ -13,7 +13,7 @@
     "build": "node scripts/build.mjs",
     "prompts:inspect": "node scripts/inspect-prompts.mjs",
     "public:check": "node scripts/public-files.mjs",
-    "prepack": "node scripts/public-files.mjs --package"
+    "prepack": "node scripts/build.mjs && node scripts/public-files.mjs --package"
   },
   "files": [
     "src",
