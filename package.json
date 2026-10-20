@@ -27,7 +27,8 @@
     "LICENSING.md",
     "assets",
     "scripts/public-files.mjs",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "README_EN.md"
   ],
   "devDependencies": {
     "@deepseek-ai/cordis-plugin-group": "1.0.5",

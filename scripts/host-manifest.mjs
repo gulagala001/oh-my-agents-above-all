@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { HOST_RANGE, LOADER_RANGE, splitReleaseVersion, alignedVersion } from '../src/host/compatibility.mjs';
 
-export const releaseFiles = ['src', 'lib', 'docs', 'README.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'assets', 'scripts/public-files.mjs', 'CHANGELOG.md'];
+export const releaseFiles = ['src', 'lib', 'docs', 'README.md', 'README_EN.md', 'cordis.patch.yml', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'assets', 'scripts/public-files.mjs', 'CHANGELOG.md'];
 
 function validateFileAllowlist(files) {
   if (!Array.isArray(files) || !files.length || new Set(files).size !== files.length
