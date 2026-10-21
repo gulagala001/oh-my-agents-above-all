@@ -3,7 +3,7 @@
 export function omdIdentityPrompt(ctx, session) {
   const persona = ctx.get('dshPersona');
   if (typeof persona?.promptFor === 'function') return persona.promptFor(session).trim();
-  const omd = ctx.get('trisoulX');
+  const omd = ctx.get('omd');
   if (!omd) return undefined;
   const value = typeof omd.omaaIdentityPrompt === 'function' ? omd.omaaIdentityPrompt(session)
     : omd.config?.().identityPreset === 'off' ? '' : omd.config?.().identityPrompt;

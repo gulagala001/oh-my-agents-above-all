@@ -14,7 +14,7 @@ export function apply(ctx) {
       const workflows = agent ? ctx.tools.schemas(agent).filter(row => row.name === 'workflow') : [];
       const value = { agent: Boolean(agent), controller: Boolean(controller), mode: controller?.mode,
         workflows: workflows.map(row => ({ name: row.name, resumable: Boolean(row.parameters?.properties?.resumeFromRunId) })),
-        omdRows: [...ctx.loader.entries()].filter(row => row.options.name === 'trisoul_x').map(row => ({ id: row.options.id, state: row.fiber?.state })) };
+        omdRows: [...ctx.loader.entries()].filter(row => row.options.name === 'oh-my-dsh').map(row => ({ id: row.options.id, state: row.fiber?.state })) };
       res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(value));
     } catch (error) { res.writeHead(500, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: error.message })); }
   } }));

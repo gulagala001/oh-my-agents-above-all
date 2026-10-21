@@ -39,7 +39,7 @@ test('configured route loader parses inert JS YAML and preserves native provider
 
 test('five presets finish an actual coding task with the authorized configured free DSH route', { skip: !process.env.OMAA_CONFIGURED_DSH_HOME, timeout: 360000 }, async t => {
   const route = await loadConfiguredRoute();
-  const settingsPath=join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'trisoul-x','cordis.patch.yml');
+  const settingsPath=join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'oh-my-dsh','cordis.patch.yml');
   const credentialPath=join(process.env.OMAA_CONFIGURED_DSH_HOME,'.credentials.yaml');
   const originalHashes=[hash(await readFile(settingsPath)),hash(await readFile(credentialPath))];
   const selected=process.env.OMAA_CONFIGURED_PRODUCTS?.split(',').filter(Boolean) ?? products.map(p=>p.id);

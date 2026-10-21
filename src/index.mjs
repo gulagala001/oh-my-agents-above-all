@@ -38,17 +38,17 @@ async function mount(ctx) {
       const active = plan?.pending ?? plan?.active ?? ctx.sessionProjections.stateOf(session, 'plan')?.active;
       return active ? 'plan' : preferences(session).mode;
     },
-    enhancementEnabled: session => Boolean(productForPreset(presetOf(session)) && preferences(session).enhancement && hub.enhancementAvailable(ctx.agents.get(session.id)) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function'),
-    enhancementWorkModeFor: (session, agent) => hub.enhancementEnabled(session) && hub.workflowFor(agent)?.mode === 'omd' && hub.modeFor(session, agent) === 'default' ? ctx.get('trisoulX')?.omaaWorkMode?.current(session, agent) ?? 'off' : 'off',
-    enhancementWorkSubmodeFor: (session, agent) => ctx.get('trisoulX')?.omaaWorkMode?.submode?.(session, agent) ?? 'free',
+    enhancementEnabled: session => Boolean(productForPreset(presetOf(session)) && preferences(session).enhancement && hub.enhancementAvailable(ctx.agents.get(session.id)) && typeof ctx.get('omd')?.installOmaaEnhancement === 'function'),
+    enhancementWorkModeFor: (session, agent) => hub.enhancementEnabled(session) && hub.workflowFor(agent)?.mode === 'omd' && hub.modeFor(session, agent) === 'default' ? ctx.get('omd')?.omaaWorkMode?.current(session, agent) ?? 'off' : 'off',
+    enhancementWorkSubmodeFor: (session, agent) => ctx.get('omd')?.omaaWorkMode?.submode?.(session, agent) ?? 'free',
     async inspect(sessionId) {
       const found = await ctx.get('sessionController')?.resolveAgent(sessionId);
       if (found?.error) throw found.error;
       const agent = found?.agent ?? ctx.agents.get(sessionId), session = agent?.session ?? ctx.sessions.get(sessionId);
       if (!session) throw new Error('会话不存在');
       const product = hub.product(session), plan = agent && hub.planController(agent)?.get(agent);
-      const omdIncompatible = Boolean(ctx.get('trisoulX') && typeof ctx.get('trisoulX').installOmaaEnhancement !== 'function');
-      const workControl = ctx.get('trisoulX')?.omaaWorkMode;
+      const omdIncompatible = Boolean(ctx.get('omd') && typeof ctx.get('omd').installOmaaEnhancement !== 'function');
+      const workControl = ctx.get('omd')?.omaaWorkMode;
       const workView = await workControl?.inspect(session, agent);
       const enhancementActive = hub.enhancementEnabled(session);
       const currentWorkMode = enhancementActive ? workView?.currentMode ?? workControl?.current?.(session, agent) ?? workView?.mode ?? 'off' : 'off';
@@ -56,7 +56,7 @@ async function mount(ctx) {
       return { agent, session, value: { ...preferences(session), product: product ?? null, hostVersion,
         mode: hub.modeFor(session, agent),
         pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
-        omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('trisoulX')?.installOmaaEnhancement === 'function', omdIncompatible,
+        omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('omd')?.installOmaaEnhancement === 'function', omdIncompatible,
         enhancementActive, enhancementWorkMode: enhancementActive ? workView?.savedMode ?? 'off' : 'off',
         enhancementWorkSubmode: workView?.submode ?? 'free', enhancementWorkSavedSubmode: workView?.savedSubmode ?? workView?.submode ?? 'free',
         enhancementWorkModeCurrent: currentWorkMode, enhancementWorkSubmodeCurrent: workView?.currentSubmode ?? workControl?.submode?.(session, agent) ?? workView?.submode ?? 'free',
@@ -84,7 +84,7 @@ async function mount(ctx) {
       store.set(session.id, next);
       try { controller?.set(agent, wantedPlan); }
       catch (error) { store.set(session.id, previous); throw error; }
-      const control = ctx.get('trisoulX')?.omaaWorkMode;
+      const control = ctx.get('omd')?.omaaWorkMode;
       const wantedWorkMode = workMode ?? (patch.enhancement === false ? 'off' : workSubmode !== undefined ? value.enhancementWorkMode : undefined);
       if (wantedWorkMode !== undefined && control && (workSubmode !== undefined || wantedWorkMode !== 'off' || (await control.inspect(session, agent)).savedMode !== 'off')) {
         try { await control.select(sessionId, wantedWorkMode, workSubmode); }
@@ -126,10 +126,10 @@ async function mount(ctx) {
     },
   };
   ctx.on('agent/disposed', ({ agent }) => { extensionNotices.delete(agent.id); }, { global: true });
-  const transferSession = createSessionTransfer({ store, hub, workControl: () => ctx.get('trisoulX')?.omaaWorkMode,
+  const transferSession = createSessionTransfer({ store, hub, workControl: () => ctx.get('omd')?.omaaWorkMode,
     flush: session => ctx.sessions.flush(session) });
   hub.updates = createUpdates({ hostVersion, getManager: () => ctx.get('pluginManager'),
-    getOmdVersion: () => ctx.get('trisoulX')?.omaaInstalledVersion,
+    getOmdVersion: () => ctx.get('omd')?.omaaInstalledVersion,
     isRunning: () => {
       const agents = ctx.agents.list(), jobs = ctx.get('jobs');
       return [...extensionStates.values()].some(state => state.busy()) || agents.some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length)

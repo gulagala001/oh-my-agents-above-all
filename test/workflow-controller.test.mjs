@@ -113,7 +113,7 @@ test('disposing during initialization releases the controller and child tools', 
 test('a provider removed during mount cannot reach the first queued turn', async () => {
   await withController('provider-removed', async f => {
     await f.entry.fiber.await(); f.setProvider({ name: 'omd-workflow', version: 1 });
-    f.root.provide('trisoulX', f.bridge('v1')); f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
+    f.root.provide('omd', f.bridge('v1')); f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
     await f.enhancedEntered.promise; f.queue(); f.setProvider(undefined);
     f.root.emit('subagent/provider-removed', 'omd-workflow'); f.enhancedGate.resolve();
     await until(() => f.observations.length === 1);
@@ -124,10 +124,10 @@ test('a provider removed during mount cannot reach the first queued turn', async
 test('async old-owner teardown installs the latest provider before releasing input', async () => {
   await withController('provider-reload', async f => {
     await f.entry.fiber.await(); f.setProvider({ name: 'omd-workflow', version: 1 });
-    const remove = f.root.provide('trisoulX', f.bridge('v1')); f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
+    const remove = f.root.provide('omd', f.bridge('v1')); f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
     await f.oldDisposeEntered.promise; f.queue(); f.setProvider(undefined);
     f.root.emit('subagent/provider-removed', 'omd-workflow'); await remove();
-    f.setProvider({ name: 'omd-workflow', version: 2 }); f.root.provide('trisoulX', f.bridge('v2'));
+    f.setProvider({ name: 'omd-workflow', version: 2 }); f.root.provide('omd', f.bridge('v2'));
     f.root.emit('subagent/provider-added', { name: 'omd-workflow' }); f.oldDisposeGate.resolve();
     await until(() => f.observations.length === 1);
     assert.deepEqual(f.observations, [['v2']]); assert.equal([...f.hub.workflowControllers][0].mode, 'omd');
@@ -140,7 +140,7 @@ test('failed enhancement keeps its outer preset fiber available', async () => {
     const hub = { enhancementScopes: new Set(), enhancementEnabled: () => false };
     root.provide('omaa', hub); root.provide('systemPrompt', {});
     root.provide('tools', { guard() {} });
-    root.provide('trisoulX', { async installOmaaEnhancement() { throw Error('fixture-enhancement-failure'); } });
+    root.provide('omd', { async installOmaaEnhancement() { throw Error('fixture-enhancement-failure'); } });
     const outer = await root.plugin(enhancement); await tick();
     assert.equal(outer.state, 2); assert.equal(hub.enhancementScopes.size, 0);
   } finally { await root.fiber.dispose(); }
@@ -151,7 +151,7 @@ test('enhancement readiness cannot be registered after its owner is disposed', a
   try {
     const hub = { enhancementScopes: new Set(), enhancementEnabled: () => false };
     for (const [name, value] of Object.entries({ omaa: hub, tools: { guard() {} }, systemPrompt: {} })) root.provide(name, value);
-    root.provide('trisoulX', { installOmaaEnhancement: async () => [] });
+    root.provide('omd', { installOmaaEnhancement: async () => [] });
     native.parent.tree.import = async () => { entered.resolve(); await gate.promise; return scopes; };
     const outer = await root.plugin(enhancement); await entered.promise;
     const runtime = [...root.registry.values()].find(row => row.name === 'omaa-optional-enhancement');

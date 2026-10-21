@@ -15,7 +15,7 @@ export async function scopeBinding(ctx) {
 export async function apply(ctx, config) {
   const tree = ctx.fiber.entry.parent.tree;
   const { scope: revision, matches: owned } = await scopeBinding(ctx);
-  let branch, bridge = ctx.get('trisoulX'), active = true, pending = false, draining;
+  let branch, bridge = ctx.get('omd'), active = true, pending = false, draining;
   let replacing, failedTarget;
   const controller = { matches: owned, mode: 'native' };
   const hub = ctx.omaa;
@@ -130,8 +130,8 @@ export async function apply(ctx, config) {
     // child is still being published would deadlock the native spawn path.
     await replacing?.promise;
   }, { global: true, prepend: true });
-  ctx.inject(['trisoulX'], scope => {
-    const current = scope.trisoulX;
+  ctx.inject(['omd'], scope => {
+    const current = scope.omd;
     bridge = current; failedTarget = undefined; schedule();
     return () => { if (bridge === current) { bridge = undefined; failedTarget = undefined; schedule(); } };
   });

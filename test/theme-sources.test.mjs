@@ -73,7 +73,7 @@ test('Codex asset stays byte-identical to the recorded authorized OMD snapshot',
   assert.equal(provenance.source.sha256, '6aba58372949773c374aee7350446367ae5f3660865afde0d6d79efe275ee4db');
   assert.equal(asset.id, 'codex-desktop'); assert.equal(asset.version, '1.0.1');
   assert.equal(asset.tokens.light.bg, '#ffffff'); assert.equal(asset.tokens.dark.bg, '#181818');
-  assert.equal(provenance.source.license, null); assert.match(provenance.source.path, /trisoul_x\/src\/client\/skins\/bundled\/codex-desktop.json$/);
+  assert.equal(provenance.source.license, null); assert.match(provenance.source.path, /(?:^|\/)src\/client\/skins\/bundled\/codex-desktop.json$/);
 });
 
 test('Cursor public layout references do not masquerade as an exact palette or copied closed-source assets', async () => {

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { installedHost } from './fixtures/installed-host.mjs';
 const run = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
-const artifact = process.env.OMAA_TEST_OMD_PACKAGE || [join(root, 'dist/trisoul_x-0.2.1-alpha.1.omd.0.8.0.tgz'), join(root, 'dist/0.3.0/trisoul_x-0.2.1-alpha.1.omd.0.8.0.tgz')].find(existsSync);
+const artifact = process.env.OMAA_TEST_OMD_PACKAGE || [join(root, 'dist/oh-my-dsh-0.2.1-alpha.1.omd.0.8.0.tgz'), join(root, 'dist/0.3.0/oh-my-dsh-0.2.1-alpha.1.omd.0.8.0.tgz')].find(existsSync);
 const systemTexts = request => request.messages.filter(message => message.role === 'system').map(message => typeof message.content === 'string' ? message.content : message.content.map(part => part.text || '').join('\n'));
 
 test('OMD identity edits reach installed OMAA requests with enhancement off, including an existing session', { timeout: 90000 }, async t => {
@@ -17,7 +17,7 @@ test('OMD identity edits reach installed OMAA requests with enhancement off, inc
   await run(process.execPath, [join(root, 'node_modules/@deepseek-ai/dsh/lib/bin.js'), 'plugin', '--profile', 'omaa-fixture', 'add', 'file:' + artifact], { cwd: root, env: { ...process.env, DSH_HOME: f.home }, timeout: 60000 });
   await f.install(); await f.boot();
   const settings = async patch => {
-    const r = await fetch(f.origin + '/trisoul-x/api/settings', { method: 'POST', headers: { cookie: f.cookie, 'content-type': 'application/json' }, body: JSON.stringify(patch) });
+    const r = await fetch(f.origin + '/oh-my-dsh/api/settings', { method: 'POST', headers: { cookie: f.cookie, 'content-type': 'application/json' }, body: JSON.stringify(patch) });
     assert.equal(r.status, 200, await r.text());
   };
   const identity = 'You are USER_IDENTITY_SENTINEL.\nKeep {{raw_identity}} and $& literal.';

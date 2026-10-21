@@ -7,7 +7,7 @@ export const RELEASES_URL = `https://github.com/${REPO}/releases`;
 const API = `https://api.github.com/repos/${REPO}`;
 const OMD_REPO = 'gulagala001/oh-my-dsh';
 const OMD_BRIDGE = JSON.parse(readFileSync(new URL('./host/compatibility.json', import.meta.url), 'utf8')).omdBridge;
-const PACKAGE = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
+const PACKAGE = { omaa: 'oh-my-agents-above-all', omd: 'oh-my-dsh' };
 const RUNNING_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 const fail = message => Object.assign(new Error(message), { statusCode: 409 });
 export function splitReleaseVersion(version, product = 'omaa') {

@@ -4,8 +4,8 @@ import { hostTokens, tokenCss } from './shared/mapping.mjs';
 import { appearanceCoordinator } from './coordinator.mjs';
 
 export function hasLegacyAppearance(surface, coordinator) {
-  return !coordinator.hasProvider('omd') && Boolean(surface.querySelector('style[data-plugin="trisoul_x"], style[data-omd-skin-style], style[data-omd-custom-style]')
-    || surface.documentElement.classList.contains('trisoul-shell'));
+  return !coordinator.hasProvider('omd') && Boolean(surface.querySelector('style[data-plugin="oh-my-dsh"], style[data-omd-skin-style], style[data-omd-custom-style]')
+    || surface.documentElement.classList.contains('omd-shell'));
 }
 
 export function createThemeRuntime(ctx, settings, adapterCss, layouts = {}, responsiveCss = '', surface = document) {

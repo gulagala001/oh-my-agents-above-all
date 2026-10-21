@@ -26,7 +26,7 @@ async function fixture(t) {
     agents: { get: () => agent, list: () => [agent] }, sessions: { flush: async () => {} },
     sessionProjections: { stateOf: () => undefined },
     effect() {}, on() {}, inject() {}, emit() {},
-    get: name => name === 'trisoulX' ? omd : undefined,
+    get: name => name === 'omd' ? omd : undefined,
     provide: (name, service) => { if (name === 'omaa') hub = service; },
   };
   await apply(ctx);

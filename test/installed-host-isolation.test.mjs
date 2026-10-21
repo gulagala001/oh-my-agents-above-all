@@ -92,9 +92,9 @@ test('default Native fixture construction owns Chrome and Pi while automatic fea
     for (const [key, value] of Object.entries(expectedPaths(f.home))) { assert.equal(probe.env[key], value, key); await access(value); }
     assert.equal(f.userHome, probe.env.HOME); assert.equal(f.piAgentDir, probe.env.PI_CODING_AGENT_DIR);
     assert.equal(probe.cwd, f.workspace, 'Ordinary install commands must not discover repository/user ancestors');
-    assert.equal(probe.settings['trisoul-x'].computerUseChromeUserDataDir, join(f.home, 'chrome-profile'));
-    assert.equal(probe.settings['trisoul-x'].componentAutoSetup, undefined, 'Mandatory path ownership must not disable automatic setup');
-    assert.equal(probe.settings['trisoul-x'].computerUseNativeBinary, undefined, 'Ordinary fixture retains real component configuration');
+    assert.equal(probe.settings['oh-my-dsh'].computerUseChromeUserDataDir, join(f.home, 'chrome-profile'));
+    assert.equal(probe.settings['oh-my-dsh'].componentAutoSetup, undefined, 'Mandatory path ownership must not disable automatic setup');
+    assert.equal(probe.settings['oh-my-dsh'].computerUseNativeBinary, undefined, 'Ordinary fixture retains real component configuration');
     await assert.rejects(readFile(join(f.piAgentDir, 'settings.json')), { code: 'ENOENT' });
     await access(join(f.workspace, '.git'));
   }, { TMPDIR: temporary });
@@ -125,7 +125,7 @@ test('legacy false isolation options cannot opt an ordinary fixture back into pe
     const probe = JSON.parse((await f.command(['unit-isolation-probe'])).stdout);
     for (const [key, value] of Object.entries(expectedPaths(f.home))) assert.equal(probe.env[key], value, key);
     assert.equal(f.userHome, join(f.home, 'user-home')); assert.equal(f.piAgentDir, join(f.home, 'pi-agent'));
-    assert.equal(probe.settings['trisoul-x'].computerUseChromeUserDataDir, join(f.home, 'chrome-profile'));
-    assert.equal(probe.settings['trisoul-x'].componentAutoSetup, undefined);
+    assert.equal(probe.settings['oh-my-dsh'].computerUseChromeUserDataDir, join(f.home, 'chrome-profile'));
+    assert.equal(probe.settings['oh-my-dsh'].componentAutoSetup, undefined);
   }, { TMPDIR: temporary });
 });

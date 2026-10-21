@@ -10,7 +10,7 @@ function entries(tree) { if (!Array.isArray(tree)) throw fail('profile patch mus
 
 export async function loadConfiguredRoute({
   home = process.env.OMAA_CONFIGURED_DSH_HOME,
-  profile = process.env.OMAA_CONFIGURED_PROFILE ?? 'trisoul-x',
+  profile = process.env.OMAA_CONFIGURED_PROFILE ?? 'oh-my-dsh',
   providerId = process.env.OMAA_CONFIGURED_PROVIDER ?? 'opencode-zen',
   model = process.env.OMAA_CONFIGURED_MODEL ?? 'space-bunny-free',
 } = {}) {

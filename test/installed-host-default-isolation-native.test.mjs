@@ -11,7 +11,7 @@ import { installedHost, textReply, toolReply, until } from './fixtures/installed
 const enabled = process.env.OMAA_TEST_DEFAULT_ISOLATION_NATIVE === '1';
 const output = resolve(process.env.OMAA_DEFAULT_ISOLATION_EVIDENCE ?? 'work/a2-compat/fixture-default-isolation');
 const omaa = { path: resolve('work/a2-compat/formal-candidate-a2/oh-my-agents-above-all-0.2.1-alpha.2.omaa.0.14.2.tgz'), sha256: 'b8acefe5475a88d868e00a3dc10b9fe593e8caaf486e57da8218b30f97256023' };
-const omd = { path: resolve(process.env.OMAA_DEFAULT_ISOLATION_OMD_ARCHIVE ?? '/Users/mac/.codex/worktrees/dsh-a2-compat/trisoul_x/work/a2-compat/formal-candidate-a2-0122/trisoul_x-0.2.1-alpha.2.omd.0.12.2.tgz'), sha256: process.env.OMAA_DEFAULT_ISOLATION_OMD_SHA ?? 'ec34bca30ad4ff99f84b25da2d00c279f79f6a1beda235382422839cfacfc665' };
+const omd = { path: resolve(process.env.OMAA_DEFAULT_ISOLATION_OMD_ARCHIVE ?? '/Users/mac/.codex/worktrees/dsh-a2-compat/oh-my-dsh/work/a2-compat/formal-candidate-a2-0122/oh-my-dsh-0.2.1-alpha.2.omd.0.12.2.tgz'), sha256: process.env.OMAA_DEFAULT_ISOLATION_OMD_SHA ?? 'ec34bca30ad4ff99f84b25da2d00c279f79f6a1beda235382422839cfacfc665' };
 const cft = join(output, 'browser/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const exec = promisify(execFile);
@@ -29,7 +29,7 @@ async function ownedIoPaths(f) {
       if (info.isDirectory() && !info.isSymbolicLink()) await walk(path, depth + 1);
     }
   }
-  for (const path of [join(f.home, 'chrome-profile'), join(f.userHome, 'Library/Application Support/Google/Chrome'), join(f.home, 'trisoul-x/computer-use'), join(f.home, 'tmp')]) await walk(path);
+  for (const path of [join(f.home, 'chrome-profile'), join(f.userHome, 'Library/Application Support/Google/Chrome'), join(f.home, 'oh-my-dsh/computer-use'), join(f.home, 'tmp')]) await walk(path);
   const processes = (await exec('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8' })).stdout.split('\n').filter(row => row.includes(f.root));
   return { paths, processes };
 }
@@ -78,8 +78,8 @@ test('ordinary default Native fixture keeps automatic CU prepare and all runtime
   const localUrl = 'http://127.0.0.1:' + local.address().port;
   const wrapper = join(f.root, 'owned-cft-exec.sh'); await writeFile(wrapper, "#!/bin/sh\nexec '" + cft.replaceAll("'", "'\\''") + "' --use-mock-keychain --password-store=basic \"$@\"\n", { mode: 0o700 });
   const settingsPath = join(f.home, 'settings.yaml'), settings = JSON.parse(await readFile(settingsPath));
-  assert.equal(settings['trisoul-x'].componentAutoSetup, undefined); assert.equal(settings['trisoul-x'].computerUseNativeBinary, undefined);
-  Object.assign(settings['trisoul-x'], { computerUseBrowserExecutable: wrapper, unifiedBackground: { provider: 'fixture', model: 'fixture', effort: 'off' }, dreamProvider: 'fixture', dreamModel: 'fixture' });
+  assert.equal(settings['oh-my-dsh'].componentAutoSetup, undefined); assert.equal(settings['oh-my-dsh'].computerUseNativeBinary, undefined);
+  Object.assign(settings['oh-my-dsh'], { computerUseBrowserExecutable: wrapper, unifiedBackground: { provider: 'fixture', model: 'fixture', effort: 'off' }, dreamProvider: 'fixture', dreamModel: 'fixture' });
   await writeFile(settingsPath, JSON.stringify(settings));
   const skillDir = join(f.piAgentDir, 'skills/owned-user-skill'); await mkdir(skillDir, { recursive: true });
   await writeFile(join(skillDir, 'SKILL.md'), '---\nname: owned-user-skill\ndescription: Owned default Pi user resource\n---\nDEFAULT_OWNED_PI_RESOURCE\n');

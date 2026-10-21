@@ -100,14 +100,14 @@ test('actual OMD hot disable, enable and uninstall preserve bases and restore re
     omaa: f.evidence.artifact.sha256, omd: f.evidence.omdArtifact.sha256, isolation: f.evidence.isolation }));
   await f.installOmd(); await f.install();
   await profilePatch(f, [await addObserver(f)]); await f.boot();
-  const initiallyDisabled = await f.call('pluginManager/setBundleEnabled', { name: 'trisoul_x', enabled: false });
+  const initiallyDisabled = await f.call('pluginManager/setBundleEnabled', { name: 'oh-my-dsh', enabled: false });
   assert(!initiallyDisabled.error, JSON.stringify(initiallyDisabled));
   const ids = {}; await fiveBases(f, ids, 'AVAILABLE_NATIVE_BASELINE');
   const id = ids.codex, children = [], child = 'WORKFLOW_AVAIL_CHILD_' + crypto.randomUUID().replaceAll('-', '');
   await expectMode(f, id, 'native');
   assert.equal((await observer(f, id)).workflows[0].resumable, false);
   assert.match((await workflow(f, id, 'AVAILABLE_NATIVE_BEFORE_ENABLE')).text, /AVAILABLE_NATIVE_BEFORE_ENABLE_VALUE/);
-  const initiallyEnabled = await f.call('pluginManager/setBundleEnabled', { name: 'trisoul_x', enabled: true });
+  const initiallyEnabled = await f.call('pluginManager/setBundleEnabled', { name: 'oh-my-dsh', enabled: true });
   assert(!initiallyEnabled.error, JSON.stringify(initiallyEnabled));
   await fiveBases(f, ids, 'AVAILABLE_INSTALLED');
   await expectMode(f, id, 'omd');
@@ -117,7 +117,7 @@ test('actual OMD hot disable, enable and uninstall preserve bases and restore re
   assert(saved.runId && saved.scriptPath, first.text);
   assert(saved.scriptPath.startsWith(f.home + '/'), 'only the isolated host may own saved workflow artifacts');
   assert.deepEqual(children, [child]);
-  const disabled = await f.call('pluginManager/setBundleEnabled', { name: 'trisoul_x', enabled: false });
+  const disabled = await f.call('pluginManager/setBundleEnabled', { name: 'oh-my-dsh', enabled: false });
   assert(!disabled.error, JSON.stringify(disabled));
   // Native dependency reloads can dispose idle Agents. Prompt the same saved
   // sessions first, as the real client does, before observing live scopes.
@@ -129,7 +129,7 @@ test('actual OMD hot disable, enable and uninstall preserve bases and restore re
     assert.equal((await f.api(sessionId)).value.omdAvailable, false);
   }
   assert.match((await workflow(f, id, 'AVAILABLE_NATIVE_AFTER_DISABLE')).text, /AVAILABLE_NATIVE_AFTER_DISABLE_VALUE/);
-  const restored = await f.call('pluginManager/setBundleEnabled', { name: 'trisoul_x', enabled: true });
+  const restored = await f.call('pluginManager/setBundleEnabled', { name: 'oh-my-dsh', enabled: true });
   assert(!restored.error, JSON.stringify(restored));
   await fiveBases(f, ids, 'AVAILABLE_REENABLED');
   await expectMode(f, id, 'omd');
@@ -138,12 +138,12 @@ test('actual OMD hot disable, enable and uninstall preserve bases and restore re
   assert.match(resumed.text, new RegExp(child + '_RESULT'));
   assert.deepEqual(children, [child], 'resuming must reuse the prior child result without a duplicate model request');
   assert.equal(f.requests.filter(payload => userText(payload).includes(child)).length, 1, 'the full lifecycle must contain only one request for this child');
-  const removed = await f.call('pluginManager/removeBundle', { name: 'trisoul_x' });
+  const removed = await f.call('pluginManager/removeBundle', { name: 'oh-my-dsh' });
   const restartDiagnostic = 'profile resolution: replacing "immer" requires a process restart';
   if (removed.packageResult?.exitCode === 0 && removed.error?.diagnostic === restartDiagnostic) {
     const manifest = JSON.parse(await readFile(join(f.home, 'profiles', 'omaa-fixture', 'package.json'), 'utf8'));
-    assert([manifest.dependencies, manifest.devDependencies, manifest.optionalDependencies].every(values => !Object.hasOwn(values ?? {}, 'trisoul_x')), 'the actual package must be uninstalled before accepting the native restart boundary');
-    assert(!manifest.dsh.profile.bundles.includes('trisoul_x'), 'the uninstalled bundle must be absent from the saved profile');
+    assert([manifest.dependencies, manifest.devDependencies, manifest.optionalDependencies].every(values => !Object.hasOwn(values ?? {}, 'oh-my-dsh')), 'the actual package must be uninstalled before accepting the native restart boundary');
+    assert(!manifest.dsh.profile.bundles.includes('oh-my-dsh'), 'the uninstalled bundle must be absent from the saved profile');
     t.diagnostic('Native remove RPC result: ' + JSON.stringify(removed));
     t.diagnostic('Successful package uninstall requires the native immer resolution restart; verifying the same saved sessions after restarting this profile.');
     await f.stop(); await f.boot();
@@ -173,14 +173,14 @@ async function faultPackage(f, mode, index) {
     import: 'export function apply( {',
     apply: `export function apply(){throw Error('WORKFLOW_AVAIL_APPLY_FAILURE');}`,
     pending: `export const inject=['workflowAvailabilityNeverProvided'];export function apply(){throw Error('Pending provider must never apply');}`,
-    bridge: `export function apply(ctx){ctx.provide('trisoulX',{});}`,
-    optional: `export const inject=['subagents'];export function apply(ctx){ctx.subagents.registerProvider({name:'omd-workflow',capabilities:{},inheritsParentContext:false,start(){throw Error('Failing optional branch must never spawn');}});ctx.provide('trisoulX',{omaaWorkflowComposition(){return [{name:${JSON.stringify(pathToFileURL(join(root, 'missing-workflow-branch.mjs')).href)}}];},installOmaaEnhancement(){throw Error('WORKFLOW_AVAIL_OPTIONAL_FAILURE');}});}`,
+    bridge: `export function apply(ctx){ctx.provide('omd',{});}`,
+    optional: `export const inject=['subagents'];export function apply(ctx){ctx.subagents.registerProvider({name:'omd-workflow',capabilities:{},inheritsParentContext:false,start(){throw Error('Failing optional branch must never spawn');}});ctx.provide('omd',{omaaWorkflowComposition(){return [{name:${JSON.stringify(pathToFileURL(join(root, 'missing-workflow-branch.mjs')).href)}}];},installOmaaEnhancement(){throw Error('WORKFLOW_AVAIL_OPTIONAL_FAILURE');}});}`,
   }[mode];
-  await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'trisoul_x', version: f.evidence.version + '.omd.0.0.' + index, type: 'module', main: './index.mjs', exports: { '.': './index.mjs' }, dsh: { bundle: { patch: ['./cordis.patch.yml'] } } }));
+  await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'oh-my-dsh', version: f.evidence.version + '.omd.0.0.' + index, type: 'module', main: './index.mjs', exports: { '.': './index.mjs' }, dsh: { bundle: { patch: ['./cordis.patch.yml'] } } }));
   await writeFile(join(dir, 'index.mjs'), code);
   // Installation is ordinary and complete; the isolated profile explicitly
   // activates this intentionally faulty row only for the boot being tested.
-  await writeFile(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: trisoul-x\n      name: trisoul_x\n      disabled: true\n');
+  await writeFile(join(dir, 'cordis.patch.yml'), '- insert:\n    - id: oh-my-dsh\n      name: oh-my-dsh\n      disabled: true\n');
   const path = join(root, 'fault.tgz'); await runFile('tar', ['-czf', path, '-C', root, 'package']);
   await f.command(['plugin', '--profile', 'omaa-fixture', 'add', 'file:' + path]);
 }
@@ -191,9 +191,9 @@ test('configured OMD import/apply/PENDING and missing bridge cannot drag five ba
     const f = await installedHost(sub, configuration()); await f.install();
     const observe = await addObserver(f);
     await faultPackage(f, mode, ++index);
-    await profilePatch(f, [{ id: 'trisoul-x', disabled: false }, observe]);
+    await profilePatch(f, [{ id: 'oh-my-dsh', disabled: false }, observe]);
     const manifest = JSON.parse(await readFile(join(f.home, 'profiles', 'omaa-fixture', 'package.json'), 'utf8'));
-    assert(manifest.dsh.profile.bundles.includes('trisoul_x'), 'the OMD bundle must really remain configured');
+    assert(manifest.dsh.profile.bundles.includes('oh-my-dsh'), 'the OMD bundle must really remain configured');
     await f.boot();
     const ids = {}; await fiveBases(f, ids, 'AVAILABLE_FAULT_' + mode);
     for (const sessionId of Object.values(ids)) {
@@ -208,7 +208,7 @@ test('configured OMD import/apply/PENDING and missing bridge cannot drag five ba
 
 test('an optional workflow/enhancement branch failure falls back to one working native engine', { skip: !enabled, timeout: 900000 }, async t => {
   const f = await installedHost(t, configuration()); await f.install(); await faultPackage(f, 'optional', 9);
-  await profilePatch(f, [{ id: 'trisoul-x', disabled: false }, await addObserver(f)]); await f.boot();
+  await profilePatch(f, [{ id: 'oh-my-dsh', disabled: false }, await addObserver(f)]); await f.boot();
   const ids = {}; await fiveBases(f, ids, 'AVAILABLE_OPTIONAL_FAILED');
   for (const sessionId of Object.values(ids)) {
     const state = await observer(f, sessionId); assert.equal(state.mode, 'native'); assert.equal(state.workflows.length, 1); assert.equal(state.workflows[0].resumable, false);

@@ -31,7 +31,7 @@ test('the pending a2 SDK build rejects old hosts before any update request or na
 const repo = 'gulagala001/oh-my-agents-above-all';
 const host = '0.2.0-rc.2', tag = 'v0.2.1-alpha.1.omaa.0.3.0';
 const versions = { omaa: `${host}.omaa.0.3.0`, omd: `${host}.omd.0.7.2` };
-const names = { omaa: 'oh-my-agents-above-all', omd: 'trisoul_x' };
+const names = { omaa: 'oh-my-agents-above-all', omd: 'oh-my-dsh' };
 function fixture({ partialFailure = false, metadataHost = host, draft = false, missingOmd = false,
   currentVersion = `${host}.omaa.0.2.1`, runtimeHost, releaseTag = tag, laterUnpaired = false } = {}) {
   const metadata = new Map(), calls = [];
@@ -52,7 +52,7 @@ function fixture({ partialFailure = false, metadataHost = host, draft = false, m
   let running = false;
   const manager = { async listBundles() { return bundles.map(row => ({ ...row })); },
     async installBundle(url, options) {
-      const product = url.includes('/trisoul_x-') ? 'omd' : 'omaa'; calls.push({ product, url, options });
+      const product = url.includes('/oh-my-dsh-') ? 'omd' : 'omaa'; calls.push({ product, url, options });
       if (partialFailure && product === 'omaa') return { application: 'failed', error: { message: 'native failure' } };
       bundles.find(row => row.name === names[product]).version = versions[product];
       return { application: 'restart-required', bundle: names[product] };

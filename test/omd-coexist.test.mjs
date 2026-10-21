@@ -47,7 +47,7 @@ async function runtimePrerequisite(f) {
   assert.equal('sha512-' + createHash('sha512').update(bytes).digest('base64'), runtimeIntegrity, 'Official npm dist.integrity');
   const manifest = JSON.parse((await run('tar', ['-xOf', source, 'package/package.json'], { maxBuffer: 1024 * 1024 })).stdout);
   assert.equal(manifest.name, '@colbymchenry/codegraph-darwin-arm64'); assert.equal(manifest.version, '1.6.0');
-  const destination = join(f.home, 'trisoul-x', 'components', 'codegraph', 'bundles', 'darwin-arm64-1.6.0');
+  const destination = join(f.home, 'oh-my-dsh', 'components', 'codegraph', 'bundles', 'darwin-arm64-1.6.0');
   await mkdir(destination, { recursive: true });
   await run('tar', ['-xf', source, '-C', destination, '--strip-components=1'], { timeout: 120000 });
   for (const path of ['node', 'lib/dist/bin/codegraph.js']) assert((await stat(join(destination, path))).isFile(), 'Full upstream runtime is required: ' + path);
@@ -176,7 +176,7 @@ test('frozen OMD and OMAA preserve standard, guarded opt-in tools, actual CodeGr
       // Keep all calls on the fixture provider, including optional background
       // lanes; this selects a local model without changing enhancement flags.
       const settingsPath = join(f.home, 'settings.yaml'), settings = JSON.parse(await readFile(settingsPath, 'utf8'));
-      settings['trisoul-x'] = { ...settings['trisoul-x'], unifiedBackground: { provider: 'fixture', model: 'fixture', effort: 'off' }, dreamProvider: 'fixture', dreamModel: 'fixture' };
+      settings['oh-my-dsh'] = { ...settings['oh-my-dsh'], unifiedBackground: { provider: 'fixture', model: 'fixture', effort: 'off' }, dreamProvider: 'fixture', dreamModel: 'fixture' };
       await writeFile(settingsPath, JSON.stringify(settings));
       evidence.runtime = await runtimePrerequisite(f);
       if (order === 'omd-first') {

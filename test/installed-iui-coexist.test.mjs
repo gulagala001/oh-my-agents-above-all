@@ -31,7 +31,7 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
   const stockBlankEvidence = { path: stockBlankEvidencePath, sha256: hash(stockBlankBytes), hostVersion: stockBlankReport.host.version, localCopy: join(out, 'stock-native-missing-preset-blank-reference.json') };
   await writeFile(stockBlankEvidence.localCopy, stockBlankBytes);
   await writeFile(join(out, 'test-source-at-execution.mjs'), await readFile(new URL(import.meta.url)));
-  const missingPresetWarning = 'initial Session restoration failed: SessionCreateError: session create failed: agent-preset/not-found: Unknown agent preset: trisoul-x';
+  const missingPresetWarning = 'initial Session restoration failed: SessionCreateError: session create failed: agent-preset/not-found: Unknown agent preset: oh-my-dsh';
   const isKnownNativeBlankWarning = row => row.type === 'warning' && ['original-IUI-control', 'native-restored'].includes(row.phase) && row.text.split('\n')[0] === missingPresetWarning;
   let verified = false, phase = 'initial';
   t.after(async () => {
@@ -88,7 +88,7 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
   const iuiSdk = JSON.parse(execFileSync(process.execPath, [iuiProbe, f.evidence.cli, f.home, 'dsh-intelligent-ui'], {
     cwd: f.workspace, env: { ...fixtureEnvironment(f.home, true), HOME: f.userHome, USERPROFILE: f.userHome, PI_CODING_AGENT_DIR: f.piAgentDir }, encoding: 'utf8', timeout: 30000,
   }));
-  const sdk = { omaa: await f.installedEvidence(), omd: await f.installedEvidence('trisoul_x'), iui: iuiSdk };
+  const sdk = { omaa: await f.installedEvidence(), omd: await f.installedEvidence('oh-my-dsh'), iui: iuiSdk };
   await writeFile(join(out, 'sdk-routing.json'), JSON.stringify(sdk, null, 2) + '\n');
   const iuiRuntimeImports = [];
   const inspectSource = async directory => {
@@ -264,7 +264,7 @@ test('fixed original IUI Forms remain editable, durable and native-submittable a
   await browser('native-restored'); await select(original); assert.equal(await page.locator('.iui-surface').count(), 0);
   const restored = await f.prompt(original.sessionId, 'IUI_NATIVE_RESTORED: read the actual sentinel through the ordinary host.');
   assert(restored.records.some(row => row.event?.type === 'tool/result' && textOf(row.event.data.message).includes('IUI_NATIVE_READ_RESTORED')));
-  const bundles = await f.call('pluginManager/listBundles', {}); for (const name of ['trisoul_x', 'oh-my-agents-above-all', 'dsh-intelligent-ui']) assert(!bundles.some(row => row.name === name && row.installed));
+  const bundles = await f.call('pluginManager/listBundles', {}); for (const name of ['oh-my-dsh', 'oh-my-agents-above-all', 'dsh-intelligent-ui']) assert(!bundles.some(row => row.name === name && row.installed));
   const knownNativeBlankWarnings = warnings.filter(isKnownNativeBlankWarning), unexpectedWarnings = warnings.filter(row => !isKnownNativeBlankWarning(row));
   assert.deepEqual(errors, []); assert.deepEqual(f.errors, []); assert.deepEqual(unexpectedWarnings, [], 'Only the exact stock-confirmed missing-preset blank warning is classified; all other warnings fail');
   await writeFile(join(out, 'verification.json'), JSON.stringify({ passed: true, acceptanceScope: 'Five-preset Form business/lifecycle and exact native user-layer preservation; automatic missing-preset blank recovery is a known stock-host limitation, not passed.', fixture: f.evidence, iuiArtifact: iui, source, sessions, checks, userLayerChecks, nativeSubmissions, uiErrors: errors, browserWarnings: warnings, knownNativeBlankWarnings, unexpectedWarnings, nativeErrors: f.errors, preservedStateFiles: records, preservedStateBytes, nativeReadRestored: true, nativeBaseUsableAfterExplicitNavigation: true, automaticMissingPresetBlankRecovery: false, stockBlankEvidence, limits: ['macOS headless CFT, scripted localhost model, real frozen native package installation and original IUI renderer.', 'Five OMAA presets with OMD enhancement enabled; separate original IUI standard control after OMD/OMAA removal.', 'Missing stored-preset blank restoration fails in stock DSH even when registry default remains standard; no blank/session/draft migration or deletion is performed.', 'Safe fixture isolated HOME; no real accounts/desktop, no rebuild of IUI and no custom renderer injection.'] }, null, 2) + '\n');

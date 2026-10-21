@@ -40,7 +40,7 @@ test('five configured free-model presets complete the same multi-file task proje
   const runId=new Date().toISOString().replace(/[:.]/g,'-'),evidence=path.resolve('.cache/configured-project',runId);await fs.mkdir(evidence,{recursive:true});
   await fs.copyFile(checker,path.join(evidence,'acceptance.mjs'));
   const redact=text=>[route.apiKey,route.baseUrl,new URL(route.baseUrl).origin].sort((a,b)=>b.length-a.length).reduce((value,secret)=>value.replaceAll(secret,'[redacted]'),String(text));
-  const originalPaths=[path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'trisoul-x','cordis.patch.yml'),path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'.credentials.yaml')];
+  const originalPaths=[path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'oh-my-dsh','cordis.patch.yml'),path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'.credentials.yaml')];
   const originalHashes=await Promise.all(originalPaths.map(async p=>hash(await fs.readFile(p))));
   let f;const reports=[];
   // This hook must precede installedHost's cleanup hook. Stop our host, capture
@@ -86,7 +86,7 @@ test('the same cold ZCode session compacts natively and implements the appended 
   const route=await loadConfiguredRoute(),evidence=path.resolve('.cache/configured-project',new Date().toISOString().replace(/[:.]/g,'-')+'-cold-report');await fs.mkdir(evidence,{recursive:true});
   const reportChecker=fileURLToPath(new URL('./fixtures/configured-project/report-acceptance.mjs',import.meta.url));await fs.copyFile(reportChecker,path.join(evidence,'report-acceptance.mjs'));await fs.copyFile(checker,path.join(evidence,'acceptance.mjs'));
   const redact=text=>[route.apiKey,route.baseUrl,new URL(route.baseUrl).origin].sort((a,b)=>b.length-a.length).reduce((v,k)=>v.replaceAll(k,'[redacted]'),String(text));
-  const originalPaths=[path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'trisoul-x','cordis.patch.yml'),path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'.credentials.yaml')],digests=await Promise.all(originalPaths.map(async p=>hash(await fs.readFile(p))));
+  const originalPaths=[path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'profiles',process.env.OMAA_CONFIGURED_PROFILE??'oh-my-dsh','cordis.patch.yml'),path.join(process.env.OMAA_CONFIGURED_DSH_HOME,'.credentials.yaml')],digests=await Promise.all(originalPaths.map(async p=>hash(await fs.readFile(p))));
   const report={product:'zcode',sessionId:saved.sessionId,cwd:saved.cwd,passed:false,checks:[],native:[]};let f;
   t.after(async()=>{
     try{if(f){await f.stop();const result=await captureNativeSessions({home:f.home,destination:path.join(evidence,'native'),sessions:[saved],route});await fs.writeFile(path.join(evidence,'snapshot-result.json'),JSON.stringify(result,null,2)+'\n');}}

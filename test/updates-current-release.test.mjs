@@ -16,27 +16,27 @@ function fixture({ wrongCommit = false, patch = '0.18.0', currentPatch = '0.18.0
       html_url: `https://github.com/${repo}/releases/tag/${tag}`,
       assets: names.map(name => ({ name, state: 'uploaded', browser_download_url: `https://github.com/${repo}/releases/download/${tag}/${name}` })) };
   }
-  const name = `oh-my-agents-above-all-${version}.tgz`, omdName = `trisoul_x-${target}.tgz`;
+  const name = `oh-my-agents-above-all-${version}.tgz`, omdName = `oh-my-dsh-${target}.tgz`;
   const omaa = release(omaaRepo, version, [name, name + '.sha256', name + '.metadata.json']);
   const omd = release(omdRepo, target, [omdName, 'SHA256SUMS', 'metadata.json']);
   const releaseRows = [omd, ...extras.map(({ version, draft = false }) => ({ ...release(omdRepo, version, []), draft }))];
   const records = new Map([
     [`https://api.github.com/repos/${omaaRepo}/releases?per_page=30`, [omaa]],
     [omaa.assets[2].browser_download_url, { name: 'oh-my-agents-above-all', version, hostVersion, filename: name, sha256 }],
-    [omd.assets[2].browser_download_url, { schema: 1, name: 'trisoul_x', version: target,
+    [omd.assets[2].browser_download_url, { schema: 1, name: 'oh-my-dsh', version: target,
       hostVersion: invalid === 'host' ? otherHost : hostVersion, file: omdName, sha256, sourceCommit }],
     [omd.assets[1].browser_download_url, `${invalid === 'checksum' ? 'c'.repeat(64) : sha256}  ${omdName}\n`],
     [`https://api.github.com/repos/${omdRepo}/git/ref/tags/v${target}`, { object: { type: 'commit', sha: wrongCommit ? 'c'.repeat(40) : sourceCommit } }],
   ]);
   if (invalid === 'asset') omd.assets.shift();
   const bundles = [{ name: 'oh-my-agents-above-all', version, installed: true, enabled: true },
-    { name: 'trisoul_x', version: current, installed: true, enabled: false }];
+    { name: 'oh-my-dsh', version: current, installed: true, enabled: false }];
   const calls = [], requests = [];
   const updates = createUpdates({ currentVersion: version, hostVersion, getOmdVersion: () => current,
     getManager: () => ({ listBundles: async () => bundles.map(row => ({ ...row })),
       installBundle: async (url, options) => {
         calls.push({ url, options }); bundles[1].version = target;
-        return { application: 'restart-required', bundle: 'trisoul_x' };
+        return { application: 'restart-required', bundle: 'oh-my-dsh' };
       } }),
     fetchImpl: async url => {
       requests.push(url);
@@ -52,7 +52,7 @@ function fixture({ wrongCommit = false, patch = '0.18.0', currentPatch = '0.18.0
 test('current host resolves OMD independently of OMAA release attachments', async t => {
   const { updates, calls, omaa, omd } = fixture(); t.after(() => updates.close());
   // Unused legacy OMD attachments cannot block the official source.
-  omaa.assets.push({ name: `trisoul_x-${omdVersion}.tgz` }, { name: `trisoul_x-${hostVersion}.omd.0.17.99.tgz` });
+  omaa.assets.push({ name: `oh-my-dsh-${omdVersion}.tgz` }, { name: `oh-my-dsh-${hostVersion}.omd.0.17.99.tgz` });
   const result = await updates.check(true);
   assert.equal(result.error, '');
   assert.equal(result.latestVersion, version);

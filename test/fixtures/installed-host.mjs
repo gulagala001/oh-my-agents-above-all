@@ -75,7 +75,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
   const artifact = packagePath ? await packageEvidence(packagePath) : undefined;
   const omdArtifact = omdPackagePath ? await packageEvidence(omdPackagePath) : undefined;
   if (artifact && artifact.name !== 'oh-my-agents-above-all') throw new Error('Expected an OMAA tarball');
-  if (omdArtifact && omdArtifact.name !== 'trisoul_x') throw new Error('Expected an OMD tarball');
+  if (omdArtifact && omdArtifact.name !== 'oh-my-dsh') throw new Error('Expected an OMD tarball');
   const root = await realpath(await mkdtemp(join(process.env.OMAA_TEST_ROOT_DIR ?? tmpdir(), 'omaa-installed-')));
   const home = join(root, 'dsh-home'), workspace = join(root, 'workspace');
   await mkdir(home); await mkdir(workspace);
@@ -128,7 +128,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
       provider.closeAllConnections(); await new Promise(resolve => provider.close(resolve));
       if (t.passed === false) t.diagnostic(redact(log.slice(-12000)));
       if (process.platform === 'darwin') {
-        const bridge = join('/private/tmp', 'trisoul-cu-' + createHash('sha256').update(join(home, 'trisoul-x/computer-use')).digest('hex').slice(0, 24));
+        const bridge = join('/private/tmp', 'omd-cu-' + createHash('sha256').update(join(home, 'oh-my-dsh/computer-use')).digest('hex').slice(0, 24));
         try { const info = await lstat(bridge); if (!info.isDirectory() || info.isSymbolicLink() || info.uid !== process.getuid()) throw new Error('Unexpected fixture bridge directory ownership'); await rm(bridge, { recursive: true }); }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
       }
@@ -138,7 +138,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
     }
   });
   await writeFile(join(home, 'settings.yaml'), JSON.stringify({
-    'trisoul-x': { computerUseChromeUserDataDir: join(home, 'chrome-profile'), ...(safeEnvironment ? { componentAutoSetup: false, computerUseNativeBinary: join(root, 'missing-native-driver'), computerUseNativeSocket: join(root, 'missing-native.sock'), computerUseBrowserExecutable: join(root, 'missing-browser-driver') } : {}) },
+    'oh-my-dsh': { computerUseChromeUserDataDir: join(home, 'chrome-profile'), ...(safeEnvironment ? { componentAutoSetup: false, computerUseNativeBinary: join(root, 'missing-native-driver'), computerUseNativeSocket: join(root, 'missing-native.sock'), computerUseBrowserExecutable: join(root, 'missing-browser-driver') } : {}) },
     'llm-pi-ai': { providers: { fixture: { api: 'openai-completions', baseURL: `http://127.0.0.1:${provider.address().port}/v1`, apiKeyEnv: 'OMAA_INSTALL_FIXTURE', models: [{ id: 'fixture', name: 'Local installation fixture', contextWindow: 1000000, maxTokens: 8192, input: ['text', 'image'] }] } } },
     ...liveSettings ? { 'llm-pi-ai': {providers: { [liveProviderId]: {api: liveSettings.api, baseURL:liveSettings.baseUrl, ...(liveSettings.streamIdleTimeoutMs !== undefined ? { streamIdleTimeoutMs: liveSettings.streamIdleTimeoutMs } : {}), apiKeyEnv:'OMAA_LIVE_CONFIGURED_KEY', compat:liveSettings.compat||{}, models:[liveModel]} }}, 'agent-default-model':{provider:liveProviderId,model:liveModel.id} } : { 'agent-default-model':{provider:'fixture',model:'fixture'} },
   }));
@@ -227,7 +227,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
     evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, cleanup, isolation: { safeEnvironment, isolatedHome: true, requestedIsolatedHome: isolatedHome, requestedPiResources: piResources, piAgentDir, userHome, paths: Object.fromEntries(['DSH_HOME','HOME','USERPROFILE','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_DATA_HOME','XDG_STATE_HOME','APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','PI_CODING_AGENT_DIR','PNPM_HOME','COREPACK_HOME','npm_config_userconfig','npm_config_cache','npm_config_prefix'].map(key => [key, env[key]])), userPiSkillBodiesExcluded: safeEnvironment, projectResourcesEnabled: true, ancestorBoundary: true, metadataScanning: 'Owned HOME/Pi/config/cache/Chrome paths; this is environment isolation, not OS-level filesystem isolation.', omd: { chromeUserDataDir: join(home, 'chrome-profile'), automaticSetupDisabled: safeEnvironment, ...(safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver') } : {}) } } },
     command,
     installOmd: () => { if (!omdArtifact) throw new Error('No explicit OMD tarball configured'); return installArtifact(omdArtifact); },
-    removeOmd: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'trisoul_x']),
+    removeOmd: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'oh-my-dsh']),
     async exemptions() { return JSON.parse((await command(['plugin', '--profile', 'omaa-fixture', 'version-exemptions'])).stdout); },
     async installedEvidence(name = 'oh-my-agents-above-all') {
       const { stdout } = await runFile(process.execPath, [fileURLToPath(new URL('./host-sdk-evidence.mjs', import.meta.url)), cli, home, name], { cwd: workspace, env, encoding: 'utf8', timeout: 30000, maxBuffer: 16 * 1024 * 1024 });
