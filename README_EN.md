@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="OMAA 0.16.4" src="https://img.shields.io/badge/release-OMAA%200.16.4-0969da?style=flat-square"></a>
-  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="This package downloads, not users" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/v0.2.1-rc.2.omaa.0.16.4/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.4.tgz?style=flat-square&amp;label=package%20downloads&amp;displayAssetName=false&amp;color=0969da"></a>
+  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="Package downloads" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/v0.2.1-rc.2.omaa.0.16.4/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.4.tgz?style=flat-square&amp;label=package%20downloads&amp;displayAssetName=false&amp;color=0969da"></a>
   <a href="#readme-install"><img alt="DSH 0.2.1-rc.2" src="https://img.shields.io/badge/DSH-0.2.1--rc.2-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
@@ -16,10 +16,6 @@
 <p align="center"><a href="#readme-install"><strong>Get started</strong></a> · <a href="docs/frontend-workbench.md">Docs</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/issues">Report an issue</a></p>
 
 <p align="center"><a href="docs/images/frontend-015/codex-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/frontend-015/codex-dark.png"><img src="docs/images/frontend-015/codex-light.png" alt="Codex 预设在 DSH 中的实际界面 / Codex preset in DSH" width="880"></picture></a></p>
-
-*Real DSH UI from the OMAA 0.15 series; consult the matching release for current functionality.*
-
-The download badge counts only the linked release’s plugin archive; it is not a count of users or installations.
 
 <a name="readme-install"></a>
 

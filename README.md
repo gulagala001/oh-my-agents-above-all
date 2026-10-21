@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="OMAA 0.16.4" src="https://img.shields.io/badge/release-OMAA%200.16.4-0969da?style=flat-square"></a>
-  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="本版插件包下载次数，非用户数" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/v0.2.1-rc.2.omaa.0.16.4/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.4.tgz?style=flat-square&amp;label=package%20downloads&amp;displayAssetName=false&amp;color=0969da"></a>
+  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="本版插件包下载次数" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/v0.2.1-rc.2.omaa.0.16.4/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.4.tgz?style=flat-square&amp;label=package%20downloads&amp;displayAssetName=false&amp;color=0969da"></a>
   <a href="#readme-install"><img alt="DSH 0.2.1-rc.2" src="https://img.shields.io/badge/DSH-0.2.1--rc.2-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
@@ -16,10 +16,6 @@
 <p align="center"><a href="#readme-install"><strong>开始使用</strong></a> · <a href="docs/frontend-workbench.md">完整文档</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/issues">反馈</a></p>
 
 <p align="center"><a href="docs/images/frontend-015/codex-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/frontend-015/codex-dark.png"><img src="docs/images/frontend-015/codex-light.png" alt="Codex 预设在 DSH 中的实际界面 / Codex preset in DSH" width="880"></picture></a></p>
-
-*OMAA 0.15 系列的真实 DSH 界面截图；当前功能以文档与对应发行版为准。*
-
-下载徽章只统计所链接发行版中的插件压缩包，不代表安装人数或活跃用户数。
 
 <a name="readme-install"></a>
 
