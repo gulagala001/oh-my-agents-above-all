@@ -28,7 +28,7 @@ export function apply(ctx, config) {
     text: ({ agent }) => {
       const child = agent?.session.header.origin === 'subagent';
       const text = build({ tools: activeTools(agent), cwd: agent ? currentDirectory(ctx, agent.session) : process.cwd(), platform: process.platform, mode: modeFor(agent), child, workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', workSubmode: agent ? ctx.omaa.enhancementWorkSubmodeFor(agent.session, agent) : 'free', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined });
-      return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx), { child });
+      return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx, agent?.session), { child });
     } });
   ctx.tools.guard(exec => {
     if (needsEnhancement(exec.name, exec.agent) && !ctx.omaa.enhancementEnabled(exec.agent.session)) return 'OMD enhancement is disabled for this session.';
@@ -44,7 +44,8 @@ export function apply(ctx, config) {
     const assembly = await next();
     if (!context.agent || context.agent.session.header.origin === 'subagent') return assembly;
     const visible = activeTools(context.agent);
-    return { ...assembly, tools: assembly.tools.filter(tool => visible.has(tool.name)) };
+    return { ...assembly, tools: assembly.tools.filter(tool => visible.has(tool.name)),
+      sections: typeof ctx.get('dshPersona')?.promptFor === 'function' ? [...assembly.sections, { name: 'dsh-persona:applied', text: '', interpolate: false }] : assembly.sections };
   });
   ctx.inject(['llm', 'sessions'], scope => {
     scope.on('llm/stream', async function* (options, next) {

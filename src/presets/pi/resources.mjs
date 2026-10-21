@@ -207,7 +207,7 @@ export function apply(ctx, config = {}) {
       return promptFrame(assembly.sections.map(section => ({ name: section.name, text: renderPrompt({ ...assembly, sections: [section] }) })), {
         tools: new Set(tools.map(tool => tool.name)), cwd: currentDirectory(ctx, agent.session),
         customTools: ctx.get('omaaPiExtensions')?.promptTools(agent) ?? [], catalog: catalogs.get(agent) ?? {},
-        identity: omdIdentityPrompt(ctx), child: agent.session.header.origin === 'subagent',
+        identity: omdIdentityPrompt(ctx, agent.session), child: agent.session.header.origin === 'subagent',
       });
     },
     boundary: agent => boundaries.get(agent),

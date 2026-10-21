@@ -1,9 +1,11 @@
 // Identity is a shared user preference, separate from optional tool/workflow
 // enhancement. OMD remains its settings owner; no second saved copy is made.
-export function omdIdentityPrompt(ctx) {
+export function omdIdentityPrompt(ctx, session) {
+  const persona = ctx.get('dshPersona');
+  if (typeof persona?.promptFor === 'function') return persona.promptFor(session).trim();
   const omd = ctx.get('trisoulX');
   if (!omd) return undefined;
-  const value = typeof omd.omaaIdentityPrompt === 'function' ? omd.omaaIdentityPrompt()
+  const value = typeof omd.omaaIdentityPrompt === 'function' ? omd.omaaIdentityPrompt(session)
     : omd.config?.().identityPreset === 'off' ? '' : omd.config?.().identityPrompt;
   return typeof value === 'string' ? value.trim() : undefined;
 }
