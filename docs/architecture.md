@@ -38,7 +38,7 @@ Pi 分支服务只调用原生 `sessionController.list/inspect/fork`，原生 pa
 
 兼容 OMD 通过共享 installer 把 CodeGraph 与 Computer Use 注册到当前预设 scope，构成默认关闭的基础增强。开启条件与执行 guard 同时检查；Pi 普通会话还隐藏并拒绝 delegation/jobs，开启增强后才提供工作流支持。基础增强不强制编排。
 
-`/omaa/api/session` 的 `enhancementWorkMode` 接受 `off | pro | ultracode`。非 `off` 自动开启增强；关闭增强同时把高级方式设为 `off`。OMAA 通过兼容 facade 复用 OMD 同一 `UltracodeControl`、持久化和全局 hooks，保持当前 provider/model，并选择该模型最高可用 reasoning effort。Ask/Plan 不启动 Pro/Ultra 工作流，回到执行模式可继续已保存方式。产品仍使用自己的提示词、压缩与工具循环；不额外挂载 OMD 主代理或 CC persona、ContextPipeline、Dream、todo/verify/BT 链。
+`/omaa/api/session` 的 `enhancementWorkMode` 接受 `off | ultra`，`enhancementWorkSubmode` 接受 `workflow | team | free`。开启 Ultra 需要兼容增强、可用的工作方式接口与空闲执行模式；关闭增强同时关闭高级方式。Ask／Plan 不启动 Ultra；模式与 provider、model 继续沿用宿主会话。运行时行为和使用条件见[兼容说明](compatibility.md)。
 
 composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 profile；不承诺无重载热换 engine。接线状态见 [增强边界](omd-enhancement-boundary.md) 和 [产品边界](compatibility.md)。
 

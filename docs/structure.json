@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    {
+      "path": "CHANGELOG.md",
+      "role": "release",
+      "language": "bilingual"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "role": "development",
+      "language": "zh"
+    },
+    {
+      "path": "LICENSING.md",
+      "role": "sources",
+      "language": "zh"
+    },
+    {
+      "path": "README.md",
+      "role": "home",
+      "language": "zh"
+    },
+    {
+      "path": "README_EN.md",
+      "role": "home",
+      "language": "zh"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "role": "sources",
+      "language": "en"
+    },
+    {
+      "path": "compat/omd/README.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/architecture.md",
+      "role": "development",
+      "language": "zh"
+    },
+    {
+      "path": "docs/compatibility.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/cursor-theme.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/documentation.md",
+      "role": "development",
+      "language": "bilingual"
+    },
+    {
+      "path": "docs/frontend-gallery.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/frontend-workbench.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/install.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/omd-enhancement-boundary.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/pi-theme.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/product-sources.md",
+      "role": "sources",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/checkpoints.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/codex.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/cursor-rules.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/cursor.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/grok.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/pi.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/zcode.md",
+      "role": "guide",
+      "language": "zh"
+    },
+    {
+      "path": "docs/releases.md",
+      "role": "release",
+      "language": "bilingual"
+    },
+    {
+      "path": "docs/theme-sources.md",
+      "role": "sources",
+      "language": "zh"
+    }
+  ]
+}

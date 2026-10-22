@@ -13,7 +13,10 @@
     "build": "node scripts/build.mjs",
     "prompts:inspect": "node scripts/inspect-prompts.mjs",
     "public:check": "node scripts/public-files.mjs",
-    "prepack": "node scripts/build.mjs && node scripts/public-files.mjs --package"
+    "prepack": "node scripts/check-docs.mjs && node scripts/build.mjs && node scripts/public-files.mjs --package",
+    "docs:check": "node scripts/check-docs.mjs",
+    "docs:write": "node scripts/check-docs.mjs --write",
+    "release:check": "node scripts/check-release-assets.mjs"
   },
   "files": [
     "src",
@@ -28,7 +31,9 @@
     "assets",
     "scripts/public-files.mjs",
     "CHANGELOG.md",
-    "README_EN.md"
+    "README_EN.md",
+    "scripts/check-docs.mjs",
+    "scripts/check-release-assets.mjs"
   ],
   "devDependencies": {
     "@deepseek-ai/cordis-plugin-group": "1.0.5",

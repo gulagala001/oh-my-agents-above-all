@@ -27,3 +27,5 @@ CI 冻结安装当前宿主依赖、构建并检查实际包。tag workflow 仅�
 ## 材料与隐私
 
 原创贡献采用 Apache-2.0。保留第三方许可、署名、固定来源与适配说明；Cursor 样本权利边界见 [许可范围](LICENSING.md)。测试保留维护所需的合成 fixture，使用隔离临时目录，不提交真实会话或账号数据。
+
+文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。

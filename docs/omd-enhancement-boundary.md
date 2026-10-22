@@ -1,21 +1,16 @@
-# OMD 兼容增强边界
+# 可选增强兼容说明
 
-OMAA 可独立运行，OMD 不是必装依赖。每个预设的增强默认关闭；安装并启用提供 `installOmaaEnhancement` 接口的兼容 Oh My DSH 后，设置中才能开启。
+[项目介绍](../README.md) · [版本与产品边界](compatibility.md) · [架构](architecture.md)
 
-该兼容接口在本次 OMD 源码中实现。检测到 OMD 已安装但没有该接口时，OMAA 预设会明确拒绝挂载，并说明更新或使用独立 DSH profile。旧 `0.3.0` 包固定于 DSH `0.2.0-rc.2`，还会全局注册 Computer Use、接管主题及部分宿主组件；仅把增强开关灰掉不能解决这些冲突。应使用匹配 DSH `0.2.1-alpha.1` 且提供 scoped 增强与外观协调接口的 OMD，不能根据包名猜测支持。现有用户 profile 未自动更新。
+OMAA 的五种产品预设使用各自提示词、主题和 DSH 原生会话。可选增强按预设开启，要求增强提供方与当前完整 DSH 版本匹配，并提供运行时所需接口。当前发行分别匹配 DSH `0.2.1-rc.1`／`0.2.1-rc.2`；安装与版本配对以[兼容说明](compatibility.md)为准。
 
-增强分为基础能力与可选高级工作方式。基础增强复用 **CodeGraph** 与 **Computer Use** 的兼容工具，并保留工具所需的实际说明；默认关闭，单独开启不强制工作流编排。模型/API、权限、取消、工具结果和附件仍由 DSH 与对应工具负责。关闭时增强工具从装配中移除，执行 guard 也拒绝调用。
+## 使用
 
-高级工作方式通过 `enhancementWorkMode: off | pro | ultracode` 选择，分别对应关闭、Pro 和 Ultra。它复用 OMD 同一 `UltracodeControl`、模式持久化和全局 hooks，保持当前 provider/model，选择该模型最高可用 reasoning effort；不另建模型路由或控制器。选择非 `off` 自动开启基础增强，关闭增强同时关闭高级方式。Ask/Plan 不启动 Pro/Ultra 工作流；恢复执行后可继续保存的方式。ZCode 将已激活高级方式视作用户持续授权，但仍加载 `zcode-workflows` 技能。
+- 基础增强提供代码理解和电脑操作工具，继续遵循宿主权限、审批、停止和附件机制。关闭增强会移除相应工具，并拒绝继续调用。
+- Ultra 提供 Workflow、Agent Team、自由三种协作方式。可用选项取决于当前宿主和增强接口；Ask／Plan 中不启动 Ultra，模式修改按会话执行边界生效。
+- 主题、身份和工具增强分别配置。关闭工具增强不会删除预设、主题、配置或用户数据。
+- 安装、更新或卸载增强提供方后，等待当前工作结束并重载目标 profile，使工具、工作流与界面重新注册。
 
-Pi 普通会话保持精简工具：delegation/jobs 不进入模型工具装配，执行 guard 同样拒绝调用。开启兼容 OMD 增强后出现工作流支持；这是用户选择的增强，不作为 Pi 原厂默认子代理能力。
+## 数据和执行
 
-工作流通过 OMAA 自己的 delegation Group 隔离。没有 OMD 时使用 native engine/tool；有兼容 OMD 时使用其公开 composition descriptor，仅启用 OMD host engine/tool 和已在 root 注册的唯一 `omd-workflow` provider。原 native 两行保留为 disabled 依赖解析参考，不同时运行两套 engine，也不为每个预设重注册 provider。安装或卸载 OMD 后须重载对应 profile，让 composition 重新选择；不承诺无重载热切换。
-
-产品预设继续使用自己的完整来源提示词和原生 DSH 压缩。高级方式只补充相应工作流指引与模式提醒，不注入 OMD 整套主提示词或 CC persona，不挂载 OMD 主代理，不接入 ContextPipeline、Dream、OMD todo/verify/BT。原生 `todo_write` 仍是预设已有工具，与 OMD 提醒/证据链不同。
-
-主题与增强独立。共享外观协调器负责同一前台的独占与释放；检测到不提供协调接口的旧 OMD 样式时暂停主题接管并提示更新。`omdAvailable` 表示兼容增强接口可用，不是所有 OMD 功能已接入的声明。
-
-基础工具与高级工作方式使用 OMD 已安装的实现与配置，不另建模型执行层。高级方式的后端接线不等于所有共存、开关、恢复或卸载场景已通过验收；具体实际检查范围见 [产品边界](compatibility.md)。
-
-初始身份／人格设置复用 OMD 现有配置及 resolver，无第二份身份设置。它在共存时生效，与可选 CodeGraph/CU/Pro/Ultra 工具增强无关；不会切换产品工作流程、导入 OMD 主 persona、ContextPipeline 或 Dream。
+产品预设继续使用自己的提示词和 DSH 会话／压缩机制；实际模型、权限和工具执行由宿主负责。增强能力依据运行时接口选择，不能仅凭包名或相近版本号判断兼容。跨平台电脑操作能力和系统授权遵循所用工具的说明。
