@@ -7,7 +7,7 @@
 <p align="center"><strong>简体中文</strong> · <a href="README_EN.md">English</a></p>
 
 <p align="center">
-  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.4"><img alt="OMAA 0.16.4" src="https://img.shields.io/badge/release-OMAA%200.16.4-0969da?style=flat-square"></a>
+  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.5"><img alt="OMAA 0.16.5" src="https://img.shields.io/badge/release-OMAA%200.16.5-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub 累计下载量" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
   <a href="#readme-install"><img alt="DSH 0.2.1-rc.2" src="https://img.shields.io/badge/DSH-0.2.1--rc.2-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
@@ -30,10 +30,10 @@
 打开实际使用的 DSH 实例，在 **插件 → ＋ 添加插件** 中粘贴：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.4/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.4.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.5.tgz
 ```
 
-等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.4/SHA256SUMS).
+等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/SHA256SUMS).
 
 ### 2. 先试这一件事
 
