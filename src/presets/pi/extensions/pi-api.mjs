@@ -1,10 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Type } from 'typebox';
+import { PiReadonlyTree } from '../../../../lib/pi-session-projection.mjs';
 import { currentSystem } from './context.mjs';
 
 export { Type };
 export const callbackContext = new AsyncLocalStorage();
-export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'turn_end', 'agent_end', 'agent_before_settle', 'agent_settled', 'message_start', 'message_update', 'message_end', 'tool_execution_start', 'tool_execution_update', 'tool_execution_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown', 'context', 'context_with_system']);
+export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'turn_end', 'agent_end', 'agent_before_settle', 'agent_settled', 'message_start', 'message_update', 'message_end', 'tool_execution_start', 'tool_execution_update', 'tool_execution_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown', 'context', 'context_with_system', 'session_before_compact', 'session_compact', 'session_compact_failed', 'session_before_tree', 'session_tree']);
 
 // Pure helpers from Pi cd32f77 extensions/types.ts and ai/typebox-helpers.ts.
 export const defineTool = tool => tool;
@@ -73,7 +74,11 @@ export function createCallbackContext(runtime) {
     },
   }, 'ctx.ui');
   const sessionManager = proxyMethods({
-    getBranch: () => clone(snapshot(runtime, 'sessionBranch')),
+    ...Object.fromEntries(['getBranch', 'getLeafId', 'getLeafEntry', 'getEntry', 'getChildren', 'getLabel', 'getTree'].map(name => [name, (...args) => {
+      if (name === 'getBranch' && args[0] === undefined) return clone(snapshot(runtime, 'sessionBranch'));
+      const reader = new PiReadonlyTree(snapshot(runtime, 'sessionEntries'), snapshot(runtime, 'sessionLeafId'));
+      return clone(reader[name](...args));
+    }])),
     getEntries: () => clone(snapshot(runtime, 'sessionEntries')),
     getSessionId: () => snapshot(runtime, 'sessionId'),
     getSessionName: () => sessionName(runtime),
@@ -96,6 +101,19 @@ export function createCallbackContext(runtime) {
     },
     hasPendingMessages: () => snapshot(runtime, 'hasPendingMessages'),
     getSystemPrompt: () => { const context = live(runtime); return context.renderSystemPrompt ? context.renderSystemPrompt() : snapshot(runtime, 'systemPrompt'); },
+    compact(options = {}) {
+      const { onComplete, onError, ...rest } = options;
+      const current = live(runtime), work = request(runtime, 'compact', [rest]).then(async ack => {
+        Object.assign(current.snapshot, ack.snapshot); await onComplete?.(ack.result); return ack.result;
+      }, async error => { if (onError) await onError(error); else throw error; });
+      current.pending.add(work);
+      work.then(() => current.pending.delete(work), error => { current.voidErrors.push(error); current.pending.delete(work); });
+      return work;
+    },
+    async navigateTree(targetId, options = {}) {
+      const current = live(runtime); if (current.kind !== 'command') unsupported('ctx.navigateTree outside command callback');
+      const ack = await request(runtime, 'navigateTree', [targetId, options]); Object.assign(current.snapshot, ack.snapshot); return ack.result;
+    },
     async executeTool(name, params, options) {
       const current = live(runtime);
       if (current.kind !== 'tool') unsupported('ctx.executeTool outside tool callback');

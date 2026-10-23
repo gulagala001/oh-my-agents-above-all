@@ -125,6 +125,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
       const choice = await responder?.(payload) ?? textReply('Local fixture completed.');
       if (gate && payload.tools?.length) { const held = gate; gate = undefined; await held.promise; }
       if (res.destroyed) return;
+      if (Number.isInteger(choice.httpStatus) && choice.httpStatus >= 400 && choice.httpStatus <= 599) { res.writeHead(choice.httpStatus, { 'content-type': 'application/json' }); res.end(JSON.stringify(choice.body)); return; }
       res.writeHead(200, { 'content-type': 'text/event-stream' });
       res.end('data: ' + JSON.stringify({ id: 'fixture', object: 'chat.completion.chunk', model: 'fixture', choices: [{ index: 0, ...choice }], usage: { prompt_tokens: 100, completion_tokens: 10, total_tokens: 110 } }) + '\n\ndata: [DONE]\n\n');
     } catch (error) { errors.push(error.message); if (!res.destroyed) { res.writeHead(500); res.end(error.message); } }

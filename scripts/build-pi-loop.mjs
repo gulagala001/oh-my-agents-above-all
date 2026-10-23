@@ -25,8 +25,15 @@ export async function buildPiLoop() {
     if (!file || hash(await readFile(root + 'src/presets/pi/' + snapshot)) !== file.sha256) throw Error('Pi boundary source changed: ' + snapshot);
   }
   const manager = await readFile(root + 'src/presets/pi/' + managerPath, 'utf8');
+  const managerAst = ts.createSourceFile(managerPath, manager, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const managerClass = managerAst.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === 'SessionManager');
+  const readMethods = ['getTree', 'getEntries', 'getBranch', 'getEntry', 'getLeafId', 'getLeafEntry', 'getChildren', 'getLabel'];
+  const reader = `export class PiReadonlyTree { constructor(entries, leafId) { this.fileEntries = entries; this.leafId = leafId; this.byId = new Map(entries.map(entry => [entry.id, entry])); this.labelsById = new Map(entries.filter(entry => entry.label).map(entry => [entry.id, entry.label])); this.labelTimestampsById = new Map(); }
+` + readMethods.map(name => {
+    const method = managerClass.members.find(node => node.name?.getText(managerAst) === name); if (!method) throw Error('Missing Pi tree reader method: ' + name); return method.getText(managerAst);
+  }).join('\n') + '}';
   const projection = manager.slice(manager.indexOf('function buildEntryIndex('), manager.indexOf('/** Build the finalized model context'));
-  await build({ stdin: { contents: `import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from './messages.ts';\nexport { convertToLlm } from './messages.ts';\n` + projection,
+  await build({ stdin: { contents: `import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from './messages.ts';\nexport { convertToLlm, createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from './messages.ts';\n` + projection + '\n' + reader,
     loader: 'ts', resolveDir: root + 'src/presets/pi/sources/packages/coding-agent/src/core' },
     outfile: root + 'lib/pi-session-projection.mjs', bundle: true, platform: 'node', format: 'esm',
     banner: { js: '// Derived from the pinned Pi session-manager.ts and messages.ts.\n/*\n' + piLicense.trimEnd() + '\n*/' } });
@@ -34,6 +41,28 @@ export async function buildPiLoop() {
     export { getSystemMessageText } from './src/presets/pi/sources/npm-pi-ai/utils/text.js';`, resolveDir: root },
     outfile: root + 'lib/pi-context-helpers.mjs', bundle: true, platform: 'node', format: 'esm',
     banner: { js: '// Derived from @earendil-works/pi-ai 1.1.0.\n/*\n' + piLicense.trimEnd() + '\n*/' } });
+  // Bundle only pinned original pure functions; provider I/O stays on DSH.
+  const pure = async (name, exports) => {
+    const snapshot = `sources/packages/coding-agent/src/core/compaction/${name}.ts`;
+    const text = await readFile(root + 'src/presets/pi/' + snapshot, 'utf8');
+    if (hash(text) !== sources.files.find(file => file.snapshot === snapshot)?.sha256) throw Error('Pi compaction source changed: ' + snapshot);
+    const ast = ts.createSourceFile(snapshot, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    return ast.statements.filter(node => ts.isFunctionDeclaration(node) || ts.isVariableStatement(node)).map(node => node.getText(ast).replace(/^export /, '')).join('\n') + `\nexport { ${exports} };`;
+  };
+  const imports = `import { buildSessionProjection, sessionEntryToContextMessages, convertToLlm, createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from './pi-session-projection.mjs';
+    import { contentText } from '../src/presets/pi/sources/npm-pi-ai/utils/text.js';
+    import { getCurrentSystemMessage } from './pi-context-helpers.mjs';`;
+  const utils = await pure('utils', 'serializeConversation, createFileOps, extractFileOpsFromMessage, computeFileLists, formatFileOperations, SUMMARIZATION_SYSTEM_PROMPT');
+  const compaction = await pure('compaction', 'prepareCompaction, estimateTokens, estimateContextTokens, SUMMARIZATION_PROMPT, UPDATE_SUMMARIZATION_PROMPT, TURN_PREFIX_SUMMARIZATION_PROMPT');
+  const branch = await pure('branch-summarization', 'collectEntriesForBranchSummary, prepareBranchEntries, BRANCH_SUMMARY_PROMPT, BRANCH_SUMMARY_PREAMBLE');
+  const virtual = { 'pi-pure-utils': imports + utils,
+    'pi-pure-compaction': imports + `import { createFileOps, extractFileOpsFromMessage } from 'pi-pure-utils';` + compaction,
+    'pi-pure-branch': imports + `import { estimateTokens } from 'pi-pure-compaction'; import { createFileOps, extractFileOpsFromMessage } from 'pi-pure-utils';` + branch };
+  await build({ stdin: { contents: `export * from 'pi-pure-compaction'; export * from 'pi-pure-branch'; export * from 'pi-pure-utils';`, resolveDir: root + 'lib' },
+    plugins: [{ name: 'pi-pure', setup(build) { build.onResolve({ filter: /^pi-pure-/ }, args => ({ path: args.path, namespace: 'pi-pure' }));
+      build.onLoad({ filter: /.*/, namespace: 'pi-pure' }, args => ({ contents: virtual[args.path], loader: 'ts', resolveDir: root + 'lib' })); } }],
+    outfile: root + 'lib/pi-compaction-helpers.mjs', bundle: true, platform: 'node', format: 'esm',
+    banner: { js: '// Pure functions from the pinned Pi compaction sources.\n/*\n' + piLicense.trimEnd() + '\n*/' } });
   const path = require.resolve(binding.package), source = await readFile(path, 'utf8');
   const manifest = JSON.parse(await readFile(require.resolve(binding.package + '/package.json'), 'utf8'));
   if (manifest.version !== binding.version || manifest.license !== binding.license || hash(source) !== binding.implementationSha256)

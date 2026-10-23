@@ -87,7 +87,7 @@ async function mount(ctx) {
         agentProfileDirectoryAvailable: product?.id === 'zcode' && session.header.origin !== 'subagent' && Boolean(agent && session.header.cwd),
         agentMemoryAvailable: product?.id === 'zcode' && session.header.origin !== 'subagent' && Boolean(agent && session.header.cwd),
         mode: hub.modeFor(session, agent),
-        pendingMode: plan?.pending !== undefined, running: agent?.status === 'running',
+        pendingMode: plan?.pending !== undefined, running: agent?.status === 'running' || Boolean(hub.piExtensions?.states.get(session.id)?.sessionOperation),
         omdAvailable: hub.enhancementAvailable(agent) && typeof ctx.get('omd')?.installOmaaEnhancement === 'function', omdIncompatible,
         enhancementActive, enhancementWorkMode: enhancementActive ? workView?.savedMode ?? 'off' : 'off',
         enhancementWorkSubmode: workView?.submode ?? 'free', enhancementWorkSavedSubmode: workView?.savedSubmode ?? workView?.submode ?? 'free',
@@ -99,7 +99,7 @@ async function mount(ctx) {
       const { agent, session, value } = await hub.inspect(sessionId);
       const product = hub.product(session);
       if (!product) throw new Error('请选择 OMAA 预设会话');
-      if (agent?.status === 'running') throw new Error('请先停止当前任务，再修改预设设置');
+      if (agent?.status === 'running' || hub.piExtensions?.states.get(session.id)?.sessionOperation) throw new Error('请先停止当前任务，再修改预设设置');
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('无效的预设设置');
       if (Object.hasOwn(patch, 'outputStyle') && product.id !== 'zcode') throw new Error('输出风格仅适用于 ZCode 预设');
       const directoryKeys = ['projectMemory', 'agentProfileDirectory', 'agentMemory'].filter(key => Object.hasOwn(patch, key));
@@ -294,7 +294,7 @@ async function mount(ctx) {
           const cancel = new AbortController();
           res.once('close', () => { if (!res.writableEnded) cancel.abort(); });
           if (req.method === 'GET') sendJson(res, 200, await hub.piBranches.inspect(id, cancel.signal));
-          else if (req.method === 'POST') sendJson(res, 200, await hub.piBranches.fork(id, await readJson(req), cancel.signal));
+          else if (req.method === 'POST') { const body = await readJson(req); sendJson(res, 200, await (body.action === 'navigate' || body.action === 'compact' ? hub.piBranches.navigate(id, body, cancel.signal) : hub.piBranches.fork(id, body, cancel.signal))); }
           else sendJson(res, 405, { error: '不支持此方法' });
           return;
         }

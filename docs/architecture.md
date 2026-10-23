@@ -16,9 +16,9 @@ Pi 的 context/system 回调通过 `host/pi-loop.mjs` 作用于拥有该扩展�
 
 Pi 自定义条目与尚未投递的消息使用原生 `appendPluginRecord` 的 `plugin:omaa/pi-entry` / `plugin:omaa/pi-pending-message`，原生日志负责冷恢复与分叉继承。非触发消息在整批工具完成后进入 surface；nextTurn 在下一次用户输入接纳，同一消息 ID 的 user/message 是消费凭据。条目不进入模型上下文；自定义消息复用现有原生事件与 Pi 默认 renderer。插件记录允许未知读取器保留并跳过，不能用于改变宿主已存在事件的解释。
 
-Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯投影函数由固定 `session-manager.ts`／`messages.ts` 构建为 `lib/pi-session-projection.mjs`。后续 Pi 请求和预览应用该记录，可见消息原生副本仅为带条目 ID 的展示回执。新生命周期在原生 turn 结束／下一次调度判定之间等待，继续使用同一 inbox；续跑的空隐藏调度回执不进入模型。取消撤销未提交批次，并在有界通知后关闭 guest。此持久投影属于 Pi 请求边界，未改写共享原生日志解释器；原厂树与原生自动压缩的完整协调仍需后续接线。
+Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯投影函数由固定 `session-manager.ts`／`messages.ts` 构建为 `lib/pi-session-projection.mjs`。后续 Pi 请求和预览应用该记录，可见消息原生副本仅为带条目 ID 的展示回执。新生命周期在原生 turn 结束／下一次调度判定之间等待，继续使用同一 inbox；续跑的空隐藏调度回执不进入模型。取消撤销未提交批次，并在有界通知后关闭 guest。此持久投影属于 Pi 请求边界，未改写共享原生日志解释器；Pi 同会话树通过 plugin:omaa/pi-tree 原子保存叶子、摘要与标签；压缩从同一有效路径准备材料并沿用 boundary 事务。原始表面与用量不复制，前端树面板展示活动路径。
 
-可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
+除 Pi 使用原厂分支投影和扩展控制的独立压缩策略外，可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
 
 ## 状态与恢复
 
@@ -28,7 +28,7 @@ Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯�
 
 Cursor 文件检查点补充保存受支持文件工具调用前后的实际字节与边界信息，位于 `DSH_HOME/omaa/checkpoints`。查看复用原生变更信息，恢复要求会话空闲并核对文件/目录身份、当前内容及冲突，保留消息；shell 任意副作用不视为可恢复快照。限制见 [检查点契约](products/checkpoints.md)。
 
-Pi 分支服务只调用原生 `sessionController.list/inspect/fork`，原生 parent 关系和不同 sessionId 构成界面树；可选位置限定为已完成回合，空闲及 journal head 检查保护分叉。所有分支共享目录，切换不回滚文件。`withSummary` 默认关闭；开启后用当前会话模型/API及完整 Pi 分支摘要指令总结所选位置之后的后缀，隐藏 reasoning 不入材料，工具结果限 2000 字符、尾部材料预算 100000 字符。不完整摘要拒绝创建分支。有界 60000 字符的继承/新增摘要 capsule 位于 `DSH_HOME/omaa/pi-branch-context`，通过原生 `systemPrompt.context` 入账并可冷读取；源 journal 保留，没有第二执行日志或 Pi 树运行时。具体差异见 [Pi 契约](products/pi.md)。
+Pi 跨会话分叉服务调用原生 `sessionController.list/inspect/fork`，原生 parent 关系和不同 sessionId 构成界面树；可选位置限定为已完成回合，空闲及 journal head 检查保护分叉。所有分支共享目录，切换不回滚文件。`withSummary` 默认关闭；开启后用当前会话模型/API及完整 Pi 分支摘要指令总结所选位置之后的后缀，隐藏 reasoning 不入材料，工具结果限 2000 字符、尾部材料预算 100000 字符。不完整摘要拒绝创建分支。有界 60000 字符的继承/新增摘要 capsule 位于 `DSH_HOME/omaa/pi-branch-context`，通过原生 `systemPrompt.context` 入账并可冷读取；源 journal 保留，没有第二执行日志。同会话树另用原生插件记录保存导航，不写原厂 JSONL 文件。具体差异见 [Pi 契约](products/pi.md)。
 
 `/omaa/api/session` 提供带宿主认证的设置与运行状态，`/omaa/api/checkpoints` 提供 Cursor 检查点查看/恢复。前端订阅真实 mounted 会话和宿主列表/原生计划变化，打开设置时刷新，POST 返回实际保存状态；没有独立轮询中枢。
 
@@ -36,7 +36,7 @@ Pi 分支服务只调用原生 `sessionController.list/inspect/fork`，原生 pa
 
 `/omaa/api/git-review` 提供 Codex 四种 Git 比较与明确文件/块操作；实际 native subprocess/sandbox、字面路径、内容 revision 和当前工作模式共同保护写入。Last turn 复用原生 Review，行反馈走原生会话提交，不造审阅日志或另一个执行器。
 
-`/omaa/api/pi-branches` 复用宿主认证，GET 读取当前 Pi 原生分支族与完成点，POST 在 revision 核对后调用原生 fork；分支面板打开同一宿主会话。摘要 checkbox 默认未选，不会因查看或切换分支自动调用模型。
+`/omaa/api/pi-branches` 复用宿主认证，GET 读取当前 Pi 原生分支族、完成点与同会话树，POST 在 revision 核对后调用原生 fork 或执行同会话 navigate/compact；分支面板打开同一宿主会话。摘要 checkbox 默认未选，不会因查看或切换分支自动调用模型。
 
 ZCode profile 使用原生 continuable 子会话保存人格、模型和工具限制。`profile-mcp.mjs` 在原生创建事件中核对父子归属并记录 MCP 准入，冷恢复重新核对相同声明摘要与公共 schema；`host/zcode-mcp-ownership.mjs` 只借用管理员明确组合的 native client，连接、重连和资源释放仍由父实例负责。工具过滤、MCP 指令范围及普通文件工具共同受宿主 guard 约束。未受管实例不通过名字推定归属，凭据不进入子会话记录。
 

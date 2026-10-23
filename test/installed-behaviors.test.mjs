@@ -60,7 +60,7 @@ test('installed DSH applies scoped Cursor rules, native product compaction and s
   });
   await t.test('each preset manual /compact routes its actual instruction and closes the native transaction', async () => {
     const fallback = await nativeCompactInstruction();
-    for (const product of products) {
+    for (const product of products.filter(product => product.id !== 'pi')) { // Pi's branch-aware pipeline is covered by installed-pi-tree.
       const session = product.id === 'cursor' ? cursor : await f.create(product.preset);
       const module = await import(`../src/presets/${product.id}/prompt.mjs`);
       const expected = module.buildCompactionPrompt() ?? fallback;

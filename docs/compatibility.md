@@ -14,7 +14,7 @@
 - Codex 的云端、persistent runtime 和专有应用机制不包含在预设中。
 - Grok monitor 与 interval 调度使用宿主作业／会话生命周期；重复任务七天到期，支持保留锚点的间隔修改和原生子任务续跑。调度事务薄适配锁定 rc.2 的实际实现，其他宿主须独立核验；不提供跨会话 durable。
 - Cursor 的 MDC 规则与变更检查点适用于已记录的文件变更；不是任意 shell 的完整工作区快照。Composer、云代理和专有 IDE 上下文不包含在内。
-- Pi 使用精简默认模式、资源、steer 与原生会话分支；本地扩展须显式白名单。每请求 context/system 投影、自定义消息与条目已接通；请求边界薄适配锁定 rc.2。turn_end/settle 草稿、消息事件与继续执行已接通。完整 TUI、自定义 renderer、原厂分支树和压缩控制回调仍有差异。
+- Pi 使用精简默认模式、资源、steer 与原生会话分支；本地扩展须显式白名单。每请求 context/system 投影、自定义消息与条目已接通；请求边界薄适配锁定 rc.2。turn_end/settle 草稿、消息事件与继续执行已接通。同会话树、扩展压缩控制、自动压力压缩与冷恢复已接通；主对话保留原始时间序列，活动路径在树面板显示。完整 TUI、自定义 renderer 和原厂 JSONL 文件读写仍有差异。
 - ZCode 的 TypeScript Actor、保存工作流、产物与 Amend 通过 DSH 隔离 PTC 和原生 child 实现；没有原厂 journal/replay、逐条 Bash 审批或半转录续跑。
 - Computer Use 来自可选 OMD/OpenCU；系统授权、平台能力和操作边界遵循相应插件说明。
 

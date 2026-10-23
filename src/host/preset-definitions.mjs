@@ -32,10 +32,10 @@ const composition = product => [
   ...product.id === 'pi' ? [] : [
     row('planning', 'cordis:group', [row('plan-mode', '@deepseek-ai/dsh-plan-mode', { section: planSection }), row('product-plan-tools', 'oh-my-agents-above-all/plan-tools')], { group: true, isolate: { planMode: true } }),
   ],
-  row('compaction', 'cordis:group', [
+  ...product.id === 'pi' ? [] : [row('compaction', 'cordis:group', [
     row('compaction-basic', '@deepseek-ai/dsh-compaction-basic', { headroomTokens: 8192, maxTokens: 8192 }),
     row('command-compact', '@deepseek-ai/dsh-command-compact'),
-  ], { group: true, isolate: { compaction: true } }),
+  ], { group: true, isolate: { compaction: true } })],
   ...product.id === 'pi' ? [row('pi-extensions', 'oh-my-agents-above-all/pi-extensions'), row('pi-resources', 'oh-my-agents-above-all/pi-resources'), row('pi-steering', 'oh-my-agents-above-all/pi-steering'), row('pi-branches', 'oh-my-agents-above-all/pi-branches')] : [],
   ...product.id === 'grok' ? [row('grok-documents', 'oh-my-agents-above-all/grok-documents'), row('grok-monitor', 'oh-my-agents-above-all/grok-monitor'), row('grok-scheduler', 'oh-my-agents-above-all/grok-scheduler')] : [],
   ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow'), row('zcode-scheduler', 'oh-my-agents-above-all/zcode-scheduler'),

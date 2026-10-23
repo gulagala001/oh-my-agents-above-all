@@ -475,7 +475,7 @@
     "Pi output truncation artifact contracts",
     "Remote npm/git package installation, full Pi extension API beyond the opt-in native guest profile, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
     "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately",
-    "v1.1.0 full prepareLoadout hiddenDeclarations/executable ToolLoadout and synchronous setActiveTools hook timing, hidden indirect tool execution, provider-specific event signatures and complete tree/compaction control remain unsupported; saved official types are reference data, not an implemented event surface."
+    "v1.1.0 full prepareLoadout hiddenDeclarations/executable ToolLoadout and synchronous setActiveTools hook timing, hidden indirect tool execution, provider-specific event signatures remain unsupported; tree and compaction control use sessionControlAdapter; saved official types are reference data, not an implemented event surface."
   ],
   "nativeAbsences": [
     "Default plan mode",
@@ -511,7 +511,7 @@
       "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract.",
       "v1.1.0 disabledBuiltinExtensions filters original builtin: extension paths even when CLI/settings enable them. OMAA has no original built-in extension loader; existing local resource discovery and explicit factory allowlist remain its actual scope, with no inert disabledBuiltinExtensions setting."
     ],
-    "sha256": "cde8a3d19ae934ee703f4079cfe22a53cf3383c5f72642f760c4b2ecee26fb39",
+    "sha256": "1515ffee8c29c04f10cb0e3eeaa8eafa30facfe030b250107a37c9d6df60ea8a",
     "helpers": [
       {
         "module": "resource-ignore.mjs",
@@ -519,7 +519,7 @@
       },
       {
         "module": "resource-paths.mjs",
-        "sha256": "6af4b42d64cadb25dabd823a5f743710fea829f7c6ed3ef466f929a826060a04"
+        "sha256": "5699306dd50e54d9ededca8b03371855ad4d8ca2d1b4d8b4b10b1734082302da"
       },
       {
         "module": "skill-discovery.mjs",
@@ -545,11 +545,11 @@
   },
   "guestAdapter": {
     "module": "extensions/guest.mjs",
-    "sha256": "1567005e9f257eeeeab6f1c436f9ae949c10b3cee54a4b5ae985e8c2e207b49a",
+    "sha256": "271e61f6dee8a39e25f5c4bec544d03befdc613301d93dee1c1b2d08565c9e5b",
     "helpers": [
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "6ca9ea316a9a2836bd10e65382bb0a9efcfc12551a808a8b3b407ffc7cc163d9"
+        "sha256": "0dd6a5f348282e8a3639ffc10a9cc2b11c2f808099e556e5ded8e3e7e493ee32"
       },
       {
         "module": "extensions/validation.ts",
@@ -609,7 +609,7 @@
   },
   "branchesAdapter": {
     "module": "branches.mjs",
-    "sha256": "c4fd3d9b30cc742fb7f89d855c647e407de5ce0f02bc908b432d8c3b721ce1c0",
+    "sha256": "40398a1c18eca15d80b53845954b3dbeb4fb361374fb387420180947f35d6f75",
     "source": [
       {
         "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
@@ -655,7 +655,7 @@
   },
   "extensionHostAdapter": {
     "module": "extensions.mjs",
-    "sha256": "b1e1d5da804246f3fc84cf3006a466c9a891699fa2bb58f54a1d51f761855aa7",
+    "sha256": "a00d102dc2aa48fcacadae664b19827a3e98a2a25fb1bb737c3363f826a98ca1",
     "transport": {
       "module": "extensions/transport.mjs",
       "sha256": "88443838884a9ac0434684d784ab084e8752633fcdc3705f209468371651a70d",
@@ -679,25 +679,25 @@
       "context_with_system"
     ],
     "verification": "test/installed-pi-extensions.test.mjs: original factories, native tool content/details, guarded write, nested tool reentry, image attachment, input transform/handled, native command, full-to-workspace permission confinement, cold restart, scope isolation and disablement. One isolated alpha native host with a scripted provider; not all extension APIs, UI dialogs or all desktop native paths. test/installed-pi-dynamic-extensions.test.mjs covers session_start registration before first assembly, same-name native replacement, added tools/commands, input event unsubscribe and rejected output-schema rollback. test/installed-pi-start.test.mjs covers awaited input before template/assembly, chained mutable options/getSystemPrompt, forced leading prompt transitions, custom native source metadata, dynamic add/replace/loadout, one-at-a-time steer, queued follow-up and durable cold queued literal input.",
-    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. Request-local context/context_with_system transforms and native sendMessage/appendEntry are implemented; custom TUI renderers remain unsupported. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view covers all supported native messages at one immutable observation, with raw entries separate from current projection; it is not a full Pi JSONL tree, callback actions scoped, dependency installation absent. agent_start/turn_start/agent_end are awaited notifications adapted to native activity/request steps; editable turn_end and agent_before_settle use the boundary adapter. New boundary callbacks run before native idle; legacy notification-only extensions retain idle-reserved runMaintenance. Native retry and original Pi low-level run/pre-settle semantics differ."
+    "differences": "Dynamic registrations use synchronous native scoped registry replacement and rollback. Awaited input and before_agent_start run before native step admission; explicit loadout edits win, otherwise current native active tools supply prompt/catalog. Native custom user/context messages retain Pi metadata. Accepted before_agent_start custom batches use native uiConversation default display with hidden-node handling; journal/model remain unchanged. Native process grouping and collapse remain, not original TUI standalone rows. Complete force uses native journal and leading-system request series, unlike original non-journal request projection. Request-local context/context_with_system transforms and native sendMessage/appendEntry are implemented; custom TUI renderers remain unsupported. Already logged tool arguments stay immutable; result state/details/structuredContent rewriting is limited. Session view covers all supported native messages at one immutable observation, with raw entries separate from current projection; it is not the original Pi JSONL file format, callback actions scoped, dependency installation absent. agent_start/turn_start/agent_end are awaited notifications adapted to native activity/request steps; editable turn_end and agent_before_settle use the boundary adapter. New boundary callbacks run before native idle; legacy notification-only extensions retain idle-reserved runMaintenance. Native retry and original Pi low-level run/pre-settle semantics differ."
   },
   "beforeAgentStartAdapter": {
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "b1e1d5da804246f3fc84cf3006a466c9a891699fa2bb58f54a1d51f761855aa7"
+        "sha256": "a00d102dc2aa48fcacadae664b19827a3e98a2a25fb1bb737c3363f826a98ca1"
       },
       {
         "module": "extensions/guest.mjs",
-        "sha256": "1567005e9f257eeeeab6f1c436f9ae949c10b3cee54a4b5ae985e8c2e207b49a"
+        "sha256": "271e61f6dee8a39e25f5c4bec544d03befdc613301d93dee1c1b2d08565c9e5b"
       },
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "6ca9ea316a9a2836bd10e65382bb0a9efcfc12551a808a8b3b407ffc7cc163d9"
+        "sha256": "0dd6a5f348282e8a3639ffc10a9cc2b11c2f808099e556e5ded8e3e7e493ee32"
       },
       {
         "module": "resources.mjs",
-        "sha256": "cde8a3d19ae934ee703f4079cfe22a53cf3383c5f72642f760c4b2ecee26fb39"
+        "sha256": "1515ffee8c29c04f10cb0e3eeaa8eafa30facfe030b250107a37c9d6df60ea8a"
       },
       {
         "module": "steering.mjs",
@@ -764,15 +764,15 @@
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "b1e1d5da804246f3fc84cf3006a466c9a891699fa2bb58f54a1d51f761855aa7"
+        "sha256": "a00d102dc2aa48fcacadae664b19827a3e98a2a25fb1bb737c3363f826a98ca1"
       },
       {
         "module": "extensions/guest.mjs",
-        "sha256": "1567005e9f257eeeeab6f1c436f9ae949c10b3cee54a4b5ae985e8c2e207b49a"
+        "sha256": "271e61f6dee8a39e25f5c4bec544d03befdc613301d93dee1c1b2d08565c9e5b"
       },
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "6ca9ea316a9a2836bd10e65382bb0a9efcfc12551a808a8b3b407ffc7cc163d9"
+        "sha256": "0dd6a5f348282e8a3639ffc10a9cc2b11c2f808099e556e5ded8e3e7e493ee32"
       },
       {
         "module": "extensions/transport.mjs",
@@ -810,7 +810,7 @@
       "User-cancel end notification exposes an already-aborted ctx.signal; host forbids exec/executeTool/sendUserMessage/UI questions from resuming work, while notify and read-only APIs remain available. Disposed activity does not start end maintenance. This stop-notification restriction is an OMAA adaptation.",
       "Strict bidirectional wire transport limits complete JSON messages to 128 MiB and individual JSONL frames to 2 MiB, validating sequence, bytes, canonical base64, UTF-8 and completeness without truncation. Registration payloads retain a separate budget."
     ],
-    "limits": "Native user turn is not a Pi turn. No complete SessionManager/tree, provider-specific signature parity, SDK cost calculation, custom TUI or native partial-tool-result ABI. Unresponsive guest processes cannot guarantee receipt of cancellation notifications.",
+    "limits": "Native user turn is not a Pi turn. No arbitrary writable SessionManager, provider-specific signature parity, SDK cost calculation, custom TUI or native partial-tool-result ABI. Unresponsive guest processes cannot guarantee receipt of cancellation notifications.",
     "verification": {
       "status": "native-rc2-source-checked",
       "evidence": [
@@ -824,14 +824,14 @@
   "tag": "v1.1.0",
   "historyAdapter": {
     "module": "history.mjs",
-    "sha256": "e9b487eff77eef89a542102825576f20416a8f34996df200a32a0d943309718a",
+    "sha256": "523cd5edb8a57f13435b7e9084c4ba2cfd877f62bbe59d990f3636b3f2723fe7",
     "hostIntegration": "Public SessionQuery observeSession projection:none captures one immutable cut; public foldSurface plus registered native projections supplies the current ordered message view. Observation is disposed after adaptation. No journal writes or second loop.",
     "adaptations": [
       "getEntries supplies all supported native user/assistant/tool-result messages without the previous 100-message/4000-character truncation; getBranch uses the same cut and current projection order.",
       "Native image attachments supply actual bytes; thinking, native-only blocks, actual usage and tool call/result identity are retained. argumentsRaw keeps exact native input alongside the adapted object. Getter clones cannot mutate the native journal.",
       "Tool identity follows native dispatch links, including content-only result replacement chains with stable message IDs. Image conversion is shared only inside one immutable observation; later cuts and other sessions re-read native attachments."
     ],
-    "limits": "Supported DSH message view plus durable Pi boundary draft entries, not every Pi JSONL entry or writable SessionManager/tree. Context previews use the original pure projection. No invented costs or complete signature parity; callback transport rejects JSON over 128 MiB.",
+    "limits": "Supported DSH message view plus durable Pi boundary draft entries, not every Pi JSONL entry or arbitrary writable SessionManager. Context previews use the original pure projection. No invented costs or complete signature parity; callback transport rejects JSON over 128 MiB.",
     "verification": {
       "status": "native-dual-host-fixture-passed",
       "evidence": [
@@ -885,7 +885,7 @@
   },
   "extensionMessagesAdapter": {
     "module": "extensions.mjs",
-    "sha256": "b1e1d5da804246f3fc84cf3006a466c9a891699fa2bb58f54a1d51f761855aa7",
+    "sha256": "a00d102dc2aa48fcacadae664b19827a3e98a2a25fb1bb737c3363f826a98ca1",
     "source": [
       "packages/coding-agent/src/core/agent-session.ts",
       "packages/coding-agent/src/core/extensions/types.ts"
@@ -895,12 +895,12 @@
       "appendEntry"
     ],
     "hostIntegration": "Original native inbox for waking steer/followUp; appendPluginRecord for custom state and pending after-step/next-input messages. The original message ID is the durable consumption receipt; default Pi custom-message UI is reused. Awaiting appendEntry refreshes the caller snapshot after host ACK.",
-    "limits": "Visible message receipts are separate native appends after one authoritative boundary record; recovery appends only missing receipts. This does not provide original tree navigation or session_before_compact control.",
+    "limits": "Visible message receipts are separate native appends after one authoritative boundary record; recovery appends only missing receipts. Tree navigation and compaction control are provided by sessionControlAdapter.",
     "verification": "test/installed-pi-messages.test.mjs: isolated native rc.2, custom state ACK/readback, cold state and next-input queue, single delivery, after-tool append, hidden context, idle display-only and explicit wake."
   },
   "boundaryAdapter": {
     "module": "extensions/boundaries.mjs",
-    "sha256": "6931200463e2528d78ca8b10fffeae2a600d4cdd62cc5e876d8de2a444bbf6a0",
+    "sha256": "b2bc2da249161afda6902bbdfd9ccb29ff0b70fd3b47dc155ce0b6a8365ed788",
     "source": [
       "packages/coding-agent/src/core/session-manager.ts",
       "packages/coding-agent/src/core/messages.ts",
@@ -915,10 +915,36 @@
       "compaction"
     ],
     "hostIntegration": "One appendPluginRecord batch owns committed drafts. Native message IDs acknowledge custom-message display. Original Pi projection computes serial previews and persistent request context before transient context handlers. Exact rc.2 native turn seam awaits settlement before publishing idle; continuation uses the native inbox with a hidden empty scheduling receipt excluded from model input.",
-    "limits": "No original JSONL tree or session_before_compact/session_before_tree hooks. Later native checkpoints supersede absorbed draft contributions; native compaction summary-material coordination remains separate work. Compaction token estimates are not fabricated. Unknown plugin records are retained but ignored outside the owning Pi request adapter.",
+    "limits": "Boundary batches and tree navigation share the effective Pi request projection. Original native history stays intact. Native checkpoints from older sessions supersede absorbed draft contributions; new Pi compaction uses the original Pi preparation and extension callbacks. Unknown plugin records are retained but ignored outside Pi.",
     "verification": [
       "test/installed-pi-boundaries.test.mjs",
       "test/pi-boundaries.test.mjs"
     ]
+  },
+  "sessionControlAdapter": {
+    "module": "extensions/session-control.mjs",
+    "sha256": "ddc066038dcad4db6a3214390b060d014d24de8e4fb469d587579d58ca008577",
+    "source": [
+      "packages/coding-agent/src/core/session-manager.ts",
+      "packages/coding-agent/src/core/agent-session.ts",
+      "packages/coding-agent/src/core/compaction/compaction.ts",
+      "packages/coding-agent/src/core/compaction/branch-summarization.ts",
+      "packages/coding-agent/src/core/compaction/utils.ts"
+    ],
+    "generated": [
+      "lib/pi-session-projection.mjs",
+      "lib/pi-compaction-helpers.mjs"
+    ],
+    "hostIntegration": "Original pure tree readers, compaction preparation, branch collection, prompt constants and file tracking. Native appendPluginRecord atomically stores navigation with its summary and label; existing boundary batches store compaction. Request projection uses the selected path, current native system/tools and original attachments. Pi alone replaces basic compaction with branch-aware manual, pressure and one overflow retry. User/project compaction settings, extension hooks and browser controls share this path.",
+    "limits": "Native chronological conversation is retained; the Pi tree panel displays the active path. No file rollback, original Pi JSONL import/export, custom TUI, provider signature parity or token-cost claim. Summary tokens are original heuristic estimates. Tool callbacks, context transforms and recursive session operations cannot initiate compaction. Cancellation can terminate an unresponsive extension process before final notification.",
+    "verification": [
+      "test/installed-pi-tree.test.mjs",
+      "test/installed-pi-branches.test.mjs",
+      "test/pi-history-readonly.test.mjs"
+    ],
+    "treeState": {
+      "module": "extensions/tree-state.mjs",
+      "sha256": "8257a7a7cee79e3695f6ec5dba0e65d32894ea3b210ffd4dfc965f7a3171e955"
+    }
   }
 }

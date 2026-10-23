@@ -204,6 +204,20 @@ async function dispatchEvent(frame, context) {
   const handlers = context.runtime.extensions.flatMap(extension => (extension.events.get(eventName) ?? []).map(registration => ({ ...registration, extensionPath: extension.file })));
   const event = { ...(frame.event ?? {}), type: eventName };
   const ctx = createCallbackContext(context.runtime);
+  if (eventName === 'session_before_tree' || eventName === 'session_before_compact') {
+    event.signal = context.controller.signal;
+    if (event.preparation?.fileOps) for (const key of ['read', 'written', 'edited']) event.preparation.fileOps[key] = new Set(event.preparation.fileOps[key]);
+    let decision = {};
+    for (const { handler } of handlers) {
+      context.controller.signal.throwIfAborted();
+      const result = await handler(event, ctx);
+      if (result?.cancel) return { cancel: true };
+      if (result) decision = { ...decision, ...result };
+      if (result?.compaction) return decision;
+      if (eventName === 'session_before_tree') for (const key of ['customInstructions', 'replaceInstructions', 'label']) if (result?.[key] !== undefined) event.preparation[key] = result[key];
+    }
+    return decision;
+  }
   if (eventName === 'turn_end' || eventName === 'agent_before_settle') {
     let entries = [], shouldContinue = false, preview = frame.preview, valid = true;
     const errors = [];

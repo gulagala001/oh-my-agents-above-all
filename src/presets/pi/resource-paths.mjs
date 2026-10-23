@@ -107,7 +107,7 @@ export async function loadPiResourcePaths(fs, { cwd, agentDir, signal }) {
   for (const scope of scopes) {
     const settings = await json(path.join(scope.baseDir, 'settings.json'));
     if (!object(settings)) continue;
-    result[scope.scope] = { packages: settings.packages };
+    result[scope.scope] = { packages: settings.packages, ...(settings.compaction === undefined ? {} : { compaction: settings.compaction }) };
     for (const type of ['skills', 'prompts']) {
       const entries = strings(settings[type], scope.baseDir + '/settings.json:' + type);
       result[scope.scope][type] = entries ?? [];

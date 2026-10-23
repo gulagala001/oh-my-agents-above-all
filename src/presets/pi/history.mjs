@@ -1,7 +1,8 @@
 import { foldSurface } from '@deepseek-ai/dsh-session';
+import { treeRecord, treeHistory } from './extensions/tree-state.mjs';
 import { boundaryRecord, chainEntries } from './extensions/boundaries.mjs';
 
-// This is a read-only DSH message view, not another Pi SessionManager or tree.
+// Read native messages and durable Pi entries at one immutable journal cut.
 export async function piHistoryEntries(events, { content, argumentsFor, selected, projectedMessages, signal }) {
   const entries = [], calls = new Map(), bySeq = new Map(events.map(event => [event.seq, event]));
   for (const event of events) if (event.type === 'tool/call') {
@@ -27,6 +28,7 @@ export async function piHistoryEntries(events, { content, argumentsFor, selected
   const ordered = selected ? selected.map(seq => bySeq.get(seq)) : events;
   for (const event of ordered) {
     signal?.throwIfAborted();
+    if (event.type === treeRecord && event.data.summaryEntry) { entries.push(event.data.summaryEntry); continue; }
     if (event.type === boundaryRecord) { entries.push(...event.data.entries); continue; }
     if (event.type === 'plugin:omaa/pi-entry') {
       entries.push({ type: 'custom', id: String(event.seq), parentId: entries.at(-1)?.id ?? null,
@@ -93,10 +95,17 @@ export async function readPiHistory(query, sessionId, { projections = [], ...opt
     };
     const adapted = { ...options, content };
     const entries = await piHistoryEntries(events, adapted);
-    const branch = await piHistoryEntries(events, { ...adapted,
-      selected: [...surface.nodes, ...events.filter(event => event.type === 'plugin:omaa/pi-entry' || event.type === boundaryRecord).map(event => event.seq)].sort((a, b) => a - b),
-      projectedMessages: surface.projectedMessages });
+    const records = events.filter(event => event.type === 'plugin:omaa/pi-entry' || event.type === boundaryRecord).map(event => event.seq);
+    const selected = [], bySeq = new Map(events.map(event => [event.seq, event]));
+    for (const seq of surface.nodes) {
+      // Surface replacement order is authoritative, not journal sequence order.
+      if (bySeq.get(seq)?.surfaceOp === 'append') while (records.length && records[0] < seq) selected.push(records.shift());
+      selected.push(seq);
+    }
+    selected.push(...records);
+    const branch = await piHistoryEntries(events, { ...adapted, selected, projectedMessages: surface.projectedMessages });
     options.signal?.throwIfAborted();
-    return { entries, branch, header: { ...observation.header }, cursor: observation.cursor };
+    const tree = treeHistory(events, entries);
+    return { entries: tree.entries, branch: events.some(event => event.type === treeRecord) ? tree.branch : branch, leafId: tree.leafId, header: { ...observation.header }, cursor: observation.cursor };
   } finally { observation[Symbol.dispose](); }
 }

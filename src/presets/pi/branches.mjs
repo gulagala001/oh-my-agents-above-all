@@ -151,7 +151,7 @@ export function apply(ctx) {
     const selected = observation.events.findLast(event => event.type === 'agent-preset/selected')?.data.agentPreset
       ?? observation.meta.agentPreset;
     if (selected !== 'omaa-pi' || observation.meta.origin === 'subagent') throw new Error('分支导航仅用于 Pi 普通会话');
-    return { ...owner, owner, observation, value: { running: owner.agent?.status === 'running'
+    return { ...owner, owner, observation, value: { running: owner.agent?.status === 'running' || Boolean(owner.agent && ctx.get('omaaPiExtensions')?.session.busy(owner.agent))
       || Boolean(owner.agent?.inbox.nextTurn.length || owner.agent?.inbox.nextStep.length) } };
   }
   const service = {
@@ -174,7 +174,15 @@ export function apply(ctx) {
         title: row.projections?.values.title || (row.sessionId === id ? '当前分支' : row.sessionId), cwd: row.cwd, running: row.running, current: row.sessionId === id,
       }));
       const points = pointsOf(observation.events);
-      return { sessionId: id, head: headOf(observation.events), branches, points, canFork: !value.running && points.length > 0 };
+      const tree = owner.agent ? await ctx.get('omaaPiExtensions')?.session.inspect(owner.agent, signal) : undefined;
+      return { sessionId: id, head: headOf(observation.events), branches, points, tree, canFork: !value.running && points.length > 0 };
+    },
+    async navigate(id, request, signal) {
+      const { owner } = await current(id, scoped(signal));
+      if (!owner.agent) throw Error('请先打开此 Pi 会话再导航或压缩');
+      if (!Number.isSafeInteger(request.head)) throw Error('Pi 会话修订号无效');
+      return request.action === 'compact' ? ctx.get('omaaPiExtensions').session.compact(owner.agent, request, scoped(signal))
+        : ctx.get('omaaPiExtensions').session.navigate(owner.agent, request, scoped(signal));
     },
     async fork(id, request, signal) {
       const control = new AbortController();
@@ -216,7 +224,7 @@ export function apply(ctx) {
           const caps = [4096, target.maxTokens];
           if (agent.options.provider === target.provider && agent.options.model === target.model) caps.push(agent.options.maxTokens);
           for (const cap of caps) if (cap !== undefined && (!Number.isSafeInteger(cap) || cap <= 0)) throw Error('原生会话输出上限无效，未生成摘要。');
-          const assembler = new BlockAssembler();
+          const assembler = new BlockAssembler(); let sawFinish = false;
           const summarySignal = AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(180000)]);
           const config = { provider: target.provider, model: target.model, maxTokens: Math.min(...caps.filter(cap => cap !== undefined)) };
           // The public adapter exposes a configured default output cap, not
@@ -227,9 +235,9 @@ export function apply(ctx) {
               Number.isSafeInteger(model.defaultMaxTokens) && model.defaultMaxTokens > 0 ? model.defaultMaxTokens : Infinity) }));
           assertOwner(id, owner, summarySignal);
           for await (const chunk of prepared.stream({ ...prepared.config, sessionId: id, tools: [], signal: summarySignal,
-            messages: [{ role: 'system', content: [{ type: 'text', text: summarySystem }] }, { role: 'user', content: [{ type: 'text', text: `<conversation>\n${material.text}\n</conversation>\n\n${branchPrompt}` }] }] })) assembler.push(chunk);
+            messages: [{ role: 'system', content: [{ type: 'text', text: summarySystem }] }, { role: 'user', content: [{ type: 'text', text: `<conversation>\n${material.text}\n</conversation>\n\n${branchPrompt}` }] }] })) { if (chunk.type === 'finish') sawFinish = true; assembler.push(chunk); }
           summarySignal.throwIfAborted();
-          if (assembler.finish?.kind !== 'completed' || assembler.blocks().some(part => part.type === 'tool-call')) throw new Error('摘要未完整生成，未创建分支');
+          if (!sawFinish || assembler.finish?.kind !== 'stop' || assembler.blocks().some(part => part.type === 'tool-call')) throw new Error('摘要未完整生成，未创建分支');
           summary = textOf(assembler.blocks()).trim();
           if (!summary || summary.length > 32000) throw new Error('摘要为空或超过范围，未创建分支');
           summary = preamble + summary + material.files;

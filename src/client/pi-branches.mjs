@@ -30,7 +30,7 @@ export function branchTreeRows(branches) {
 }
 
 export function createPiBranches(settings, uiWorkspace, sessions, request = fetch) {
-  let state = { sessionId: settings.getSnapshot().sessionId, data: null, result: null, loading: false, saving: false, error: '' };
+  let state = { sessionId: settings.getSnapshot().sessionId, data: null, result: null, loading: false, saving: false, editorText: '', treeResult: null, error: '' };
   let generation = 0, readController, forkController, disposed = false, productId = settings.getSnapshot().data?.product?.id;
   const listeners = new Set();
   const emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
@@ -46,7 +46,7 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
     if (id === state.sessionId && product === productId) return;
     productId = product;
     readController?.abort(); forkController?.abort(); ++generation;
-    emit({ sessionId: id, data: null, result: null, loading: false, saving: false, error: '' });
+    emit({ sessionId: id, data: null, result: null, loading: false, saving: false, editorText: '', treeResult: null, error: '' });
   });
   return {
     getSnapshot: () => state,
@@ -71,6 +71,40 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
       requirePi(settings, expectedId);
       if (state.sessionId !== expectedId || !(state.result?.sessionId === sessionId || state.data?.branches.some(branch => branch.sessionId === sessionId))) throw new Error('该分支已不在当前分支列表，请刷新。');
       uiWorkspace.openSession(sessionId);
+    },
+    cancelTree() { if (state.treeSaving) forkController?.abort(); },
+    async treeAction(action, options = {}, expectedId = state.sessionId) {
+      if (disposed) throw Error('Pi 分支视图已关闭。');
+      requirePi(settings, expectedId, true);
+      if (state.saving || state.loading || !state.data?.tree) throw Error('请先刷新会话树。');
+      const version = ++generation; forkController = new AbortController(); const signal = forkController.signal;
+      emit({ saving: true, treeSaving: true, error: '' });
+      try {
+        const result = await api(expectedId, { action, head: state.data.tree.head, ...options }, signal);
+        if (version !== generation || settings.getSnapshot().sessionId !== expectedId) return result;
+        emit({ treeResult: result ?? { empty: true }, editorText: result?.editorText ?? '' });
+        const data = await api(expectedId, undefined, signal);
+        if (version === generation && settings.getSnapshot().sessionId === expectedId) emit({ data, saving: false, treeSaving: false, treeResult: result ?? { empty: true },
+          editorText: result?.editorText ?? '', error: result?.cancelled ? '扩展已取消导航。' : '' });
+        return result;
+      } catch (error) { if (version === generation) emit({ saving: false, treeSaving: false, error: error.message }); throw error; }
+      finally { if (forkController?.signal === signal) forkController = undefined; }
+    },
+    async submitTreeText(text, expectedId = state.sessionId) {
+      requirePi(settings, expectedId, true);
+      if (!text.trim() || state.saving) throw Error('请输入要继续的内容。');
+      emit({ saving: true, error: '' });
+      try {
+        return await sessions.using(expectedId, { source: 'omaa-pi-tree' }, async reference => {
+          const { session } = await reference.ready; requirePi(settings, expectedId, true);
+          if (session.getSnapshot().running) throw Error('会话已经开始运行。');
+          const submission = session.beginSubmission({ mode: 'queue', text, attachments: [] });
+          try { const result = await session.prompt([{ type: 'text', text }], 'queue', undefined, submission.requestId);
+            if (!result.ok || result.value?.accepted !== true) throw Error(result.error?.message || '宿主未接受输入。');
+            if (settings.getSnapshot().sessionId === expectedId) emit({ editorText: '' }); return result;
+          } catch (error) { submission.abandon(); throw error; }
+        });
+      } finally { if (settings.getSnapshot().sessionId === expectedId) emit({ saving: false }); }
     },
     async fork({ atSeq, withSummary = false } = {}, expectedId = state.sessionId) {
       if (disposed) throw Error('Pi 分支视图已关闭。');

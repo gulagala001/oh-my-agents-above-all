@@ -13,11 +13,13 @@ import { currentDirectory, ensureDirectory } from '../../host/working-directory.
 import { toolNeedsEnhancement } from '../../host/tool-enhancement.mjs';
 import { installPiLoop } from '../../host/pi-loop.mjs';
 import { requestToPi, requestFromPi } from './extensions/context.mjs';
+import { createPiSessionControl } from './extensions/session-control.mjs';
+import { treeRecord } from './extensions/tree-state.mjs';
 import { supportedEvents } from './extensions/pi-api.mjs';
 import { boundaryRecord, commitBoundary, materializeBoundaryMessages, projectBoundaryRequest } from './extensions/boundaries.mjs';
 
 export const name = 'omaa-pi-extensions';
-export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
+export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess', 'llm', 'sessions'];
 const textOf = blocks => (blocks ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const json = value => JSON.parse(JSON.stringify(value));
 const catalogEdits = (before, after) => ({
@@ -100,7 +102,7 @@ export function apply(ctx) {
     // an unavailable projection stays absent rather than inventing a name.
     const title = ctx.get('sessionProjections')?.snapshot(agent.session)?.values?.title;
     return { cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
-      isIdle: agent.status === 'idle' && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
+      isIdle: agent.status === 'idle' && !state.sessionOperation && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
       sessionId: agent.session.id, ...(typeof title === 'string' || title === null ? { sessionName: title } : {}),
       activeTools: tools.map(t => t.name), allTools: ctx.tools.schemas(agent).map(t => ({ ...t, label: t.name })),
       commands: ctx.commands.list(agent).map(c => ({ name: c.name, description: c.description ?? '' })), flags: {},
@@ -113,7 +115,7 @@ export function apply(ctx) {
       projections: ctx.get('sessions')?.messageProjections ?? [],
     });
     return { ...catalog, sessionHeader: history.header, sessionCursor: history.cursor,
-      sessionEntries: history.entries, sessionBranch: history.branch };
+      sessionEntries: history.entries, sessionBranch: history.branch, sessionLeafId: history.leafId };
   };
   const currentPolicy = agent => ctx.sandboxPolicy.resolve({ session: agent.session });
   const assertPolicy = (agent, state) => {
@@ -164,9 +166,15 @@ export function apply(ctx) {
       && ['exec', 'executeTool', 'sendUserMessage', 'ui.select', 'ui.confirm', 'ui.input'].includes(method)) throw Error('原生活动已取消，结束通知不能继续执行或唤醒任务');
     if (Array.isArray(args)) {
       const fields = { 'ui.notify': ['text', 'type'], 'ui.select': ['title', 'options', 'dialogOptions'], 'ui.confirm': ['title', 'message', 'dialogOptions'], 'ui.input': ['title', 'placeholder', 'dialogOptions'],
-        sendUserMessage: ['content', 'options'], sendMessage: ['message', 'options'], appendEntry: ['customType', 'data'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'] }[method];
+        sendUserMessage: ['content', 'options'], sendMessage: ['message', 'options'], appendEntry: ['customType', 'data'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'], compact: ['options'], navigateTree: ['targetId', 'options'] }[method];
       if (!fields) throw Error('未支持 Pi API 参数: ' + method);
       args = Object.fromEntries(fields.map((key, i) => [key, args[i]]));
+    }
+    if (method === 'compact' || method === 'navigateTree') {
+      if (context.exec || ['session_before_compact', 'session_before_tree', 'context', 'context_with_system'].includes(context.eventName)) throw Error('Pi 会话操作不能在工具执行、请求改写或另一个会话操作内部重入');
+      const result = method === 'compact' ? await controller.session.compact(agent, args.options, signal, agent.status !== 'idle')
+        : await controller.session.navigate(agent, { ...args.options, targetId: args.targetId }, signal, agent.status !== 'idle');
+      return { result, snapshot: await snapshot(agent, state, signal) };
     }
     if (method === 'syncRegistrations') {
       if (state.status !== 'ready' || state.disposal && context.eventName !== 'session_shutdown') throw Error('扩展注册仅可在当前已加载的回调中更改');
@@ -423,7 +431,7 @@ export function apply(ctx) {
       generation: 0, life: new AbortController(), revoked: false,
       status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
       forceAdmitted: previous?.force === true,
-      busy: () => Boolean(state.loading || state.calls || state.disposal || state.lifecycleRun?.ending),
+      busy: () => Boolean(state.loading || state.calls || state.sessionOperation || state.disposal || state.lifecycleRun?.ending),
       view: () => ({ status: state.status, ...(state.error ? { error: state.error } : {}), tools: state.descriptors?.tools.map(t => t.name) ?? [], commands: state.descriptors?.commands.map(c => c.name) ?? [] }),
       async dispose({ shutdownReason } = {}) {
         if (state.disposal) return state.disposal;
@@ -484,7 +492,7 @@ export function apply(ctx) {
       },
       async request(request, signal) {
         let current = request;
-        if (agent.session.snapshotEvents().some(event => event.type === boundaryRecord)
+        if (agent.session.snapshotEvents().some(event => event.type === boundaryRecord || event.type === treeRecord)
           || request.messages.some(message => message.source?.piContinuation)) {
           current = (await projectBoundaryRequest(request, agent.session.snapshotEvents(), boundaryAdapters(signal))).request;
         }
@@ -821,6 +829,19 @@ export function apply(ctx) {
       return result;
     },
   };
+  controller.session = createPiSessionControl(ctx, { ensure, history: (agent, signal) => readPiHistory(ctx.get('sessionQuery'), agent.id,
+    { ...historyOptions(signal), projections: ctx.get('sessions')?.messageProjections ?? [] }), preview: boundaryPreview,
+    notify: notifyEvent, invoke, assertCurrent: (agent, state) => { assertOwner(agent, state); assertPolicy(agent, state); }, adapters: boundaryAdapters });
+  ctx.commands.register({ name: 'compact', description: '压缩 Pi 当前分支，可指定摘要重点', async handler(input) {
+    const result = await controller.session.compact(input.agent, { customInstructions: input.rawInput.trim() || undefined }, input.signal);
+    return { kind: 'success', text: result ? 'Pi 当前分支已压缩；原始记录和其他分支保留。' : '当前没有可压缩的历史。' };
+  } });
+  ctx.commands.register({ name: 'tree', description: '查看 Pi 会话树，或按节点 ID 切换', async handler(input) {
+    const targetId = input.rawInput.trim();
+    if (!targetId) { const tree = await controller.session.inspect(input.agent, input.signal); return { kind: 'success', text: tree.nodes.map(node => `${node.current ? '*' : ' '} ${node.id} ${node.role}: ${node.label ?? node.text}`).join('\n') || '当前会话树为空。' }; }
+    const result = await controller.session.navigate(input.agent, { targetId }, input.signal);
+    return { kind: 'success', text: result.cancelled ? '扩展已取消导航。' : `Pi 已切换节点。${result.editorText ? '\n可编辑原输入：\n' + result.editorText : ''}` };
+  } });
   ctx.provide('omaaPiExtensions', controller);
   ctx.on('agent/created', async ({ agent, signal }) => { if (owns(agent)) await ensure(agent, signal); });
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {

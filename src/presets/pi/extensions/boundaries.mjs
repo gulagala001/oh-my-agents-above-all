@@ -3,6 +3,7 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSessionProjection, convertToLlm } from '../../../../lib/pi-session-projection.mjs';
+import { selectTreeRequest } from './tree-state.mjs';
 import { currentSystem, requestToPi, requestFromPi } from './context.mjs';
 
 export const boundaryRecord = 'plugin:omaa/pi-boundary';
@@ -69,6 +70,7 @@ export function commitBoundary(session, prepared, eventName) {
   materializeBoundaryMessages(session);
 }
 export async function projectBoundaryRequest(request, events, adapters, drafts = []) {
+  ({ request, events } = selectTreeRequest(request, events));
   const adapted = await requestToPi(request, adapters), entries = [], byMessageId = new Map();
   for (const event of events) {
     const message = event.data.message ?? event.data;

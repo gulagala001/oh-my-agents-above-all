@@ -268,6 +268,20 @@ export function apply(ctx, config = {}) {
   ctx.systemPrompt.section({ name: 'omaa:pi-addendum', order: 5, text: '', interpolate: false });
   ctx.systemPrompt.section({ name: 'omaa:pi-global-context', order: 10, text: '', interpolate: false });
   const resources = {
+    async compactionSettings(agent, signal) {
+      const operation = operationFor(agent, signal);
+      const paths = await loadPiResourcePaths(ctx.fs, { cwd: operation.cwd, agentDir, signal: operation.signal }); operation.check();
+      const result = { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 };
+      for (const scope of [paths.user, paths.project]) if (scope.compaction !== undefined) {
+        const value = scope.compaction;
+        if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('Pi compaction 设置必须为对象');
+        for (const key of ['enabled', 'reserveTokens', 'keepRecentTokens']) if (value[key] !== undefined) {
+          if (key === 'enabled' ? typeof value[key] !== 'boolean' : !Number.isSafeInteger(value[key]) || value[key] < (key === 'reserveTokens' ? 1 : 0)) throw Error('Pi compaction 设置无效: ' + key);
+          result[key] = value[key];
+        }
+      }
+      return result;
+    },
     frame(agent, assembly, tools) {
       const operation = operationFor(agent), catalog = catalogs.get(operation.owner);
       if (catalog && catalogLocations.get(operation.owner) !== operation.cwd)
