@@ -6,8 +6,10 @@ import { CONTINUITY_PROVIDER_PREFIX, createActorContinuity } from './continuity.
 import { inputHash } from '../../../lib/zcode-import-cache.mjs';
 import { startActivation, drainChildren, actorPersona } from '../../host/subagents.mjs';
 import { ensureDirectory } from '../../host/working-directory.mjs';
-import { createAskReceipt, observeAskEvent, askReceiptOutcome } from './ask-receipt.mjs';
+import { createAskReceipt, observeAskEvent, askReceiptOutcome, verifyAskExchange } from './ask-receipt.mjs';
 import { ESCALATE_PARAMETERS, ESCALATE_OUTPUT, ESCALATE_DESCRIPTION, renderEscalateResult } from './questions.mjs';
+import { createAskProtocol } from './ask-protocol.mjs';
+import { NUDGE_PROMPT, qualityEpilogue } from '../../../lib/zcode-ask-protocol.mjs';
 
 const textOf = parts => (parts ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const copy = value => structuredClone(value);
@@ -49,8 +51,8 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
     const turn = p.receipt.admitted.get(p.messageId), claimed = p.receipt.claimed.get(p.messageId);
     if (turn === undefined || claimed !== undefined && claimed !== turn) return;
     const observed = p.progressTurns.get(turn);
-    if (!observed || observed.revision === p.progressRevision) return;
-    p.progressRevision = observed.revision;
+    if (!observed || turn + ':' + observed.revision === p.progressRevision) return;
+    p.progressRevision = turn + ':' + observed.revision;
     const snapshot = { ...observed };
     p.progressTail = p.progressTail.then(() => {
       if (!p.progressFailure) return p.node.progress(snapshot.turn, snapshot.toolCalls, snapshot.lastTool);
@@ -62,16 +64,16 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
   }
   const progressFor = (p, turn) => {
     let observed = p.progressTurns.get(turn);
-    if (!observed) { observed = { revision: 0, toolCalls: 0 }; p.progressTurns.set(turn, observed); }
+    if (!observed) { observed = { revision: 0, toolCalls: p.toolCalls,
+      ...(p.completedTurns.size ? { turn: p.completedTurns.size } : {}) }; p.progressTurns.set(turn, observed); }
     return observed;
   };
   function observeProgress(p, event) {
     if (event.type === 'tool/call') p.callTurns.set(event.data.callId, event.data.turn);
     if (event.type === 'turn/end' && event.data.reason?.kind === 'completed') {
-      // Native repair/model steps share one task turn. This adapter does not
-      // start the original driver's nudge turns; never relabel steps as turns.
       const observed = progressFor(p, event.data.turn);
-      observed.turn = 1; observed.revision++;
+      p.completedTurns.add(event.data.turn);
+      observed.turn = p.completedTurns.size; observed.revision++;
     }
     publishProgress(p);
   }
@@ -80,7 +82,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
     if (turn === undefined || p.progressTokens.has(exec.token)) return;
     p.progressTokens.add(exec.token);
     const observed = progressFor(p, turn);
-    observed.toolCalls++; observed.lastTool = { name: exec.name.slice(0, 64) }; observed.revision++;
+    observed.toolCalls = ++p.toolCalls; observed.lastTool = { name: exec.name.slice(0, 64) }; observed.revision++;
     publishProgress(p);
   }
   function install(agent, actor) {
@@ -116,17 +118,28 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
         name: 'submit_result',
         description: 'Submit the final result for this task. The value must match this JSON schema: ' + JSON.stringify(pending.spec.schema),
         parameters: { type: 'object', properties: { value: {} }, required: ['value'], additionalProperties: false },
-        output: { schema: { type: 'object', properties: { recorded: { type: 'boolean' } }, required: ['recorded'], additionalProperties: false },
+        output: { schema: { type: 'object', properties: { recorded: { type: 'boolean' }, error: { type: 'object',
+          properties: { code: { type: 'string' }, message: { type: 'string' } }, required: ['code', 'message'], additionalProperties: false } }, required: ['recorded'], additionalProperties: false },
           render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
         async execute(args, exec) {
           check(); exec.signal.throwIfAborted();
           const turn = pending.receipt.currentTurn;
           if (actor.pending !== pending || pending.finished || turn === undefined || pending.reservations.has(turn) || pending.submissions.has(turn)) throw Error('This typed task is no longer accepting a result.');
-          const violations = validate(pending.spec.schema, args.value);
-          if (violations.length) throw Error(formatViolations(violations));
+          if (pending.protocolFailure) { exec.concludeTurn(); throw pending.protocolFailure; }
+          const verdict = pending.protocol.submit(args.value);
+          for (const event of verdict.events) if (event.type === 'node-repairing')
+            await pending.node?.repairing(event.attempt, event.violations);
+          if (verdict.kind === 'fail') {
+            pending.protocolFailure = verdict.error;
+            // rc.2 only preserves concludeTurn on a successful tool envelope.
+            // No value is staged: the ask rejects with the original failure
+            // after this explicit non-recording receipt completes its turn.
+            exec.concludeTurn(); return { recorded: false, error: { code: verdict.error.code, message: verdict.error.message } };
+          }
+          if (verdict.kind === 'reject') throw Error(formatViolations(verdict.violations));
           // Execution alone is not commitment: result hooks and enclosing PTC
           // calls can still reject. Commit only authoritative successful results.
-          const submission = { actor, pending, turn, value: copy(args.value) };
+          const submission = { actor, pending, turn, value: copy(verdict.value) };
           pending.reservations.set(turn, submission); staged.set(exec, submission);
           exec.concludeTurn();
           return { recorded: true };
@@ -136,12 +149,13 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
   }
   function finish(actor) {
     const p = actor.pending;
-    if (!p || p.finished) return;
+    if (!p || p.finished || !p.deliveryCommitted || p.handledMessages.has(p.messageId)) return;
     const outcome = askReceiptOutcome(p.receipt, p.messageId);
     if (!outcome) return;
-    p.finished = true;
-    questions?.cancelAsk(p, outcome.error ?? Error('The native ask completed before the main agent answered.'));
+    p.handledMessages.add(p.messageId);
     if (outcome.error) {
+      p.finished = true;
+      questions?.cancelAsk(p, outcome.error);
       const admitted = p.receipt.admitted.get(p.messageId), claimed = p.receipt.claimed.get(p.messageId);
       const terminal = p.receipt.turns.get(admitted ?? claimed)?.end;
       // A known discarded input or this exact task's committed failed turn is
@@ -151,18 +165,35 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
       p.result.reject(outcome.error); return;
     }
     p.eventCount = outcome.eventCount;
-    if (p.spec.typed) {
-      const submitted = p.submissions.get(outcome.turn);
-      if (submitted === undefined) {
-        p.nativeTaskError = Error('Native actor completed without a committed submit_result.');
-        p.result.reject(p.nativeTaskError);
-      }
-      else p.result.resolve(submitted.value);
-    } else if (!outcome.text) {
-      p.nativeTaskError = Error('Native actor completed without final assistant text.');
-      p.result.reject(p.nativeTaskError);
+    const submitted = p.submissions.get(outcome.turn);
+    const verdict = p.protocolFailure ? { kind: 'fail', error: p.protocolFailure }
+      : submitted ? { kind: 'accept', value: submitted.value } : p.protocol.turnEnded(outcome.text);
+    if (verdict.kind === 'nudge') {
+      // A new real native turn, after teardown of the completed one. Keep the
+      // same ask, child, concurrency seat, escalation budget and transcript.
+      p.deliveryCommitted = false;
+      p.continuation = (async () => {
+        const agent = ctx.get('agents')?.get(actor.childId);
+        if (agent) await agent.whenIdle(signal);
+        check();
+        if (actor.pending !== p || p.finished) throw Error('The Actor task changed before its nudge.');
+        await p.node?.nudged(); check();
+        p.messageId = undefined;
+        const messageId = await ctx.subagents.sendMessage(parent, actor.childId, [{ type: 'text', text: NUDGE_PROMPT }], { signal });
+        p.messageId = messageId;
+        p.continuations.push({ messageId, afterEventCount: outcome.eventCount });
+        await p.persistAcceptance();
+        p.deliveryCommitted = true;
+        publishProgress(p); finish(actor);
+      })().catch(error => { p.finished = true; p.result.reject(error); });
+      return;
     }
-    else p.result.resolve(outcome.text);
+    p.finished = true;
+    questions?.cancelAsk(p, verdict.error ?? Error('The native ask completed before the main agent answered.'));
+    if (verdict.kind === 'fail') {
+      p.nativeTaskError = verdict.error; p.settledTaskFailure = true;
+      p.result.reject(verdict.error);
+    } else p.result.resolve(verdict.value);
   }
   disposers.push(ctx.on('agent/created', ({ agent }) => {
     const actor = children.get(agent.id); if (actor) install(agent, actor);
@@ -194,6 +225,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
   disposers.push(ctx.on('tools/execute', async (exec, next) => {
     const actor = exec.agent && children.get(exec.agent.id), p = actor?.pending;
     if (!p || p.finished) return next();
+    if (p.protocolFailure) { exec.concludeTurn(); throw p.protocolFailure; }
     // This public hook sees allowed dispatches, unlike pre-approval tool/call
     // records. Count protocol tools too; keep cache-effect accounting separate.
     dispatchedProgress(p, exec);
@@ -327,10 +359,12 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
         result.promise.catch(() => {});
         // A synchronous delivery may start/finish before its RPC returns. Keep
         // actual message IDs and terminal events, then correlate after receipt.
-        const pending = { spec, actorSeq: seq, result, receipt: createAskReceipt(), enclosed: new Map(), reservations: new Map(), submissions: new Map(), finished: false, node, worldToolCalls: 0,
+        const pending = { spec, protocol: createAskProtocol(spec), actorSeq: seq, result, receipt: createAskReceipt(), enclosed: new Map(), reservations: new Map(), submissions: new Map(), finished: false, node, worldToolCalls: 0,
+          continuations: [], handledMessages: new Set(), completedTurns: new Set(), toolCalls: 0,
           callTurns: new Map(), progressTurns: new Map(), progressTokens: new Set(), progressTail: Promise.resolve(), progressRevision: -1 };
         actor.pending = pending;
-        const instructionsWithResult = spec.typed ? instructions + '\n\nReturn the final value by calling submit_result; its declared schema is the required task result.' : instructions;
+        const instructionsWithResult = instructions + qualityEpilogue(spec.typed ? spec.schema : undefined)
+          + (spec.typed ? '\n\nReturn the final value by calling submit_result; its declared schema is the required task result.' : '');
         const prompt = [{ type: 'text', text: instructionsWithResult }];
         progress?.({ type: 'actor-start', siteId, name: reference.name, childId: actor.childId });
         let release, completedContextCommitted = false, primaryFailure, hasPrimaryFailure = false;
@@ -351,7 +385,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
             const agentOptions = typeof reference.persona === 'object' && reference.persona?.model !== undefined
               ? modelBindings.get(reference.persona.model) : subagentModel?.options ?? (seed ? actor.replayNativeAgentOptions ?? actor.imported?.candidate.nativeAgentOptions : undefined);
             const detach = seed && continuity.attach(actor.childId, { sessionId: seed.sourceSessionId, eventCount: seed.messageCount, persona,
-              ...(seed.allowAborted ? { allowAborted: true, messageId: seed.messageId, completedEventCounts: seed.completedEventCounts,
+              ...(seed.allowAborted ? { allowAborted: true, messageId: seed.messageId, continuations: seed.continuations, completedEventCounts: seed.completedEventCounts,
                 completedFallbackCount: seed.completedFallbackCount, isCarryOpen: seed.isCarryOpen } : {}) });
             let receipt;
             // This wrapper can reject after native inbox admission but before
@@ -378,12 +412,18 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           }
           // Acceptance is a durable identity fact, not a completed result.
           // Persist even if cancellation raced the native receipt's return.
-          const acceptedRef = await cache?.actorAccepted(reference, seq, instructions, { sessionId: actor.childId, messageId: pending.messageId });
-          if (journalContext?.updateRunning) {
-            if (!acceptedRef) throw Object.assign(Error('Accepted Actor work has no durable native replay identity.'), { code: 'uncertain_effect' });
-            await journalContext.updateRunning(acceptedRef);
-          }
+          pending.acceptanceMessageId = pending.messageId;
+          pending.persistAcceptance = async () => {
+            const acceptedRef = await cache?.actorAccepted(reference, seq, instructions, { sessionId: actor.childId,
+              messageId: pending.acceptanceMessageId, ...(pending.continuations.length ? { continuations: pending.continuations } : {}) });
+            if (journalContext?.updateRunning && pending.continuations.length === 0) {
+              if (!acceptedRef) throw Object.assign(Error('Accepted Actor work has no durable native replay identity.'), { code: 'uncertain_effect' });
+              await journalContext.updateRunning(acceptedRef);
+            }
+          };
+          await pending.persistAcceptance();
           await node?.materialized();
+          pending.deliveryCommitted = true;
           publishProgress(pending);
           finish(actor);
           const value = await result.promise;
@@ -392,7 +432,13 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           await pending.progressTail;
           if (pending.progressFailure) throw pending.progressFailure;
           if (!Number.isSafeInteger(pending.eventCount)) throw Error('The native completed task boundary is missing.');
-          await cache?.actorResult(reference, seq, instructions, value, { sessionId: actor.childId, eventCount: pending.eventCount },
+          if (pending.continuations.length) {
+            const observation = await ctx.get('sessionQuery').observeSession(actor.childId, { signal });
+            try { verifyAskExchange(observation.events.slice(observation.inheritedEventCount), { sessionId: parent.id,
+              messageId: pending.acceptanceMessageId, continuations: pending.continuations }, pending.eventCount); }
+            finally { observation[Symbol.dispose](); }
+          }
+          await cache?.actorResult(reference, seq, instructions, value, { sessionId: actor.childId, eventCount: pending.eventCount, continuations: pending.continuations },
             { ...(pending.carriedContext ? {} : { worldToolCalls: pending.worldToolCalls }),
               observation: pending.carriedContext ? 'native-tool-dispatch-with-carried-context' : 'native-tool-dispatch' }, false);
           completedContextCommitted = true;
@@ -406,7 +452,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           await pending.progressTail;
           if (pending.progressFailure && error !== pending.progressFailure)
             error = Object.assign(new AggregateError([error, pending.progressFailure], 'Native Actor task and progress persistence both failed.'), { code: 'uncertain_effect' });
-          const uncertain = !completedContextCommitted && (pending.worldToolCalls > 0
+          const uncertain = !completedContextCommitted && !pending.settledTaskFailure && (pending.worldToolCalls > 0
             || pending.deliveryAttempted && !(Object.hasOwn(pending, 'nativeTaskError') && error === pending.nativeTaskError));
           const failure = completedContextCommitted
             ? Object.assign(Error(completedDeliveryMessage, { cause: error }), { code: 'uncertain_effect' }) : uncertain
@@ -425,6 +471,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
           await attemptCleanup('progress', () => node?.settled(failure));
           throw failure;
         } finally {
+          await pending.continuation;
           await attemptCleanup('questions', () => questions?.cancelAsk(pending, signal.reason ?? Error('The native ask is no longer in flight.')));
           await attemptCleanup('concurrency', () => release?.());
           if (actor.pending === pending) actor.pending = undefined;

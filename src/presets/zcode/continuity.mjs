@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { actorPersona } from '../../host/subagents.mjs';
 import { ToolCallRecovery } from '@deepseek-ai/dsh-session';
+import { verifyAskExchange } from './ask-receipt.mjs';
 
 export const CONTINUITY_PROVIDER_PREFIX = 'omaa-zcode-continuity-';
 
@@ -78,7 +79,11 @@ export async function readActorContinuation(ctx, parent, source, signal, options
     if (options.acceptedMessageId) {
       if (source.eventCount !== undefined && source.eventCount !== eventCount)
         throw new ActorCarryUnavailable('The settled Actor carry source changed before successor activation.');
-      validateAcceptedTail(observation.events, observation.inheritedEventCount, options.acceptedMessageId);
+      const lastMessageId = source.continuations?.at(-1)?.messageId ?? options.acceptedMessageId;
+      validateAcceptedTail(observation.events, observation.inheritedEventCount, lastMessageId);
+      try { verifyAskExchange(observation.events.slice(observation.inheritedEventCount),
+        { sessionId: parent.id, messageId: options.acceptedMessageId, continuations: source.continuations }, eventCount, 'aborted'); }
+      catch { throw new ActorCarryUnavailable('The accepted Actor nudge chain is incomplete or changed.'); }
     }
     for (const count of options.eventCounts ?? (options.acceptedMessageId ? [] : [eventCount])) {
       const boundary = observation.events[count - 1];

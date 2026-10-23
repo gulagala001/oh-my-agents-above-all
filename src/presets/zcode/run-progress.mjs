@@ -78,6 +78,8 @@ export function createRunProgress({ store, parent, runId, signal, stopReason }) 
         progress: (turn, toolCalls, lastTool) => emit('node-progress', { instance: payload.instance,
           ...(turn === undefined ? {} : { turn }), ...(toolCalls === undefined ? {} : { toolCalls }),
           ...(lastTool === undefined ? {} : { lastTool }) }),
+        repairing: (attempt, violations) => emit('node-repairing', { instance: payload.instance, attempt, violations }),
+        nudged: () => emit('node-nudged', { instance: payload.instance }),
         settled: (error, { cached = false, sourceSessionId } = {}) => emit('node-settled', { ...payload, ...(cached ? { cached: true } : {}),
           ...(cached && sourceSessionId ? { sourceSessionId } : {}), outcome: error ? signal?.aborted ? 'cancelled' : 'failed' : 'ok',
           ...(error ? { error: String(error.message ?? error) } : {}) }, actor?.ready ? actor.childId : undefined),

@@ -61,6 +61,10 @@ OMD 人格／初始身份兼容与工具增强独立。每次装配读取同一 
 
 ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。脚本先经原厂 analyze/typecheck、site table、schema 合成和 lowering，再由隔离 native ptcRuntime 运行；没有原厂引擎、provider 或独立模型循环。Actor 以 native continuable childId 持久存在，重复 ask 排队且每次声明实际 submit_result，成功结果和关联回合结束共同决定提交。原生 descriptor 保存 literal persona，长期装配 hook 保证冷恢复；脚本正常返回会取消遗留 ask 并等待 drain。背景执行和停止通过原生 jobs，父权限/Ask/Plan 变化会主动取消。定义档的 facade marker 决定 TypeScript 或既有 JavaScript 路由；运行图是独立显示投影，不冒充原厂 journal/replay；修订缓存的执行事实见下文。
 
+`build-zcode-compiler.mjs` 同时从固定 `scheduler-submit.ts`、预算常量与提示辅助函数生成 `zcode-ask-protocol.mjs`。原函数负责单次 JSON 解码、三次修复和一次补交的决定；`actors.mjs` 负责真实工具结果、原生回合收束与接纳收据，成功的原函数判定本身不提交结果。rc.2 仅在成功工具回执上保留 `concludeTurn`，因此预算耗尽返回明确的 `recorded:false` 回执后，以原错误码拒绝 ask。补交仍占同一个并发名额并复用同一个 child，进度交给已有原厂 reducer／组件。
+
+多回合交换使用 v2 accepted-ask／chapter 的有界 continuation 字段，旧 v1 记录仍可读取。最初的 replay carry 引用保持不变；补交的接纳事实追加到候选，完成章记录最终边界。活跃完成、冷 replay 与取消后的 carry 都核对原生消息 ID、发送者、精确补交正文及回合边界，拒绝插入的其他任务；原生准备阶段的 snapshot／catalog／instructions 保留为上下文。回合终止、失败后的前缀封闭、权限和外部效果检查仍由相同路径负责。
+
 ## OMAA 0.9.0 的 ZCode 运行投影与修订
 
 OMAA 0.9.0 接入 `amend_workflow`：run 必须属于当前 session；先编译及核对归属／可读缓存，再停止并等待前驱结算，创建带 `resumedFrom`／`supersededBy` 的 successor。原 `ImportedActorState`、`ImportedWorldQueue`、persona/hash 算法从固定原文构建；完整结果存 native immutable attachment，metadata 保存连续 Actor 完成前缀、native canonical event offset、world 准入序号及关闭事实，独立于有界 display。首次 live 分歧通过专用 continuity provider 继承旧 Actor 的精确 completed event prefix；native manager 追加新 descriptor、真实 parent、当前委派权限并负责冷恢复。失败 ask 封住可导入前缀，不阻断脚本 catch 后的后续 live ask。

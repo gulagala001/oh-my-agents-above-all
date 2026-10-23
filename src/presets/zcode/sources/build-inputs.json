@@ -211,6 +211,56 @@
       "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
       "license": "Apache-2.0",
       "runtimeRole": "reference for native profile MCP and child restriction adaptation"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/scheduler-submit.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/scheduler-submit.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "1489c215d32308edbc60daed6adfca098689f1a8",
+      "sha256": "58e220b86f9c84e2dcb45af4e8933c0bc7f3ad77eeed5a5d6782f3dc96636d5e",
+      "bytes": 5047,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/scheduler-submit.ts",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "f4d117520518170bc5f9d781f684ee9d3c4b79b0",
+      "sha256": "42501b4b8fcd3cfd9976907a4b8bd61fa3779920f7256dc09dcd90eab2cfc7ec",
+      "bytes": 59367,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "f52cd97517a4c6add5a41993503ee118df2d5ecb",
+      "sha256": "6d8c70bc553320fd7ac55dac75ad09ee4e6db1f60991f3690094f192aeaced6e",
+      "bytes": 8423,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-driver-helpers.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/bootstrap/src/app/workflow-driver-helpers.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "b2878069b5f792765dad857c6eb4e371e541e3b0",
+      "sha256": "b8730d26de24439ab3ca4eca76d3da7d5b4d14bdd60c6d6e9f1d6a7b91e85f92",
+      "bytes": 13419,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/workflow-driver-helpers.ts",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-ask-epilogue.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/bootstrap/src/app/workflow-ask-epilogue.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "f4ee74ad05d070b08630efcdf1a908c3ed04023e",
+      "sha256": "ecbe399e2230760944bc7bae8f55a51e5db1581778d7a22c49a7dcfb4551564b",
+      "bytes": 2929,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/workflow-ask-epilogue.ts",
+      "license": "Apache-2.0"
     }
   ]
 }

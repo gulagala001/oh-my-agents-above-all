@@ -117,7 +117,53 @@ export async function buildZCodeWorkflowCompiler() {
   if (Object.keys(validation.metafile.inputs).length !== 1) throw new Error('ZCode validator gained runtime dependencies');
   await writeFile(output, fileOutput.contents);
   await writeFile(join(root, 'lib/zcode-workflow-validate.mjs'), validation.outputFiles[0].contents);
+  await buildAskProtocol();
   return { output, stdlibFiles: stdlib.count, exports: Object.values(result.metafile.outputs)[0].exports };
+}
+
+// Keep the fixed scheduler's schema normalization, repair and nudge decisions.
+// Only its small pure seam is used; DSH continues to own every actual turn.
+async function buildAskProtocol() {
+  const app = join(snapshots, 'apps/zcode-cli/packages/bootstrap/src/app');
+  const manifest = JSON.parse(await readFile(join(root, 'src/presets/zcode/sources/build-inputs.json'), 'utf8'));
+  const paths = [join(sourceRoot, 'engine/scheduler-submit.ts'), join(sourceRoot, 'engine/types.ts'),
+    join(sourceRoot, 'engine/errors.ts'), join(app, 'workflow-driver-helpers.ts'), join(app, 'workflow-ask-epilogue.ts')];
+  const sources = new Map();
+  for (const path of paths) {
+    const bytes = await readFile(path), row = manifest.files.find(row => row.file === relative(root, path));
+    if (!row || row.bytes !== bytes.length || row.sha256 !== createHash('sha256').update(bytes).digest('hex')
+      || row.gitBlobSha1 !== createHash('sha1').update('blob ' + bytes.length + '\0').update(bytes).digest('hex'))
+      throw Error('Fixed ZCode ask source changed: ' + path);
+    sources.set(path, bytes.toString('utf8'));
+  }
+  const selectConstants = (path, names) => {
+    const file = ts.createSourceFile(path, sources.get(path), ts.ScriptTarget.Latest, true);
+    const nodes = file.statements.filter(node => ts.isVariableStatement(node)
+      && node.declarationList.declarations.length === 1 && names.includes(node.declarationList.declarations[0].name.getText(file)));
+    if (nodes.length !== names.length) throw Error('Fixed ZCode ask constants changed.');
+    return nodes.map(node => node.getText(file)).join('\n');
+  };
+  const constants = selectConstants(paths[1], ['REPAIR_ATTEMPTS', 'NUDGE_ATTEMPTS']);
+  const nudge = selectConstants(paths[3], ['NUDGE_PROMPT']);
+  const result = await build({
+    stdin: { contents: `export * from './engine/scheduler-submit.js';\nexport * from './engine/errors.js';\n${constants}\n${nudge}\n`
+      + `export { qualityEpilogue } from ${JSON.stringify(paths[4])};`, resolveDir: sourceRoot, loader: 'ts' },
+    bundle: true, platform: 'node', target: 'node22', format: 'esm', write: false,
+    banner: { js: '// Fixed ZCode 3.15.1 ask protocol (Apache-2.0). See build-inputs.json and THIRD_PARTY_NOTICES.md.' },
+    plugins: [{ name: 'zcode-ask-seam', setup(builder) {
+      builder.onResolve({ filter: /^\.\/types\.js$/ }, args => {
+        if (args.importer !== paths[0]) throw Error('Unexpected ZCode ask type importer.');
+        return { path: 'ask-types', namespace: 'zcode-ask' };
+      });
+      builder.onLoad({ filter: /.*/, namespace: 'zcode-ask' }, () => ({ contents: constants
+        + `\nexport { WorkflowError } from ${JSON.stringify(paths[2])};`, loader: 'ts', resolveDir: sourceRoot }));
+      builder.onLoad({ filter: /\.ts$/ }, args => {
+        if (!sources.has(args.path)) throw Error('Unexpected ZCode ask dependency: ' + args.path);
+        return { contents: sources.get(args.path), loader: 'ts' };
+      });
+    } }],
+  });
+  await writeFile(join(root, 'lib/zcode-ask-protocol.mjs'), result.outputFiles[0].contents);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

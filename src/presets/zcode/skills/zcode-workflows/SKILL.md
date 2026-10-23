@@ -18,6 +18,16 @@ run independently; use Promise.all for independent tasks. An ask without `T`,
 or with `T = string`, returns final assistant text, as in the original facade.
 Do not mix this API with native `agent(prompt)`.
 
+Typed tasks retain the original result protocol: a JSON string is decoded once
+only when its direct value fails the schema; three rejected submissions may be
+repaired, and the fourth invalid submission fails with `ValidationFailed`.
+If the model ends without submitting, one new native turn asks it to submit;
+another omission fails with `ResultNotSubmitted`. Both errors are catchable in
+the workflow. These budgets belong to an ask, including its repair and nudge
+turns, and reset for the next ask. The same Actor keeps its full conversation;
+separate Actors start with separate task contexts. Repair/nudge observations
+appear in the existing workflow run panel. Cancellation stops the actual child.
+
 ```ts
 interface Finding { path: string; summary: string }
 phase('Inspect');

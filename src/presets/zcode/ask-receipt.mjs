@@ -1,6 +1,51 @@
 // One accepted ask can finish before its delivery RPC returns. Retain each
 // native turn's facts and bind the accepted message to its own consumed turn.
 // A later unrelated turn must not replace its terminal reason or result text.
+import { NUDGE_PROMPT } from '../../../lib/zcode-ask-protocol.mjs';
+
+export function verifyAskExchange(events, accepted, boundary, finalKind = 'completed') {
+  const hops = [{ messageId: accepted.messageId }, ...(accepted.continuations ?? [])];
+  const admissions = new Map(); let turn;
+  const inboxIds = new Set();
+  for (const event of events) {
+    if (event.type === 'agent/inbox/spliced') for (const message of event.data.inserted ?? []) inboxIds.add(message.id);
+    if (event.type === 'turn/start') turn = event.data.turn;
+    else if (event.type === 'turn/end') turn = undefined;
+    else if (event.type === 'user/message' && event.surfaceOp === 'append') {
+      const message = event.data.message ?? event.data, list = admissions.get(message.id) ?? [];
+      list.push({ turn, event, message }); admissions.set(message.id, list);
+    }
+  }
+  const fail = () => { throw Error('The native Actor exchange has no exact owned message/turn chain.'); };
+  if (hops.length > 2 || new Set(hops.map(hop => hop.messageId)).size !== hops.length) fail();
+  let previousBoundary = -1, firstSeq;
+  const turns = new Set(), ids = new Set(hops.map(hop => hop.messageId));
+  for (let index = 0; index < hops.length; index++) {
+    const entries = admissions.get(hops[index].messageId), endCount = hops[index + 1]?.afterEventCount ?? boundary;
+    const end = events.find(event => event.seq === endCount - 1), admission = entries?.[0];
+    if (entries?.length !== 1 || admission.turn === undefined || admission.event.seq <= previousBoundary
+      || end?.type !== 'turn/end' || end.data.turn !== admission.turn || admission.event.seq >= end.seq
+      || end.data.reason?.kind !== (index === hops.length - 1 ? finalKind : 'completed')) fail();
+    if (index > 0 && (typeof accepted.sessionId !== 'string'
+      || admission.message.source?.kind !== 'agent-message' || admission.message.source.form !== 'relay'
+      || admission.message.source.senderSessionId !== accepted.sessionId
+      || admission.message.content?.length !== 2 || admission.message.content[0].type !== 'text'
+      || admission.message.content[0].text !== `Agent ${accepted.sessionId} sent a message: `
+      || admission.message.content[1].type !== 'text' || admission.message.content[1].text !== NUDGE_PROMPT)) fail();
+    firstSeq ??= admission.event.seq; previousBoundary = end.seq; turns.add(admission.turn);
+  }
+  for (const event of events) if (event.seq >= firstSeq && event.seq < boundary) {
+    if (event.type === 'turn/end' && !turns.has(event.data.turn)) fail();
+    if (event.type === 'user/message' && event.surfaceOp === 'append') {
+      const message = event.data.message ?? event.data;
+      // Native preparation appends runtime snapshots, skill catalogs and
+      // standing instructions inside a task. They are context, not a second
+      // inbox delivery. Any other accepted input changes this task exchange.
+      if (!ids.has(message.id) && (inboxIds.has(message.id)
+        || !['snapshot', 'catalog', 'instructions'].includes(message.source?.form))) fail();
+    }
+  }
+}
 export function createAskReceipt() {
   return { currentTurn: undefined, turns: new Map(), claimed: new Map(), admitted: new Map(), discarded: new Set() };
 }

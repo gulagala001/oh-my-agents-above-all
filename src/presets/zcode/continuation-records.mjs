@@ -12,12 +12,14 @@ const reference = value => object(value) && integer(value.bytes) &&
     || text(value.attachmentId) && typeof value.name === 'string');
 const allowed = (value, keys) => Object.keys(value).every(key => keys.includes(key));
 const common = ['format', 'version', 'sessionId', 'runId', 'revision'];
+const continuations = value => Array.isArray(value) && value.length === 1 && value.every(row => object(row)
+  && allowed(row, ['messageId', 'afterEventCount']) && text(row.messageId) && integer(row.afterEventCount, 1));
 function envelope(kind, fields) {
   const value = { format: prefix + kind, version: CONTINUATION_RECORD_VERSION, ...fields };
   return decodeContinuationRecord(kind, value);
 }
 export function decodeContinuationRecord(kind, value, owner) {
-  if (!object(value) || value.format !== prefix + kind || !(value.version === CONTINUATION_RECORD_VERSION || kind === 'start-header' && value.version === 2)
+  if (!object(value) || value.format !== prefix + kind || !(value.version === CONTINUATION_RECORD_VERSION || ['start-header', 'accepted-ask', 'chapter'].includes(kind) && value.version === 2)
     || !text(value.sessionId) || !text(value.runId) || !integer(value.revision, 1)
     || owner && (value.sessionId !== owner.sessionId || value.runId !== owner.runId))
     throw Error('Unsupported or incorrectly owned native continuation record.');
@@ -37,16 +39,18 @@ export function decodeContinuationRecord(kind, value, owner) {
     && (value.chapterCount === 0 ? value.lastChapterRef === undefined : reference(value.lastChapterRef))
     && (value.acceptedRef === undefined || reference(value.acceptedRef))
     && (value.prefixClosedAt === undefined || integer(value.prefixClosedAt));
-  if (kind === 'accepted-ask') valid = allowed(value, [...common, 'handle', 'actorSeq', 'inputHash', 'sourceSessionId', 'messageId'])
+  if (kind === 'accepted-ask') valid = allowed(value, [...common, 'handle', 'actorSeq', 'inputHash', 'sourceSessionId', 'messageId', ...(value.version === 2 ? ['continuations'] : [])])
     && text(value.handle) && integer(value.actorSeq) && value.revision === value.actorSeq + 1
-    && text(value.inputHash) && text(value.sourceSessionId) && text(value.messageId);
+    && text(value.inputHash) && text(value.sourceSessionId) && text(value.messageId)
+    && (value.version !== 2 || continuations(value.continuations) && value.continuations[0].messageId !== value.messageId);
   if (kind === 'chapter') {
     valid = value.kind === 'actor'
-      ? allowed(value, [...common, 'kind', 'handle', 'actorSeq', 'inputHash', 'resultRef', 'sourceSessionId', 'messageBoundary', 'statsRef', 'cached', 'previousChapterRef'])
+      ? allowed(value, [...common, 'kind', 'handle', 'actorSeq', 'inputHash', 'resultRef', 'sourceSessionId', 'messageBoundary', 'statsRef', 'cached', 'previousChapterRef', ...(value.version === 2 ? ['continuations'] : [])])
         && text(value.handle) && integer(value.actorSeq) && text(value.sourceSessionId) && integer(value.messageBoundary, 1)
         && value.revision === value.actorSeq + 1
         && (value.actorSeq === 0 ? value.previousChapterRef === undefined : reference(value.previousChapterRef))
         && (value.statsRef === undefined || reference(value.statsRef))
+        && (value.version !== 2 || continuations(value.continuations) && value.continuations[0].afterEventCount < value.messageBoundary)
       : value.kind === 'world' && allowed(value, [...common, 'kind', 'ordinal', 'inputHash', 'resultRef', 'cached']) && integer(value.ordinal, 1);
     valid &&= text(value.inputHash) && reference(value.resultRef) && typeof value.cached === 'boolean';
   }
@@ -56,8 +60,8 @@ export function decodeContinuationRecord(kind, value, owner) {
 export const startHeaderRecord = fields => envelope('start-header', { version: fields.subagentModelRef === undefined ? 1 : 2, ...fields });
 export const subagentModelRecord = fields => envelope('subagent-model', fields);
 export const candidateRecord = fields => envelope('candidate', fields);
-export const chapterRecord = fields => envelope('chapter', fields);
-export const acceptedAskRecord = fields => envelope('accepted-ask', fields);
+export const chapterRecord = fields => envelope('chapter', { version: fields.continuations === undefined ? 1 : 2, ...fields });
+export const acceptedAskRecord = fields => envelope('accepted-ask', { version: fields.continuations === undefined ? 1 : 2, ...fields });
 export function assertRunCache(record, sessionId) {
   const execution = record?.execution;
   if (!object(record) || record.sessionId !== sessionId || !text(record.runId) || !object(execution)

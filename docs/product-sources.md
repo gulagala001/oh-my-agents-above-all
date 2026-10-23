@@ -20,4 +20,6 @@ ZCode 3.15.1 的编译、运行图、profile、记忆和日历代码固定到 `a
 
 Grok 与 Cursor 的浏览器队列复用固定 `@deepseek-ai/dsh-client-ui-conversation@0.2.1-rc.2` 的真实 QueueDock，原始片段及 MIT 许可位于 `src/client/sources/grok-queue/`。`source.json` 记录 npm 工件、完整 bundle 与片段 SHA-256；构建校验原文，适配层提供共享队列操作及按预设授权的宿主接线；原始快照路径沿用，不复制第二份组件。
 
+ZCode 子任务结果协议来自同一 3.15.1 的 `engine/scheduler-submit.ts`、`types.ts`、`errors.ts` 与 `workflow-driver-helpers.ts`／`workflow-ask-epilogue.ts`。原始字节及 Git blob／SHA-256 纳入 `build-inputs.json`；编译构建只提取纯结果裁决、预算、错误和提示函数。原生回合、接纳消息、权限、持久化与取消由 DSH 接线承担。
+
 Cursor 的差异面板使用 MIT 许可的 `@deepseek-ai/dsh-client-ui-deliverables@0.2.1-rc.2` 实际 `FileDiff` 组件。必要片段与 CSS、许可证、原包文件和片段 SHA-256 保存在 `src/client/sources/dsh-rc2/`；生成脚本仅适配五处行号按钮和样式挂载，保留原生显示与高亮逻辑。这是宿主组件的复用，Cursor 的闭源 UI 不因此被标为已有源码。

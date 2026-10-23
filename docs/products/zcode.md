@@ -41,6 +41,10 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。0.7 接入文件／Git／world，0.8 接入产物；0.9.0 接入下述运行图和 successor-run Amend。自动专家/planner/critic、原厂审批、完整模型网络状态与运行日志重放仍有差异。
 
+类型化子任务采用固定 3.15.1 的结果归一化与修复规则：原值不符合 schema 且是字符串时仅解码一次 JSON；前三次无效提交允许修复，第四次以 `ValidationFailed` 结束该 ask。模型结束回合但未交结果时，在同一子会话中补问一次，再次漏交返回 `ResultNotSubmitted`。脚本可以 catch 这两类失败并继续其他工作；预算按 ask 重置，补交不重新占用并发名额，也不重置提问预算。同一 Actor 的并发 ask 按 FIFO 处理并保留此前工具结果，独立 Actor 的任务上下文互不混入。
+
+入口仍为加载 `zcode-workflows` 后调用 `create_workflow`／`run_saved_workflow`，工作流卡片和右侧运行面板显示实际修复、补交及回合／工具进度。已完成的补交交换保存原始接纳消息、补交消息与两个原生回合边界；`resume_workflow` 冷恢复不重跑已确认的读文件、修复或补交，`amend_workflow` 后续任务继承完整的已完成前缀。停止补交中的后台作业会中断并收束真实子会话；只有完整核验、仍允许导入的已取消交换能作为修订上下文，结果不明时拒绝自动重跑。
+
 ### OMAA 0.7.0 的 world facade
 
 TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep(pattern, glob?)`，以及 `git.changedFiles(base?)`、`git.diff(base?, path?)`、`git.status()`、`git.log(count?)`、`world.run(cmd, args?, opts?)`。`world.run` 的 cmd 必须是原厂编译器可收集的字面命令；动态命令在编译时诊断，执行时再次核对已声明集合。args 是字符串数组，opts 可指定正整数 `timeoutMs`。命令直接按 argv 执行；非零退出返回 `{exitCode, stdout, stderr}`，超时、驱动失败和超限才抛出错误，脚本可 catch 其 `code`。

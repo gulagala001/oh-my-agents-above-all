@@ -5,6 +5,7 @@ import { CONTINUITY_PROVIDER_PREFIX, ActorCarryUnavailable, readActorContinuatio
 import { executionDirectories } from '../../host/working-directory.mjs';
 import { RUN_CACHE_VERSION, assertRunCache, decodeContinuationRecord, startHeaderRecord, subagentModelRecord, candidateRecord, chapterRecord, acceptedAskRecord } from './continuation-records.mjs';
 import { checkedWorkflowSubagentModel } from './model-bindings.mjs';
+import { verifyAskExchange } from './ask-receipt.mjs';
 
 export { RUN_CACHE_VERSION };
 export const actorPersona = reference => normalizePersona(reference.name || undefined, reference.persona ?? undefined);
@@ -28,21 +29,10 @@ async function verifyReplayReceipts(ctx, parent, sourceSessionId, receipts, sign
     if (!descriptor || descriptor.mode !== 'continuable' || !descriptor.label?.startsWith('ZCode Actor · ')
       || descriptor.provider !== 'spawn' && !descriptor.provider?.startsWith(CONTINUITY_PROVIDER_PREFIX))
       uncertainReplay('the accepted task source is not a native ZCode Actor.');
-    const admitted = new Map(); let turn;
-    for (const event of ownEvents) {
-      if (event.type === 'turn/start') turn = event.data.turn;
-      else if (event.type === 'turn/end') turn = undefined;
-      else if (event.type === 'user/message' && event.surfaceOp === 'append') {
-        const id = (event.data.message ?? event.data).id, entries = admitted.get(id) ?? [];
-        entries.push({ turn, seq: event.seq }); admitted.set(id, entries);
-      }
-    }
     for (const { accepted, chapter, persona } of receipts) {
-      const admissions = admitted.get(accepted.messageId), boundary = observation.events[chapter.messageBoundary - 1];
-      if (recordedActorPersona(ownEvents) !== persona.system || admissions?.length !== 1 || admissions[0].turn === undefined
-        || boundary?.type !== 'turn/end' || boundary.data.reason?.kind !== 'completed'
-        || admissions[0].turn !== boundary.data.turn || admissions[0].seq >= boundary.seq)
-        uncertainReplay('the accepted native message is not correlated with its recorded completed boundary.');
+      if (recordedActorPersona(ownEvents) !== persona.system) uncertainReplay('the accepted Actor persona changed.');
+      try { verifyAskExchange(ownEvents, { ...accepted, continuations: chapter.continuations }, chapter.messageBoundary); }
+      catch { uncertainReplay('the accepted native message chain is not correlated with its recorded completed boundary.'); }
     }
     signal.throwIfAborted(); assertResidentSourceIdle(ctx, sourceSessionId);
   } finally { observation[Symbol.dispose](); }
@@ -108,6 +98,7 @@ async function readCandidate(store, row, owner, signal) {
       throw Error('The completed Actor cache prefix is incomplete.');
     entries.push({ actorSeq: chapter.actorSeq, inputHash: chapter.inputHash, resultRef: chapter.resultRef,
       messageBoundary: chapter.messageBoundary, sourceSessionId: chapter.sourceSessionId,
+      ...(chapter.continuations === undefined ? {} : { continuations: chapter.continuations }),
       cached: chapter.cached,
       stats: chapter.statsRef === undefined ? undefined : await store.readItem(chapter.statsRef, signal) });
     ref = chapter.previousChapterRef;
@@ -260,7 +251,7 @@ export async function importCompletedRun({ ctx, parent, store, record, signal, d
     // inherited from earlier successors. Validate every selectable completed
     // cut before stopping a live predecessor, not only its longest boundary.
     const completedEventCounts = entries.map(entry => entry.messageBoundary);
-    let transcriptSourceSessionId = actor.transcriptSourceSessionId, nativeAgentOptions, inFlight, inFlightMessageId;
+    let transcriptSourceSessionId = actor.transcriptSourceSessionId, nativeAgentOptions, inFlight, inFlightMessageId, inFlightContinuations;
     if (entries.length) {
       const source = await readActorContinuation(ctx, parent, { sessionId: transcriptSourceSessionId,
         eventCount: entries.at(-1).messageBoundary, persona: persona.system }, signal,
@@ -277,10 +268,11 @@ export async function importCompletedRun({ ctx, parent, store, record, signal, d
         else {
           try {
             const source = await readAcceptedActorContinuation(ctx, parent, { sessionId: accepted.sourceSessionId,
-              messageId: accepted.messageId, persona: persona.system }, signal,
+              messageId: accepted.messageId, continuations: accepted.continuations, persona: persona.system }, signal,
             { eventCounts: completedEventCounts, includeEvents: false });
             inFlight = { inputHash: accepted.inputHash, messageBoundary: source.eventCount };
             inFlightMessageId = accepted.messageId;
+            inFlightContinuations = accepted.continuations;
             transcriptSourceSessionId = accepted.sourceSessionId; nativeAgentOptions = source.nativeModel;
           } catch (error) {
             if (!(error instanceof ActorCarryUnavailable)) throw error;
@@ -291,7 +283,7 @@ export async function importCompletedRun({ ctx, parent, store, record, signal, d
     }
     if (!entries.length && !inFlight) continue;
     actors.set(persona.name, { persona, entries, transcriptSourceSessionId,
-      ...(inFlight === undefined ? {} : { inFlight, inFlightMessageId }),
+      ...(inFlight === undefined ? {} : { inFlight, inFlightMessageId, inFlightContinuations }),
       ...(nativeAgentOptions === undefined ? {} : { nativeAgentOptions: Object.freeze(nativeAgentOptions) }) });
   }
   const ordinals = new Set();
@@ -367,13 +359,15 @@ export function createRunCache({ store, parent, runId, imported, replay = false 
       }
       const seed = actor.seed();
       return seed && { ...seed, ...(carried ? { allowAborted: true, messageId: actor.candidate.inFlightMessageId,
+        continuations: actor.candidate.inFlightContinuations,
         completedEventCounts: actor.candidate.entries.map(entry => entry.messageBoundary), isCarryOpen: () => !closed,
         completedFallbackCount: actor.candidate.entries[actorSeq - 1]?.messageBoundary } : {}) };
     },
     async actorAccepted(reference, actorSeq, instructions, source) {
       if (replay && blocked.has(reference.handle)) uncertainReplay('accepted work cannot extend a closed failed Actor prefix.');
       const acceptedRef = await store.saveItem(acceptedAskRecord({ ...owner, revision: actorSeq + 1, handle: reference.handle,
-        actorSeq, inputHash: inputHash(instructions), sourceSessionId: source.sessionId, messageId: source.messageId }));
+        actorSeq, inputHash: inputHash(instructions), sourceSessionId: source.sessionId, messageId: source.messageId,
+        ...(source.continuations === undefined ? {} : { continuations: source.continuations }) }));
       // A caught failure closes reusable context, not this live Actor. Later
       // accepted work still needs its own durable identity in the v3 journal;
       // it must not extend the earlier incomplete continuation candidate.
@@ -382,8 +376,14 @@ export function createRunCache({ store, parent, runId, imported, replay = false 
         const row = facts.actors.find(row => row.handle === reference.handle);
         if (!row) throw Error('Accepted Actor work has no declared candidate.');
         const candidate = await readEnvelope(store, 'candidate', row.candidateRef, owner);
-        if (candidate.chapterCount !== actorSeq || candidate.acceptedRef !== undefined)
+        if (candidate.chapterCount !== actorSeq)
           throw Error('Accepted Actor work does not immediately follow its completed prefix.');
+        if (candidate.acceptedRef !== undefined) {
+          const previous = await readEnvelope(store, 'accepted-ask', candidate.acceptedRef, owner);
+          if (previous.continuations !== undefined || source.continuations?.length !== 1 || previous.messageId !== source.messageId
+            || previous.sourceSessionId !== source.sessionId || previous.inputHash !== inputHash(instructions) || previous.actorSeq !== actorSeq)
+            throw Error('An accepted Actor exchange can only append its one native nudge.');
+        } else if (source.continuations !== undefined) throw Error('A nudge requires an earlier accepted task.');
         row.candidateRef = await store.saveItem(candidateRecord({ ...candidate, revision: candidate.revision + 1, acceptedRef }));
       });
       return acceptedRef;
@@ -414,6 +414,7 @@ export function createRunCache({ store, parent, runId, imported, replay = false 
           || candidate.prefixClosedAt !== undefined && actorSeq >= candidate.prefixClosedAt) throw Error('Actor result is not a contiguous completed prefix.');
         const chapterRef = await store.saveItem(chapterRecord({ ...owner, revision: actorSeq + 1, kind: 'actor', handle: reference.handle,
           actorSeq, inputHash: inputHash(instructions), resultRef, messageBoundary: source.eventCount, sourceSessionId: source.sessionId,
+          ...(source.continuations?.length ? { continuations: source.continuations } : {}),
           ...(candidate.lastChapterRef === undefined ? {} : { previousChapterRef: candidate.lastChapterRef }),
           ...(statsRef === undefined ? {} : { statsRef }), cached }));
         const { acceptedRef: _acceptedRef, ...completed } = candidate;
