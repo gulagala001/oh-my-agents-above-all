@@ -4,7 +4,7 @@
 
 ## 固定来源与完整装配
 
-官方 [zai-org/ZCode](https://github.com/zai-org/ZCode)，commit `29628c9acdb81b703bbd4080c207a0e7ce5e276e`，根应用版本 3.14.3、CLI core 0.16.9，Apache-2.0。不是泄露样本。来源原文、路径、链接、逐文件 SHA256 和 bytes 保存在 `src/presets/zcode/sources/source.json`；完整 LICENSE 在 `sources/upstream/LICENSE`，未把本地维护约定复制进发行资料。
+官方来源为 [zai-org/ZCode](https://github.com/zai-org/ZCode)，Apache-2.0。当前工作流编译器、运行图、记忆与 profile 解析固定到 3.15.1／`aac4755666d09fdcd70272fcf063c077a639015f`；仍使用的早期提示与 UI 辅助源码保留在 3.14.3／`29628c9acdb81b703bbd4080c207a0e7ce5e276e` 快照中。具体入口、原文、逐文件哈希、许可证及适配说明见 `src/presets/zcode/sources/source.json` 与 `build-inputs.json`。宿主 SDK 精确绑定 DSH `0.2.1-rc.2`。
 
 真正入口是 [context/builder.ts](https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/context/builder.ts)，不是单独的身份句。默认交互主代理依次构造：CLI prefix、identity、desktop（仅 zcode_desktop surface）、dynamic behavior、session guidance、memory/environment/output style/context management/git；技能、用户与项目资料、日期另作 meta-user attachment。工具说明经模型请求的 tools 字段提供，不镜像到 system。
 
@@ -35,9 +35,9 @@
 
 ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/作业生命周期。保留用户明确点名才启动、任务很小也尊重其工具选择的原要求；不在普通任务自动套固定团队。先用真实 `skill` 加载随包的 `zcode-workflows`，工具 guard 根据原生成功调用拒绝未加载时的脚本。脚本支持原生 JavaScript 控制流、独立并发、阶段、日志和 schema 中间结果；子代理以实际 `structured_output` 返回值，父代理收到真实值或失败，不用文本假报成功。子代理身份和证据段按真实读者/工具契约适配。复用 DSH 模型/API、沙箱与唯一执行器，没有另建官方账户或 workflow engine。
 
-`create_workflow` 接入固定原厂 TypeScript compiler、facade、静态分析、类型结果 schema 合成与 lowering。保留的 69 份纯来源文件与 TypeScript 5.9.3 的 57 份虚拟 ES2022 声明参与构建；不加载原厂 Actor 引擎、模型供应商或客户端。编译器检查脚本及静态调用点，再将控制流交给原生隔离 PTC。执行权限来自宿主沙箱和子代理委派策略，TypeScript 检查本身不是安全隔离。
+`create_workflow` 接入固定原厂 TypeScript compiler、facade、静态分析、类型结果 schema 合成与 lowering。固定的 3.15.1 纯源码与 TypeScript 5.9.3 的虚拟 ES2022 声明参与构建；不加载原厂 Actor 引擎、模型供应商或客户端。编译器检查脚本及静态调用点，再将控制流交给原生隔离 PTC。执行权限来自宿主沙箱和子代理委派策略，TypeScript 检查本身不是安全隔离。
 
-`agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于原生 descriptor，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
+`agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于宿主会话中的插件记录，历史 descriptor 仍可读取，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
 
 支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。0.7 接入文件／Git／world，0.8 接入产物；0.9.0 接入下述运行图和 successor-run Amend。自动专家/planner/critic、原厂审批、完整模型网络状态与运行日志重放仍有差异。
 
@@ -51,7 +51,7 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 原版限制明确拒绝而不截断成功结果：glob 最多 2000 文件；grep 最多 2000 条且序列化结果最多 256 KiB；Git diff 最多 512 KiB；Git log 默认 20 条、最多 100 条；world.run 的 stdout/stderr 各最多 256 KiB，默认超时 300000 ms，显式 timeout 不做上限钳制。Git 其它文本输出另受适配端口 4 MiB 限制。参数与越界错误保留 `DriverError`，结果超限使用 `WorldReadCapExceeded`；原生权限与沙箱负责实际访问边界，类型检查和词法路径校验本身不替代隔离。
 
-此路径使用原生 workflow 工具调用的权限边界与当前授权，不提供原厂 workflow journal/replay、Bash 逐条工具审批或 escalation。0.9.0 的运行投影与 successor-run Amend 见下文。world 调用本身沿用原生工具界面，产物另有下述右栏。既有 OMAA 0.6 与 Actor 验证记录保持原范围。
+执行使用 DSH 的工具、权限、作业与子会话生命周期。`resume_workflow` 可在同一 run 上恢复具有预先持久化执行记录的中断任务，复用已确认结果，避免重复发布报告与产物；外部命令结果不明、Actor 尚未确认完成或运行参数不一致时拒绝恢复。修改脚本或参数使用 `amend_workflow` 创建关联后继。
 
 `read_session_context` 读取用户明确引用的原生 session id，使用公开 `sessionController.inspect`，支持冷历史且不激活/修改原会话。原厂相关度评分、中文 query 拆词、tail/chunk 选择、上下文格式及预算函数来自固定完整 `session-context/read-session-context.ts`，在 build 时仅替换 native message/part 边界并编译，不概括重写算法。读取只收集可见用户/助手文本与实际工具结果，忽略系统注入和思维块；历史内容作为背景材料。默认使用当前已配置 DSH 模型做有界提取，大历史按原策略选择最多五块后合成；提取不可用返回有界原文，标明 fallback。原厂 lite 模型路线改为现有 DSH route，原生日志查询和历史层不替换。
 
@@ -59,7 +59,7 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 官方 desktop context 明确本地 URL、绝对文件链接及 inline code comment 指令。保存的 UI 来源还包括 plan-guidance renderer、edit diff renderer、ToolSummaryRow、create-workflow renderer 和 WorkflowPermissionBlock，可分别回查计划展示、文件差异、工具折叠/状态和 workflow 审批。它们是固定官方源码证据，**来源本身不是截图/点击验收**；预设主题已有独立来源，新增产物界面的实际 Web 验证见下节。
 
-本轮直接检查所有保存原文的 hash、bytes 和固定 Git blob SHA1，装配及摘要保留；原版 DSH 安装后的工具/模式/停止恢复、原生 `/compact`、Web 主题/模式与共享原生 Plan 流程已核对。新增原生 workflow 的实际结构化子代理返回、随包技能 gate、冷会话回查和只读 Git filter 防护通过 `installed-zcode-tools`。已配置 `space-bunny-free` 完成复杂多文件工程，再以同一原生 session 冷恢复、压缩和追加 `--report` 需求，原合同、测试和冻结材料保留，详见 [产品边界](../compatibility.md)。这些代表性证据不证明全部服务、原厂 workflow facade或模型等价。
+工具与模式的行为以实际宿主为准；完整原厂客户端、云服务、账户体系和内部执行引擎不作为此预设的运行依赖。
 
 
 ## OMAA 0.8.0 的工作流产物
@@ -76,7 +76,7 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 ### OMAA 0.9.0 的原版运行投影与时间线
 
-OMAA 0.9.0 保留固定 `29628c9` 的 41 文件显示/reducer closure，以及 37 份原版 UI 代码、样式与中英 locale；Timeline 和 WorkflowRunPhaseList 是真实原版组件，不是 ReactFlow。`scripts/build-zcode-run-projection.mjs` 在严格 SHA closure 下派生 `lib/zcode-run-projection.mjs`，保留三类 graph bounds 投影及原 workflowRuns reducer，不导入原执行 engine。
+当前 Timeline 与 WorkflowRunPhaseList 使用固定 3.15.1 的真实组件、样式与中英 locale。`scripts/build-zcode-run-projection.mjs` 校验固定来源并派生运行投影；可见图、Actor 进度、日志与状态来自实际宿主执行记录。
 
 ### OMAA 0.9.0 的修订与完成前缀缓存
 
@@ -84,7 +84,7 @@ OMAA 0.9.0 保留固定 `29628c9` 的 41 文件显示/reducer closure，以及 3
 
 缓存使用固定原 `ImportedActorState`、`ImportedWorldQueue` 与 persona/hash 函数，按唯一有效 Actor 名、原 persona 及连续 instruction hash 匹配。匿名／改 persona／首次分歧不复活后缀结果。首次 live ask 继承到最后命中任务的精确 native canonical event offset，不拼摘要，不复制旧 run 后半段；native manager 建新 descriptor、真实 parent 与当前权限。每个结果存 native immutable attachment，完整执行事实独立于有界 UI。失败 ask 截断可导入前缀，脚本 catch 后仍能继续 live ask。
 
-world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执行效果。live world.run 关闭导入窗口；read/glob/grep/read_image/skill 只记 native dispatch，其它缺少 effect 分类的工具保守关闭，不当作原厂精确按入参分类。关闭后仅 `worldToolCalls === 0` 的缓存 ask 可命中。当前 DSH 模型/API 仍生效，不继承原厂模型 pin；pending ask 会取消，不继承半转录；完整 same-run resume/journal/replay 尚未提供。旧 0.8 run 无任务缓存，在停前驱前拒绝 Amend。
+world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执行效果。live world.run 关闭导入窗口；read/glob/grep/read_image/skill 只记 native dispatch，其它缺少 effect 分类的工具保守关闭，不当作原厂精确按入参分类。关闭后仅 `worldToolCalls === 0` 的缓存 ask 可命中。当前 DSH 模型/API 仍生效，不继承原厂模型 pin；pending ask 会取消，不继承半转录；同 run 恢复按上述持久化记录与已确认结果边界执行。旧 0.8 run 无任务缓存，在停前驱前拒绝 Amend。
 
 未声明 phase 的 ask/world 现已避免把 undefined 带入原生 lossless JSON 传输，修复无 phase 的正常调用失败。
 
@@ -105,3 +105,14 @@ world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执�
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 
 TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已实际核对 typed 保存/按名运行、两次真实 submit_result、同一原生日志、整宿主重启后的字面角色续问；另一个短用例核对后台运行在父会话切到 Ask 后停止并等待 child drain。已配置 Space Bunny Free 的短任务实际读取一次 fact.txt，再在同一 Actor 中只凭历史返回第二个类型化结果，两次正确；它不证明所有模型或复杂编排质量。
+
+## 当前源码的工作入口
+
+- 保存定义支持编辑、移动、删除和参数填写；提交前重新校验文件版本、会话归属与执行模式。
+- `list_workflow_runs`／`get_workflow_run` 查看运行、日志和原始脚本；`fill_workflow` 填入运行中等待的代码空位，先提交有效源码再继续执行。`eval_workflow_snippet` 执行有界片段。
+- 在会话设置中显式选择已有项目记忆目录后，读取其 `MEMORY.md`；Agent 目录与 Agent 记忆分别配置。设置不会自动创建目录。
+- `zcode_agent` 列出或运行本地 profile；人格原文与工具限制随原生子会话保留。支持的工具、技能、默认／计划权限按实际宿主校验，未知字段会给出诊断。
+- `cron_create`／`cron_list`／`cron_update`／`cron_delete` 使用宿主调度；日历规则要求显式时区，有限次数与逻辑日历链保留持久记录。已受理、已派发和任务完成分别记录。
+- `list_models` 读取真实模型目录；`todo_read` 读取当前待办；`read_pdf` 使用已有受限转换器读取 PDF。实际权限、工具能力与转换器可用性继续由宿主决定。
+
+这些源码增量尚未单独发行；固定安装入口继续对应已发布版本。

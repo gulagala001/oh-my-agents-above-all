@@ -25,7 +25,7 @@ report(first); return {first, second};`;
       return toolReply('submit_result', { value: { value: material.includes('FIXTURE_ACTOR_FACT') ? 'FIXTURE_ACTOR_FACT' : 'MISSING_CONTEXT', round } });
     }
     if (!names.includes('create_workflow')) return textReply('Not an actor workflow request.');
-    const hasSkill = request.messages.some(m => m.role === 'tool' && textOf(m).includes('The `workflow` tool'));
+    const hasSkill = request.messages.some(m => m.role === 'tool' && textOf(m).includes('For the ZCode Actor facade use'));
     if (!hasSkill) return toolReply('skill', { name: 'zcode-workflows' });
     if (request.messages.some(m => m.role === 'tool' && textOf(m).includes('"runId"'))) return textReply('Actor workflow completed.');
     if (!request.messages.some(m => m.role === 'tool' && textOf(m).includes('Saved workflow definition.'))) return toolReply('save_workflow', {
@@ -87,7 +87,7 @@ test('background ZCode Actor work stops and drains when the parent switches to A
       started = true; await held;
       return toolReply('submit_result', { value: { fact: 'must-be-canceled' } });
     }
-    if (!request.messages.some(m => m.role === 'tool' && textOf(m).includes('The `workflow` tool'))) return toolReply('skill', { name: 'zcode-workflows' });
+    if (!request.messages.some(m => m.role === 'tool' && textOf(m).includes('For the ZCode Actor facade use'))) return toolReply('skill', { name: 'zcode-workflows' });
     if (request.messages.some(m => m.role === 'tool' && textOf(m).includes('"jobId"'))) return textReply('Background workflow started.');
     return toolReply('create_workflow', { script: "interface Result { fact: string } const worker = agent('waiting'); return await worker.ask<Result>('BACKGROUND_HELD_TASK');", run_in_background: true });
   });

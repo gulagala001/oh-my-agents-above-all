@@ -7,11 +7,12 @@ import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const snapshots = join(root, 'src/presets/zcode/sources/upstream');
+const currentSnapshots = join(root, 'src/presets/zcode/sources/upstream-3.15.1');
 const cli = 'apps/zcode-cli/packages/';
 const engine = cli + 'dynamic-workflow/src/engine/';
 const facade = cli + 'dynamic-workflow/src/facade/';
 const presets = 'packages/ui/src/app-shell/workflow-artifacts/presets/';
-const banner = '// Derived from fixed Apache-2.0 ZCode artifact sources at 29628c9; see THIRD_PARTY_NOTICES.md.\n';
+const banner = '// Derived from version-pinned Apache-2.0 ZCode artifact sources; see source.json and THIRD_PARTY_NOTICES.md.\n';
 
 // This allowlist pins exactly the reviewed files. No engine barrel, scheduler,
 // NodeFs implementation, provider or account source is loaded by this builder.
@@ -30,8 +31,18 @@ const digests = {
 
 async function original(path) {
   if (!Object.hasOwn(digests, path)) throw new Error('Unreviewed artifact source: ' + path);
-  const bytes = await readFile(join(snapshots, path));
-  if (createHash('sha256').update(bytes).digest('hex') !== digests[path]) {
+  const updated = [facade + 'report-caps.ts', engine + 'engine-artifacts-primary.ts', engine + 'types.ts'].includes(path);
+  let expected = digests[path];
+  if (updated) {
+    const manifests = await Promise.all(['source.json', 'import-cache-source.json', 'artifact-helper-source.json']
+      .map(name => readFile(join(currentSnapshots, name), 'utf8').then(JSON.parse)));
+    if (manifests.some(value => value.commit !== 'aac4755666d09fdcd70272fcf063c077a639015f')) throw new Error('Unexpected artifact helper source commit');
+    const row = manifests.flatMap(value => value.files).find(value => value.path === path);
+    if (!row) throw new Error('Unmapped 3.15.1 artifact helper: ' + path);
+    expected = row.sha256;
+  }
+  const bytes = await readFile(join(updated ? currentSnapshots : snapshots, path));
+  if (createHash('sha256').update(bytes).digest('hex') !== expected) {
     throw new Error('Fixed artifact source SHA-256 mismatch: ' + path);
   }
   return bytes.toString('utf8');

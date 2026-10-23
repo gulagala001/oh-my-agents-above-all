@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { WorkflowTimeline } from '../presets/zcode/sources/upstream/packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx';
-import { buildWorkflowTimeline } from '../presets/zcode/sources/upstream/packages/ui/src/components/workflow-timeline/timeline-model.ts';
-import { WorkflowRunPhaseList } from '../presets/zcode/sources/upstream/packages/ui/src/app-shell/WorkflowRunPhaseList.tsx';
+import { WorkflowTimeline } from '../presets/zcode/sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx';
+import { buildWorkflowTimeline } from '../presets/zcode/sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-model.ts';
+import { WorkflowRunPhaseList } from '../presets/zcode/sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunPhaseList.tsx';
 import { ZCodeGraphIntlProvider } from './zcode-workflow-graph-intl.jsx';
 import css from './zcode-workflow-graph.css';
 
@@ -18,13 +18,17 @@ class GraphBoundary extends React.Component {
   }
 }
 
-function GraphBody({ graph, run, onOpenActor, onOpenWorkspace }) {
+function GraphBody({ graph, run, onOpenActor, onOpenWorkspace, subagentModelProviderName }) {
   const model = useMemo(() => buildWorkflowTimeline(graph, run), [graph, run]);
   const [landing, setLanding] = useState();
   const landingOrdinal = useRef(0);
   const selectStation = useCallback(station => {
     setLanding({ phaseId: station.id, key: `${station.id}@${++landingOrdinal.current}` });
   }, []);
+  const openFill = useCallback(fill => {
+    const station = model.stations[fill.from];
+    if (station) selectStation(station);
+  }, [model, selectStation]);
   // The Timeline and phase list use the same native slot identity. Session IDs
   // are supplied only by the actual actor projection, never derived in the UI.
   const openPill = useCallback(pill => {
@@ -37,17 +41,18 @@ function GraphBody({ graph, run, onOpenActor, onOpenWorkspace }) {
   const openWorkspace = useCallback(pill => {
     if (pill.workspace) onOpenWorkspace?.(pill.workspace.phaseId);
   }, [onOpenWorkspace]);
-  return <><WorkflowTimeline model={model} className="py-1" onSelectStation={selectStation} onOpenMore={selectStation}
+  return <><WorkflowTimeline model={model} className="py-1" onSelectStation={selectStation} onOpenMore={selectStation} onOpenFill={openFill}
     {...(onOpenActor ? { onOpenPill: openPill } : {})} {...(onOpenWorkspace ? { onOpenWorkspace: openWorkspace } : {})}/>
     <div className="omaa-zcode-phase-pane"><WorkflowRunPhaseList graph={graph} model={model} run={run} pendingQuestions={run?.pendingQuestions ?? NO_QUESTIONS}
-      landing={landing} {...(onOpenActor ? { onOpenActor } : {})} {...(onOpenWorkspace ? { onOpenWorkspace } : {})}/></div></>;
+      landing={landing} {...(onOpenActor ? { onOpenActor } : {})} {...(onOpenWorkspace ? { onOpenWorkspace } : {})}
+      {...(subagentModelProviderName ? { subagentModelProviderName } : {})}/></div></>;
 }
 
-export function ZCodeWorkflowGraph({ graph, run, onOpenActor, onOpenWorkspace, locale }) {
-  if (!graph || !Array.isArray(graph.steps) || !graph.steps.length) return null;
+export function ZCodeWorkflowGraph({ graph, run, onOpenActor, onOpenWorkspace, subagentModelProviderName, locale }) {
+  if (!graph || !Array.isArray(graph.steps) || !graph.steps.length && !graph.phases?.length && !graph.holes?.length) return null;
   return <section className="omaa-zcode-workflow-graph" aria-label="ZCode workflow graph"><style>{css}</style>
     <ZCodeGraphIntlProvider locale={locale}><GraphBoundary graph={graph} runId={run?.runId}>
-      <GraphBody key={run?.runId || 'static'} {...{ graph, run, onOpenActor, onOpenWorkspace }}/>
+      <GraphBody key={run?.runId || 'static'} {...{ graph, run, onOpenActor, onOpenWorkspace, subagentModelProviderName }}/>
     </GraphBoundary></ZCodeGraphIntlProvider>
   </section>;
 }

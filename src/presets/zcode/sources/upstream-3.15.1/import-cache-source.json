@@ -1,0 +1,54 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "upstreamVersion": "3.15.1",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "gitBlobSha1": "17c508022fcde40e2f40e83c24aa0f4929109ceb",
+      "sha256": "1888d8b7a977f601efdff6dea4999d32439c373d28fe379ca447398769959a74",
+      "bytes": 12323,
+      "runtimeRole": "pure-helper"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/persona.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/persona.ts",
+      "gitBlobSha1": "81ed5b19b872008b26478d4a69d950f178c7a3b9",
+      "sha256": "a1774037382272156ab25c516c7f090a69c19b1ef6d607080acc62418d55e48d",
+      "bytes": 2368,
+      "runtimeRole": "pure-helper"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "gitBlobSha1": "8ae09a80105fcd946d35a906e9d7c53332a43b51",
+      "sha256": "9b96aac60af892ee7bea42bf685f714a637535569afe8a1231040568df83c427",
+      "bytes": 2200,
+      "runtimeRole": "pure-helper"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "gitBlobSha1": "f4d117520518170bc5f9d781f684ee9d3c4b79b0",
+      "sha256": "42501b4b8fcd3cfd9976907a4b8bd61fa3779920f7256dc09dcd90eab2cfc7ec",
+      "bytes": 59367,
+      "runtimeRole": "reference-only"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache-types.ts",
+      "gitBlobSha1": "6016378ba2e8fbaba8bfb9489240d6d39edc50c9",
+      "sha256": "e83bea8268272b5dd0a109edea04221c905c7a3818442b7ed241cc6ecc6ab9fa",
+      "bytes": 5050,
+      "runtimeRole": "reference-only"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "gitBlobSha1": "c33138753aaea816d3f717a7c070722dea5e2ddc",
+      "sha256": "790728c8d415f2fd721242fc35627069676c5a0ee6a6f349232da67a1e239934",
+      "bytes": 36220,
+      "runtimeRole": "reference-only"
+    }
+  ]
+}

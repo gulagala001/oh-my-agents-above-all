@@ -8,6 +8,12 @@
   "license": "Apache-2.0",
   "selectedPrompt": "apps/zcode-cli/packages/core/src/context/builder.ts",
   "modelSelection": "DSH owns model/API and native execution; these sources supply preset behavior only.",
+  "currentTarget": {
+    "version": "3.15.1",
+    "sourceCommit": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "dshInterfaceCommit": "d743267388641bc76f17c45ce8b4c231aed1d32c",
+    "scope": "Mixed-version retained evidence; top-level commit/version and existing component pins describe their historical snapshots, not a blanket current-source claim."
+  },
   "files": [
     {
       "file": "sources/upstream/LICENSE",
@@ -2450,6 +2456,2397 @@
       "kind": "official-source",
       "gitBlobSha1": "ff8ad42fb6fb2a23d8a6ada495f58b1b26e8565f",
       "license": "Apache-2.0"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/package.json",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/package.json",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/package.json",
+      "gitBlobSha1": "3a85820ef8b5f2f3778d3a1e89b291879e9a5a86",
+      "sha256": "9edb746ae170418d81c4431dc16533e814bf3a97e4693a2a94f06b4516151a95",
+      "bytes": 1150,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/scripts/generate-libs.mjs",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/scripts/generate-libs.mjs",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/scripts/generate-libs.mjs",
+      "gitBlobSha1": "447d0caf370f69a4e8487fe41497494116290af5",
+      "sha256": "0cf565c2aab391f7271a5e64b633c0965238c33e01ea05d76f4945dd2852d680",
+      "bytes": 2971,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-graph.ts",
+      "gitBlobSha1": "284fcfe2a9c9ca553348f3065eefa17c4e65b523",
+      "sha256": "a9a3b95712698982c5760fa9faadc345798b430470f4034a52639ef160bb1830",
+      "bytes": 6640,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-models.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-models.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-models.ts",
+      "gitBlobSha1": "ac38b94efde079ac4468f4dfa7cf86148c69c946",
+      "sha256": "b28cf4efb9cb3adf9f4bd6da6eb8747fc6b18424b2b607532b5881ba8ce8ef3b",
+      "bytes": 11498,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-names.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-names.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-names.ts",
+      "gitBlobSha1": "ae42ded1e212f735376d17cf5f720a89ac629900",
+      "sha256": "5530008ff1a072567766e624554dd3cf95f5b20c893fd82b43232d709ad22c72",
+      "bytes": 9781,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/analyze.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/analyze.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/analyze.ts",
+      "gitBlobSha1": "667a993c3192a6374a130726aaa1e4656f8f76ee",
+      "sha256": "2321a47ca2c9b84036c89e157bb6b369fb6ef572dd6d7f10dbe2900471f9282a",
+      "bytes": 7818,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/array-methods.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/array-methods.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/array-methods.ts",
+      "gitBlobSha1": "c0fdae9bcf1f2a3904c771e469ddf72c56f677c9",
+      "sha256": "a8733fcdbf0e0e5aa75c46799bf8a3e84e65350dcc3419356480616108730467",
+      "bytes": 7802,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifact-types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifact-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifact-types.ts",
+      "gitBlobSha1": "9aa20517eeeac4245fc620afe1f16110a38348af",
+      "sha256": "f8170714ef999b78f7f84107a87c74a3d1a9c9b0df95413c39f26b7665fcd06d",
+      "bytes": 7644,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifacts.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifacts.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifacts.ts",
+      "gitBlobSha1": "27d459eb695cdd4e918555b037ec884b1c2d337d",
+      "sha256": "4191c208346e5cba828ae4ebfc63b61e183e867ecd8413ccb0e2713f92803ee8",
+      "bytes": 16861,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/assign.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/assign.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/assign.ts",
+      "gitBlobSha1": "71e392b5356ca93420e936752f66e7e71181498b",
+      "sha256": "46230efec4e434a7c0a264b57dbe2ae74611f59ac5e8615745f0e7cf3f6eff5a",
+      "bytes": 13882,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/callbacks.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/callbacks.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/callbacks.ts",
+      "gitBlobSha1": "b6ac0bfc6ad712f11fb857108f9ce437d45efa77",
+      "sha256": "fc25af89242c2f97261c3af5fb96927e55479bd6670d166d6a92c630361c3a94",
+      "bytes": 10120,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/calls.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/calls.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/calls.ts",
+      "gitBlobSha1": "0eac17811c2f3925a3d1af49a7013e0a034586a6",
+      "sha256": "48196ef74706ccbe776d04769bbd6253861b18e321a2bb406f5af1d1860b04c8",
+      "bytes": 28191,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-lanes.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-lanes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-lanes.ts",
+      "gitBlobSha1": "a7299cccf1f0e9d8e546f309215da0256f19eb86",
+      "sha256": "91cfe8684ed75502cdfa9c1c079d2e367bafe1f240e518e96734b3dd16d95bd8",
+      "bytes": 7859,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-types.ts",
+      "gitBlobSha1": "32dd01be9c2dd2cde52307f38a165f904c38ff62",
+      "sha256": "7610c1958472d8de7d6f2b9a375893160e30e4435dd9ea7657977a62a98e24f0",
+      "bytes": 7978,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph.ts",
+      "gitBlobSha1": "c1cf767640ce3c45fce872b9dab0202f8f22c67c",
+      "sha256": "50159df53f2b7087a2d6e844d3175572d7fd6fdebe16be9d2bdc56555556bf21",
+      "bytes": 28267,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-calls.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-calls.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-calls.ts",
+      "gitBlobSha1": "2ee2214da08a88211b2e79984fd3ba965dd762b8",
+      "sha256": "7a85a6bcc1fd29d3cdfc33ebfd2ea1065e0bc6a78e2d6d9713e2a2121b110246",
+      "bytes": 13789,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-functions.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-functions.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-functions.ts",
+      "gitBlobSha1": "c730f4c817d4cfdcd9224ec69f23e42e3bfe8539",
+      "sha256": "76196deb7c5889b5125f19c47d5104955bf4b174b3221fb2b17fb2d3503fe14d",
+      "bytes": 5124,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-loops.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-loops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-loops.ts",
+      "gitBlobSha1": "ffd1f38d95a64575fe9d54785c388b9fba918034",
+      "sha256": "ce80981d778eb5d2d3eb15c4349aab8770cb94081c4fc45bc462a41c26c7f76f",
+      "bytes": 6478,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-settle.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-settle.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-settle.ts",
+      "gitBlobSha1": "c6fa31b8dc5f148de80f1d3dc6caad21b342e7bf",
+      "sha256": "0d43b6c54db63e8607a4b461462c02059b7e1d8feb5b99ed6682ac862049f703",
+      "bytes": 13910,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-state.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-state.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-state.ts",
+      "gitBlobSha1": "4c701d3dc1a644d1fa7d1c5b803c992c95b7dc0d",
+      "sha256": "04edc3f4be331937fb55ddca809d7494df24b418f0cf20a27b9c189fbde3e63f",
+      "bytes": 13299,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-strands.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-strands.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-strands.ts",
+      "gitBlobSha1": "cd8321e11f200a4ceff818bdf3c3d66226086c49",
+      "sha256": "919132d12de90b0b59825637e92bfd35bca89799d63cdc2977dc80c132878861",
+      "bytes": 9272,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-types.ts",
+      "gitBlobSha1": "089f0905f6f82c07c811e94419596f6ed2056029",
+      "sha256": "d22df6cb5605b7a47548a55ac983983d894c20bfa63f33859641ee9dfe999976",
+      "bytes": 8139,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-walk.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-walk.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-walk.ts",
+      "gitBlobSha1": "8fd724a17bdad39d19eda6a42a30301f4d9a5561",
+      "sha256": "a63999b12058dc2fa97cce78417d0e7a798e62a84a000431bfbff8b3dadb8044",
+      "bytes": 12121,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order.ts",
+      "gitBlobSha1": "5b0bc8b3728e9f99bc3a47fdc65d91428ca6b9c4",
+      "sha256": "5cf50c169179fe8705af1a29cfdceba673c344f0640e3653b86c62bc17d3b8e9",
+      "bytes": 7127,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-reduce.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-reduce.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-reduce.ts",
+      "gitBlobSha1": "2154cea5f1ece59c622383fbb9472d980c0cecb6",
+      "sha256": "e8c99c4beb9eaadea4f9fcd31c82ccf66489a51d021da3a61ebcfa10584b2d2f",
+      "bytes": 10270,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/classes.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/classes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/classes.ts",
+      "gitBlobSha1": "a1d16baadde08d4109b75efd6b58e53799277b93",
+      "sha256": "39c326cb1e662aca236ebbff18e8c62f43bf043b5300e5ede02dd497fb3520f7",
+      "bytes": 13118,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/constants.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/constants.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/constants.ts",
+      "gitBlobSha1": "33997220067189869c2c183c11b39e61e9db5c48",
+      "sha256": "dec44bb45653f784f9e285c26fcf45fbd9f165dde9254b8a6ba91f1317d4b453",
+      "bytes": 2460,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/control-flow.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/control-flow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/control-flow.ts",
+      "gitBlobSha1": "14e4cdf42ad3d9bea9a85d0aee0c61b265124327",
+      "sha256": "7ee218370e4c3b2a5d769baffeff5f233d131e2d925e95a869831a578da8f379",
+      "bytes": 6658,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core-json.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/core-json.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core-json.ts",
+      "gitBlobSha1": "9d6259aa3f0dc06a3ce26e4fb3ddc71097978c2e",
+      "sha256": "d9d554c51818edfeb0be53ffa1f4fa38b5cbbf64aef63b72b5ada2830eca36b6",
+      "bytes": 4023,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/core.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core.ts",
+      "gitBlobSha1": "4c0fc3db1b71ce20a6e2be0806246021b704fb45",
+      "sha256": "a6f42a65a045bb3cc1158456920a8c732eb6a6824e30eccdd0d4066a17422f3a",
+      "bytes": 14799,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/domain.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/domain.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/domain.ts",
+      "gitBlobSha1": "130d1067dc65b341ce3e464199c93726ba4ae0a0",
+      "sha256": "199f52f155da2252281ff4ad0e5afe7ba6638f2356be916cb2cb1c7ae5cd401a",
+      "bytes": 28388,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/facade-misuse.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/facade-misuse.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/facade-misuse.ts",
+      "gitBlobSha1": "9ba4ed83fe846aef26f70d9afe3c1b8e915185d7",
+      "sha256": "84925f4817e05811afee033454319a94f9ab0654c140ea54487d843f7f341760",
+      "bytes": 19109,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/fanout-cardinality.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/fanout-cardinality.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/fanout-cardinality.ts",
+      "gitBlobSha1": "2e377239119d33c023b85648a3694a5cbeb7fa22",
+      "sha256": "8f967c348b025d1616bf3c68c3116ef0ac95c325237d4e688609c9d2d75ed3cb",
+      "bytes": 5383,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-graph.ts",
+      "gitBlobSha1": "c87498e7354f07dcc18c1dfdb65b8205330a439c",
+      "sha256": "a51fbdcaa7677fb3f10e0fa7390005e3a4efd3a34b03d4ac8d8d40e05fc6877a",
+      "bytes": 24932,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-phase.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-phase.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-phase.ts",
+      "gitBlobSha1": "bab2e250cf20c0beefc9b2ecf273228875ab6365",
+      "sha256": "c7554f5c8d2d86905c737b86b063926e19e8559e5c222129e12afde4034a8cdf",
+      "bytes": 4621,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-strands.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-strands.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-strands.ts",
+      "gitBlobSha1": "71f3454b979fac4a3d4d694059d891d786a1ac80",
+      "sha256": "84d54f2e04f9d6ef9637be9cfd2d853ce39824815da9d3b9f997db5efa086376",
+      "bytes": 3795,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-tree.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-tree.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-tree.ts",
+      "gitBlobSha1": "c77c543429570d45290c512dd03b9b3db27f9320",
+      "sha256": "fdb7ac7b27134382980f0e4728926996c7c6872aff123ab32a19b77bf93d9d85",
+      "bytes": 2855,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/graph.ts",
+      "gitBlobSha1": "3f40c96042c294300c8c899470919a21550008ec",
+      "sha256": "68b6b37fb39059994ffd2b34dbbe14278fa3ad015c790fba83a04ea54e3b05aa",
+      "bytes": 8968,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/handoff-graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/handoff-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/handoff-graph.ts",
+      "gitBlobSha1": "b4f5bd1f8db096e48f1ad8c7dca7b5e9f26f1834",
+      "sha256": "a38d2e5cbbc060c74fb2c07cc6512d35836ff504f0bf6f0e31b2fc51022d7583",
+      "bytes": 11142,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/heap-ops.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/heap-ops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/heap-ops.ts",
+      "gitBlobSha1": "5e7e8a3bce250079278cb9ca4ab27c71e11640f5",
+      "sha256": "11507dc605b84f4ad643967bdea68413ebde790af89b20db174da4fd37dfd6b0",
+      "bytes": 3905,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-id.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-id.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-id.ts",
+      "gitBlobSha1": "ad6b39105c894a41181da7e0966cf65ee4997ec6",
+      "sha256": "7720e764930ebeca1b57de76b0c362eac2d1eb9ceb4296aab860ed3ef6d6e4fc",
+      "bytes": 2577,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-sites.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-sites.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-sites.ts",
+      "gitBlobSha1": "db34f46e60133eb32571885e9af8cfc6ab4f3251",
+      "sha256": "d26052e40407c14e7643fdc59e6c97824698610e4dcebdcaa7e433067c5e4d12",
+      "bytes": 12647,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-splice.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-splice.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-splice.ts",
+      "gitBlobSha1": "8d1bfd2d91c4328f3fa3ec03cf87f07f13537954",
+      "sha256": "298494d665fe027e8d49b9a72504f2a59954f30b3001ba6be0141af9fbc50eae",
+      "bytes": 6278,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/interpret.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/interpret.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/interpret.ts",
+      "gitBlobSha1": "833b81ec9737da8d9b4746c7c8da1f1b33e76465",
+      "sha256": "ae589c45782ec30065eae532206f35bc210e870457bf2a30be18591c25d185b3",
+      "bytes": 9837,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/literals.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/literals.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/literals.ts",
+      "gitBlobSha1": "d62abd83c268f5452e22a8534b87e106a1bc930f",
+      "sha256": "beac2d27fc4b91c7e9a97c394132beabdeb6104c0847218275cb7d60f5679794",
+      "bytes": 7713,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/mermaid.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/mermaid.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/mermaid.ts",
+      "gitBlobSha1": "e76fc164ae32dd3c87299b67d390bc83a9c1bfc8",
+      "sha256": "6eef0d27ad5943c0e209c5cf1e9f27af6edddc0ee3417403a8bfb5168285845b",
+      "bytes": 22622,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/patterns.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/patterns.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/patterns.ts",
+      "gitBlobSha1": "a4100140d64f09fb58ecb5104601670ed1fd55ac",
+      "sha256": "a89028fe1130d05b0643f2666d0cbbbf75195f1775eae1dc8e0d5f4c921c5b6b",
+      "bytes": 4444,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phase-graph.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/phase-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phase-graph.ts",
+      "gitBlobSha1": "45e7966d50dc99429f882e63354136385ef793f8",
+      "sha256": "4a995ca593b95e527c7a605e550056323ab313bffc60f5caf2dc543791ca8999",
+      "bytes": 18071,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phases.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phases.ts",
+      "gitBlobSha1": "e1ac0a587012593e28227ce4baba4b482e7abd7b",
+      "sha256": "27418cde742a6128842498cb202e4972196e3c95bd479523f29b9034f1afbd0d",
+      "bytes": 3267,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/promise-ops.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/promise-ops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/promise-ops.ts",
+      "gitBlobSha1": "4ab1f177529203446d620253c702909f4f7f90e7",
+      "sha256": "ab7e1dbc677276001abe71e748a0cb6d266a93353ea3f49605f92059d2eee4a8",
+      "bytes": 6875,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/relays.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/relays.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/relays.ts",
+      "gitBlobSha1": "581afbd5d65d50610666e47a1d4c5063b15a0f4c",
+      "sha256": "fe1d717caeda7a615af26416b7b1cf1c91341cb1454a72ad30e453745f6b5fa1",
+      "bytes": 3940,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/serialize.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/serialize.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/serialize.ts",
+      "gitBlobSha1": "583739499f707a57ad459a014a35a23892581fec",
+      "sha256": "c7f93c4dbb3f7661d87de83e62421441f242471832955aaf4c35753eb484f4d8",
+      "bytes": 15117,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/site-phases.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/site-phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/site-phases.ts",
+      "gitBlobSha1": "40f193839a11f257719dd3d72099d1a995693d75",
+      "sha256": "ffaa8ffe30726d4d437ddd87062508ac7944223a7e7e47f4687f9acfa13876b9",
+      "bytes": 3505,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites-labels.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites-labels.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites-labels.ts",
+      "gitBlobSha1": "180edecda46339ff86c9c815bba976a74f2d0b5f",
+      "sha256": "aa606eef6898fec5a4964b019991d2a9fe4610a63a074313d91aac3906761a72",
+      "bytes": 9261,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites.ts",
+      "gitBlobSha1": "e894cce00854ae8e5a249bf5830a62047aacee82",
+      "sha256": "3882441c984204561b8ee36116082c47a6ad98e2c111f7b41c9a546ca7306638",
+      "bytes": 22326,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/state.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/state.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/state.ts",
+      "gitBlobSha1": "bcdda0d6736bb9695f0fc744385ee9efc8867dd2",
+      "sha256": "a2a326b088f1889ecc68d58b53e49320fdec95961dbc832ec8ebae12a4de759e",
+      "bytes": 27191,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/taint.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/taint.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/taint.ts",
+      "gitBlobSha1": "e0b91abd269190adfcc7383f42081618a4aeedde",
+      "sha256": "7e286b59bafe779516d8ac4478f0897ef90dfdd42385df218c16761394ff396f",
+      "bytes": 35102,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/types.ts",
+      "gitBlobSha1": "da0bf25be65495575ee8898ba5b9535c7e022cde",
+      "sha256": "6a61682883b87aeece204672646efe8e4f535d07328b96fef72fb51614127c5c",
+      "bytes": 4728,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/analysis/world-run.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/world-run.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/world-run.ts",
+      "gitBlobSha1": "bbcba51c283e9d014c2ecdc282eb1e053288cd5b",
+      "sha256": "2ecba8073a7c5664dd65fb274418f5637a345b3fc695c3152c17cd443b231d9c",
+      "bytes": 2757,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/compiler/compile.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/compiler/compile.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/compiler/compile.ts",
+      "gitBlobSha1": "4b6728eff87f7029e7939bc3312e071572312a43",
+      "sha256": "3e23dcd45091286a70c1decb1bdda6727ade8be564baa7bcccc875caf0e54bc1",
+      "bytes": 9371,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "gitBlobSha1": "8ae09a80105fcd946d35a906e9d7c53332a43b51",
+      "sha256": "9b96aac60af892ee7bea42bf685f714a637535569afe8a1231040568df83c427",
+      "bytes": 2200,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler",
+      "components": [
+        "pure-workflow-compiler",
+        "import-cache",
+        "graph-projection"
+      ]
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/artifact-caps.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/artifact-caps.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/artifact-caps.ts",
+      "gitBlobSha1": "9d3dee2e89a7f2d835d17de0f7c3dfb4f832f34f",
+      "sha256": "2370e966732e519248a89c73c40cad8bcd0d9c15d5a029d1cb309922e395b7ae",
+      "bytes": 2823,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-hole.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-hole.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-hole.ts",
+      "gitBlobSha1": "eeefb687cef96d21d265a3e4c00cee74d2021309",
+      "sha256": "a367618dfe01cc6a528ca0272440f617f4d019559bd7d10c577a1c7e9614f1fb",
+      "bytes": 1759,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-model.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-model.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-model.ts",
+      "gitBlobSha1": "8218cd71f242fffe6a9a978b85e999594fdbd98e",
+      "sha256": "96b21aa8e7df1feb7c98b50ae6f5a12883766afc039ac58d1a92e01b7ec58515",
+      "bytes": 973,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-stream.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-stream.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts-stream.ts",
+      "gitBlobSha1": "b6a5cbdcf0953f243d395ef24726f2457ac155f0",
+      "sha256": "6cccec32d6531eca72031486b2bb6b63efd021960695f55631a0e777111fc20d",
+      "bytes": 1896,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/dts.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/dts.ts",
+      "gitBlobSha1": "e40b93aedc9b9cca2f08cda98a1e4ce09793f9f0",
+      "sha256": "83aed2749e5f3a11be819ac2f3b8678c2944ef20c3e9fdd937df3af4c1c7357a",
+      "bytes": 16001,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/registry.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/registry.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/registry.ts",
+      "gitBlobSha1": "f74bb0dc545f957ae9ca364b4bd862e57f47bf92",
+      "sha256": "425cc29a04b48ce4f81a731988da72ce7f0e101ebfdb27c3b4f4bd3df0bc0640",
+      "bytes": 16657,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/report-caps.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/report-caps.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/report-caps.ts",
+      "gitBlobSha1": "aa3e6a93d94dc7d1177ada84edef32c44563550a",
+      "sha256": "5973c27ed5b755790196a3ccd904a01db6b2f3a2cc4cee1c75a3252b62e5765e",
+      "bytes": 2537,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/facade/world-read-caps.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/facade/world-read-caps.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/facade/world-read-caps.ts",
+      "gitBlobSha1": "34331862ff3796f27d27c3278a9cf7a4b69adab7",
+      "sha256": "aa2aedf2fd96e99a5192f3deaea7e00723780c9a69c20bea63684d1df27a144f",
+      "bytes": 2028,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/index.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/index.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/index.ts",
+      "gitBlobSha1": "c985a82d8d1d42c3fa0670dbd2e7471e3f2ce88e",
+      "sha256": "b5691da248f6c1319bdb0b50e7f25d8f9f7eea12806cb1a7a88aa0f5bba54f91",
+      "bytes": 7696,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/lowering/index.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/lowering/index.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/lowering/index.ts",
+      "gitBlobSha1": "21f3a50c18915600fdcf1edc7229490942d7c5ce",
+      "sha256": "dd2441a20902c6e3c1524d88b2a925c2b8d7683be25ce6dab61f837edc8874c8",
+      "bytes": 130,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower-hole.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower-hole.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower-hole.ts",
+      "gitBlobSha1": "1b1aa9d1afd1904752247501445314ada2bed549",
+      "sha256": "8d8bb78d58a46eb395f87384d47b5a6c8b2ded2a721ddcc5bd157015d0f35d40",
+      "bytes": 4022,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/lowering/lower.ts",
+      "gitBlobSha1": "09c8b995eb337763fca0b6e506e9c018818ff4aa",
+      "sha256": "4eadbdfad642a4310ebd78716f9ade043ebdb580d8fd90d73f57fb8ed8030505",
+      "bytes": 23176,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/actor-submit-profiles.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/actor-submit-profiles.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/actor-submit-profiles.ts",
+      "gitBlobSha1": "437d816d1c8b088806f342163c7b415665f108c7",
+      "sha256": "ab3aff8a609722ba4854c1f04f3738a6dbe6588812fa946f4ac56da8628d3fb7",
+      "bytes": 5014,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/emit.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/emit.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/emit.ts",
+      "gitBlobSha1": "5be450e570aa94daccc43be540678674a6904535",
+      "sha256": "98b19778e7228d2ac4cafa5057c16873e8b47acec30be9ccf3b53995b2ed6fa1",
+      "bytes": 14030,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/jsdoc.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/jsdoc.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/jsdoc.ts",
+      "gitBlobSha1": "575ee89a46970685378bf0e8e4c6a54eea08e05f",
+      "sha256": "c51e51ac2fe1465b6d0109a32fc1f742f1a08444f60b0b2ef32c195b9e883444",
+      "bytes": 3016,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/serialize.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/serialize.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/serialize.ts",
+      "gitBlobSha1": "b9091c846fd50861cc12a2b95d04c2f056db95bf",
+      "sha256": "e599d6701a73c526264056da042ae2a5291906bb36ebc47ec374085b0cb83d0b",
+      "bytes": 903,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/synthesize.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/synthesize.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/synthesize.ts",
+      "gitBlobSha1": "f25d79537313854e833d0a52ade53233fcae73b5",
+      "sha256": "85b3c645c6c444d0c88200de976c3851a3c1302c345eb2d89c994fc866031693",
+      "bytes": 8765,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/types.ts",
+      "gitBlobSha1": "0117a02300a8e9d8655f82b05b41910cc94d10f5",
+      "sha256": "328bda07061843d17e8d9699e2cc92b37c7803586f38a7f92722811063e6e082",
+      "bytes": 3116,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/schema/validate.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/schema/validate.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/schema/validate.ts",
+      "gitBlobSha1": "f7bdd949de42b4419b7c9c41569557497930b735",
+      "sha256": "915fd213e12d521ed585f061aa04e9c4777c6813457fcdf54d6da3acd2c4ec12",
+      "bytes": 8854,
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "pure-workflow-compiler"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache.ts",
+      "gitBlobSha1": "17c508022fcde40e2f40e83c24aa0f4929109ceb",
+      "sha256": "1888d8b7a977f601efdff6dea4999d32439c373d28fe379ca447398769959a74",
+      "bytes": 12323,
+      "runtimeRole": "pure-helper",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "import-cache"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/persona.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/persona.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/persona.ts",
+      "gitBlobSha1": "81ed5b19b872008b26478d4a69d950f178c7a3b9",
+      "sha256": "a1774037382272156ab25c516c7f090a69c19b1ef6d607080acc62418d55e48d",
+      "bytes": 2368,
+      "runtimeRole": "pure-helper",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "import-cache"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/types.ts",
+      "gitBlobSha1": "f4d117520518170bc5f9d781f684ee9d3c4b79b0",
+      "sha256": "42501b4b8fcd3cfd9976907a4b8bd61fa3779920f7256dc09dcd90eab2cfc7ec",
+      "bytes": 59367,
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "import-cache"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache-types.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/imported-cache-types.ts",
+      "gitBlobSha1": "6016378ba2e8fbaba8bfb9489240d6d39edc50c9",
+      "sha256": "e83bea8268272b5dd0a109edea04221c905c7a3818442b7ed241cc6ecc6ab9fa",
+      "bytes": 5050,
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "import-cache"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine.ts",
+      "gitBlobSha1": "c33138753aaea816d3f717a7c070722dea5e2ddc",
+      "sha256": "790728c8d415f2fd721242fc35627069676c5a0ee6a6f349232da67a1e239934",
+      "bytes": 36220,
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "import-cache"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "sha256": "6d8c70bc553320fd7ac55dac75ad09ee4e6db1f60991f3690094f192aeaced6e",
+      "gitBlobSha1": "f52cd97517a4c6add5a41993503ee118df2d5ecb",
+      "bytes": 8423,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "artifact-helper"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "sha256": "273274d148c051b41c88cd524f0bbfe3ff81333b8df7b6fa19548aea8c103036",
+      "gitBlobSha1": "b2ccd8ee0566c340e8a5a099fc7cd842095a5fb9",
+      "bytes": 1920,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "artifact-helper"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow/src/projections.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/projections.ts",
+      "sha256": "2597436336b22990e6616691ea8997d5faca00001f69e13ff51878d3f000c9be",
+      "gitBlobSha1": "ce0d96caa2aefac2f43a111ebddfbfef184588b8",
+      "bytes": 2940,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/projections.ts",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "graph-projection"
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/model-selection.ts",
+      "path": "packages/shared/src/model-selection.ts",
+      "sha256": "653a4671723d4a3302e84ba13f29d4d55a17e5e8082b44d54ba1f9087dbd3e44",
+      "gitBlobSha1": "5f46f4c929ff0d0f63f8cdf1e8cfbf3eab84a522",
+      "bytes": 2457,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/model-selection.ts",
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "upstreamVersion": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "component": "model-binding-reference"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/bootstrap/src/app/provider-registry-selection.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/provider-registry-selection.ts",
+      "sha256": "cb7458442d727c7eec05d233a319d39472d2318c2c5012e9b7cf1f029fd3dc72",
+      "gitBlobSha1": "9279edb4de5161405d6d8043a4cb6498fb3a90d6",
+      "bytes": 7448,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/provider-registry-selection.ts",
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "upstreamVersion": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "component": "model-binding-reference"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/bootstrap/src/app/workflow-actor-model.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-actor-model.ts",
+      "sha256": "9585449a70e916f3c41310daec2a1e3a9aba8db132c0e0d02a2bc434a47c1fd0",
+      "gitBlobSha1": "59be0e796279a7006df4a0d19498441b970757cb",
+      "bytes": 11728,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/workflow-actor-model.ts",
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "upstreamVersion": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "component": "model-binding-reference"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/dynamic-workflow-runtime/src/child-cell-streams.ts",
+      "path": "apps/zcode-cli/packages/dynamic-workflow-runtime/src/child-cell-streams.ts",
+      "sha256": "8e3dbb47437aa2c9d0f8276c2f35854d6d506ae887410dbb533231d1d90c94bf",
+      "gitBlobSha1": "979cc6bdfebdb3d944ecca667acc9baa81073e7a",
+      "bytes": 6157,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow-runtime/src/child-cell-streams.ts",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "stream-bootstrap"
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "sha256": "9f7c6d7ab87ba54b36923b1dd6553d0dc5e83c1f27633ff507ec2b3d7d276d31",
+      "gitBlobSha1": "3086087469b2c1208864abf52fdc05cfd84c8669",
+      "bytes": 18031,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "report-read-contract"
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/core.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/core.ts",
+      "sha256": "97750a7bab0a7580c1d27c8e0155981786fdbfa07373d46c77829f25eb407a39",
+      "gitBlobSha1": "69712ccd60a49fe33725ea34aa77b34e457d7fa8",
+      "bytes": 3859,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/core.ts",
+      "runtimeRole": "reference-only",
+      "kind": "official-source",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "component": "report-read-contract"
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-snippet-service.ts",
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-snippet-service.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/dynamic-workflow-snippet-service.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "5ec917d1b70c61760bd750d26da4e5159c1eed37f260e8a2ef5ca5318c0f41a9",
+      "gitBlobSha1": "a2bfc300274a5105c59f07fbe3817df510a77688",
+      "bytes": 10116
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/create-workflow.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/create-workflow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/create-workflow.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "e619f8c063ceab1b4ae4810ceb468cf93193284fad0ea61d825638bbfdce028b",
+      "gitBlobSha1": "1ab27fd21751b4212c09c4d0228e968663daad93",
+      "bytes": 31779
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/escalate.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/escalate.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/escalate.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "6dcd7f3e3aef939c60c6941c33a395963c8e76b549e1b830787cc6ac6bd9fa3d",
+      "gitBlobSha1": "d98c6f710397cea50a0cbf895e2c12e54c02a5f5",
+      "bytes": 2274
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/eval-workflow-snippet.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/eval-workflow-snippet.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/eval-workflow-snippet.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "e85c917ab4609a318d2bb24e99c5265f05c7bedeaece0dc10a6b949e29be932d",
+      "gitBlobSha1": "4665820c4b47c4ebbd59e1a8687d77ae4ecc5d80",
+      "bytes": 3420
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/get-workflow-run.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/get-workflow-run.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/get-workflow-run.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "3ab33cdc8bd714586d36c778d0d2ef0dc909dba49e3317c9169f7276a8c461cc",
+      "gitBlobSha1": "90a75b585f117b93d5558dfc410eda21f68ecf33",
+      "bytes": 13134
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/list-workflow-runs.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/list-workflow-runs.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/list-workflow-runs.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "fb83791f5b6aa42935dd442181237a501848e3c3eec835b0591a34317cf395ec",
+      "gitBlobSha1": "60b5a9d8e7ca11e0d4a01fd611fc0b4bb4833941",
+      "bytes": 5608
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/read-session-context.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/read-session-context.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/read-session-context.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "3aeb206190e76376e2f2def73e1d17fc275d517d51baaa4dfd29f6dffd6e6502",
+      "gitBlobSha1": "d6a154a07df5a818b68f862617230b00b4d72ed5",
+      "bytes": 4200
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/contracts/src/tools/resolve-workflow-question.ts",
+      "path": "apps/zcode-cli/packages/contracts/src/tools/resolve-workflow-question.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/resolve-workflow-question.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "825f4932e1c4de39fa1b02d23a1f27c7fcac8bb829c8d4f64a738249cf89ab50",
+      "gitBlobSha1": "30871a73a3ca94cef3ee2f456feab16549214007",
+      "bytes": 1945
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/context/builder.ts",
+      "path": "apps/zcode-cli/packages/core/src/context/builder.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/context/builder.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "d2ac7a06fd2498e34c0e0e2864b9a8659541b3c02114ab4bc862bd438a28e8a2",
+      "gitBlobSha1": "0bc0fcfad7a7fa46ad20e3c411f04f5ee0b1ac1c",
+      "bytes": 12845
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/context/sections/desktop.ts",
+      "path": "apps/zcode-cli/packages/core/src/context/sections/desktop.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/context/sections/desktop.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c9a2b6ccc3bc8a06f12f719ad5515cbd32c2e062dd75612d325c412c04bcf8c3",
+      "gitBlobSha1": "0e8b1bb59d376fd3b9c19030953870ed644b436a",
+      "bytes": 2809
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/context/sections/memory.ts",
+      "path": "apps/zcode-cli/packages/core/src/context/sections/memory.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/context/sections/memory.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "719683a853fb1956884c86dbedb56b8dee6f246e3ce7343109a5d50383929209",
+      "gitBlobSha1": "e47f9091e54faf7265b40bc48df1731f666e8db4",
+      "bytes": 3279
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/memory/project-memory-retrieval-branch.ts",
+      "path": "apps/zcode-cli/packages/core/src/memory/project-memory-retrieval-branch.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/memory/project-memory-retrieval-branch.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "daabcbaed6d283021ace2d6241504cbc76209e33e8b489c96ad0e5f3f0131d32",
+      "gitBlobSha1": "a1dcfd138612dc9ae33283ffa01f51e30484ad61",
+      "bytes": 555
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/session-context/read-session-context.ts",
+      "path": "apps/zcode-cli/packages/core/src/session-context/read-session-context.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/session-context/read-session-context.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "a523b2eb502c3bb25364dc4e259169493b632d2b451598ae2869a9a40e023c58",
+      "gitBlobSha1": "dece3fb58dfae3487876701ed11b46035074fbb3",
+      "bytes": 11906
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/session-context/topic-archive.ts",
+      "path": "apps/zcode-cli/packages/core/src/session-context/topic-archive.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/session-context/topic-archive.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "57983a0f98b3f81eec5109bd8bbb7982cffc9aff0e2b9bcf3ff2d2819f2e54ec",
+      "gitBlobSha1": "f7aeeb0cdf97e784ff91cb07466d6b6cdea4b298",
+      "bytes": 3773
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/session-context/topic-resource.ts",
+      "path": "apps/zcode-cli/packages/core/src/session-context/topic-resource.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/session-context/topic-resource.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "a8886a94d88893b0cc87631e449157b81b66e56bd3cc1ebefaf6d4141ee9f008",
+      "gitBlobSha1": "fdff5af9ff5021db406c83d6a52e03583153391a",
+      "bytes": 5679
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-bounds.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-bounds.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-bounds.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "665a8af239bac2b1c254d279623c9b515b2c571e735ff3d23fa3a86d97f9a7b2",
+      "gitBlobSha1": "d43ab0513eef40b655adf6a1ccb2fcc5fbbfe553",
+      "bytes": 19868
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-fold.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-fold.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-fold.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "6c646e75884f6bc364c48220c936d5121d00b91276252d11d2547f966d97b84c",
+      "gitBlobSha1": "b365beb32e497fee8f61741fd6fabff08e992715",
+      "bytes": 5918
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/escalate.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/escalate.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/escalate.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "548d1ad0e88467f42e7eb612bf049018b14cbfbfa42db46db1d16076266cc71e",
+      "gitBlobSha1": "fe6c11fd9052c511c80ce6b33d9f102b5095f76d",
+      "bytes": 7064
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/eval-workflow-snippet.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/eval-workflow-snippet.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/eval-workflow-snippet.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ed792dee83f8427da52cd18e9807fee09742eafa8972cbeb29c1c99589e7f93d",
+      "gitBlobSha1": "d742600822a850bc6735d5d80db935ec5e86a4a0",
+      "bytes": 13008
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/get-workflow-run.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/get-workflow-run.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/get-workflow-run.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ad593dc599c7ba9c5f1166678a42b7a5839aa96c8aa6a579d0923cfb68176db6",
+      "gitBlobSha1": "dfec130b9a8c0abf9c4f98342a18032d0f40a787",
+      "bytes": 14526
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/list-workflow-runs.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/list-workflow-runs.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/list-workflow-runs.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ce60cf0bcbb897e798f535065891ad18b76aef7f9b51b4bb8abc3a960a8d7bb1",
+      "gitBlobSha1": "7850a05f3ee7ed091d74bd5f31d13a9f2759096a",
+      "bytes": 9574
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/read-session-context.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/read-session-context.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/read-session-context.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b94b12dc957c184d259b4e925f02b54146900f651690577995219c7cdc8c8798",
+      "gitBlobSha1": "f6d6f94215cb44c43dcca39eeadcef660029e348",
+      "bytes": 15339
+    },
+    {
+      "file": "sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/tool/handlers/resolve-workflow-question.ts",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/resolve-workflow-question.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/resolve-workflow-question.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "4fdea7706a482a14bfd36f4e4b00d23874133fb39979d51c54b8e639022d8acb",
+      "gitBlobSha1": "bdc5c9765a29555a6db2a0cf74b384f2bfd24d11",
+      "bytes": 8565
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/custom-model-value.ts",
+      "path": "packages/shared/src/custom-model-value.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/custom-model-value.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b825ca3b3f32cebf4f1876457c79d683cd37fd5b2a24c20c0547519de3b0b493",
+      "gitBlobSha1": "47e8582242ea138e2af3197053f6bacf5432c058",
+      "bytes": 1501
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/model-provider-family.ts",
+      "path": "packages/shared/src/model-provider-family.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/model-provider-family.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "de6921dc0fce1e776a62010bfcf5488145ea4f4aa86cced5207cf6785f726e71",
+      "gitBlobSha1": "52ab99c89ed38f6102e83fa691a573479ae2cd55",
+      "bytes": 5902
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/model-provider-types.ts",
+      "path": "packages/shared/src/model-provider-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/model-provider-types.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "7136b3e33dc7274e747e14f6c66cb4acf908dc6f2d8cf2b28adfc569bee218e8",
+      "gitBlobSha1": "259ce8e06d127278db0d1aeea8453dfe7aedae5e",
+      "bytes": 3104
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/oauth.ts",
+      "path": "packages/shared/src/oauth.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/oauth.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "426441fab7296a7a110523b455dbb3b8b86f291da5b6e3e0127058f63e26841b",
+      "gitBlobSha1": "3c6bb8bcb7a0cf06e9ebead872c0470ba8f05355",
+      "bytes": 5644
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-media-policy.ts",
+      "path": "packages/shared/src/zcode-media-policy.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-media-policy.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "47ccb08304cf2a24f4795dc6ded2ef5712d1ee1bad5c8bffb4d6081dc86dcde1",
+      "gitBlobSha1": "0a237c03737e7eecbaf33b673df9d74eb2ff1573",
+      "bytes": 451
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-artifact.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-artifact.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-artifact.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "a21519ac5e3077572aba32c9354548aa7910eead77b587dadcc4535788f8e2ab",
+      "gitBlobSha1": "92997a19de02391f25c9bdff16b7a8c33948d418",
+      "bytes": 1912
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-observation-display.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-observation-display.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-observation-display.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "4b21c1e4cbd10ca616c6a590cf1a44dab773a4458a2ec3e8bafee43dbc3466f5",
+      "gitBlobSha1": "7e635a879901581fee7a457edc3a0726f5404733",
+      "bytes": 9740
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-session.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-actor-session.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-session.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "7052e0e91b26ccb429e7c614fb3e911180d2c091c0d7e247841b88a22b0fef65",
+      "gitBlobSha1": "c5191fde5c7dc9e416a3fc3ad9063575f458c9ea",
+      "bytes": 3136
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-status.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-actor-status.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-status.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "0223d367f6d9159be355fcb62c331499427fd31ddacf17e7564a1f909d54f733",
+      "gitBlobSha1": "e6f04bfdf73c011ab6c39f54e83816a746fe7a84",
+      "bytes": 3315
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-artifacts.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-artifacts.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-artifacts.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "de8e08048c7a30603f976ddaf32ac7d5b67bee7d513bcd29237d308c9905d8af",
+      "gitBlobSha1": "ad17cd840cc4c3f88ce3e352218fb9c0b99d1ee0",
+      "bytes": 7093
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-caps.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-caps.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-caps.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "f294479c180ea3e800abe953ae67b74cc832e09bd30bb7e7ed1861e21acb6b8c",
+      "gitBlobSha1": "884436f6280de47b7c4d4c994c83a8b247967dbd",
+      "bytes": 6807
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-concurrency.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-concurrency.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-concurrency.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "0d42555be4c41cdcbc7eb319b423b13d700862f5865897d3848ac86494ae5cb9",
+      "gitBlobSha1": "ece6f0c5d5d5b89fd7282f2c006061072f97d4cd",
+      "bytes": 9322
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-delta.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-delta.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-delta.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c922fa7df8ae3e16e3e127babadaad379498c8066bd9fcb254fefb30d5a60965",
+      "gitBlobSha1": "35440b128aa142ff9563b37005e4a4bb6b4da2c5",
+      "bytes": 25095
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-entries.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-entries.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-entries.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "24c56ae87916c57b65e56c47b7e6fab22cf17364cc4a385a1c7794f66a92221d",
+      "gitBlobSha1": "fb9b5b59f03643bb802114fe55135b0af64ea233",
+      "bytes": 4572
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-eviction.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-eviction.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-eviction.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b8ae77e7243754e9f76d1c106b1de23ec3bd9d593aac23d74f7116fe62af3779",
+      "gitBlobSha1": "e8ad14f95fac6eedb6e2d762042a583c3bd08b5a",
+      "bytes": 26892
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-holes.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-holes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-holes.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c302c64a56a350a161f1d6bcda46a9ffca351f496b06e3075db57a10aa16d268",
+      "gitBlobSha1": "d9758ee6dc1286cfb876b56f6d8683d375bbaf6e",
+      "bytes": 9490
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-lineage.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-lineage.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-lineage.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "032257d84ea448a4a7f027ea5fd104e05f362a6fed9ed7e21ced2151aa887df3",
+      "gitBlobSha1": "ca3961aab24ab8b9bf2d93356a979fd254ee7f39",
+      "bytes": 983
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-node-progress.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-node-progress.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-node-progress.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "2d56d1582fabc564ad9b087eafeef72a2c5fbd6cad16414b4d1051008f811ca1",
+      "gitBlobSha1": "072f72283743594f12304cb40dcb01e59db5ef19",
+      "bytes": 7055
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-phases.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-phases.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "2969e18957a1246bbfd4cdd4974fa5acbf7ed0b04e27b3b70eb1eaaa6f4c7cd5",
+      "gitBlobSha1": "f2dec24ff8091e21940f11ae065e5ce1fc352dbd",
+      "bytes": 5098
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-reducer.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-reducer.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-reducer.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "04ca69a4dfa0f39db7e1907cf07190b367f0e29752e39bc9601bb61affb0797c",
+      "gitBlobSha1": "8225c34cd595a39b0e804fb78a264465d9a722a1",
+      "bytes": 35055
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-started.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-started.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-started.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "cf8773e4944e5e48e1cd24ee941e59ba3989f255f219a7d5f050a6eeb635cd7d",
+      "gitBlobSha1": "8917815c3850e8f79e1c135b27f8829e56129c25",
+      "bytes": 5076
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-tables.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-tables.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-tables.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "d0e28108c1196dcd0b6d8725a6f0ab9ff943fc1103af5c50137c71302434078b",
+      "gitBlobSha1": "83f66cbd0b9a235554b4d5baa06aade01b1ce776",
+      "bytes": 3063
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs-unlisted.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-unlisted.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-unlisted.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "a54e979a254af438f629a6bc2e4852cc32c537b306f0ecad20d0aef5f9c3055f",
+      "gitBlobSha1": "7197a1117f45b86036a065ab426c402edeb26f3d",
+      "bytes": 6572
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/shared/src/zcode-protocol-v4/workflow-runs.ts",
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "f4cdba0b631468efaeba11f8f1a9dec03d7ff7896d00f145f68ea88812d7f9b5",
+      "gitBlobSha1": "51309ee666d5707103f26435cd4d71756f3979de",
+      "bytes": 37015
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunFillFrames.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunFillFrames.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunFillFrames.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "98c0ffdb3c3c094da16a347a14a946a7b718d5695db991e51c689d2dbf7ad397",
+      "gitBlobSha1": "b2d0d5f322dc86f3040feec3adce53e2cd844b5a",
+      "bytes": 5828
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunHoleParts.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunHoleParts.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunHoleParts.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "4ecdf6311a335a685a2adde82fce8b8632944fd14386ea18c461764b9113af5e",
+      "gitBlobSha1": "6a94632676d664b8553b0485f97c7f32b4afcb65",
+      "bytes": 5219
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunPhaseList.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunPhaseList.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunPhaseList.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "f15eb7855cc6a614ecec7fa17d48609356bab79fcda4556a977ee7cd2233d7d4",
+      "gitBlobSha1": "e3710ae8bb68391da58ea6ff3045152625aba883",
+      "bytes": 19775
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunPhasePills.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunPhasePills.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunPhasePills.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "3d5d907f4db6855d5af9c541d4749482da59b92d796339001b8f166c1bed244a",
+      "gitBlobSha1": "ee66808f40a1ba914fa635d545104f64cb82aa97",
+      "bytes": 6448
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunQuestionRow.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunQuestionRow.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunQuestionRow.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "5abd3d11c607edd3e96690af0d893d1741eff92c7ec1e6ff47b592ae4aae014e",
+      "gitBlobSha1": "3fa4b0374409dfa21ae0b574f57174e7791f4cbc",
+      "bytes": 3321
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/WorkflowRunSpineParts.tsx",
+      "path": "packages/ui/src/app-shell/WorkflowRunSpineParts.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/WorkflowRunSpineParts.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "891ba1a8c18e72c0b86d0b948e9fa58df5e5419e5ffba3219570c4e13956b2b8",
+      "gitBlobSha1": "0e1ccbffc0aba2acaf629e02d1a6a5e5588b7558",
+      "bytes": 13620
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/workflowRunQuestions.ts",
+      "path": "packages/ui/src/app-shell/workflowRunQuestions.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/workflowRunQuestions.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "4b4cc5a4e0615d1abd65047dd6229009534a8a00471dcdac330b902c2b22ea59",
+      "gitBlobSha1": "bd6604ab40324aa81e4f70b15fec3727c633a13f",
+      "bytes": 2795
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/app-shell/workflowRunSpine.ts",
+      "path": "packages/ui/src/app-shell/workflowRunSpine.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/app-shell/workflowRunSpine.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b95dcb97a153fc7dac945adb247b8561e50092f20da1f1a485953e68070ee8cb",
+      "gitBlobSha1": "f51b720cfef247453f74ba9e8a5c48de5974451e",
+      "bytes": 7521
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/chat-input-toolbar/thoughtLevelOptions.ts",
+      "path": "packages/ui/src/chat-input-toolbar/thoughtLevelOptions.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/chat-input-toolbar/thoughtLevelOptions.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "3b001622afcbdf0c13f2eae1ea5e5eeb97c2424b835fd20935eca7b59f873e73",
+      "gitBlobSha1": "475bd689341625797b048773ab5dec2977e535ec",
+      "bytes": 3323
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/lib/utils.ts",
+      "path": "packages/ui/src/components/lib/utils.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/lib/utils.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "gitBlobSha1": "0f05a8e7a8462cf02b3c7aa29e3043783a4ef599",
+      "bytes": 604
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/instance-phases.ts",
+      "path": "packages/ui/src/components/workflow-graph/instance-phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/instance-phases.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b85490e0259dc453edfde9ecee27a0fc8df9e86ffa8656e8b026a4fab4fe30f4",
+      "gitBlobSha1": "0da0c4a1f1dc9a98bd9602dcac549a3c6c1658cf",
+      "bytes": 3381
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/lane-name.ts",
+      "path": "packages/ui/src/components/workflow-graph/lane-name.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/lane-name.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "aa820c4fc8cddba905f75af8d8d41c43fe771013b36ef186cf0e1aa935b9cf91",
+      "gitBlobSha1": "4efd4e54289c39c3dda87e8436fa27cc83777279",
+      "bytes": 6207
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/name-pattern.ts",
+      "path": "packages/ui/src/components/workflow-graph/name-pattern.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/name-pattern.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "905a4e15940bc14eaad7bf103a43c75e37033eb4f1f7e8e668d68afa62403a14",
+      "gitBlobSha1": "febf12f3b235eae77d7c015af8adbd64505a68fe",
+      "bytes": 1640
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/participant-model.ts",
+      "path": "packages/ui/src/components/workflow-graph/participant-model.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/participant-model.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c636c52d6383b5d03934b2eb5f781a8ae313b51bda0bd2d3a188e2ae15be0938",
+      "gitBlobSha1": "ac6ce0c4caa35db31c310a446c585f920ba2c044",
+      "bytes": 16497
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/phase-model.ts",
+      "path": "packages/ui/src/components/workflow-graph/phase-model.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/phase-model.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "74361d3a9d7f491c72264d9443150331941d798a07627586dc1a0c8104897672",
+      "gitBlobSha1": "cc601eeefa0987b7163365a633a552622748bc98",
+      "bytes": 1854
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/phase-name.ts",
+      "path": "packages/ui/src/components/workflow-graph/phase-name.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/phase-name.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c3568ad3a1d7c2a7aa4f11b24a6bd3eddb33bbe48457218a89b20bc1a5c2cf4e",
+      "gitBlobSha1": "70a0a9fbea99b0c7a9877d7102cacbf95e872547",
+      "bytes": 2814
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/run-status-presentation.ts",
+      "path": "packages/ui/src/components/workflow-graph/run-status-presentation.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/run-status-presentation.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "d831877dbaec88fe7250f95fdde97e8ea354693c6bc1b573b7108477e307946b",
+      "gitBlobSha1": "555c67fb04386bbbe6b4aa21c647da4c565df4fe",
+      "bytes": 3913
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/run-status.ts",
+      "path": "packages/ui/src/components/workflow-graph/run-status.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/run-status.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ff151e56c52e02202c1b5a24d6531a2af173aa1f749db4ef5301eba65c32d330",
+      "gitBlobSha1": "f7d09d84cd8cf593292d7ce85f3838d60471d2cf",
+      "bytes": 8333
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-graph/types.ts",
+      "path": "packages/ui/src/components/workflow-graph/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-graph/types.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "863fca1c28f469509fcf346b27dc16702ed7c1ff4b31de3a1cca5f944a268aad",
+      "gitBlobSha1": "51043b4e393281ab06634fc55570a610fdc434e6",
+      "bytes": 5051
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowAgentFace.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowAgentFace.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowAgentFace.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "0d3b1db8ae17cc9f0e5daba64fcc068476602040924a6286514dc29d236d013a",
+      "gitBlobSha1": "82403767d564b2e165de93bd986e480e14302297",
+      "bytes": 4495
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowAgentPill.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowAgentPill.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowAgentPill.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ccb40ac5c8b663beee63e0b36328568a6b8da330f1d991c036db32ceada00435",
+      "gitBlobSha1": "73107ebf49a32ff5af40e8669e6f01be217256e5",
+      "bytes": 7879
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowHoleParts.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowHoleParts.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowHoleParts.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "6b26e2a9815bb53d681353c577dc51669d56ae51acd8812760c86624129f6714",
+      "gitBlobSha1": "eab2083d33805f71ffa1c871ffc8d9b9a8a88cb1",
+      "bytes": 3867
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowMarchLight.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowMarchLight.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowMarchLight.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "1461d599fd47d4ea890a0f0008ec9035d7fa6699c3c7bbbb3c798b01b3e0077d",
+      "gitBlobSha1": "44ff20e3fba500df3b1085a9a43590ca192aa21b",
+      "bytes": 1917
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowMoreRow.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowMoreRow.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowMoreRow.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c91917433f68fd0da9924da409d10598d82db5ed5220c43589d37c23e23cf6b4",
+      "gitBlobSha1": "e6155ffb9f80d78b57658374014f02f174700ea3",
+      "bytes": 5838
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowRoll.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowRoll.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowRoll.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "26dde7267510ac0cbd3603fa51bfa0fb660c42d82f640396614f94c070da122b",
+      "gitBlobSha1": "b3f7c9e8cba8804c565eedfb66070f2925650ed4",
+      "bytes": 4474
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowRosterParts.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowRosterParts.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowRosterParts.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "35a3087060d8555496f4deb37ee3fd10217051b01c2531a4270ba3d9a4bab8d5",
+      "gitBlobSha1": "8c9285aad4ba9d4301a941a4553d075da6a3bdd7",
+      "bytes": 3891
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowStationMeta.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowStationMeta.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowStationMeta.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "73c9369cb680c66f2333f75ea6f929df6876094a598eed83c2d199fa6f907c73",
+      "gitBlobSha1": "19bfa84edff29f240f5302e326454dfa3379cf8d",
+      "bytes": 1433
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowStreamChevrons.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowStreamChevrons.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowStreamChevrons.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "698b62503e475d5070687cf22d669835c18cd54c146bb8a8d1ac44c4593e8c72",
+      "gitBlobSha1": "f36358e727a88fcc6f068be7cbaacfcbafe4c200",
+      "bytes": 3784
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c17cc7cf089e32922827142a4e675486f4e120e4ebcfcb6ec57e0eb0f1551807",
+      "gitBlobSha1": "65e20ecdfc440fde7719155b67e42d252efa6d0a",
+      "bytes": 21003
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimelineArcs.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimelineArcs.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimelineArcs.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "6b43774997c638ee316eec28a4a387ad929d3bb909624fde62fb3bbddce0f146",
+      "gitBlobSha1": "533c749c1cadf0802242308efa7dac2e8dc65fb6",
+      "bytes": 6834
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimelineFills.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimelineFills.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimelineFills.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "d5b87fed9d3acd837f366a5514f276542c82fa8c92e33f99c38a79b71c900af3",
+      "gitBlobSha1": "63fe8d4e4356980568c0d40ec4e665c32f6cc89a",
+      "bytes": 12124
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimelineLedge.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimelineLedge.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimelineLedge.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "a5f57f502ff6e2455b0afa165f1da20541c3c44b47c17c7edb135fe675a2118a",
+      "gitBlobSha1": "4f5ecc9948b825080fad24136c7fa0bd55c25229",
+      "bytes": 10432
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimelineStation.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimelineStation.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimelineStation.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "b44cf9aa77855f4e0a57ddd3efbc2ba38d31de5de6e7bf80a5c91b9d32b6114b",
+      "gitBlobSha1": "5ad16a1c94a84417b46da496734fbbe1743559de",
+      "bytes": 10917
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimelineTracks.tsx",
+      "path": "packages/ui/src/components/workflow-timeline/WorkflowTimelineTracks.tsx",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/WorkflowTimelineTracks.tsx",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "c3ef089cdfc9ae7408d88eb60fd1e9cb28789f71c689953ae2475a92fde00b14",
+      "gitBlobSha1": "5829d68864a5cef02c4aa21dfccf87775eaab63b",
+      "bytes": 11460
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/roster-model.ts",
+      "path": "packages/ui/src/components/workflow-timeline/roster-model.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/roster-model.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "4a6825c022e4fba86f9da23bd3431725e8d82fc9325c585ed8fdc1fa409d14e4",
+      "gitBlobSha1": "c9402b15180ef4659db9b531d46854a35f408444",
+      "bytes": 8591
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/stage-lamps.ts",
+      "path": "packages/ui/src/components/workflow-timeline/stage-lamps.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/stage-lamps.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "fb773773cf2f2271c0e008c4764aa07578b4ca1fd86a754023137bf5c7e19ed2",
+      "gitBlobSha1": "18497f59af70f8221027a1af3af2b1d35ce5487e",
+      "bytes": 6559
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/station-observation.ts",
+      "path": "packages/ui/src/components/workflow-timeline/station-observation.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/station-observation.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "704cbdf0bdc97b27a2daaa785d60bf1782ba9b1150e8716d7b831aa57d0df6fc",
+      "gitBlobSha1": "8a6d7553a615a9ced3decaf86eb36eeda3df6e84",
+      "bytes": 5552
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/subagent-model-label.ts",
+      "path": "packages/ui/src/components/workflow-timeline/subagent-model-label.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/subagent-model-label.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "0e305ba86e3141ea48c4b9c7bc5856eacf596a7f4bc8d91353635c8ed395984d",
+      "gitBlobSha1": "bbe7eab5fae883fb7924842a5dd3cdae90211c60",
+      "bytes": 6264
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-bands.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-bands.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-bands.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "d347716e1d35b82aec34230d90bc97493920cce665d08d22a2ec1535364323fe",
+      "gitBlobSha1": "194a1d626cdb68f80e4271230bdfc2747cb0fa13",
+      "bytes": 15169
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-cache.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-cache.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-cache.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "6aee99ea65966b5e1a09c914b4f8c780e127bc9562c7e1eb81e2f61627b5dc17",
+      "gitBlobSha1": "549ca1935713a063504a3daf55a9a224aca29e1e",
+      "bytes": 2108
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-frames.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-frames.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-frames.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "0ebb444dc9ea5cc7b3ab030c2bda53b2b27a3ead706804a24c8221b5ae97fd06",
+      "gitBlobSha1": "de083a9981b5ccde6868180a0b3f0d2c8b530c53",
+      "bytes": 8415
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-geometry.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-geometry.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-geometry.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "2306035f5c3c8f594c5bd386e4d4df023ac1a13f6b598a3e4b619d58424ab331",
+      "gitBlobSha1": "40528584802448c78ce576766e0052f361e6386f",
+      "bytes": 10116
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-holes.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-holes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-holes.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "55f174ed51dcdcc0fbf8ae076d8a6ffa512226edb1f0bc26493e0bdf5d96ded1",
+      "gitBlobSha1": "9ee8822dc5f21ebfaa6d0902cf9ca24c7fe94761",
+      "bytes": 15500
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-ledge.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-ledge.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-ledge.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "7097dd6656c821b8775f03653c0eaaa2b2af571af388de86f95d237acab3169d",
+      "gitBlobSha1": "35f49465fa03278b6219170433a0d6fa5def0031",
+      "bytes": 8974
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-model.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-model.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-model.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "5c06e1ae6e471a65ecb8e285b12cb75d04d1b5630b9a3b87de9493c5139db7b1",
+      "gitBlobSha1": "226f04c0036ef778f0f4fc14223b3658f2a006e0",
+      "bytes": 20984
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-pill-activity.ts",
+      "path": "packages/ui/src/components/workflow-timeline/timeline-pill-activity.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/timeline-pill-activity.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "8382b6145fc9358c8a6143d94afdfe9188791c62d401b67d4b1471b273a98d54",
+      "gitBlobSha1": "ae9e80453e9f99ef2a2bd49ae3ba01850fd30d63",
+      "bytes": 1680
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/use-fill-growth.ts",
+      "path": "packages/ui/src/components/workflow-timeline/use-fill-growth.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/use-fill-growth.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "1d1dcd57a01ce7723dc08b49a8fdf12f3de858e8013d4259ecff123cd722561c",
+      "gitBlobSha1": "1bbaf1ac80a175a07a2fa95aa5b31f41fd70589e",
+      "bytes": 3531
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/use-timeline-viewport.ts",
+      "path": "packages/ui/src/components/workflow-timeline/use-timeline-viewport.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/use-timeline-viewport.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "ae988ec2729c2f783ea39e3d69431f0db026650e92b5742ffa9dd261d0fcf543",
+      "gitBlobSha1": "af19e2c1cc5d8502639f57fa03ffb9b841b48732",
+      "bytes": 4080
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/use-typewriter.ts",
+      "path": "packages/ui/src/components/workflow-timeline/use-typewriter.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/use-typewriter.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "315176c8333aca3239cfdd2776251fcc8b078816cd8140cba9386a2d980fc71c",
+      "gitBlobSha1": "f1417fe2a57c8368379288e35c53f0d6fd01422b",
+      "bytes": 5696
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/workflow-face-motion.ts",
+      "path": "packages/ui/src/components/workflow-timeline/workflow-face-motion.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/components/workflow-timeline/workflow-face-motion.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "292c2cad70f9c1a67f7f295da887d665295b489f70f77714b9998479930d947a",
+      "gitBlobSha1": "2c8858e8bb7185d8b9e5d0494fdf28aca24bb8fb",
+      "bytes": 5977
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/i18n/locales/en-US.ts",
+      "path": "packages/ui/src/i18n/locales/en-US.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/i18n/locales/en-US.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "12400cb26bd09a1af6b4fc2842b0683b2c3e9b4eef69d05c54564e5886f794f3",
+      "gitBlobSha1": "acdad8a6b7007bb160c0407b120762c6df3e2abc",
+      "bytes": 462918
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/i18n/locales/zh-CN.ts",
+      "path": "packages/ui/src/i18n/locales/zh-CN.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/i18n/locales/zh-CN.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "29b5679d744c7a400a3e9f75516d5a3f8086ce8eefe77028bf0fb02c35154cf3",
+      "gitBlobSha1": "e0f402214e7d20ce7b4080ef6592db7557f60df1",
+      "bytes": 464333
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/lib/zcodeSessionProjection.ts",
+      "path": "packages/ui/src/lib/zcodeSessionProjection.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/lib/zcodeSessionProjection.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "2b030f4c7a267528f323466e05c425dd6317f8baa8af473eb7316e3497703ea4",
+      "gitBlobSha1": "75a1e9553e8ef8b5a1528865b063f719c5a237ab",
+      "bytes": 120538
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/styles.css",
+      "path": "packages/ui/src/styles.css",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/styles.css",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "793515ed9a255acb0a954446d579d15030d206fe41bbd3c67a7aac857a6f65ef",
+      "gitBlobSha1": "576042dc764333289143625ecd760822b55861a7",
+      "bytes": 77721
+    },
+    {
+      "file": "sources/upstream-3.15.1/packages/ui/src/v4/composer/modelTriggerDisplay.ts",
+      "path": "packages/ui/src/v4/composer/modelTriggerDisplay.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/ui/src/v4/composer/modelTriggerDisplay.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "kind": "official-source",
+      "sha256": "97ff255dfeac23f58e68b0042c3469027f457ccc0a3bf0a87efd480e99e5543e",
+      "gitBlobSha1": "a30d29770dbc8b21c49695e2ff00b882ea48341d",
+      "bytes": 4237
     }
   ],
   "adaptation": {
@@ -2468,8 +4865,8 @@
     ],
     "hostIntegration": "Actual native workflow-ptc, schema-checked child structured_output, native jobs/sandbox/permissions; skill gate uses actual successful native skill call. Explicit user workflow routing retained. No external client/account/second engine.",
     "differences": "The existing native JavaScript body/meta path remains available. Role-specific instructions use real native children without forcing a team. The original TypeScript Actor facade/typechecking/static graphs are implemented separately by typedWorkflowAdapter; original graph amendment and engine run-journal semantics are not supplied by the native JavaScript path.",
-    "sha256": "9fb75714d07ea5c0df95a240c54ec4745d407e73e62e7742982bee0db669f277",
-    "skillSha256": "51106aa6e4c37022aea9ab4594375a00a3ad09be2db6b49c9bee7e15568db16e"
+    "sha256": "3c11af7a02c9f74e02cb70938bb6329b44ac5ea284ece08e15db1dff524bc1d7",
+    "skillSha256": "3f958aa8078b889215bb8284c8fecd37bb14f615336383e796a4a3954f4ee558"
   },
   "nativeSessionContext": {
     "module": "../session-context.mjs",
@@ -2477,12 +4874,20 @@
     "generated": "lib/zcode-session-material.mjs",
     "hostIntegration": "Public cold-safe sessionController.inspect; native user/assistant/tool result parts only. Original ranking/chunk/format/budget helper compiled at build with native part boundary. Configured same DSH route extraction, bounded local fallback; no session activation/appends or separate history.",
     "parameters": "sessionId/query/strategy/maxTokens; target id must occur in a real user message",
-    "differences": "Same configured DSH model instead of official lite route; native persisted events instead of ZCode active tree; source model label truthful; incomplete extraction falls back."
+    "differences": "Same configured DSH model instead of official lite route; native persisted events instead of ZCode active tree; source model label truthful; incomplete extraction falls back.",
+    "eventNormalization": {
+      "dshInterfaceCommit": "d743267388641bc76f17c45ce8b4c231aed1d32c",
+      "messages": "event.data.message ?? event.data; preserve actual IDs",
+      "runtimeValidationCount": 0,
+      "moduleSha256": "f6590476b997508658f6993403d09007c718241ef40a32d348219617c462fcfe"
+    },
+    "selectorSourceCommit": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "queryMaxLength": 4000
   },
   "omdEnhancementAdaptation": {
     "capability": "optional Pro/Ultra",
     "module": "../workflow.mjs",
-    "sha256": "9fb75714d07ea5c0df95a240c54ec4745d407e73e62e7742982bee0db669f277",
+    "sha256": "e669715187365d51daf027c2bc2444e6fc778001538be0426aea8ca19939aecc",
     "promptModule": "../prompt.mjs",
     "promptSha256": "288ebbb4452f597c569f3797e689ead3485994e6bf92688dd63403b59f8a4ca9",
     "original": "Without an explicit workflow request, do not start a workflow.",
@@ -2498,8 +4903,8 @@
       "generated": "lib/zcode-workflow-compiler.mjs",
       "build": "scripts/build-zcode-compiler.mjs",
       "sourceRoot": "apps/zcode-cli/packages/dynamic-workflow",
-      "retainedSourceFiles": 69,
-      "sourceScope": "Fixed original compiler/analysis/schema/lowering/facade closure and build/export files; engine/hash.ts is a dependency-free JSON helper only. No WorkflowEngine, Actor scheduler, provider/account runtime or CLI is bundled.",
+      "retainedSourceFiles": 80,
+      "sourceScope": "Exact 3.15.1 compiler/analysis/schema/lowering/facade source closure plus dependency-free engine/hash.ts. All original 3.14.3 snapshots remain available to not-yet-upgraded derived modules. No engine or provider runtime is bundled.",
       "typescript": {
         "version": "5.9.3",
         "license": "Apache-2.0",
@@ -2509,8 +4914,11 @@
         "embeddedStdlibFiles": 57,
         "generation": "Same reference-lib closure as the fixed upstream generator, emitted through an esbuild virtual module at build time. Original declaration text/headers retained; no generated module is written into original snapshots. Workflow compiler host is fully virtual."
       },
-      "sha256": "d2c4f689ae1db6128bf68000754070bee698944ad305a8188349dd2e70df7d16",
-      "buildSha256": "851c6eb82cc7bfe35f89139dd5d171eb2c757afbfde94f475197e76ad56af5af"
+      "sha256": "d9790bf853939aecb695fb93871e11e48da4c147407aeb1edd4516b3abb5ddb6",
+      "buildSha256": "ce80cc6c7e62ec5d2104dbe512a167fc0cfa71894c013e712a832fc0142e40a2",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "upstreamVersion": "3.15.1",
+      "snapshotRoot": "sources/upstream-3.15.1"
     },
     "source": [
       "apps/zcode-cli/packages/dynamic-workflow/src/compiler/compile.ts",
@@ -2525,7 +4933,7 @@
     "compilation": "analyzeWorkflowScript gates type and authoring diagnostics. A shared WorkflowProgram/SiteTable then supplies synthesizeAskSchemas, buildAskSpecs, collectWorldRunCommands and lowerWorkflow. The original lowerer emits an async function body with static site IDs and __host bindings; compilation does not execute the script. Diagnostic9003 retains the command-literal contract and names actual native permissions instead of an unavailable original confirmation dialog.",
     "hostIntegration": "DSH isolated ptcRuntime transports compiled Actor operations to native subagents.startContinuable/sendMessage. The same Actor retains one native childId/session across FIFO repeated asks. Native children own model/API, working tools, sandbox permissions, inbox, transcript and activation; no temporary child is spawned for every ask.",
     "results": "Typed asks use their compiled per-site schema and the fixed original validate/formatViolations helper. submit_result stages a candidate; authoritative successful native tool results, including enclosing tool completion, commit it. Untyped asks use the completed native assistant text. A typed turn without a committed result fails explicitly. The original plain string type remains untyped: ask() and ask<string>() return final text.",
-    "lifecycle": "Native jobs own background run status/cancellation. Native PTC cancellation and permission/mode changes abort the adapter; continuable children are interrupted and drained on completion, cancellation and scope disposal. Native child journals remain authoritative; original engine run-journal/replay/resume semantics are not transplanted. A successful top-level return cancels unfinished asks and waits for native cleanup, preserving caught ordinary-ask failures rather than replaying them through an unconditional Promise.all. Actor persona text is durable and literal on cold activation.",
+    "lifecycle": "Native jobs own background run status/cancellation. Native PTC cancellation and permission/mode changes abort the adapter; continuable children are interrupted and drained on completion, cancellation and scope disposal. Native child journals remain authoritative; original engine run-journal/replay/resume semantics are not transplanted. A successful top-level return cancels unfinished asks and waits for native cleanup, preserving caught ordinary-ask failures rather than replaying them through an unconditional Promise.all. Actor persona text is durable and literal on cold activation. Prospective native v3 journal and resume_workflow provide conservatively gated same-run replay, using explicit script-side settlement delivery; original engine journal remains a distinct format.",
     "savedDefinitions": {
       "facade": "save_workflow facade=zcode; facade=native preserves the existing JavaScript API",
       "marker": "// @omaa-workflow-facade: zcode",
@@ -2543,19 +4951,94 @@
       "runtime": "test/installed-zcode-actors.test.mjs: native saved TypeScript facade, two committed structured results in one child, host stop/boot and human cold continuation preserving literal persona; background parent Ask switch stops and drains its native child.",
       "model": "One configured opencode-zen/space-bunny-free read/recall task completed two correct structured results in one Actor, native read occurred once; prior short attempt failed. No overall model/native-equivalence claim."
     },
-    "sha256": "9560bbd983312d91091b8f581490bfcc6eb1418b61c142bffb9a116922e9e4a2",
-    "compilerAdapterSha256": "9c6dc64378680bac56880b0c7f3f5688223e18c02e803edcfedecf6bc1cc72de",
-    "actorAdapterSha256": "a1bc9acdcb6f1a09ee28268a150944d166834c83190e7c44a893642c01ef7a61"
+    "sha256": "0481cf90a7cd83fc63fd3f204409d9bdc4cb35823cf047d72ff5e2de23e9824f",
+    "compilerAdapterSha256": "92d1e26d0a99f62ec8c5a04e85377946852f6bb54219f3ce96cfe766a6f70623",
+    "actorAdapterSha256": "89233acb174ec733efb6b8c949dde7ac27f13191f20b98c408575564cd76ba05",
+    "importCache315": {
+      "build": "scripts/build-zcode-import-cache.mjs",
+      "generated": [
+        "lib/zcode-import-cache.mjs",
+        "lib/zcode-persona.mjs"
+      ],
+      "sourceManifest": "sources/upstream-3.15.1/import-cache-source.json",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "sha256": {
+        "scripts/build-zcode-import-cache.mjs": "e680927d5ddd4fd6a950f5dc0e463199131588fc62123dbb4d0ac59c78fdd8c8",
+        "lib/zcode-import-cache.mjs": "9d1c861a39e6f49eba32ad3631204d3d1c7773a043771e084362ca36e7054bb2",
+        "lib/zcode-persona.mjs": "ed44da1f583f2a8134280b32a068766e497fccd3124dc88362ca1d88725677f7"
+      }
+    },
+    "modelBinding315": {
+      "nativeModule": "../model-bindings.mjs",
+      "sourceManifest": "sources/upstream-3.15.1/model-binding-source.json",
+      "scope": "Explicit per-Actor literal model selectors resolved from public native advertised catalogs; no provider/account runtime transplanted; omitted settings remain native-owned"
+    },
+    "stream315": {
+      "build": "scripts/build-zcode-streams.mjs",
+      "generated": "lib/zcode-streams.mjs",
+      "sourceManifest": "sources/upstream-3.15.1/stream-source.json",
+      "scope": "Exact public queue/future/stall bootstrap inside existing Node PTC program; no separate runtime"
+    },
+    "executionCacheVersion": 2,
+    "runDefaultModel315": {
+      "contract": "Create optional string, Amend inherited/null-clear/replaced, Resume canonical catalog preflight; persona > run > pin > parent",
+      "headerVersionWhenSelected": 2,
+      "choiceRecordVersion": 1,
+      "oldNoChoiceHashesPreserved": true,
+      "runtimeValidationCount": 0
+    },
+    "runConcurrency315": {
+      "contract": "Amend omit inherits, null clears additional native run cap, integer sets; confirmed durable commit synchronizes live cap; fallback refreshes owned non-user terminal proof",
+      "nativeDefaultGuessed": false,
+      "runtimeValidationCount": 0,
+      "fallbackProof": "Retained fully settled native lifecycle only; unmarked historical stop intent never authorizes automatic restart"
+    }
   },
   "savedWorkflowAdapter": {
-    "module": "saved-workflows.mjs",
+    "module": "../saved-workflows.mjs",
     "sourceContract": "apps/zcode-cli/packages/contracts/src/tools/saved-workflow.ts",
     "nativeContract": "Native fs observations and tools.execute write/workflow; no alternate execution loop",
     "format": "Original YAML block comment + native JavaScript or marked ZCode TypeScript body in .dwf.ts; project before global, scoped lookup/list. facade=zcode inserts // @omaa-workflow-facade: zcode when absent; the marker selects the matching execution entry on read/reuse.",
     "validation": "Original metadata and argument validation derived from source; Zod record overload adapted to host 4. Native definitions receive plain JavaScript syntax validation; ZCode definitions receive fixed TypeScript typecheck, analysis, schema synthesis and unsupported-facade checks before save. Defaults/types are validated before reuse, and each execution rechecks its script and current native permissions.",
     "limits": "256 KiB per definition, 256 directory entries/definitions, 1 MiB aggregate list reads",
-    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation/static graphs, world contracts and artifact contracts/presentation are implemented through native adapters; graph amend, original live graph UI and dedicated saved-definition manager remain unavailable. Saved metadata is a definition archive, not the original engine run journal.",
-    "sha256": "007a7edb44c09b3e2e5bfa2c86ece5607e4b8a7e9b3250e23876233617de3d62"
+    "differences": "Native definitions dispatch to workflow; marked ZCode definitions dispatch to create_workflow. Original TypeScript compilation/static graphs, world contracts and artifact contracts/presentation are implemented through native adapters. Saved definitions expose body-preserving metadata update and same-name global-to-project move/explicit-scope delete with guarded native write and ordinary Shell receipts; original dedicated application services/settings manager are not transplanted. Saved metadata is a definition archive, not the original engine run journal.",
+    "sha256": "a03e2feaf8dc745d0876b9e7b553f3a76f0d791f75f5f0f769ed6451dbaa77bf",
+    "metadataUpdate": {
+      "tool": "update_saved_workflow",
+      "scope": "Explicit existing project/global definition; native write pipeline with snapshot version, body preserved; no permission escalation",
+      "atomicity": "Native provider version guard and atomic publication, not cross-process OS CAS",
+      "runtimeValidationCount": 0,
+      "hashes": {
+        "src/presets/zcode/saved-workflow-metadata.mjs": "5850f6b8f5d9e993728318653d93b432a56c7277bc6a03cae723741b55ae00b4",
+        "src/presets/zcode/saved-workflows.mjs": "a03e2feaf8dc745d0876b9e7b553f3a76f0d791f75f5f0f769ed6451dbaa77bf",
+        "src/presets/zcode/workflow.mjs": "8dcdd35d70b8b29312d4eec8692f3b2894d7955d0301f9a6559f2302e65c0ae0",
+        "src/presets/zcode/saved-workflow-writes.mjs": "6c323bedb8783d7ff6da5a5a4c894dd0a9b6e50d0fef759cce5eda0169f4ab58",
+        "src/presets/zcode/saved-workflow-permissions.mjs": "021299b7e508ec7cf7a94b73e91da0fcf9fdd2b8d59157c6d84cb033fe25e07d"
+      }
+    },
+    "fileManagement": {
+      "tools": [
+        "move_saved_workflow",
+        "delete_saved_workflow"
+      ],
+      "scope": "Same-name global-to-project move; explicit project/global delete; reviewed full source-byte SHA256; native createIfAbsent and ordinary bash/pwsh through parent tools.execute; no permission expansion",
+      "atomicity": "Two-step copy/unlink, not two-path atomic move or cross-process hash/unlink CAS",
+      "outcome": "Exact terminal helper receipt plus native path/digest readback; copied-only partial or unknown with native job/call references; no automatic retry/rollback",
+      "runtimeValidationCount": 0,
+      "hashes": {
+        "src/presets/zcode/saved-workflow-management.mjs": "bf7b4c62f08f3bc0649e5d1c802147aeeeb0b7f70f112cce78aad9f9391258dc",
+        "src/presets/zcode/saved-workflow-writes.mjs": "6c323bedb8783d7ff6da5a5a4c894dd0a9b6e50d0fef759cce5eda0169f4ab58",
+        "src/presets/zcode/saved-workflows.mjs": "a03e2feaf8dc745d0876b9e7b553f3a76f0d791f75f5f0f769ed6451dbaa77bf",
+        "src/presets/zcode/workflow.mjs": "8dcdd35d70b8b29312d4eec8692f3b2894d7955d0301f9a6559f2302e65c0ae0",
+        "src/presets/zcode/skills/zcode-workflows/SKILL.md": "04828b46a20263f8e80e968bd0bd0d633e9d1eea8eb41e744fd662e1ed61a763",
+        "src/client/zcode-saved-workflow-state.mjs": "3279bb7b0b788f88a936dcb9c053db474e871667ef9775529040ce090ccbb05a",
+        "src/client/zcode-saved-workflow-tool.jsx": "9dd7cd21e7adca7bf913487093c0d998d2a4aea3f90f63ea8b9da2331142c662",
+        "src/client/index.jsx": "f90f0cf2fecd732933413049ca867a646c27fe8ec096332e49796d54b33add41",
+        "src/presets/zcode/saved-workflow-permissions.mjs": "021299b7e508ec7cf7a94b73e91da0fcf9fdd2b8d59157c6d84cb033fe25e07d"
+      },
+      "permissionScope": "Exact live parent/policy snapshot; native mode/disposal change aborts and intent/admission/final receipt rechecks; promoted helper owner/kind/nonce label verified before kill request; cancellation is not rollback",
+      "requestScope": "Monotonic sessions-service lock by session/read-call/full-source digest across card lifecycle and unknown admission; not cross-page persistence; checkbox is user selection, not native approval"
+    }
   },
   "worldReadAdapter": {
     "status": "implemented",
@@ -2599,8 +5082,8 @@
       "Native transport/file-race/process-provider limits remain; no universal escaped-descendant guarantee."
     ],
     "verification": "test/installed-zcode-world.test.mjs single installed native fixture: original glob semantics, UTF16 BOM/CRLF, bundled search/Git, undefined positional args, relative argv, nonzero result/catchable caps, native workspace-write and parent Ask background cancellation. No five-preset matrix or cross-platform/native-equivalence claim.",
-    "sha256": "7751c42137757870bbab4e64a2adb1bda0190d51f777805dafdfe0f1d03aed0e",
-    "buildSha256": "854a909b8f3aee57234364ce125cb9ab7797eb04aedead6524b56c3ae3181ba9",
+    "sha256": "45dc333b4698de243953a2e571f568a64b9da5d3600e66faea8bcefa87b6c458",
+    "buildSha256": "636950026b76920935062848fbfb7c52c4d8ba1666682d1a777acfab5ee7d186",
     "modelVerification": "One configured opencode-zen/space-bunny-free task loaded the actual zcode-workflows skill and executed create_workflow to read/glob a native fact file, inspect native Git main branch and run a literal argv command; all returned values matched. This short task does not establish model-wide fidelity or stability."
   },
   "artifactAdapter": {
@@ -2636,18 +5119,19 @@
       "lib/zcode-artifact-ui-apply.mjs",
       "lib/zcode-artifact-palette.mjs"
     ],
-    "sourceContract": "Fixed 29628c9 original-byte publish/spec/primary contracts, caps, JSON probe/hash, parse/fold/palette and complete ChartView/chart leaves. Builder extracts named pure declarations and adapts import tokens only; no WorkflowEngine, scheduler, provider/account runtime or original blob/journal backend is bundled.",
+    "sourceContract": "Version-pinned mixed native adapter: 3.15.1 report budget/types/primary helpers and WorkflowError; legacy source publishers and presentation remain pinned to 3.14.3. All original snapshots retained.",
     "content": "await artifact.file/markdown publishes immutable snapshots and returns {id,version}. Native root/realpath containment applies to file inputs. Missing/outside/oversize/primary publication failures preserve catchable original error codes; successful versions survive later workspace changes and whole-host cold restart. Primary is sticky under the original validator.",
     "presets": "Top-level artifact.chart/table/metrics/board declarations snapshot the spec at call time; later caller mutation does not alter it. Tagged report(item,id) uses original JSON probe and budgets. Invalid declarations or reports fail the parent run even if the script catches a local error. Original parse/fold/palette supports paginated reports and table key upsert.",
-    "storage": "Native storage Domain omaa_zcode_workflows v1 retains only small per-run summaries. Full metadata, content versions and report items are native content-addressed file attachment refs; no separate blob store or native journal format change. Reads authorize session/run/version, reject cross-session access, and cold-inspect without activating or appending to the native session journal.",
+    "storage": "Native Domain v1 summaries reference owned omaa.zcode.run v2 immutable Merkle JSON pages; legacy whole-record and item references stay readable. Native file preview refs unchanged. No irreversible migration/deletion.",
     "presentation": "Separate workflow artifact sidebar, tool-result View artifacts entry, per-run navigation and actual native Stop. Visible-only reads use singleflight, pending reread and stale-response filtering. Exact upstream ChartView uses pinned Recharts 3.8.0 via lazy loading and local error boundary; Table/Metrics/Board presentation adapts DSH CSS. Native attachments.fileHostPath selects immutable snapshots for native Text/Markdown/document previews. Graph/causality are actual static JSON only.",
     "limits": {
       "maxArtifactIdsPerRun": 32,
       "maxSuccessfulVersionsPerArtifact": 16,
       "fileBytes": 20971520,
       "markdownBytes": 262144,
-      "maxReportItemsPerRun": 256,
-      "maxReportItemSerializedBytes": 32768
+      "maxReportItemsPerRun": 65536,
+      "maxReportItemSerializedBytes": 1048576,
+      "maxReportBytesPerRun": 1073741824
     },
     "dependencies": [
       {
@@ -2683,27 +5167,52 @@
       "model": "One configured opencode-zen/space-bunny-free task loaded the actual zcode-workflows skill and executed create_workflow to declare chart/table, emit four tagged reports and publish immutable primary Markdown. Actual outcome completed, two chart data rows and the expected snapshot matched. No five-preset matrix or model-wide fidelity claim.",
       "ui": "Actual alpha native web UI: completed create_workflow result View artifacts opened its requested run; original ChartView displayed the two-point chart, original table keyed replacement displayed one row/value3, and Open native preview loaded immutable published delivery.md from native attachment storage. One task and narrow-width interface observation only; rc2/Windows artifact UI not separately exercised."
     },
-    "sha256": "c60a7eb82140813ca1917a246fe136add59352e44deff11250e68b928e267b16",
+    "sha256": "a6c52629cd4b46cf1c067fb6209b42a8dc7649848064f15d8f5b15fb9066862c",
     "hostAdapter": "src/host/zcode-artifacts.mjs",
-    "hostAdapterSha256": "6681a33b295668a7d79a6bf58b19a3fe748b5d4858acf16d2fef5b19041bd55e",
-    "buildSha256": "4da0fc9681463b76509bfc4bc6ff161166ad309266a1caaeae63e5f54006051a",
+    "hostAdapterSha256": "d49d768e05b5d0944abb1adc78517542b34b72442c7d6dba0f0779c96342da10",
+    "buildSha256": "9a49724bd9ace940dfa81cc6422071ba91cd2e6923962fda81bc17ad2e08b981",
     "adapterHashes": {
-      "src/presets/zcode/artifacts.mjs": "c60a7eb82140813ca1917a246fe136add59352e44deff11250e68b928e267b16",
-      "src/host/zcode-artifacts.mjs": "6681a33b295668a7d79a6bf58b19a3fe748b5d4858acf16d2fef5b19041bd55e",
-      "src/client/zcode-workflows.jsx": "20e186d69192399f82c0ba9f43062781cd5187e6672b5e1465aaf340268e3778",
-      "src/client/zcode-workflows.css": "2f37c762924a978ce1cd195f0d006855ecb3cfd95e9500aafe04f41ef679f7dc",
-      "src/client/zcode-workflow-tool.jsx": "04af8cb91aef231c6b81388e018e9736fc0e56126ec2a9cfb4b636a847c45c13",
-      "src/client/zcode-artifact-chart.jsx": "52b2e8363ea5193161ae35bb17926e44c6b09a1c4da1d9bc7f9e8c1229ff96bf",
+      "src/presets/zcode/artifacts.mjs": "b46522ec56394a93a7cf1bf02a3882a696ef49592d809eaa77c1c79299ca4f9e",
+      "src/host/zcode-artifacts.mjs": "d49d768e05b5d0944abb1adc78517542b34b72442c7d6dba0f0779c96342da10",
+      "src/client/zcode-workflows.jsx": "58623a88af675dd68e6d7d8091fea627c71a62f614490e4714be1afa2060b791",
+      "src/client/zcode-workflows.css": "868dac630d0ca0563784a20548e14f583df07776681c1a8c7099cee3a5a81ae8",
+      "src/client/zcode-workflow-tool.jsx": "a782dde1a14d3df5fecc2bdb60be663f7893df22907d49bfc7d1d1dbfcaa9192",
+      "src/client/zcode-artifact-chart.jsx": "b4018c04ca75ca7868b03c934c0917afa66da0ca74efe226e85de8c601a548ad",
       "src/client/zcode-artifact-primitives.jsx": "ba77f8a2f5348e1e5dcd5e32425b8be9a56af9f093e285cdef2196a89c2311e4"
     },
     "generatedHashes": {
-      "lib/zcode-artifact-shared.mjs": "97ba7f8a1b41071f6aa72b4641105cf721a9c2dbb459c61a189f29320a857b45",
-      "lib/zcode-artifact-publish.mjs": "5c41cd108172f4a5bcc63a5e1666776249c4806dfa4db0231e0442b01ef8557a",
-      "lib/zcode-artifact-spec.mjs": "f1f39d63b93f27704522b298a9d8170bb7bd36a9848dd6cf7b8038ce23ae56df",
-      "lib/zcode-artifact-primary.mjs": "8933c2261dd299d9c68106f8886edecd4e2d9125176ed23a779c91a56a88fdad",
-      "lib/zcode-artifact-ui-spec.mjs": "bfb0ebffba79ee19869c1ebd127c009c16b8c7e4ee0063f552bee06c355304e7",
-      "lib/zcode-artifact-ui-apply.mjs": "86410a265afc5e34561f66805c788858ee16f41aec24c9b5cd00bc648eb50a2f",
-      "lib/zcode-artifact-palette.mjs": "811c34a6509f2de93f58c25d531e558b181f4460bf03aff8f0b19c0b52c99f0e"
+      "lib/zcode-artifact-shared.mjs": "03e2b686ff2aafd1a455d43522341941fd6e5f1e2ba39a4754dda03646c401fa",
+      "lib/zcode-artifact-publish.mjs": "8807a065f6535e51c787ed204d4e95fc0bffb89a8ad7c9ead305a7eb1635f5af",
+      "lib/zcode-artifact-spec.mjs": "6e4b04ea121148b7ebff71e845322ae23e687b4049d5c0c71630d4e7fffbff67",
+      "lib/zcode-artifact-primary.mjs": "0ece98f90603f8eb79ba487d5e37ad69b33790aba3fd9ae56d143987c10df239",
+      "lib/zcode-artifact-ui-spec.mjs": "a0eda966c0b0c66a37042e7d511a0d408892efc583c70e5e5706f0fe3ddb5d72",
+      "lib/zcode-artifact-ui-apply.mjs": "820303e166705ab86f6182737ae1b641bdf0ea49876c68e830eb782a13731116",
+      "lib/zcode-artifact-palette.mjs": "92224b03ce7072e2a58a8d42d3352830c1ba079e5a9df12f51ba98769e6846fa"
+    },
+    "source315ReportCaps": {
+      "maxItemsPerRun": 65536,
+      "maxItemSerializedBytes": 1048576,
+      "maxBytesPerRun": 1073741824
+    },
+    "nativeTransportViewCaps": {
+      "reportDataPageBytes": 4194304,
+      "memberWindow": 200,
+      "sourceBytes": 262144,
+      "fullRunProjections": [
+        "metrics",
+        "table",
+        "board",
+        "chart"
+      ],
+      "legacyScope": "page",
+      "runtimeValidationCount": 0
+    },
+    "reportPage315": {
+      "maxSerializedItemBytesPerPage": 4194304,
+      "defaultItemsPerPage": 200,
+      "maxItemsPerPage": 500,
+      "sourceManifest": "sources/upstream-3.15.1/report-reader-source.json",
+      "scope": "Byte-bounded existing artifact data pages; preserves cursor/hasMore without truncating stored data"
     }
   },
   "graphProjectionAdapter": {
@@ -2797,14 +5306,13 @@
       "packages/ui/src/styles.css"
     ],
     "fixedUiFiles": 40,
-    "sourceContract": "Exact fixed 29628c9 sources and strict SHA closure derive bound actor/phase/causality display projections and the original workflowRuns reducer; only display/reducer code, not the original execution engine.",
+    "sourceContract": "Version-pinned pure dynamic graph/reducer sources at 3.15.1 plus bounded display/UI sources at 3.14.3; strict source SHA closure. Original runtime engines and account/provider implementations are excluded.",
     "nativeAdapter": "../run-progress.mjs",
     "nativeContract": "Observed siteId x ordinal, phase and Actor birth; native child accepted receipt, queued/dispatch/settled facts populate the original reducer. Unknown provider backoff is not inferred. Native Domain/attachments remain authoritative for presentation; no original engine execution or replay journal.",
-    "presentation": "Retained original Timeline and WorkflowRunPhaseList, 37 original UI code files plus styles and Chinese/English locale; not ReactFlow. Native display adapter supplies actual facts. Tailwind 4.2.2 produces source CSS at build time from an isolated temporary build, not a runtime dependency. lucide-react1.17.0 is a production dependency compatible with React18 peers.",
-    "amend": "Original Amend stops the predecessor and starts a successor run inheriting cache and the exact completed Actor transcript prefix. Same-run changes are concurrency retune; resume requires identical script bytes. OMAA Amend is not wired: stop/new without cache/prefix inheritance is not equivalent. A dedicated public continuity provider can seed the old Actor complete completed prefix while the manager retains new parent/descriptor/permissions; a host modification is not inherently required.",
+    "presentation": "Exact retained 3.15.1 Timeline/PhaseList closure (49 runtime UI source files); native Intl and four explicit pure AST ports. CSS is statically generated; no application provider/account/state runtime closure.",
+    "amend": "Native successor Amend/cache/prefix carry and prospective v3 same-run resume are implemented in separate adapters; no original SQLite driver revival or full-engine equivalence claim.",
     "differences": [
-      "No wired Amend, original engine journal/replay/resume or full native/product equivalence.",
-      "Final native graph fixture is pending; no graph browser screenshot/click or publication/deployment pass is claimed."
+      "Original SQLite scheduler/replay and native execution equivalence remain unverified."
     ],
     "dependency": {
       "name": "lucide-react",
@@ -2821,24 +5329,124 @@
       "remaining": "Amend cache/precision prefix and original engine replay remain unimplemented; dedicated public continuity provider has been researched, not executed."
     },
     "hashes": {
-      "scripts/build-zcode-run-projection.mjs": "851e82ec229a369a4bbcbc829969461ecd6216f10069675bef390578984c645c",
-      "scripts/zcode-graph-ui-aliases.json": "87308823543b09307e64c00362fbb3aef297b9e72c75be8b7a153a63940aaefb",
-      "src/presets/zcode/run-progress.mjs": "ec14c9184d720662bf2e63ee4f8d6b5c28c45cd6ff22f01084fe44440814999e",
-      "lib/zcode-run-projection.mjs": "eb2de7a01ca22c4e25c277c0a0db33fe090e7b6799b30b51ee7e3e00d394cb0e",
-      "src/client/zcode-workflow-graph.jsx": "be7c1875d7a10fec381de7fc0ef9fc2c933bd050e56821eaf16bc4a49ecc36b2",
-      "src/client/zcode-workflow-graph.css": "bdd53afcb60a9377d66479fe6a0cfbf21899f2a661b2b83fd6f287adb19d95c9",
+      "scripts/build-zcode-run-projection.mjs": "1de61f1443b07ac5b7674066b33ad294aadfb66311332dc4c0276ad7a7968607",
+      "scripts/zcode-graph-ui-aliases.json": "95a1b87b03673a084a75969d5f9d0174f90d42ae9776470a504f0780dd9f6e97",
+      "src/presets/zcode/run-progress.mjs": "ac7865320f8e410b129d8505ed4856af159486878c9b8605bcbfdc6983fa181e",
+      "lib/zcode-run-projection.mjs": "2d82e4021356d8b1fbaf56a819cc6e8bde52fcf36ecbc8829a712a1b5f99f43a",
+      "src/client/zcode-workflow-graph.jsx": "321e0cfadb2aca07056fa4d089b85db31cd33b0e910ab362f9ea5db98e01243e",
+      "src/client/zcode-workflow-graph.css": "addda6f468df10968f52069e6acda0a5578171cbea5dba37be631bac7bbc0a80",
       "src/client/zcode-workflow-graph-intl.jsx": "a6ce1fdb422aff56f620c2f1baf3838f9cbd56170ea27c059b00b2c75df29677",
-      "src/client/zcode-workflow-graph-messages.mjs": "bfc71986b334233db794d3807ad76adcfc3bdeb044c98466c3c8959d78546e88"
+      "src/client/zcode-workflow-graph-messages.mjs": "0acf225b4510caf7bfe825cd8a843aa71f3e23446e43fcd3ebe556387585f471"
     },
     "assetGenerator": {
       "module": "scripts/build-zcode-graph-ui-assets.mjs",
-      "sha256": "e54480ea499586c63fa6e2515d22016b5c86696c4f2e6072f656dd346b2e7bb9",
-      "mode": "Build calls read-only check; CLI --write regenerates, --output-dir previews separately. Fixed40 source SHA/commit and37 runtime closure; DSH/Intl bridge is explicit.",
+      "sha256": "7328e55ef5bb665f2567d82a0321553e750ab7662c70f24cfc9b79249c1f6139",
+      "mode": "Read-only --check verifies 61 raw sources, 49 UI runtime files, four explicit pure ports and Intl seam; --write regenerates assets.",
       "buildDependencies": {
         "tailwindcss": "4.2.2",
         "postcss": "8.5.6"
       },
       "runtimeDependency": false
+    },
+    "dynamicSourceCommit": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "boundedDisplayContractCommit": "aac4755666d09fdcd70272fcf063c077a639015f",
+    "source": "Pinned 3.15.1 pure graph, display protocol, bounded projection and selected Timeline/PhaseList UI closure; original runtime engine, account and provider state excluded."
+  },
+  "componentPins": {
+    "mainPrompt": {
+      "version": "3.14.3",
+      "commit": "29628c9acdb81b703bbd4080c207a0e7ce5e276e"
+    },
+    "pureWorkflowCompiler": {
+      "version": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f"
+    },
+    "artifactRuntime": {
+      "sharedHelpersVersion": "3.15.1",
+      "publishAndPresentationVersion": "3.14.3",
+      "nativeLargeReportViewsPending": false,
+      "nativeFullRunProjectionVersion": 1
+    },
+    "importCache": {
+      "version": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "runtimeScope": "Pure consumer/persona only; no new native in-flight or storage format"
+    },
+    "graphProjection": {
+      "dynamicSourceVersion": "3.15.1",
+      "protocolAndBoundedNativeDisplayVersion": "3.15.1",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "selectedUiVersion": "3.15.1",
+      "runtimeValidationCount": 0
+    }
+  },
+  "nativeDurableRecords": {
+    "format": "omaa.zcode.run",
+    "version": 2,
+    "jsonFormat": "omaa.zcode.json",
+    "jsonVersion": 2,
+    "legacyDomainVersion": 1,
+    "legacyReads": true,
+    "hashes": {
+      "src/host/zcode-records.mjs": "34357f65b7e6084155d17cdd40b4e9ec722335e327e695d583ee436cf405cee8",
+      "src/host/zcode-artifacts.mjs": "d49d768e05b5d0944abb1adc78517542b34b72442c7d6dba0f0779c96342da10",
+      "src/presets/zcode/continuation-records.mjs": "9e2538fbb86ea363ac4a8bdf3f8542d5b4470c6b8a073ccf5d646843c34eb4e9",
+      "src/presets/zcode/run-cache.mjs": "0e64d5a57459512b1cd37b50a06e93e71ae33cf34876c34076c4f2c21a208f79",
+      "src/presets/zcode/continuity.mjs": "ce188c5074dde41b57c64bc465bfb244e697429c429f4babbfd38dd3ad81a747",
+      "src/presets/zcode/typed-workflow.mjs": "33a52c31d8ab73a0d8130267ee43e8f2e9c37d63e017fc0b2ee95624d99c1985",
+      "src/index.mjs": "8e0a27977105b070d57969fd13cb490b0e3acb00d73b15d3f31762de3afab5af"
+    }
+  },
+  "nativeLiveHoles": {
+    "tool": "fill_workflow",
+    "stateVersion": 1,
+    "scope": "Live lexical fills; prospective v3 journal ownership updated in the same effective-source commit. Eligible same-run replay runs filled bodies inline.",
+    "hashes": {
+      "src/presets/zcode/holes.mjs": "6d2d530b918f77e6b94e4dae2f4a5e5da56a2a64a57441c7dc3dd64c2c1821f7",
+      "src/presets/zcode/holes-contract.mjs": "3dc3074414d337e8ed2056e611afb27d7865fe6c155150c9a2976640b10165c7",
+      "src/presets/zcode/typed-compiler.mjs": "92d1e26d0a99f62ec8c5a04e85377946852f6bb54219f3ce96cfe766a6f70623",
+      "src/presets/zcode/typed-workflow.mjs": "33a52c31d8ab73a0d8130267ee43e8f2e9c37d63e017fc0b2ee95624d99c1985",
+      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a",
+      "src/presets/zcode/world.mjs": "45dc333b4698de243953a2e571f568a64b9da5d3600e66faea8bcefa87b6c458",
+      "src/presets/zcode/artifacts.mjs": "b46522ec56394a93a7cf1bf02a3882a696ef49592d809eaa77c1c79299ca4f9e",
+      "src/presets/zcode/workflow.mjs": "8dcdd35d70b8b29312d4eec8692f3b2894d7955d0301f9a6559f2302e65c0ae0"
+    }
+  },
+  "nativeActorCarry": {
+    "scope": "Successor context carry of actual accepted/admitted/fully settled canceled task; no original driver revival",
+    "runtimeValidationCount": 0,
+    "hashes": {
+      "src/presets/zcode/continuity.mjs": "ce188c5074dde41b57c64bc465bfb244e697429c429f4babbfd38dd3ad81a747",
+      "src/presets/zcode/continuation-records.mjs": "9e2538fbb86ea363ac4a8bdf3f8542d5b4470c6b8a073ccf5d646843c34eb4e9",
+      "src/presets/zcode/run-cache.mjs": "0e64d5a57459512b1cd37b50a06e93e71ae33cf34876c34076c4f2c21a208f79",
+      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a"
+    }
+  },
+  "nativeReplay": {
+    "format": "omaa.zcode.replay",
+    "version": 3,
+    "tool": "resume_workflow",
+    "settlementFormat": "omaa.zcode.settlement",
+    "settlementVersion": 1,
+    "prospectiveOnly": true,
+    "legacyReads": true,
+    "runtimeValidationCount": 0,
+    "constraints": [
+      "No unknown running external command or Actor ask automatically retries",
+      "Recorded Actor failures without exact completed native context are refused",
+      "Journal metadata integrity is not whole-run external-effect verification",
+      "No original synchronous SQLite engine, exactly-once external execution or full-product equivalence claim"
+    ],
+    "hashes": {
+      "src/presets/zcode/replay-journal.mjs": "23a87fe93fbf480dd4dfad9abc759308aec096f453ee2de95ce0976d149a7ef2",
+      "src/presets/zcode/typed-workflow.mjs": "33a52c31d8ab73a0d8130267ee43e8f2e9c37d63e017fc0b2ee95624d99c1985",
+      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a",
+      "src/presets/zcode/run-cache.mjs": "0e64d5a57459512b1cd37b50a06e93e71ae33cf34876c34076c4f2c21a208f79",
+      "src/presets/zcode/artifacts.mjs": "b46522ec56394a93a7cf1bf02a3882a696ef49592d809eaa77c1c79299ca4f9e",
+      "src/presets/zcode/holes.mjs": "6d2d530b918f77e6b94e4dae2f4a5e5da56a2a64a57441c7dc3dd64c2c1821f7",
+      "src/presets/zcode/workflow.mjs": "8dcdd35d70b8b29312d4eec8692f3b2894d7955d0301f9a6559f2302e65c0ae0",
+      "src/host/zcode-artifacts.mjs": "d49d768e05b5d0944abb1adc78517542b34b72442c7d6dba0f0779c96342da10",
+      "src/presets/zcode/skills/zcode-workflows/SKILL.md": "04828b46a20263f8e80e968bd0bd0d633e9d1eea8eb41e744fd662e1ed61a763"
     }
   }
 }

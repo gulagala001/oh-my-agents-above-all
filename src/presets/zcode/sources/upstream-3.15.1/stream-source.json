@@ -1,0 +1,12 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow-runtime/src/child-cell-streams.ts",
+      "sha256": "8e3dbb47437aa2c9d0f8276c2f35854d6d506ae887410dbb533231d1d90c94bf",
+      "gitBlobSha1": "979cc6bdfebdb3d944ecca667acc9baa81073e7a",
+      "bytes": 6157,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow-runtime/src/child-cell-streams.ts"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "repository": "zai-org/ZCode",
+  "purpose": "Exact 3.15.1 pure display graph bounding and workflowRuns reducer protocol closure. Dynamic analysis/projections use existing graph-source.json; create-workflow.ts contributes only CREATE_WORKFLOW_GRAPH_MAX_* constants.",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/contracts/src/tools/create-workflow.ts",
+      "gitBlobSha1": "1ab27fd21751b4212c09c4d0228e968663daad93",
+      "sha256": "e619f8c063ceab1b4ae4810ceb468cf93193284fad0ea61d825638bbfdce028b",
+      "bytes": 31779,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/contracts/src/tools/create-workflow.ts"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-bounds.ts",
+      "gitBlobSha1": "d43ab0513eef40b655adf6a1ccb2fcc5fbbfe553",
+      "sha256": "665a8af239bac2b1c254d279623c9b515b2c571e735ff3d23fa3a86d97f9a7b2",
+      "bytes": 19868,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-bounds.ts"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-fold.ts",
+      "gitBlobSha1": "b365beb32e497fee8f61741fd6fabff08e992715",
+      "sha256": "6c646e75884f6bc364c48220c936d5121d00b91276252d11d2547f966d97b84c",
+      "bytes": 5918,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/tool/handlers/create-workflow-graph-fold.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-media-policy.ts",
+      "gitBlobSha1": "0a237c03737e7eecbaf33b673df9d74eb2ff1573",
+      "sha256": "47ccb08304cf2a24f4795dc6ded2ef5712d1ee1bad5c8bffb4d6081dc86dcde1",
+      "bytes": 451,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-media-policy.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/core.ts",
+      "gitBlobSha1": "69712ccd60a49fe33725ea34aa77b34e457d7fa8",
+      "sha256": "97750a7bab0a7580c1d27c8e0155981786fdbfa07373d46c77829f25eb407a39",
+      "bytes": 3859,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/core.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-artifact.ts",
+      "gitBlobSha1": "92997a19de02391f25c9bdff16b7a8c33948d418",
+      "sha256": "a21519ac5e3077572aba32c9354548aa7910eead77b587dadcc4535788f8e2ab",
+      "bytes": 1912,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-artifact.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "gitBlobSha1": "3086087469b2c1208864abf52fdc05cfd84c8669",
+      "sha256": "9f7c6d7ab87ba54b36923b1dd6553d0dc5e83c1f27633ff507ec2b3d7d276d31",
+      "bytes": 18031,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-observation-display.ts",
+      "gitBlobSha1": "7e635a879901581fee7a457edc3a0726f5404733",
+      "sha256": "4b21c1e4cbd10ca616c6a590cf1a44dab773a4458a2ec3e8bafee43dbc3466f5",
+      "bytes": 9740,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-observation-display.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-actor-session.ts",
+      "gitBlobSha1": "c5191fde5c7dc9e416a3fc3ad9063575f458c9ea",
+      "sha256": "7052e0e91b26ccb429e7c614fb3e911180d2c091c0d7e247841b88a22b0fef65",
+      "bytes": 3136,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-session.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-actor-status.ts",
+      "gitBlobSha1": "e6f04bfdf73c011ab6c39f54e83816a746fe7a84",
+      "sha256": "0223d367f6d9159be355fcb62c331499427fd31ddacf17e7564a1f909d54f733",
+      "bytes": 3315,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-actor-status.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-artifacts.ts",
+      "gitBlobSha1": "ad17cd840cc4c3f88ce3e352218fb9c0b99d1ee0",
+      "sha256": "de8e08048c7a30603f976ddaf32ac7d5b67bee7d513bcd29237d308c9905d8af",
+      "bytes": 7093,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-artifacts.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-caps.ts",
+      "gitBlobSha1": "884436f6280de47b7c4d4c994c83a8b247967dbd",
+      "sha256": "f294479c180ea3e800abe953ae67b74cc832e09bd30bb7e7ed1861e21acb6b8c",
+      "bytes": 6807,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-caps.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-concurrency.ts",
+      "gitBlobSha1": "ece6f0c5d5d5b89fd7282f2c006061072f97d4cd",
+      "sha256": "0d42555be4c41cdcbc7eb319b423b13d700862f5865897d3848ac86494ae5cb9",
+      "bytes": 9322,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-concurrency.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-delta.ts",
+      "gitBlobSha1": "35440b128aa142ff9563b37005e4a4bb6b4da2c5",
+      "sha256": "c922fa7df8ae3e16e3e127babadaad379498c8066bd9fcb254fefb30d5a60965",
+      "bytes": 25095,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-delta.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-entries.ts",
+      "gitBlobSha1": "fb9b5b59f03643bb802114fe55135b0af64ea233",
+      "sha256": "24c56ae87916c57b65e56c47b7e6fab22cf17364cc4a385a1c7794f66a92221d",
+      "bytes": 4572,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-entries.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-eviction.ts",
+      "gitBlobSha1": "e8ad14f95fac6eedb6e2d762042a583c3bd08b5a",
+      "sha256": "b8ae77e7243754e9f76d1c106b1de23ec3bd9d593aac23d74f7116fe62af3779",
+      "bytes": 26892,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-eviction.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-holes.ts",
+      "gitBlobSha1": "d9758ee6dc1286cfb876b56f6d8683d375bbaf6e",
+      "sha256": "c302c64a56a350a161f1d6bcda46a9ffca351f496b06e3075db57a10aa16d268",
+      "bytes": 9490,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-holes.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-lineage.ts",
+      "gitBlobSha1": "ca3961aab24ab8b9bf2d93356a979fd254ee7f39",
+      "sha256": "032257d84ea448a4a7f027ea5fd104e05f362a6fed9ed7e21ced2151aa887df3",
+      "bytes": 983,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-lineage.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-node-progress.ts",
+      "gitBlobSha1": "072f72283743594f12304cb40dcb01e59db5ef19",
+      "sha256": "2d56d1582fabc564ad9b087eafeef72a2c5fbd6cad16414b4d1051008f811ca1",
+      "bytes": 7055,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-node-progress.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-phases.ts",
+      "gitBlobSha1": "f2dec24ff8091e21940f11ae065e5ce1fc352dbd",
+      "sha256": "2969e18957a1246bbfd4cdd4974fa5acbf7ed0b04e27b3b70eb1eaaa6f4c7cd5",
+      "bytes": 5098,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-phases.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-reducer.ts",
+      "gitBlobSha1": "8225c34cd595a39b0e804fb78a264465d9a722a1",
+      "sha256": "04ca69a4dfa0f39db7e1907cf07190b367f0e29752e39bc9601bb61affb0797c",
+      "bytes": 35055,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-reducer.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-started.ts",
+      "gitBlobSha1": "8917815c3850e8f79e1c135b27f8829e56129c25",
+      "sha256": "cf8773e4944e5e48e1cd24ee941e59ba3989f255f219a7d5f050a6eeb635cd7d",
+      "bytes": 5076,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-started.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-tables.ts",
+      "gitBlobSha1": "83f66cbd0b9a235554b4d5baa06aade01b1ce776",
+      "sha256": "d0e28108c1196dcd0b6d8725a6f0ab9ff943fc1103af5c50137c71302434078b",
+      "bytes": 3063,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-tables.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs-unlisted.ts",
+      "gitBlobSha1": "7197a1117f45b86036a065ab426c402edeb26f3d",
+      "sha256": "a54e979a254af438f629a6bc2e4852cc32c537b306f0ecad20d0aef5f9c3055f",
+      "bytes": 6572,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs-unlisted.ts"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-runs.ts",
+      "gitBlobSha1": "51309ee666d5707103f26435cd4d71756f3979de",
+      "sha256": "f4cdba0b631468efaeba11f8f1a9dec03d7ff7896d00f145f68ea88812d7f9b5",
+      "bytes": 37015,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-runs.ts"
+    }
+  ]
+}

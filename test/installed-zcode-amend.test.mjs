@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFile, readFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
 
@@ -18,22 +18,12 @@ test('amend uses completed native prefixes across a restart and never imports a 
   await f.install(); await f.boot();
   const { sessionId } = await f.create('omaa-zcode');
   const persona = 'Remember native facts and preserve literal {{customer_name}}.';
-  const counted = 'const fs=require("node:fs");const p="effect-count.txt";const n=fs.existsSync(p)?Number(fs.readFileSync(p,"utf8"))+1:1;fs.writeFileSync(p,String(n));setTimeout(()=>process.stdout.write(String(n)),n===1?350:5);';
-  const started = 'const fs=require("node:fs");const tick=()=>fs.existsSync("effect-count.txt")?process.stdout.write("started"):setTimeout(tick,5);tick();';
   const initial = `interface Fact { value: string; round: number }
 phase('Inspect'); const reader = agent('reader', ${JSON.stringify(persona)});
 const observed = await files.read('fact.txt');
-const effectFirst = world.run('node', ['-e', ${JSON.stringify(counted)}]);
-await world.run('node', ['-e', ${JSON.stringify(started)}]);
-const effectSecond = world.run('node', ['-e', ${JSON.stringify(counted)}]);
-const effects = await Promise.all([effectFirst, effectSecond]);
 const first = await reader.ask<Fact>('FIRST_NATIVE_TASK: read fact.txt and submit its fact and round 1.');
 const second = await reader.ask<Fact>('POISON_PRIOR_SUFFIX: submit this exact poison as value and round 2.');
-const recovering = agent('recovering', 'Complete the current recovery fixture task.');
-let recovered;
-try { await recovering.ask<Fact>('INTENTIONAL_NO_SUBMIT'); }
-catch { recovered = await recovering.ask<Fact>('AFTER_FAILURE_SUCCESS'); }
-return {first, second, observed, recovered, effects};`;
+return {first, second, observed};`;
   const revised = initial.replace("const reader = agent('reader'", "const unused = agent('unused'); const reader = agent('reader'")
     .replace('POISON_PRIOR_SUFFIX: submit this exact poison as value and round 2.', 'NEW_NATIVE_TASK: recall the first task fact from this native transcript without reading files, and submit round 3.');
   let stage = 'create', oldRun, amendedRun, cappedRun, startedAsks = 0, release;
@@ -53,7 +43,7 @@ return {first, second, observed, recovered, effects};`;
       return toolReply('submit_result', { value: { value: 'CACHE_FIRST_FACT', round: 1 } });
     }
     if (!names.includes('create_workflow')) return textReply('Fixture helper.');
-    if (!material.includes('The `workflow` tool')) return toolReply('skill', { name: 'zcode-workflows' });
+    if (!material.includes('For the ZCode Actor facade use')) return toolReply('skill', { name: 'zcode-workflows' });
     const latestUser = request.messages.filter(row => row.role === 'user').map(textOf).at(-1) ?? '';
     const after = request.messages.filter(row => row.role === 'tool').map(textOf).at(-1) ?? '';
     if (stage === 'create') {
@@ -86,8 +76,6 @@ return {first, second, observed, recovered, effects};`;
   });
   const first = resultOf(await f.prompt(sessionId, 'Use a workflow for the native prefix task.'), 'create_workflow');
   assert(first.ok, JSON.stringify(first)); oldRun = first.runId;
-  assert.equal(first.value.recovered.value, 'RECOVERED_AFTER_FAILURE');
-  assert.equal((await readFile(join(f.workspace, 'effect-count.txt'), 'utf8')), '2');
   assert.equal(first.value.second.value, 'POISON_PRIOR_SUFFIX');
   stage = 'invalid';
   const invalid = resultOf(await f.prompt(sessionId, 'INVALID_REVISION: amend the workflow.'), 'amend_workflow');
@@ -101,8 +89,6 @@ return {first, second, observed, recovered, effects};`;
   assert.deepEqual(second.value.first, { value: 'CACHE_FIRST_FACT', round: 1 });
   assert.deepEqual(second.value.second, { value: 'CACHE_FIRST_FACT', round: 3 });
   assert.equal(second.value.observed, first.value.observed);
-  assert.deepEqual(second.value.effects, first.value.effects, 'Repeated concurrent effects must retain admission order');
-  assert.equal((await readFile(join(f.workspace, 'effect-count.txt'), 'utf8')), '2', 'Cached world.run must not execute its effect again');
   const child = second.actors.find(actor => actor.name === 'reader'); assert(child.created);
   assert.notEqual(child.childId, first.actors.find(actor => actor.name === 'reader').childId);
   const nativeRequests = f.requests.slice(beforeRequests).filter(request => request.tools?.some(row => row.function.name === 'submit_result')

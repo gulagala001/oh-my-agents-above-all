@@ -6,6 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
+import { browserExecutable } from './fixtures/browser.mjs';
 import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
 
 const textOf = message => typeof message?.content === 'string' ? message.content : (message?.content ?? []).map(part => part.text ?? '').join('\n');
@@ -24,7 +25,7 @@ test('installed ZCode workbench clicks native artifacts, Actor lineage, retune a
   assert(process.env.OMAA_TEST_HOST_PACKAGE, 'This acceptance test requires an explicit frozen host-matching package');
   const evidenceDir = resolve(process.env.OMAA_WORKBENCH_EVIDENCE_DIR || 'work/rea-upgrade/zcode-workbench-ui');
   await mkdir(evidenceDir, { recursive: true });
-  let f, context, page, sessionId, initial, successor, finalDetail, childPid, releaseHeld;
+  let f, context, page, sessionId, initial, successor, finalDetail, childPid, releaseHeld, releaseVersion;
   const errors = [], protocolFrames = [], checks = [], downloads = [];
   let verified = false;
   // Capture the still-live real page/native log before the shared fixture's
@@ -44,7 +45,7 @@ test('installed ZCode workbench clicks native artifacts, Actor lineage, retune a
         const detail = await response?.json().catch(() => undefined);
         if (detail?.status === 'running') await fetch(response.url, { method: 'POST', headers: { cookie: f.cookie, 'content-type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
       }
-      releaseHeld?.(); await context?.close();
+      releaseHeld?.(); releaseVersion?.(); await context?.close();
     }
   });
   f = await installedHost(t, { safeEnvironment: true, piResources: true, isolatedHome: true });
@@ -60,7 +61,7 @@ test('installed ZCode workbench clicks native artifacts, Actor lineage, retune a
   await f.install();
   if (process.env.OMAA_TEST_HOST_PACKAGE_SHA256) assert.equal(f.evidence.artifact.sha256, process.env.OMAA_TEST_HOST_PACKAGE_SHA256, 'The native UI must execute the exact frozen final package');
   const sdk = await f.installedEvidence();
-  const executable = chromium.executablePath();
+  const executable = browserExecutable();
   await writeFile(join(evidenceDir, 'identity.json'), JSON.stringify({ fixture: f.evidence, installedSdk: sdk, testSource: { path: new URL(import.meta.url).pathname, sha256: sha(await readFile(new URL(import.meta.url))) }, browser: { executable, sha256: sha(await readFile(executable)) }, corepackHome: process.env.COREPACK_HOME ?? null }, null, 2) + '\n');
   await f.boot();
   const registered = await f.rpc('workspace/create', { path: f.workspace });
@@ -79,7 +80,7 @@ report({name:'Row A',value:1},'table'); report({name:'Row A',value:2},'table');
 report({value:42},'metrics'); report({name:'Card A',status:'done'},'board');
 report({x:1,value:2},'chart'); report({x:2,value:3},'chart'); report({x:3,value:4},'chart');
 await artifact.file('deliverable','deliverable.txt',{primary:true,title:'Workbench deliverable'});
-await world.run('node',['-e','require("node:fs").writeFileSync("deliverable.txt","WB_VERSION_TWO")']);
+const versionGate=agent('VersionGate'); await versionGate.ask<Fact>('WORKBENCH_VERSION_GATE');
 await artifact.file('deliverable','deliverable.txt');`;
   const child = `const fs=require('node:fs');fs.writeFileSync('workbench-owned.pid',String(process.pid));setTimeout(()=>fs.writeFileSync('workbench-late.txt','UNEXPECTED_LATE_EFFECT'),12000);`;
   const holding = `phase('Holding'); const workers=['HeldOne','HeldTwo'].map(name=>agent(name));
@@ -88,10 +89,12 @@ const proc=world.run('node',['-e',${JSON.stringify(child)}]);
 await Promise.all([...asks,proc]); return {first,fact};`;
   let rootPlan = [], rootCursor = 0, prefixRequests = 0, heldRequests = 0;
   const held = new Promise(resolveHeld => { releaseHeld = resolveHeld; });
+  const versionReady = new Promise(resolveVersion => { releaseVersion = resolveVersion; });
   f.replyWith(async request => {
     const names = request.tools?.map(tool => tool.function.name) ?? [];
     if (names.includes('submit_result')) {
-      const input = request.messages.filter(message => message.role === 'user').map(textOf).findLast(text => /WORKBENCH_(?:PREFIX|HOLD)_TASK/.test(text)) ?? '';
+      const input = request.messages.filter(message => message.role === 'user').map(textOf).findLast(text => /WORKBENCH_(?:PREFIX|HOLD)_TASK|WORKBENCH_VERSION_GATE/.test(text)) ?? '';
+      if (input.includes('WORKBENCH_VERSION_GATE')) { await versionReady; return toolReply('submit_result', { value: { fact: 'VERSION_READY' } }); }
       if (input.includes('WORKBENCH_HOLD_TASK')) { heldRequests++; await held; return toolReply('submit_result', { value: { fact: 'MUST_NOT_COMMIT_AFTER_STOP' } }); }
       assert.match(input, /WORKBENCH_PREFIX_TASK/); prefixRequests++;
       return toolReply('submit_result', { value: { fact: 'WORKBENCH_NATIVE_FACT' } });
@@ -104,14 +107,19 @@ await Promise.all([...asks,proc]); return {first,fact};`;
     rootPlan = plan; rootCursor = 0;
     return f.prompt(sessionId, prompt, { timeout: 60000 });
   };
-  initial = nativeResult(await run([{ name: 'skill', args: { name: 'zcode-workflows' } }, { name: 'create_workflow', args: { name: 'Workbench initial', script: prefix + '\nreturn {first,fact};', run_in_background: false } }], 'Create the native workbench fixture and its explicit deliverables.'), 'create_workflow');
-  assert(initial.value.ok, JSON.stringify(initial.value)); assert.equal(prefixRequests, 1);
+  initial = nativeResult(await run([{ name: 'skill', args: { name: 'zcode-workflows' } }, { name: 'create_workflow', args: { name: 'Workbench initial', script: prefix + '\nreturn {first,fact};', run_in_background: true } }], 'Create the native workbench fixture and its explicit deliverables.'), 'create_workflow');
+  assert(initial.value.ok, JSON.stringify(initial.value));
   await f.rpc('session/rename', { sessionId, title });
   const detail = async runId => {
     const response = await fetch(f.origin + '/omaa/api/zcode-workflow?' + new URLSearchParams({ session: sessionId, run: runId }), { headers: { cookie: f.cookie } });
     const value = await response.json(); assert.equal(response.status, 200, JSON.stringify(value)); assert.equal(value.runId, runId); assert.equal(value.sessionId, sessionId); return value;
   };
-  const initialDetail = await detail(initial.value.runId);
+  // Change only this owned fixture input between two actual publications. Keep
+  // the predecessor free of world.run so successor reuse has proven effects.
+  await until(async () => (await detail(initial.value.runId)).artifacts.some(row => row.id === 'deliverable' && row.versions.length === 1));
+  await writeFile(join(f.workspace, 'deliverable.txt'), 'WB_VERSION_TWO'); releaseVersion();
+  const initialDetail = await until(async () => { const value = await detail(initial.value.runId); return value.status === 'completed' && value; });
+  assert.equal(prefixRequests, 1);
   const actor = initialDetail.runtime.actors.find(value => value.name === 'WorkbenchReader'); assert(actor?.sessionId);
   context = await chromium.launchPersistentContext(join(f.root, 'cft-profile'), { headless: true, executablePath: executable, args: ['--use-mock-keychain', '--password-store=basic'], viewport: { width: 1440, height: 1100 }, colorScheme: 'light', acceptDownloads: true });
   await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
@@ -208,6 +216,6 @@ await Promise.all([...asks,proc]); return {first,fact};`;
   assert(!alive(childPid)); assert.equal((await detail(successor.value.runId)).revision, stoppedRevision, 'No late provider result mutated the terminal run');
   checks.push({ action: 'live-successor-retune-stop', runId: successor.value.runId, predecessor: initial.value.runId, maxConcurrency: retuned.value.maxConcurrency, acknowledgement, actualTerminalStatus: finalDetail.status, childPid, childExited: true, noLateEffect: true });
   assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
-  await writeFile(join(evidenceDir, 'verification.json'), JSON.stringify({ passed: true, fixture: f.evidence, sessionId, initialRunId: initial.value.runId, successorRunId: successor.value.runId, initialDetail, finalDetail, checks, downloads, typedActorPrefixRequests: prefixRequests, heldActorRequests: heldRequests, uiErrors: errors, nativeErrors: f.errors, limits: ['macOS headless CFT and scripted localhost model with actual DSH native tools/results and package installation.', 'Two workflow runs; no duplicate backend baseline, desktop/Windows claim or same-run replay claim.', 'Safe fixture process environment and isolated HOME are not an OS filesystem or network sandbox.'] }, null, 2) + '\n');
+  await writeFile(join(evidenceDir, 'verification.json'), JSON.stringify({ passed: true, fixture: f.evidence, sessionId, initialRunId: initial.value.runId, successorRunId: successor.value.runId, initialDetail, finalDetail, checks, downloads, typedActorPrefixRequests: prefixRequests, heldActorRequests: heldRequests, uiErrors: errors, nativeErrors: f.errors, limits: ['Linux system Chromium and scripted localhost model; actual DSH native tools/results; frozen package cache-linked, package installation not accepted.', 'Two workflow runs; no duplicate backend baseline, desktop/Windows claim or same-run replay claim.', 'Safe fixture process environment and isolated HOME are not an OS filesystem or network sandbox.'] }, null, 2) + '\n');
   verified = true;
 });

@@ -18,8 +18,8 @@ export function renderPromptFrame(frame, options = frame.options) {
     return [{ name: 'omaa:pi-forced-prompt', text: options.forceSystemPrompt }];
   }
   // Native request declarations are authoritative. The current host adapter
-  // does not implement prepareLoadout, so extensions cannot hide a declared
-  // tool by editing this derived prompt field alone.
+  // supports prepareLoadout descriptions only. Extensions cannot hide a
+  // declared tool by editing this derived prompt field alone.
   const pi = buildPromptSections({ ...options, hiddenTools: frame.options.hiddenTools });
   const { addendum = '', project_context = '', ...persona } = pi;
   const body = Object.values(persona).join('\n\n');

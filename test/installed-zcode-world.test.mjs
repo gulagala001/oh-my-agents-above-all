@@ -54,7 +54,7 @@ try { await world.run('node', ['-e', 'process.stdout.write("x".repeat(262146))']
 return {filesFound,literal,text,hits,changed,status,diff,commits,command,relativeCommand,denied,capError,pathError,refError,outputError};`;
   f.replyWith(request => {
     if (!request.tools?.length) return textReply('Native fixture complete.');
-    if (!request.messages.some(message => message.role === 'tool' && textOf(message).includes('The `workflow` tool'))) return toolReply('skill', { name: 'zcode-workflows' });
+    if (!request.messages.some(message => message.role === 'tool' && textOf(message).includes('For the ZCode Actor facade use'))) return toolReply('skill', { name: 'zcode-workflows' });
     if (request.messages.some(message => message.role === 'tool' && textOf(message).includes('"runId"'))) return textReply('Collected actual world observations.');
     return toolReply('create_workflow', { script, run_in_background: false });
   });

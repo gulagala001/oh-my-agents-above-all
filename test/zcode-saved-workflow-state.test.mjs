@@ -57,14 +57,37 @@ test('explicit integers reject precision loss while safe boundaries and native d
 function sessionFixture() {
   let state = { sessionId: 'one', agentPreset: 'omaa-zcode', data: { product: { id: 'zcode' }, mode: 'default', running: false } }, mounted = 'one', alive = true, ready;
   const prompts = [], submissions = [];
-  const session = { getSnapshot: () => ({ running: state.data.running }),
+  const input = { openState: 'open', running: false, pendingSubmissions: [] };
+  const inbox = { 'next-turn': [], 'next-step': [] };
+  const session = { getSnapshot: () => ({ ...input, running: state.data.running }),
+    projections: { faceOf: name => name === 'inbox' ? { getSnapshot: () => inbox } : undefined },
     beginSubmission(value) { const submission = { ...value, requestId: 'native-request-id', abandon() { submission.abandoned = true; } }; submissions.push(submission); return submission; },
     async prompt(...args) { prompts.push(args); return { ok: true, value: { accepted: true } }; },
   };
   const deps = { settings: { getSnapshot: () => state }, sidebarRight: { mounted: { getSnapshot: () => mounted } }, sessionId: 'one', alive: () => alive,
     sessions: { using(id, options, fn) { assert.equal(id, 'one'); assert.equal(options.source, 'omaa-zcode-saved-workflow'); return fn({ ready: ready || Promise.resolve({ session }) }); } } };
-  return { deps, prompts, submissions, session, setState: patch => { state = { ...state, ...patch, data: { ...state.data, ...patch.data } }; }, mount: id => { mounted = id; }, close: () => { alive = false; }, hold: () => { let resolve; ready = new Promise(done => { resolve = done; }); return () => resolve({ session }); } };
+  return { deps, prompts, submissions, session, input, inbox, setState: patch => { state = { ...state, ...patch, data: { ...state.data, ...patch.data } }; }, mount: id => { mounted = id; }, close: () => { alive = false; }, hold: () => { let resolve; ready = new Promise(done => { resolve = done; }); return () => resolve({ session }); } };
 }
+
+test('saved requests reject unopened, failed, removed and queued native input before submission', async () => {
+  const blocked = [
+    f => { f.input.openState = 'opening'; },
+    f => { f.input.openError = new Error('fixture open failure'); },
+    f => { f.input.removed = true; },
+    f => { f.input.pendingSubmissions.push({ requestId: 'already-accepted' }); },
+    f => { f.input.awaitingFirstTurn = true; },
+    f => { f.session.projections = undefined; },
+    ...['next-turn', 'next-step'].map(lane => f => { f.inbox[lane].push({ source: { kind: 'user' } }); }),
+  ];
+  for (const block of blocked) {
+    const f = sessionFixture(); block(f);
+    await assert.rejects(submitSavedWorkflowRequest(f.deps, 'read', definition));
+    assert.equal(f.submissions.length, 0); assert.equal(f.prompts.length, 0);
+  }
+  const f = sessionFixture(); f.inbox['next-turn'].push({ source: { kind: 'system' } });
+  await submitSavedWorkflowRequest(f.deps, 'read', definition);
+  assert.equal(f.prompts.length, 1);
+});
 
 test('saved request uses the current native submission receipt and refuses stale, busy and read-only execution', async () => {
   const f = sessionFixture();

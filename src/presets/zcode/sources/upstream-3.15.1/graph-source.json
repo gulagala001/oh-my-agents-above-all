@@ -1,0 +1,418 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-graph.ts",
+      "gitBlobSha1": "284fcfe2a9c9ca553348f3065eefa17c4e65b523",
+      "sha256": "a9a3b95712698982c5760fa9faadc345798b430470f4034a52639ef160bb1830",
+      "bytes": 6640
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-models.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-models.ts",
+      "gitBlobSha1": "ac38b94efde079ac4468f4dfa7cf86148c69c946",
+      "sha256": "b28cf4efb9cb3adf9f4bd6da6eb8747fc6b18424b2b607532b5881ba8ce8ef3b",
+      "bytes": 11498
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-names.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/actor-names.ts",
+      "gitBlobSha1": "ae42ded1e212f735376d17cf5f720a89ac629900",
+      "sha256": "5530008ff1a072567766e624554dd3cf95f5b20c893fd82b43232d709ad22c72",
+      "bytes": 9781
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/analyze.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/analyze.ts",
+      "gitBlobSha1": "667a993c3192a6374a130726aaa1e4656f8f76ee",
+      "sha256": "2321a47ca2c9b84036c89e157bb6b369fb6ef572dd6d7f10dbe2900471f9282a",
+      "bytes": 7818
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/array-methods.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/array-methods.ts",
+      "gitBlobSha1": "c0fdae9bcf1f2a3904c771e469ddf72c56f677c9",
+      "sha256": "a8733fcdbf0e0e5aa75c46799bf8a3e84e65350dcc3419356480616108730467",
+      "bytes": 7802
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifact-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifact-types.ts",
+      "gitBlobSha1": "9aa20517eeeac4245fc620afe1f16110a38348af",
+      "sha256": "f8170714ef999b78f7f84107a87c74a3d1a9c9b0df95413c39f26b7665fcd06d",
+      "bytes": 7644
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifacts.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/artifacts.ts",
+      "gitBlobSha1": "27d459eb695cdd4e918555b037ec884b1c2d337d",
+      "sha256": "4191c208346e5cba828ae4ebfc63b61e183e867ecd8413ccb0e2713f92803ee8",
+      "bytes": 16861
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/assign.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/assign.ts",
+      "gitBlobSha1": "71e392b5356ca93420e936752f66e7e71181498b",
+      "sha256": "46230efec4e434a7c0a264b57dbe2ae74611f59ac5e8615745f0e7cf3f6eff5a",
+      "bytes": 13882
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/callbacks.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/callbacks.ts",
+      "gitBlobSha1": "b6ac0bfc6ad712f11fb857108f9ce437d45efa77",
+      "sha256": "fc25af89242c2f97261c3af5fb96927e55479bd6670d166d6a92c630361c3a94",
+      "bytes": 10120
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/calls.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/calls.ts",
+      "gitBlobSha1": "0eac17811c2f3925a3d1af49a7013e0a034586a6",
+      "sha256": "48196ef74706ccbe776d04769bbd6253861b18e321a2bb406f5af1d1860b04c8",
+      "bytes": 28191
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-lanes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-lanes.ts",
+      "gitBlobSha1": "a7299cccf1f0e9d8e546f309215da0256f19eb86",
+      "sha256": "91cfe8684ed75502cdfa9c1c079d2e367bafe1f240e518e96734b3dd16d95bd8",
+      "bytes": 7859
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph-types.ts",
+      "gitBlobSha1": "32dd01be9c2dd2cde52307f38a165f904c38ff62",
+      "sha256": "7610c1958472d8de7d6f2b9a375893160e30e4435dd9ea7657977a62a98e24f0",
+      "bytes": 7978
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-graph.ts",
+      "gitBlobSha1": "c1cf767640ce3c45fce872b9dab0202f8f22c67c",
+      "sha256": "50159df53f2b7087a2d6e844d3175572d7fd6fdebe16be9d2bdc56555556bf21",
+      "bytes": 28267
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-calls.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-calls.ts",
+      "gitBlobSha1": "2ee2214da08a88211b2e79984fd3ba965dd762b8",
+      "sha256": "7a85a6bcc1fd29d3cdfc33ebfd2ea1065e0bc6a78e2d6d9713e2a2121b110246",
+      "bytes": 13789
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-functions.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-functions.ts",
+      "gitBlobSha1": "c730f4c817d4cfdcd9224ec69f23e42e3bfe8539",
+      "sha256": "76196deb7c5889b5125f19c47d5104955bf4b174b3221fb2b17fb2d3503fe14d",
+      "bytes": 5124
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-loops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-loops.ts",
+      "gitBlobSha1": "ffd1f38d95a64575fe9d54785c388b9fba918034",
+      "sha256": "ce80981d778eb5d2d3eb15c4349aab8770cb94081c4fc45bc462a41c26c7f76f",
+      "bytes": 6478
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-settle.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-settle.ts",
+      "gitBlobSha1": "c6fa31b8dc5f148de80f1d3dc6caad21b342e7bf",
+      "sha256": "0d43b6c54db63e8607a4b461462c02059b7e1d8feb5b99ed6682ac862049f703",
+      "bytes": 13910
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-state.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-state.ts",
+      "gitBlobSha1": "4c701d3dc1a644d1fa7d1c5b803c992c95b7dc0d",
+      "sha256": "04edc3f4be331937fb55ddca809d7494df24b418f0cf20a27b9c189fbde3e63f",
+      "bytes": 13299
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-strands.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-strands.ts",
+      "gitBlobSha1": "cd8321e11f200a4ceff818bdf3c3d66226086c49",
+      "sha256": "919132d12de90b0b59825637e92bfd35bca89799d63cdc2977dc80c132878861",
+      "bytes": 9272
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-types.ts",
+      "gitBlobSha1": "089f0905f6f82c07c811e94419596f6ed2056029",
+      "sha256": "d22df6cb5605b7a47548a55ac983983d894c20bfa63f33859641ee9dfe999976",
+      "bytes": 8139
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-walk.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order-walk.ts",
+      "gitBlobSha1": "8fd724a17bdad39d19eda6a42a30301f4d9a5561",
+      "sha256": "a63999b12058dc2fa97cce78417d0e7a798e62a84a000431bfbff8b3dadb8044",
+      "bytes": 12121
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-order.ts",
+      "gitBlobSha1": "5b0bc8b3728e9f99bc3a47fdc65d91428ca6b9c4",
+      "sha256": "5cf50c169179fe8705af1a29cfdceba673c344f0640e3653b86c62bc17d3b8e9",
+      "bytes": 7127
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-reduce.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/causality-reduce.ts",
+      "gitBlobSha1": "2154cea5f1ece59c622383fbb9472d980c0cecb6",
+      "sha256": "e8c99c4beb9eaadea4f9fcd31c82ccf66489a51d021da3a61ebcfa10584b2d2f",
+      "bytes": 10270
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/classes.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/classes.ts",
+      "gitBlobSha1": "a1d16baadde08d4109b75efd6b58e53799277b93",
+      "sha256": "39c326cb1e662aca236ebbff18e8c62f43bf043b5300e5ede02dd497fb3520f7",
+      "bytes": 13118
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/constants.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/constants.ts",
+      "gitBlobSha1": "33997220067189869c2c183c11b39e61e9db5c48",
+      "sha256": "dec44bb45653f784f9e285c26fcf45fbd9f165dde9254b8a6ba91f1317d4b453",
+      "bytes": 2460
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/control-flow.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/control-flow.ts",
+      "gitBlobSha1": "14e4cdf42ad3d9bea9a85d0aee0c61b265124327",
+      "sha256": "7ee218370e4c3b2a5d769baffeff5f233d131e2d925e95a869831a578da8f379",
+      "bytes": 6658
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/core-json.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core-json.ts",
+      "gitBlobSha1": "9d6259aa3f0dc06a3ce26e4fb3ddc71097978c2e",
+      "sha256": "d9d554c51818edfeb0be53ffa1f4fa38b5cbbf64aef63b72b5ada2830eca36b6",
+      "bytes": 4023
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/core.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/core.ts",
+      "gitBlobSha1": "4c0fc3db1b71ce20a6e2be0806246021b704fb45",
+      "sha256": "a6f42a65a045bb3cc1158456920a8c732eb6a6824e30eccdd0d4066a17422f3a",
+      "bytes": 14799
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/domain.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/domain.ts",
+      "gitBlobSha1": "130d1067dc65b341ce3e464199c93726ba4ae0a0",
+      "sha256": "199f52f155da2252281ff4ad0e5afe7ba6638f2356be916cb2cb1c7ae5cd401a",
+      "bytes": 28388
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/facade-misuse.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/facade-misuse.ts",
+      "gitBlobSha1": "9ba4ed83fe846aef26f70d9afe3c1b8e915185d7",
+      "sha256": "84925f4817e05811afee033454319a94f9ab0654c140ea54487d843f7f341760",
+      "bytes": 19109
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/fanout-cardinality.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/fanout-cardinality.ts",
+      "gitBlobSha1": "2e377239119d33c023b85648a3694a5cbeb7fa22",
+      "sha256": "8f967c348b025d1616bf3c68c3116ef0ac95c325237d4e688609c9d2d75ed3cb",
+      "bytes": 5383
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-graph.ts",
+      "gitBlobSha1": "c87498e7354f07dcc18c1dfdb65b8205330a439c",
+      "sha256": "a51fbdcaa7677fb3f10e0fa7390005e3a4efd3a34b03d4ac8d8d40e05fc6877a",
+      "bytes": 24932
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-phase.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-phase.ts",
+      "gitBlobSha1": "bab2e250cf20c0beefc9b2ecf273228875ab6365",
+      "sha256": "c7554f5c8d2d86905c737b86b063926e19e8559e5c222129e12afde4034a8cdf",
+      "bytes": 4621
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-strands.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-strands.ts",
+      "gitBlobSha1": "71f3454b979fac4a3d4d694059d891d786a1ac80",
+      "sha256": "84d54f2e04f9d6ef9637be9cfd2d853ce39824815da9d3b9f997db5efa086376",
+      "bytes": 3795
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-tree.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/flow-tree.ts",
+      "gitBlobSha1": "c77c543429570d45290c512dd03b9b3db27f9320",
+      "sha256": "fdb7ac7b27134382980f0e4728926996c7c6872aff123ab32a19b77bf93d9d85",
+      "bytes": 2855
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/graph.ts",
+      "gitBlobSha1": "3f40c96042c294300c8c899470919a21550008ec",
+      "sha256": "68b6b37fb39059994ffd2b34dbbe14278fa3ad015c790fba83a04ea54e3b05aa",
+      "bytes": 8968
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/handoff-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/handoff-graph.ts",
+      "gitBlobSha1": "b4f5bd1f8db096e48f1ad8c7dca7b5e9f26f1834",
+      "sha256": "a38d2e5cbbc060c74fb2c07cc6512d35836ff504f0bf6f0e31b2fc51022d7583",
+      "bytes": 11142
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/heap-ops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/heap-ops.ts",
+      "gitBlobSha1": "5e7e8a3bce250079278cb9ca4ab27c71e11640f5",
+      "sha256": "11507dc605b84f4ad643967bdea68413ebde790af89b20db174da4fd37dfd6b0",
+      "bytes": 3905
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-id.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-id.ts",
+      "gitBlobSha1": "ad6b39105c894a41181da7e0966cf65ee4997ec6",
+      "sha256": "7720e764930ebeca1b57de76b0c362eac2d1eb9ceb4296aab860ed3ef6d6e4fc",
+      "bytes": 2577
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-sites.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-sites.ts",
+      "gitBlobSha1": "db34f46e60133eb32571885e9af8cfc6ab4f3251",
+      "sha256": "d26052e40407c14e7643fdc59e6c97824698610e4dcebdcaa7e433067c5e4d12",
+      "bytes": 12647
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-splice.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/hole-splice.ts",
+      "gitBlobSha1": "8d1bfd2d91c4328f3fa3ec03cf87f07f13537954",
+      "sha256": "298494d665fe027e8d49b9a72504f2a59954f30b3001ba6be0141af9fbc50eae",
+      "bytes": 6278
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/interpret.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/interpret.ts",
+      "gitBlobSha1": "833b81ec9737da8d9b4746c7c8da1f1b33e76465",
+      "sha256": "ae589c45782ec30065eae532206f35bc210e870457bf2a30be18591c25d185b3",
+      "bytes": 9837
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/literals.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/literals.ts",
+      "gitBlobSha1": "d62abd83c268f5452e22a8534b87e106a1bc930f",
+      "sha256": "beac2d27fc4b91c7e9a97c394132beabdeb6104c0847218275cb7d60f5679794",
+      "bytes": 7713
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/mermaid.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/mermaid.ts",
+      "gitBlobSha1": "e76fc164ae32dd3c87299b67d390bc83a9c1bfc8",
+      "sha256": "6eef0d27ad5943c0e209c5cf1e9f27af6edddc0ee3417403a8bfb5168285845b",
+      "bytes": 22622
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/patterns.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/patterns.ts",
+      "gitBlobSha1": "a4100140d64f09fb58ecb5104601670ed1fd55ac",
+      "sha256": "a89028fe1130d05b0643f2666d0cbbbf75195f1775eae1dc8e0d5f4c921c5b6b",
+      "bytes": 4444
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/phase-graph.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phase-graph.ts",
+      "gitBlobSha1": "45e7966d50dc99429f882e63354136385ef793f8",
+      "sha256": "4a995ca593b95e527c7a605e550056323ab313bffc60f5caf2dc543791ca8999",
+      "bytes": 18071
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/phases.ts",
+      "gitBlobSha1": "e1ac0a587012593e28227ce4baba4b482e7abd7b",
+      "sha256": "27418cde742a6128842498cb202e4972196e3c95bd479523f29b9034f1afbd0d",
+      "bytes": 3267
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/promise-ops.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/promise-ops.ts",
+      "gitBlobSha1": "4ab1f177529203446d620253c702909f4f7f90e7",
+      "sha256": "ab7e1dbc677276001abe71e748a0cb6d266a93353ea3f49605f92059d2eee4a8",
+      "bytes": 6875
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/relays.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/relays.ts",
+      "gitBlobSha1": "581afbd5d65d50610666e47a1d4c5063b15a0f4c",
+      "sha256": "fe1d717caeda7a615af26416b7b1cf1c91341cb1454a72ad30e453745f6b5fa1",
+      "bytes": 3940
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/serialize.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/serialize.ts",
+      "gitBlobSha1": "583739499f707a57ad459a014a35a23892581fec",
+      "sha256": "c7f93c4dbb3f7661d87de83e62421441f242471832955aaf4c35753eb484f4d8",
+      "bytes": 15117
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/site-phases.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/site-phases.ts",
+      "gitBlobSha1": "40f193839a11f257719dd3d72099d1a995693d75",
+      "sha256": "ffaa8ffe30726d4d437ddd87062508ac7944223a7e7e47f4687f9acfa13876b9",
+      "bytes": 3505
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites-labels.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites-labels.ts",
+      "gitBlobSha1": "180edecda46339ff86c9c815bba976a74f2d0b5f",
+      "sha256": "aa606eef6898fec5a4964b019991d2a9fe4610a63a074313d91aac3906761a72",
+      "bytes": 9261
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/sites.ts",
+      "gitBlobSha1": "e894cce00854ae8e5a249bf5830a62047aacee82",
+      "sha256": "3882441c984204561b8ee36116082c47a6ad98e2c111f7b41c9a546ca7306638",
+      "bytes": 22326
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/state.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/state.ts",
+      "gitBlobSha1": "bcdda0d6736bb9695f0fc744385ee9efc8867dd2",
+      "sha256": "a2a326b088f1889ecc68d58b53e49320fdec95961dbc832ec8ebae12a4de759e",
+      "bytes": 27191
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/taint.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/taint.ts",
+      "gitBlobSha1": "e0b91abd269190adfcc7383f42081618a4aeedde",
+      "sha256": "7e286b59bafe779516d8ac4478f0897ef90dfdd42385df218c16761394ff396f",
+      "bytes": 35102
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/types.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/types.ts",
+      "gitBlobSha1": "da0bf25be65495575ee8898ba5b9535c7e022cde",
+      "sha256": "6a61682883b87aeece204672646efe8e4f535d07328b96fef72fb51614127c5c",
+      "bytes": 4728
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/analysis/world-run.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/analysis/world-run.ts",
+      "gitBlobSha1": "bbcba51c283e9d014c2ecdc282eb1e053288cd5b",
+      "sha256": "2ecba8073a7c5664dd65fb274418f5637a345b3fc695c3152c17cd443b231d9c",
+      "bytes": 2757
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/hash.ts",
+      "gitBlobSha1": "8ae09a80105fcd946d35a906e9d7c53332a43b51",
+      "sha256": "9b96aac60af892ee7bea42bf685f714a637535569afe8a1231040568df83c427",
+      "bytes": 2200
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/projections.ts",
+      "sha256": "2597436336b22990e6616691ea8997d5faca00001f69e13ff51878d3f000c9be",
+      "gitBlobSha1": "ce0d96caa2aefac2f43a111ebddfbfef184588b8",
+      "bytes": 2940,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/projections.ts"
+    }
+  ]
+}

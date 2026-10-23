@@ -31,52 +31,69 @@ export function branchTreeRows(branches) {
 
 export function createPiBranches(settings, uiWorkspace, sessions, request = fetch) {
   let state = { sessionId: settings.getSnapshot().sessionId, data: null, result: null, loading: false, saving: false, error: '' };
-  let generation = 0, readController, productId = settings.getSnapshot().data?.product?.id;
+  let generation = 0, readController, forkController, disposed = false, productId = settings.getSnapshot().data?.product?.id;
   const listeners = new Set();
   const emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
   const api = async (id, body, signal) => {
     const response = await request(`omaa/api/pi-branches?session=${encodeURIComponent(id)}`, { credentials: 'same-origin', signal,
       ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}) });
     const value = await response.json();
-    if (!response.ok) throw new Error(value.error || `HTTP ${response.status}`);
+    if (!response.ok) throw Object.assign(new Error(value.error || `HTTP ${response.status}`), { replyReceived: true });
     return value;
   };
   const off = settings.subscribe(() => {
     const current = settings.getSnapshot(), id = current.sessionId, product = current.data?.product?.id;
     if (id === state.sessionId && product === productId) return;
     productId = product;
-    readController?.abort(); ++generation;
+    readController?.abort(); forkController?.abort(); ++generation;
     emit({ sessionId: id, data: null, result: null, loading: false, saving: false, error: '' });
   });
   return {
     getSnapshot: () => state,
     subscribe: listener => { listeners.add(listener); return () => listeners.delete(listener); },
     async refresh() {
+      if (disposed) throw Error('Pi 分支视图已关闭。');
       const id = settings.getSnapshot().sessionId; requirePi(settings, id);
       if (state.saving) return;
       readController?.abort(); readController = new AbortController(); const signal = readController.signal, version = ++generation;
       emit({ sessionId: id, loading: true, error: '' });
       try {
         const data = await api(id, undefined, signal);
-        if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) emit({ data, result: null, loading: false });
+        if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) {
+          const retained = state.result?.partial || state.result?.forkOutcome === 'unknown' ? state.result : null;
+          emit({ data: retained?.forkOutcome === 'unknown' ? { ...data, canFork: false } : data, result: retained,
+            loading: false, ...(retained?.message ? { error: retained.message } : {}) });
+        }
       } catch (error) { if (!signal.aborted && version === generation && settings.getSnapshot().sessionId === id) emit({ loading: false, error: error.message }); }
     },
     open(sessionId, expectedId = state.sessionId) {
+      if (disposed) throw Error('Pi 分支视图已关闭。');
       requirePi(settings, expectedId);
       if (state.sessionId !== expectedId || !(state.result?.sessionId === sessionId || state.data?.branches.some(branch => branch.sessionId === sessionId))) throw new Error('该分支已不在当前分支列表，请刷新。');
       uiWorkspace.openSession(sessionId);
     },
     async fork({ atSeq, withSummary = false } = {}, expectedId = state.sessionId) {
+      if (disposed) throw Error('Pi 分支视图已关闭。');
       requirePi(settings, expectedId, true);
       if (state.result?.sessionId) throw new Error('分支已创建，请先打开该分支或刷新列表。');
+      if (state.result?.forkOutcome === 'unknown') throw Error('上次分支创建结果未知，请先检查原生会话列表，勿重复创建。');
       if (state.sessionId !== expectedId || state.loading || state.saving || !state.data?.canFork) throw new Error('当前回合尚不能分叉，请刷新或等待运行结束。');
       if (atSeq !== undefined && !state.data.points.some(point => point.seq === atSeq)) throw new Error('所选回合已不可用，请刷新。');
       const version = ++generation, head = state.data.head;
+      forkController = new AbortController();
+      const signal = forkController.signal;
+      let acknowledged;
       emit({ saving: true, error: '' });
       try {
-        const result = await api(expectedId, { head, ...(atSeq === undefined ? {} : { atSeq }), withSummary: Boolean(withSummary) });
+        const result = await api(expectedId, { head, ...(atSeq === undefined ? {} : { atSeq }), withSummary: Boolean(withSummary) }, signal);
+        acknowledged = result;
         if (version !== generation || settings.getSnapshot().sessionId !== expectedId) return result;
         emit({ result });
+        if (result.partial || result.interrupted || !result.sessionId || result.forkConfirmed === false) {
+          emit({ saving: false, error: result.message || '分支结果未完整确认，请检查已有分支，勿重复创建。',
+            ...(result.forkOutcome === 'unknown' ? { data: { ...state.data, canFork: false } } : {}) });
+          return result;
+        }
         try { await sessions.refresh(); }
         catch (error) {
           if (version === generation && settings.getSnapshot().sessionId === expectedId) emit({ saving: false,
@@ -87,10 +104,12 @@ export function createPiBranches(settings, uiWorkspace, sessions, request = fetc
         emit({ saving: false, result }); uiWorkspace.openSession(result.sessionId);
         return result;
       } catch (error) {
-        if (version === generation && settings.getSnapshot().sessionId === expectedId) emit({ saving: false, error: error.message });
+        if (version === generation && settings.getSnapshot().sessionId === expectedId) emit({ saving: false, error: error.message,
+          ...(acknowledged ? { result: acknowledged } : !error.replyReceived ? { result: { parentSessionId: expectedId, forkConfirmed: false, forkOutcome: 'unknown', partial: true,
+            message: '分支请求未获确认，请检查原生会话列表，勿重复创建。' }, data: { ...state.data, canFork: false } } : {}) });
         throw error;
-      }
+      } finally { if (forkController?.signal === signal) forkController = undefined; }
     },
-    dispose() { readController?.abort(); ++generation; off(); listeners.clear(); },
+    dispose() { disposed = true; readController?.abort(); forkController?.abort(); ++generation; off(); listeners.clear(); },
   };
 }

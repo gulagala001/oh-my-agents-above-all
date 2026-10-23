@@ -1,9 +1,13 @@
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
+import { finished } from 'node:stream/promises';
+import { scopeOf } from '@deepseek-ai/dsh-scope';
+import { symbols } from '@deepseek-ai/cordis';
 import { startGuest } from './extensions/transport.mjs';
 import { promptFrameText, renderPromptFrame } from './extension-prompt.mjs';
 import { piHistoryEntries, readPiHistory } from './history.mjs';
+import { promptOptions } from './prompt.mjs';
 import { currentDirectory, ensureDirectory } from '../../host/working-directory.mjs';
 import { toolNeedsEnhancement } from '../../host/tool-enhancement.mjs';
 
@@ -21,6 +25,19 @@ const applyCatalogEdits = (fresh, edits) => {
   for (const name of edits?.removed ?? []) delete value[name];
   return value;
 };
+
+// Cancellation must be observable even when a provider/pipe does not settle.
+// The underlying Promise remains observed and is joined during owned cleanup.
+function awaitExecSignal(work, signal) {
+  const promise = Promise.resolve(work); promise.catch(() => {});
+  if (signal.aborted) return Promise.reject(signal.reason);
+  return new Promise((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(signal.reason); };
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(value => { signal.removeEventListener('abort', abort); resolve(value); },
+      error => { signal.removeEventListener('abort', abort); reject(error); });
+  });
+}
 
 function piArguments(exec) {
   const input = json(exec.arguments);
@@ -45,17 +62,42 @@ function content(blocks) {
 }
 export function apply(ctx) {
   const settings = ctx.omaa.piExtensions, states = new Map();
+  let closed = false;
+  const retiring = new Set();
   // Registry service access can return a traced Agent face. Resolve journal
   // observations by the stable native session identity, not proxy identity.
-  const sessionState = session => [...states].find(([agent]) => agent.session.id === session.id) ?? [];
+  const ownerKey = agent => agent?.ctx && scopeOf(agent.ctx);
+  const nativeSession = session => session?.[symbols.original] ?? session;
+  const stateFor = agent => states.get(ownerKey(agent));
+  const sessionState = session => {
+    const current = ctx.get('agents')?.get(session.id), state = current && stateFor(current);
+    return state?.session === nativeSession(session) ? [current, state] : [];
+  };
+  const assertOwner = (agent, state, capture) => {
+    const current = ctx.get('agents')?.get(state.session.id);
+    if (closed || state.revoked || !state.ownerKey || states.get(state.ownerKey) !== state
+      || ownerKey(agent) !== state.ownerKey || ownerKey(current) !== state.ownerKey
+      || nativeSession(current.session) !== state.session || nativeSession(agent.session) !== state.session
+      || capture && (capture.generation !== state.generation || capture.guest !== state.guest))
+      throw Error('Pi 扩展的原生会话或加载实例已失效');
+  };
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
-  const visible = (agent, state) => ctx.tools.schemas(agent).filter(tool => (!toolNeedsEnhancement(ctx, 'pi', tool.name, agent) || ctx.omaa.enhancementEnabled(agent.session)) && (!state.active || state.active.has(tool.name)));
+  const visible = (agent, state) => {
+    const tools = ctx.tools.schemas(agent).filter(tool => !toolNeedsEnhancement(ctx, 'pi', tool.name, agent) || ctx.omaa.enhancementEnabled(agent.session));
+    if (!state.active) return tools;
+    const known = new Map(tools.map(tool => [tool.name, tool]));
+    return [...state.active].flatMap(name => known.has(name) ? [known.get(name)] : []);
+  };
   const catalogSnapshot = (agent, state, cwd = currentDirectory(ctx, agent.session)) => {
     const tools = visible(agent, state);
     const model = typeof agent.options?.model === 'string' ? { id: agent.options.model, provider: agent.options.provider } : undefined;
+    // Fixed public SessionController.liveProjections uses this same exact live
+    // Session projection. Null is a known unset title and survives the wire;
+    // an unavailable projection stays absent rather than inventing a name.
+    const title = ctx.get('sessionProjections')?.snapshot(agent.session)?.values?.title;
     return { cwd, mode: 'rpc', hasUI: Boolean(ctx.get('userQuestions')),
       isIdle: agent.status === 'idle' && !state.lifecycleRun?.ending, hasPendingMessages: Boolean(agent.inbox.nextTurn.length || agent.inbox.nextStep.length),
-      sessionId: agent.session.id,
+      sessionId: agent.session.id, ...(typeof title === 'string' || title === null ? { sessionName: title } : {}),
       activeTools: tools.map(t => t.name), allTools: ctx.tools.schemas(agent).map(t => ({ ...t, label: t.name })),
       commands: ctx.commands.list(agent).map(c => ({ name: c.name, description: c.description ?? '' })), flags: {},
       systemPrompt: state.prompt ?? '', ...(model ? { model } : {}) };
@@ -90,7 +132,14 @@ export function apply(ctx) {
   }
   async function api(method, args, context, signal) {
     if (!context?.agent) throw Error('扩展 API 需要当前原生调用上下文');
-    const { agent, state, exec } = context; signal.throwIfAborted(); assertPolicy(agent, state);
+    const { agent, state, exec } = context; signal.throwIfAborted();
+    if (context.cleanup) {
+      if (method !== 'ui.notify') throw Error('扩展关闭通知仅可报告清理信息，不能执行或唤醒任务');
+      const text = Array.isArray(args) ? args[0] : args.text ?? args.message;
+      ctx.logger.info('Pi extension shutdown: ' + String(text ?? '').slice(0, 4096));
+      return;
+    }
+    assertOwner(agent, state, context); assertPolicy(agent, state);
     if (context.eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted'
       && ['exec', 'executeTool', 'sendUserMessage', 'ui.select', 'ui.confirm', 'ui.input'].includes(method)) throw Error('原生活动已取消，结束通知不能继续执行或唤醒任务');
     if (Array.isArray(args)) {
@@ -126,6 +175,7 @@ export function apply(ctx) {
       if (options.expandPromptTemplates !== undefined && typeof options.expandPromptTemplates !== 'boolean') throw Error('Pi expandPromptTemplates 必须为布尔值');
       if (options.deliverAs !== undefined && !['steer', 'followUp'].includes(options.deliverAs)) throw Error('无效的 Pi 输入投递方式');
       const blocks = typeof args.content === 'string' ? [{ type: 'text', text: args.content }] : await admitContent(args.content, signal);
+      signal.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
       const streaming = agent.status === 'running' || Boolean(state.lifecycleRun?.ending);
       const input = { source: 'extension', expandPromptTemplates: options.expandPromptTemplates ?? false,
         streaming, ...(streaming ? { streamingBehavior: options.deliverAs ?? 'followUp' } : {}) };
@@ -142,8 +192,12 @@ export function apply(ctx) {
     }
     if (method === 'executeTool') {
       if (!exec) throw Error('executeTool 仅能在原生工具回调内调用');
+      const definition = state.descriptors?.tools.find(tool => tool.name === args.name);
+      if (definition?.exposure === 'model-only' || state.active && !state.active.has(args.name)
+        || !ctx.tools.get(args.name, agent)) throw Error('Pi executeTool 仅可调用当前已启用的直接工具');
       const result = await ctx.tools.execute({ name: args.name, arguments: nativeArguments(args.name, args.args), agent,
         callId: exec.callId + '/' + (++state.nestedCalls), rootCallId: exec.rootCallId ?? exec.callId, parent: exec.token, signal });
+      signal.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
       for (const extra of result.additionalContexts ?? []) exec.deferContext(extra);
       if (result.concludesTurn) exec.concludeTurn();
       return { content: await piContent(result.content, signal), details: result.meta?.piExtension?.details ?? {}, isError: result.isError, ...(!result.isError ? { structuredContent: result.value } : {}) };
@@ -151,39 +205,118 @@ export function apply(ctx) {
     if (method === 'exec') {
       const command = args.command, commandArgs = args.args ?? [], options = args.options ?? {};
       if (typeof command !== 'string' || !command || !Array.isArray(commandArgs) || commandArgs.some(v => typeof v !== 'string')) throw Error('exec 需要程序与字符串参数');
+      // Fixed Pi ExecOptions has no input field. Preserve the existing OMAA
+      // text-stdin extension; the guest JSON wire cannot preserve Uint8Array.
+      if (options.input !== undefined && typeof options.input !== 'string') throw Error('OMAA exec input 扩展仅支持字符串');
       const cwd = currentDirectory(ctx, agent.session);
       if (options.cwd !== undefined && options.cwd !== cwd) throw Error('扩展 exec 的工作目录由当前会话固定');
-      const ms = options.timeout ?? 120000; if (!Number.isFinite(ms) || ms <= 0 || ms > 3600000) throw Error('exec timeout 无效');
-      const fused = AbortSignal.any([signal, AbortSignal.timeout(ms)]), program = await ctx.subprocess.resolveExecutable(command, undefined, fused);
+      const ms = options.timeout ?? 120000; if (!Number.isSafeInteger(ms) || ms <= 0 || ms > 3600000) throw Error('exec timeout 无效');
+      const outputStop = new AbortController();
+      const fused = AbortSignal.any([signal, AbortSignal.timeout(ms), outputStop.signal]), program = await ctx.subprocess.resolveExecutable(command, undefined, fused);
       const policy = currentPolicy(agent), argv = [program, ...commandArgs];
       const confined = policy.mode === 'danger-full-access' ? { argv } : await ctx.sandbox.confine(argv, policy, fused);
-      assertPolicy(agent, state);
-      const child = ctx.subprocess.spawn({ argv: confined.argv, cwd, stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: fused });
-      child.stdin?.on('error', () => {}); child.stdin?.end(options.input);
-      const collect = async stream => { let total = 0; const chunks = []; for await (const chunk of stream) { total += chunk.length; if (total > 256 * 1024) { child.terminate(); throw Error('扩展 exec 输出超过 256 KiB'); } chunks.push(chunk); } return Buffer.concat(chunks).toString('utf8'); };
-      try { const [result, stdout, stderr] = await Promise.all([child.done, collect(child.stdout), collect(child.stderr)]); return { stdout, stderr, code: result.exitCode ?? 1, killed: Boolean(result.signal || fused.aborted) }; }
-      finally { child.terminate(); if (!await child.waitForExit(AbortSignal.timeout(5000))) throw Error('扩展 exec 进程未完成退出'); }
+      fused.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
+      const child = ctx.subprocess.spawn({ argv: confined.argv, cwd,
+        stdio: { stdin: options.input === undefined ? 'ignore' : 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: fused });
+      let value, primary, failed = false;
+      const tasks = [], failures = [];
+      const issue = (stage, error) => { if (!failed || error !== primary) failures.push({ stage, error }); };
+      try {
+        const collect = async stream => {
+          let total = 0; const chunks = [];
+          for await (const chunk of stream) {
+            total += chunk.length;
+            if (total > 256 * 1024) {
+              const error = Object.assign(Error('扩展 exec 输出超过 256 KiB'), { code: 'OMAA_PI_EXEC_OUTPUT_LIMIT' });
+              outputStop.abort(error); throw error;
+            }
+            chunks.push(chunk);
+          }
+          return Buffer.concat(chunks).toString('utf8');
+        };
+        // Register every native completion before stdin setup or the first await.
+        const done = Promise.resolve(child.done), stdout = collect(child.stdout), stderr = collect(child.stderr);
+        for (const [stage, work] of [['done', done], ['stdout', stdout], ['stderr', stderr]]) {
+          work.catch(() => {}); tasks.push({ stage, work });
+        }
+        if (options.input !== undefined) {
+          if (!child.stdin) throw Error('原生 exec 没有返回请求的 stdin 管道');
+          // Observe native Writable completion before end(): an asynchronous
+          // EPIPE is a transport failure even when the command exits with 0.
+          // Completion proves flushed transport, not child consumption.
+          const stdin = finished(child.stdin, { cleanup: true }); stdin.catch(() => {});
+          tasks.push({ stage: 'stdin', work: stdin });
+          child.stdin.on('error', () => {}); child.stdin.end(options.input);
+        }
+        const [result, out, err] = await awaitExecSignal(Promise.all(tasks.map(task => task.work)), fused);
+        fused.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
+        value = { stdout: out, stderr: err, code: result.exitCode ?? 1, killed: Boolean(result.signal || fused.aborted) };
+      } catch (error) { failed = true; primary = fused.aborted ? fused.reason : error; }
+      finally {
+        // Termination, command exit, managed-range emptiness and caller pipes
+        // are separate facts. Attempt each even if another cleanup step fails.
+        const deadline = AbortSignal.timeout(5000);
+        try { child.terminate(); } catch (error) { issue('terminate', error); }
+        const range = Promise.resolve().then(() => child.waitForExit(deadline)); range.catch(() => {});
+        for (const [stage, pipe] of [['stdin', child.stdin], ['stdout', child.stdout], ['stderr', child.stderr]]) {
+          try { pipe?.destroy(); } catch (error) { issue('destroy-' + stage, error); }
+        }
+        const observed = await Promise.allSettled([
+          awaitExecSignal(range, deadline), ...tasks.map(task => awaitExecSignal(task.work, deadline)),
+        ]);
+        if (observed[0].status === 'rejected') issue('range', observed[0].reason);
+        else if (!observed[0].value) issue('range', Error('扩展 exec 进程范围未确认退出'));
+        const rangeEmpty = observed[0].status === 'fulfilled' && observed[0].value === true;
+        for (let index = 0; index < tasks.length; index++) if (observed[index + 1].status === 'rejected') {
+          const error = observed[index + 1].reason, stage = tasks[index].stage;
+          // Explicit destruction after a failed body can reject settled pipe
+          // readers/writers normally. A proven empty range plus those known
+          // shutdown errors is not a failure to reach quiescence. Raw command
+          // failures and deadline/unexpected pipe failures remain material.
+          const expectedShutdown = failed && rangeEmpty && stage !== 'done'
+            && (error?.name === 'AbortError' || error?.code === 'ABORT_ERR' || error?.code === 'ERR_STREAM_PREMATURE_CLOSE');
+          if (!expectedShutdown) issue(stage, error);
+        }
+      }
+      if (failures.length) {
+        const message = failed ? String(primary?.message ?? primary) + '; ' : '';
+        throw Object.assign(new AggregateError([...(failed ? [primary] : []), ...failures.map(item => item.error)],
+          message + 'Pi exec cleanup/quiescence was not fully confirmed', failed ? { cause: primary } : {}), {
+          code: primary?.code ?? 'OMAA_PI_EXEC_CLEANUP_FAILED',
+          cleanupFailures: failures.slice(0, 8).map(item => ({ stage: item.stage, name: String(item.error?.name ?? 'Error').slice(0, 96),
+            ...(item.error?.code ? { code: String(item.error.code).slice(0, 96) } : {}), message: String(item.error?.message ?? item.error).slice(0, 512) })),
+        });
+      }
+      if (failed) throw primary;
+      fused.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
+      return value;
     }
     throw Error('尚未适配 Pi API: ' + method);
   }
   function toolRegistration(agent, state, tool) {
+    const capture = { generation: state.generation, guest: state.guest };
     return agent.ctx.get('tools').register({ name: tool.name, description: tool.description, parameters: tool.parameters,
       output: { schema: { type: 'object', properties: { content: { type: 'array', items: { type: 'object' } }, details: {}, structuredContent: tool.outputSchema ?? {} }, required: ['content', ...(tool.outputSchema ? ['structuredContent'] : [])], additionalProperties: false },
         render: (_args, value) => content(value.content), presentationMeta: (_args, value) => ({ piExtension: { details: value.details ?? {}, toolName: tool.name } }) },
       async execute(params, exec) {
-        assertPolicy(agent, state);
+        assertOwner(agent, state, capture); assertPolicy(agent, state);
+        const signal = AbortSignal.any([exec.signal, state.life.signal]); signal.throwIfAborted();
         // A native invocation may already have captured this definition when a
         // later callback replaces it. Keep its original guest callback ID.
-        const value = await invoke(agent, state, { kind: 'tool', callbackId: tool.callbackId, callId: exec.callId, params }, exec.signal, exec);
+        const value = await invoke(agent, state, { kind: 'tool', callbackId: tool.callbackId, callId: exec.callId, params }, signal, exec);
         if (value.isError) throw Error(textOf(value.content) || 'Pi extension tool failed');
-        const admitted = await admitContent(value.content, exec.signal);
+        const admitted = await admitContent(value.content, signal);
+        assertOwner(agent, state, capture); signal.throwIfAborted();
         return { content: admitted, ...(value.details !== undefined ? { details: value.details } : {}), ...(value.structuredContent !== undefined ? { structuredContent: value.structuredContent } : {}) };
       } });
   }
   function commandRegistration(agent, state, command) {
+    const capture = { generation: state.generation, guest: state.guest };
     return agent.ctx.get('commands').register({ name: command.name, description: command.description,
       async handler(input) {
+        assertOwner(agent, state, capture);
         await ensure(agent, input.signal);
+        assertOwner(agent, state, capture); input.signal?.throwIfAborted();
         const callbackId = state.descriptors?.commands.find(c => c.name === command.name)?.callbackId;
         if (!callbackId) throw Error('Pi 扩展命令已移除，请刷新');
         await invoke(agent, state, { kind: 'command', callbackId, args: input.rawInput.trimStart() }, input.signal);
@@ -191,12 +324,13 @@ export function apply(ctx) {
       } });
   }
   function syncRegistrations(agent, state, descriptors) {
+    assertOwner(agent, state);
     if (!descriptors || !Array.isArray(descriptors.tools) || !Array.isArray(descriptors.commands) || !Array.isArray(descriptors.events) || descriptors.tools.length > 128 || descriptors.commands.length > 128 || descriptors.events.some(e => !supportedEvents.has(e))) throw Error('扩展注册内容包含未支持的接口或超过上限');
     const names = new Set(), commandNames = new Set();
     for (const tool of descriptors.tools) {
       if (!tool || typeof tool.name !== 'string' || !/^[A-Za-z0-9_]{1,64}$/.test(tool.name) || names.has(tool.name) || !state.toolRegistrations.has(tool.name) && ctx.tools.get(tool.name, agent)) throw Error('扩展工具名称无效、重复或与原生工具冲突: ' + tool?.name);
       if (typeof tool.callbackId !== 'string' || !tool.callbackId || typeof tool.description !== 'string' || !tool.parameters || typeof tool.parameters !== 'object' || Array.isArray(tool.parameters)) throw Error('Pi 扩展工具定义无效: ' + tool.name);
-      if (tool.prepareArguments || tool.prepareLoadout || tool.exposure && !['direct', 'model-only'].includes(tool.exposure)) throw Error('尚未适配扩展工具的 prepare/exposure 接口');
+      if (tool.prepareArguments || tool.exposure && !['direct', 'model-only'].includes(tool.exposure)) throw Error('尚未适配扩展工具的 prepareArguments/exposure 接口');
       if (tool.constrainedSampling !== undefined || tool.renderShell !== undefined) throw Error('尚未适配扩展工具的 constrainedSampling/renderShell 接口');
       if (tool.promptSnippet !== undefined && typeof tool.promptSnippet !== 'string' || tool.promptGuidelines !== undefined && (!Array.isArray(tool.promptGuidelines) || tool.promptGuidelines.length > 64 || tool.promptGuidelines.some(rule => typeof rule !== 'string'))) throw Error('Pi 扩展工具的 promptSnippet/promptGuidelines 无效');
       names.add(tool.name);
@@ -240,67 +374,124 @@ export function apply(ctx) {
   }
   function makeState(agent) {
     const previous = agent.session.snapshotEvents().findLast(event => event.type === 'user/message' && event.data.source?.pi?.runPrompt)?.data.source.pi.runPrompt;
-    const state = { status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
+    const state = { ownerKey: ownerKey(agent), session: nativeSession(agent.session), agent,
+      generation: 0, life: new AbortController(), revoked: false,
+      status: 'disabled', nestedCalls: 0, calls: 0, inputOrigins: new Map(), toolRegistrations: new Map(), commandRegistrations: new Map(), events: new Set(), guest: null, key: null, policyKey: null,
       forceAdmitted: previous?.force === true,
       busy: () => Boolean(state.loading || state.calls || state.disposal || state.lifecycleRun?.ending),
       view: () => ({ status: state.status, ...(state.error ? { error: state.error } : {}), tools: state.descriptors?.tools.map(t => t.name) ?? [], commands: state.descriptors?.commands.map(c => c.name) ?? [] }),
-      async dispose({ shutdown = true } = {}) {
+      async dispose({ shutdownReason } = {}) {
         if (state.disposal) return state.disposal;
+        const guest = state.guest, observeShutdown = shutdownReason === 'reload' && guest && !guest.stopped
+          && state.status === 'ready' && state.events.has('session_shutdown');
+        // Revoke the epoch before any awaited cleanup. Its callbacks may report
+        // shutdown information, but cannot retain native effects or admission.
+        state.generation++;
+        state.life.abort(Error('Pi extension epoch ended'));
         const disposal = Promise.withResolvers(); state.disposal = disposal.promise;
-        void (async () => {
-        const guest = state.guest;
-        if (shutdown && guest && !guest.stopped && state.status === 'ready' && state.events.has('session_shutdown')) {
-          try { const signal = AbortSignal.timeout(2000);
-            const response = await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown' }, snapshot: await snapshot(agent, state, signal) },
-            { context: { agent, state, eventName: 'session_shutdown' }, signal, timeoutMs: 2000 });
-            for (const error of response?.errors ?? []) ctx.logger.warn('Pi extension shutdown: ' + error.error); }
-          catch (error) { ctx.logger.warn('Pi extension shutdown: ' + error.message); }
+        const failures = [];
+        for (const registry of [state.toolRegistrations, state.commandRegistrations]) {
+          for (const entry of registry.values()) { try { entry.dispose(); } catch (error) { failures.push(error); } }
+          registry.clear();
         }
-        for (const registry of [state.toolRegistrations, state.commandRegistrations]) { for (const entry of registry.values()) entry.dispose(); registry.clear(); }
         state.guest = null; state.key = null; state.active = null; state.events.clear(); state.descriptors = null; state.status = 'disabled';
         state.runStarted = false; state.runOptions = undefined; state.runCatalogEdits = undefined; state.inputOrigins.clear();
         state.lifecycleRun = undefined; state.lifecycleCompletion = undefined;
-        if (guest) await guest.close();
+        void (async () => {
+        if (observeShutdown) {
+          try { const signal = AbortSignal.timeout(2000);
+            const response = await guest.call({ type: 'invoke', kind: 'event', eventName: 'session_shutdown', event: { type: 'session_shutdown', reason: 'reload' }, snapshot: await snapshot(agent, state, signal) },
+            { context: { agent, state, eventName: 'session_shutdown', cleanup: true, guest }, signal, timeoutMs: 2000 });
+            for (const error of response?.errors ?? []) ctx.logger.warn('Pi extension shutdown: ' + error.error); }
+          catch (error) { ctx.logger.warn('Pi extension shutdown: ' + error.message); }
+        }
+        if (guest) { try { await guest.close(); } catch (error) { failures.push(error); } }
+        if (failures.length) throw new AggregateError(failures, 'Pi extension cleanup failed');
         })().then(disposal.resolve, disposal.reject);
         try { await disposal.promise; } finally { state.disposal = null; }
       },
     };
-    states.set(agent, state); settings.states.set(agent.id, state); return state;
+    if (!state.ownerKey) throw Error('Pi 扩展需要真实原生 Agent scope');
+    states.set(state.ownerKey, state); settings.states.set(agent.id, state); return state;
   }
   async function ensure(agent, signal) {
-    let state = states.get(agent) ?? makeState(agent);
-    if (state.disposal) await state.disposal;
-    if (state.loading) await state.loading;
-    const cwd = await ensureDirectory(ctx, agent, signal);
-    const policy = currentPolicy(agent), configured = settings.settings.read();
-    const versions = [];
-    for (const file of configured.files) {
-      const target = await ctx.fs.resolve(file, { signal }), stat = await ctx.fs.stat(target, signal);
-      if (!stat || stat.type !== 'file' || stat.size > 256 * 1024) throw Error('Pi 扩展文件不存在或超过 256 KiB: ' + file);
-      versions.push(stat.version);
+    if (closed) throw Error('Pi 扩展宿主已关闭');
+    const state = stateFor(agent) ?? makeState(agent);
+    assertOwner(agent, state); signal?.throwIfAborted();
+    if (state.loading) {
+      await state.loading;
+      assertOwner(agent, state); signal?.throwIfAborted();
+      return state;
     }
-    const policyKey = JSON.stringify(policy), key = JSON.stringify([configured, policyKey, versions, cwd]);
-    if (key === state.key && !state.guest?.stopped) return state;
     const load = async () => {
-      await state.dispose(); state.key = key; state.policyKey = policyKey; delete state.error;
+      if (state.disposal) await state.disposal;
+      assertOwner(agent, state); signal?.throwIfAborted();
+      if (state.life.signal.aborted) state.life = new AbortController();
+      const preparing = AbortSignal.any([state.life.signal, ...signal ? [signal] : []]);
+      const cwd = await ensureDirectory(ctx, agent, preparing);
+      assertOwner(agent, state); preparing.throwIfAborted();
+      const policy = currentPolicy(agent), configured = settings.settings.read(), versions = [];
+      for (const file of configured.files) {
+        const target = await ctx.fs.resolve(file, { signal: preparing });
+        assertOwner(agent, state); preparing.throwIfAborted();
+        const stat = await ctx.fs.stat(target, preparing);
+        assertOwner(agent, state); preparing.throwIfAborted();
+        if (!stat || stat.type !== 'file' || stat.size > 256 * 1024) throw Error('Pi 扩展文件不存在或超过 256 KiB: ' + file);
+        versions.push(stat.version);
+      }
+      const policyKey = JSON.stringify(policy), key = JSON.stringify([configured, policyKey, versions, cwd]);
+      if (JSON.stringify(currentPolicy(agent)) !== policyKey) throw Error('Pi 扩展加载期间权限已变化');
+      if (key === state.key && !state.guest?.stopped) return;
+      if (state.calls) throw Error('Pi 扩展回调仍在执行，不能在该回调中重新加载扩展');
+      await state.dispose({ shutdownReason: 'reload' });
+      assertOwner(agent, state); signal?.throwIfAborted();
+      state.life = new AbortController();
+      const generation = state.generation, fused = AbortSignal.any([state.life.signal, ...signal ? [signal] : []]);
+      state.key = key; state.policyKey = policyKey; delete state.error;
       if (!configured.files.length) return;
       state.status = 'loading';
+      let guest;
       try {
-        state.guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd, signal, api });
-        const descriptors = await state.guest.call({ type: 'load', files: configured.files, snapshot: await snapshot(agent, state, signal, cwd) }, { signal, timeoutMs: 30000 });
+        guest = await startGuest({ subprocess: ctx.subprocess, sandbox: ctx.sandbox, policy, cwd, signal: fused, api });
+        assertOwner(agent, state); fused.throwIfAborted();
+        if (state.generation !== generation) throw Error('Pi 扩展加载实例已失效');
+        state.guest = guest;
+        const capture = { generation, guest };
+        const initial = await snapshot(agent, state, fused, cwd);
+        assertOwner(agent, state, capture); fused.throwIfAborted(); assertPolicy(agent, state);
+        const descriptors = await guest.call({ type: 'load', files: configured.files, snapshot: initial }, { signal: fused, timeoutMs: 30000 });
+        assertOwner(agent, state, capture); fused.throwIfAborted(); assertPolicy(agent, state);
         syncRegistrations(agent, state, descriptors);
         state.status = 'ready';
-        await notifyEvent(agent, state, 'session_start', {}, signal);
-      } catch (error) { await state.dispose(); state.status = 'error'; state.error = error.message; settings.notify(agent, 'Pi 扩展加载失败：' + error.message, 'error'); throw error; }
+        await notifyEvent(agent, state, 'session_start', {}, fused);
+      } catch (error) {
+        if (state.generation === generation) await state.dispose();
+        else if (guest) await guest.close();
+        if (!closed && !state.revoked && stateFor(agent) === state) {
+          state.status = 'error'; state.error = error.message; settings.notify(agent, 'Pi 扩展加载失败：' + error.message, 'error');
+        }
+        throw error;
+      }
     };
-    state.loading = load();
-    try { await state.loading; return state; } finally { state.loading = null; }
+    // Publish the full preparation transaction before its first await, including
+    // directory and file metadata reads. Concurrent callers join this loading.
+    const loading = Promise.resolve().then(load); state.loading = loading;
+    try { await loading; assertOwner(agent, state); signal?.throwIfAborted(); return state; }
+    finally { if (state.loading === loading) state.loading = null; }
   }
   async function invoke(agent, state, call, signal, exec) {
-    if (!state.guest || state.guest.stopped) throw Error('Pi 扩展进程未运行');
-    assertPolicy(agent, state);
+    const guest = state.guest, generation = state.generation, capture = { guest, generation };
+    assertOwner(agent, state, capture); assertPolicy(agent, state);
+    if (!guest || guest.stopped) throw Error('Pi 扩展进程未运行');
+    const fused = AbortSignal.any([state.life.signal, ...signal ? [signal] : []]); fused.throwIfAborted();
     state.calls++;
-    try { return await state.guest.call({ type: 'invoke', ...call, snapshot: await snapshot(agent, state, signal) }, { context: { agent, state, exec, eventName: call.eventName }, signal }); }
+    try {
+      const current = await snapshot(agent, state, fused);
+      assertOwner(agent, state, capture); fused.throwIfAborted(); assertPolicy(agent, state);
+      const result = await guest.call({ type: 'invoke', ...call, snapshot: current }, { context: { agent, state, exec, eventName: call.eventName, ...capture }, signal: fused });
+      assertOwner(agent, state, capture); fused.throwIfAborted();
+      return result;
+    }
     finally { state.calls--; }
   }
   async function notifyEvent(agent, state, eventName, event, signal) {
@@ -308,6 +499,43 @@ export function apply(ctx) {
     const response = await invoke(agent, state, { kind: 'event', eventName, event: { type: eventName, ...event },
       ...(eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted' ? { callbackAbortReason: state.lifecycleRun.endReason.reason } : {}) }, signal);
     for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 ' + eventName + '：' + error.error, 'error');
+  }
+  function loadoutInput(agent, state) {
+    const registered = ctx.tools.schemas(agent), declared = visible(agent, state);
+    const definitions = new Map((state.descriptors?.tools ?? []).map(tool => [tool.name, tool]));
+    const guidelines = promptOptions({ customTools: [...definitions.values()] }).toolGuidelines;
+    const describe = tools => tools.map(tool => ({ ...tool, label: definitions.get(tool.name)?.label ?? tool.name }));
+    return json({ loadout: { registered: describe(registered), declared: describe(declared),
+      callable: describe(declared.filter(tool => definitions.get(tool.name)?.exposure !== 'model-only')),
+      metadata: Object.fromEntries(registered.map(tool => [tool.name, {
+        exposure: definitions.get(tool.name)?.exposure ?? 'direct',
+        ...(definitions.get(tool.name)?.namespace ? { namespace: definitions.get(tool.name).namespace } : {}),
+        promptGuidelines: guidelines[tool.name] ?? [],
+      }])) },
+      hooks: declared.map(tool => definitions.get(tool.name)).filter(tool => tool?.prepareLoadout).map(tool => tool.callbackId) });
+  }
+  async function prepareLoadout(agent, state, signal) {
+    assertOwner(agent, state); signal?.throwIfAborted();
+    if (state.guest) assertPolicy(agent, state);
+    const input = loadoutInput(agent, state);
+    if (!input.hooks.length) return visible(agent, state);
+    // Upstream prepares again even for an unchanged catalog: closures may have
+    // changed since the preceding request. Never cache callback results.
+    const response = await invoke(agent, state, { kind: 'loadout', ...input }, signal);
+    assertPolicy(agent, state);
+    // Callback-owned registration/API work drains before its result. Refuse
+    // stale presentation instead of admitting a different tool set underneath.
+    if (!isDeepStrictEqual(loadoutInput(agent, state), input)) throw Error('Pi prepareLoadout 期间工具目录发生变化，请重新组装请求');
+    for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 prepare_loadout ' + error.toolName + '：' + error.error, 'error');
+    if (!response || !response.descriptions || typeof response.descriptions !== 'object' || Array.isArray(response.descriptions)
+      || Object.values(response.descriptions).some(value => typeof value !== 'string')
+      || !Array.isArray(response.hiddenDeclarations) || response.hiddenDeclarations.some(name => typeof name !== 'string')) throw Error('Pi prepareLoadout 响应无效');
+    // DSH logs historical declarations. Its current public projection cannot
+    // hide the full declaration history while keeping tools active/callable.
+    // Never silently interpret hiddenDeclarations as disabling execution.
+    if (response.hiddenDeclarations.length) throw Error('Pi hiddenDeclarations 需要可重放的完整工具声明投影；当前公开接口尚未提供');
+    return visible(agent, state).map(tool => Object.hasOwn(response.descriptions, tool.name)
+      ? { ...tool, description: response.descriptions[tool.name] } : tool);
   }
   async function runMessages(agent, run, signal) {
     const observation = await ctx.get('sessionQuery').observeSession(agent.session.id, { projectionMode: 'none', signal });
@@ -347,7 +575,7 @@ export function apply(ctx) {
   }
   ctx.on('agent/request', async (info, next) => {
     if (!owns(info.agent)) return next();
-    const state = states.get(info.agent);
+    const state = stateFor(info.agent);
     if (!state?.guest || state.guest.stopped) return next();
     if (state.lifecycleCompletion) await state.lifecycleCompletion;
     if (state.lifecycleRun?.ending) await finishLifecycle(info.agent, state, info.signal);
@@ -355,9 +583,9 @@ export function apply(ctx) {
     return next();
   });
   const controller = {
-    inputMetadata: (agent, id) => states.get(agent)?.inputOrigins.get(id),
+    inputMetadata: (agent, id) => stateFor(agent)?.inputOrigins.get(id),
     promptTools(agent) {
-      const state = states.get(agent), allowed = new Set(visible(agent, state ?? {}).map(t => t.name));
+      const state = stateFor(agent), allowed = new Set(visible(agent, state ?? {}).map(t => t.name));
       return state?.descriptors?.tools.filter(t => allowed.has(t.name)) ?? [];
     },
     async input(agent, messages, signal) {
@@ -458,10 +686,11 @@ export function apply(ctx) {
       ? { ...message, source: { ...message.source, pi: { ...message.source.pi, runPrompt: { force } } } } : message);
     state.pendingForce = force;
     state.prompt = sections.map(section => section.text).filter(Boolean).join('\n\n');
-    return { ...assembly, tools: visible(context.agent, state), sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
+    const tools = await prepareLoadout(context.agent, state, context.signal);
+    return { ...assembly, tools, sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
   });
   ctx.on('agent/status', ({ agent, status }) => {
-    const state = states.get(agent);
+    const state = stateFor(agent);
     if (state && status === 'running') state.nativeNextStep = 1;
     if (!state || status !== 'idle') return;
     const run = state.lifecycleRun;
@@ -488,13 +717,13 @@ export function apply(ctx) {
     } catch (error) { if (agent.status === 'idle') settings.notify(agent, 'Pi 扩展 agent_end：' + error.message, 'error'); }
   });
   ctx.tools.guard(exec => {
-    const state = exec.agent && states.get(exec.agent);
+    const state = exec.agent && stateFor(exec.agent);
     if (state?.active && !state.active.has(exec.name) && !exec.parent) return 'Pi extension disabled this model-facing tool.';
     if (state?.guest && JSON.stringify(currentPolicy(exec.agent)) !== state.policyKey) return 'Pi extension permissions changed; reload under current policy.';
   });
   ctx.on('tools/pre-execute', async (exec, next) => {
     if (!exec.agent || !owns(exec.agent)) return next();
-    const state = states.get(exec.agent);
+    const state = stateFor(exec.agent);
     if (!state?.guest) return next();
     assertPolicy(exec.agent, state);
     if (!state.events.has('tool_call')) return next();
@@ -508,7 +737,7 @@ export function apply(ctx) {
   ctx.on('tools/post-execute', async (exec, result, next) => {
     const decision = await next();
     if (!exec.agent || !owns(exec.agent)) return decision;
-    const state = states.get(exec.agent); if (!state?.events.has('tool_result')) return decision;
+    const state = stateFor(exec.agent); if (!state?.events.has('tool_result')) return decision;
     const event = { type: 'tool_result', toolName: exec.name, toolCallId: exec.callId, input: piArguments(exec), content: await piContent(result.content, exec.signal),
       isError: result.isError, details: result.meta?.piExtension?.details ?? {} };
     const response = await invoke(exec.agent, state, { kind: 'event', eventName: 'tool_result', event }, exec.signal, exec);
@@ -517,7 +746,27 @@ export function apply(ctx) {
     if (response.details !== undefined && !isDeepStrictEqual(response.details, event.details)) throw Error('尚未适配 Pi 工具结果 details 改写');
     return response.content ? { kind: 'accept', content: await admitContent(response.content, exec.signal) } : decision;
   });
-  ctx.on('agent/disposed', ({ agent }) => { const state = states.get(agent); states.delete(agent); if (settings.states.get(agent.id) === state) settings.states.delete(agent.id); if (state) void state.dispose().catch(error => ctx.logger.warn(error.message)); });
+  const retire = state => {
+    if (!state) return Promise.resolve();
+    state.revoked = true;
+    const disposal = state.dispose();
+    const work = (async () => {
+      await disposal;
+      if (state.loading) await Promise.allSettled([state.loading]);
+    })();
+    retiring.add(work);
+    void work.catch(error => ctx.logger.warn(error.message)).finally(() => retiring.delete(work));
+    return work;
+  };
+  ctx.on('agent/disposed', ({ agent }) => {
+    const state = stateFor(agent); if (!state) return;
+    // Revocation is synchronous, before removing the owner lookup or awaiting
+    // shutdown. A replacement Agent with the same durable id owns a new scope.
+    state.revoked = true; state.life.abort(Error('Pi extension owner disposed'));
+    states.delete(state.ownerKey);
+    if (settings.states.get(agent.id) === state) settings.states.delete(agent.id);
+    void retire(state);
+  });
   ctx.on('session/event', (session, event) => {
     if (event.type === 'turn/start') {
       const [, state] = sessionState(session);
@@ -548,8 +797,19 @@ export function apply(ctx) {
       // Revoke the old process range immediately; no callback may retain a
       // wider policy after the native mode event. Next assembly re-confines.
       void state.guest.close().catch(error => ctx.logger.warn(error.message));
-      void state.dispose({ shutdown: false }).catch(error => ctx.logger.warn(error.message));
+      void state.dispose().catch(error => ctx.logger.warn(error.message));
     }
   });
-  ctx.effect(() => async () => { await Promise.all([...states.values()].map(state => state.dispose())); states.clear(); });
+  ctx.effect(() => async () => {
+    closed = true;
+    const current = [...states.values()];
+    for (const state of current) { state.revoked = true; state.life.abort(Error('Pi extension host disposed')); }
+    await Promise.allSettled(current.map(retire));
+    // A loading guest may return after revocation; its checked catch closes
+    // that exact process. Include it before finishing host teardown.
+    await Promise.allSettled(current.map(state => state.loading).filter(Boolean));
+    while (retiring.size) await Promise.allSettled([...retiring]);
+    for (const state of current) if (settings.states.get(state.session.id) === state) settings.states.delete(state.session.id);
+    states.clear();
+  });
 }

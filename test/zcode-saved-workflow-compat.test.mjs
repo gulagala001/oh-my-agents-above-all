@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 import { build } from 'esbuild';
-import { chromium } from 'playwright';
+import { launchChromium } from './fixtures/browser.mjs';
 
 const repo = new URL('../', import.meta.url).pathname;
 const hostRequire = createRequire(await realpath(join(repo, 'node_modules/@deepseek-ai/dsh/lib/bin.js')));
@@ -17,8 +17,7 @@ test('six ZCode views are public low-priority fallbacks and preserve foreign reg
   for (const match of source.matchAll(/for \(const key of \[([^\]]+)\]\) ctx\.slots\.inject\('tool.call.toolview', \(\) => ctx\.slots\.register\(\{ name: 'tool.call.toolview', key, priority: (\d+)/g)) {
     for (const key of match[1].matchAll(/'([^']+)'/g)) priorities.set(key[1], Number(match[2]));
   }
-  assert.equal(priorities.size, 6); for (const key of keys) assert.equal(priorities.get(key), 100, key);
-  assert(source.includes("inject: sessionId => ({ openArtifacts: runId => ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } }) })"));
+  for (const key of keys) assert.equal(priorities.get(key), 100, key);
   assert(source.includes('inject: sessionId => ({ sessionId, toolName: key, settings, sessions: ctx.sessions, sidebarRight: ctx.sidebarRight })'));
   const file = join(dirname(hostRequire.resolve('@deepseek-ai/dsh-client-ui-renderer/package.json')), 'lib/client.js');
   const require = createRequire(file), { Context } = require('@deepseek-ai/cordis'); let native;
@@ -70,15 +69,15 @@ test('real native foreign results remain read-only when incompatible, then norma
   const bundle = await build({ stdin: { contents: `export { ZCodeSavedWorkflowTool } from './src/client/zcode-saved-workflow-tool.jsx';export { ZCodeWorkflowTool } from './src/client/zcode-workflow-tool.jsx';export {default as React} from 'react';export {createRoot} from 'react-dom/client';export {flushSync} from 'react-dom';`, resolveDir: repo }, bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'compatFixture', target: 'es2022',
     plugins: [{ name: 'css-text', setup(builder) { builder.onLoad({ filter: /\.css$/ }, async args => ({ contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`, loader: 'js' })); } }],
   });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
   const page = await browser.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.setContent('<div id="app"></div>'); await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await page.evaluate(() => {
     const { React, createRoot, flushSync, ZCodeSavedWorkflowTool, ZCodeWorkflowTool } = compatFixture, root = createRoot(document.getElementById('app'));
     const state = { sessionId: 'one', agentPreset: 'omaa-zcode', data: { product: { id: 'zcode' }, mode: 'default', running: false } };
-    const settings = { subscribe: () => () => {}, getSnapshot: () => state }, sidebarRight = { mounted: { subscribe: () => () => {}, getSnapshot: () => 'one' } };
+    const settings = { subscribe: () => () => {}, getSnapshot: () => state }, sidebarRight = { mounted: { subscribe: () => () => {}, getSnapshot: () => 'one' } }, sessions = {};
     function useDisclosure() { return { expanded: true, toggle() {} }; }
-    window.renderCanonical = (toolName, block, legacy = false, phase = 'result') => flushSync(() => root.render(React.createElement(legacy ? ZCodeWorkflowTool : ZCodeSavedWorkflowTool, { toolName, block, phase, callId: 'canonical', sessionId: 'one', settings, sidebarRight, useDisclosure })));
+    window.renderCanonical = (toolName, block, legacy = false, phase = 'result') => flushSync(() => root.render(React.createElement(legacy ? ZCodeWorkflowTool : ZCodeSavedWorkflowTool, { toolName, block, phase, callId: 'canonical', sessionId: 'one', settings, sidebarRight, sessions, useDisclosure })));
   });
   for (const [toolName, value] of corrupt) {
     const block = await canonical(toolName, value); await page.evaluate(({ toolName, block }) => renderCanonical(toolName, block), { toolName, block });

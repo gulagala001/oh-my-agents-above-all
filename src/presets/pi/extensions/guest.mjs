@@ -10,6 +10,7 @@ import path from 'node:path';
 import { callbackContext, codingAgentShim, aiShim, createPiAPI, createCallbackContext, supportedEvents } from './pi-api.mjs';
 import { promptFrameText } from '../extension-prompt.mjs';
 import { encodeFrames, frameDecoder } from './wire.mjs';
+import { prepareToolLoadout } from './loadout.mjs';
 
 // Fixed upstream's pure argument validator; no Pi provider or agent runtime.
 const validatorImporter = createJiti(import.meta.url, { fsCache: false, moduleCache: false, tryNative: false,
@@ -268,6 +269,7 @@ async function invoke(frame, context) {
   context.runtime = runtime; context.kind = frame.kind;
   initializeRegistrationSnapshot(runtime, context);
   projectRegistrationSnapshots(runtime);
+  if (frame.kind === 'loadout') return prepareToolLoadout(frame, runtime, context.controller.signal);
   const ctx = createCallbackContext(runtime);
   if (frame.kind === 'event') return dispatchEvent(frame, context);
   const callback = runtime.callbacks.get(frame.callbackId);
@@ -275,7 +277,7 @@ async function invoke(frame, context) {
   if (frame.kind === 'command') return callback.definition.handler(frame.args ?? '', ctx);
   if (frame.kind !== 'tool') throw new Error('Invalid Pi extension invocation kind');
   if (typeof frame.callId !== 'string' || !frame.callId || frame.callId.length > 512) throw new Error('Pi tool invocation requires callId');
-  if (callback.definition.prepareArguments !== undefined || callback.definition.prepareLoadout !== undefined) throw new Error('Unsupported Pi extension tool prepareArguments/prepareLoadout');
+  if (callback.definition.prepareArguments !== undefined) throw new Error('Unsupported Pi extension tool prepareArguments');
   const params = validateToolArguments(callback.definition, { name: callback.definition.name, arguments: frame.params });
   const onUpdate = value => { context.controller.signal.throwIfAborted(); send({ type: 'update', requestId: context.id, value }); };
   return callback.definition.execute(frame.callId, params, context.controller.signal, onUpdate, ctx);

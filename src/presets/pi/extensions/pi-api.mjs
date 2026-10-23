@@ -39,6 +39,7 @@ function snapshot(runtime, key) {
   if (!Object.hasOwn(context.snapshot, key)) throw new Error('Pi extension snapshot does not provide ' + key);
   return context.snapshot[key];
 }
+const sessionName = runtime => snapshot(runtime, 'sessionName') ?? undefined;
 function optionsFor(context, options) {
   if (!options) return undefined;
   if (options.signal !== undefined && options.signal !== context.controller.signal) unsupported('custom operation AbortSignal');
@@ -74,7 +75,7 @@ export function createCallbackContext(runtime) {
     getBranch: () => clone(snapshot(runtime, 'sessionBranch')),
     getEntries: () => clone(snapshot(runtime, 'sessionEntries')),
     getSessionId: () => snapshot(runtime, 'sessionId'),
-    getSessionName: () => snapshot(runtime, 'sessionName'),
+    getSessionName: () => sessionName(runtime),
     getCwd: () => snapshot(runtime, 'cwd'),
   }, 'ctx.sessionManager');
   const context = {
@@ -136,6 +137,7 @@ export function createPiAPI(runtime, extension) {
       const context = register();
       if (!definition || typeof definition.name !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(definition.name)
         || typeof definition.description !== 'string' || typeof definition.execute !== 'function'
+        || definition.prepareLoadout !== undefined && typeof definition.prepareLoadout !== 'function'
         || !definition.parameters || typeof definition.parameters !== 'object' || Array.isArray(definition.parameters)) throw new Error('Invalid Pi tool definition');
       if (!extension.tools.has(definition.name) && extension.tools.size >= 128) throw new Error('Pi extension exceeds 128 tools');
       const callbackId = runtime.callbackId('tool');
@@ -162,6 +164,7 @@ export function createPiAPI(runtime, extension) {
     },
     getAllTools: () => clone(snapshot(runtime, 'allTools')),
     getCommands: () => clone(snapshot(runtime, 'commands')),
+    getSessionName: () => sessionName(runtime),
     getSettings: () => clone(snapshot(runtime, 'settings')),
     exec(command, args = [], options) {
       const context = live(runtime);

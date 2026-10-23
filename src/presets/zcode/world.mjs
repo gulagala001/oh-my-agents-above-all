@@ -15,7 +15,19 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
   let cwd = currentDirectory(ctx, parent.session), workspaceRoot = parent.session.header.cwd;
   const directoryReady = (directories ?? executionDirectories(ctx, parent, signal)).then(value => { cwd = value.cwd; workspaceRoot = value.workspaceRoot; });
   void directoryReady.catch(() => {});
-  const calls = new Set(), processes = new Set();
+  const calls = new Set(), processes = new Set(), ranges = new WeakMap();
+  const rangeOf = child => {
+    let range = ranges.get(child);
+    if (!range) {
+      range = Promise.resolve().then(() => child.waitForExit()).then(empty => {
+        if (empty !== true) throw new WorkflowError('DriverError', 'The native process range was not confirmed empty.');
+      });
+      // Range observation starts independently of the direct command result.
+      // A provider failure must not hide behind an unsettled done promise.
+      range.catch(() => {}); ranges.set(child, range);
+    }
+    return range;
+  };
   const sites = new Map(prepared.sites.worldReads.map(site => [site.id, site.op]));
   const assert = () => { check(); if (!cwd) throw new WorkflowError('DriverError', 'World operations require a native workspace directory.'); };
   const fileError = (code, path, message) => createFileSystemError({ code, path, message });
@@ -42,16 +54,23 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
     const clearDeadline = deadline(timing, request.timeoutMs ?? WORLD_READ_CAPS.runDefaultTimeoutMs);
     const empty = () => ({ text: '', bytes: 0, truncated: false });
     let child, output, stdout = empty(), stderr = empty(), failure, ended;
+    const terminationFailures = [], pipeFailures = [];
+    const terminate = () => {
+      try { child?.terminate(); } catch (error) { terminationFailures.push(error); }
+    };
     const drainPipes = async () => {
       if (!output) return;
       let drainTimer;
       const drained = await Promise.race([output.then(() => true, () => false), new Promise(resolve => { drainTimer = setTimeout(() => resolve(false), 1000); })]);
       clearTimeout(drainTimer);
       if (!drained) {
-        failure ??= new WorkflowError('DriverError', 'Native command output did not close after termination; no complete observation was returned.');
-        child.stdout?.destroy(); child.stderr?.destroy();
+        const error = new WorkflowError('DriverError', 'Native command output did not close after termination; no complete observation was returned.');
+        failure ??= error; pipeFailures.push(error);
+        for (const stream of [child.stdout, child.stderr]) {
+          try { stream?.destroy(); } catch (error) { pipeFailures.push(error); }
+        }
       }
-      try { [stdout, stderr] = await output; } catch (error) { failure ??= error; }
+      try { [stdout, stderr] = await output; } catch (error) { failure ??= error; pipeFailures.push(error); }
       output = undefined;
     };
     try {
@@ -69,6 +88,7 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
         env: { ELECTRON_RUN_AS_NODE: undefined, GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0' },
         stdio: { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal: fused });
       processes.add(child);
+      const range = rangeOf(child);
       const cap = request.outputLimit?.maxInlineBytes ?? 4 * 1024 * 1024;
       const pump = async (stream, callback) => {
         let bytes = 0, buffer = ''; const chunks = [], decoder = new StringDecoder('utf8');
@@ -85,16 +105,15 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
             if (Buffer.byteLength(buffer) > 1024 * 1024) throw new WorkflowError('WorldReadCapExceeded', 'A search result frame exceeds 1 MiB. Narrow the search.');
           }
           if (callback) { buffer += decoder.end(); if (buffer) callback(buffer); }
-        } catch (error) { failure ??= error; control.abort(error); child.terminate(); }
+        } catch (error) { failure ??= error; control.abort(error); terminate(); }
         return { text: callback ? '' : Buffer.concat(chunks).toString('utf8'), bytes, truncated: false };
       };
       output = Promise.all([pump(child.stdout, onLine), pump(child.stderr)]);
       output.catch(() => {});
-      ended = await child.done.then(value => { child.terminate(); return value; }, error => { failure ??= error; child.terminate(); return undefined; });
-      if (!await child.waitForExit(AbortSignal.timeout(5000))) {
-        child.terminate();
-        await child.waitForExit();
-      }
+      [ended] = await Promise.all([
+        child.done.then(value => { terminate(); return value; }, error => { failure ??= error; terminate(); return undefined; }),
+        range,
+      ]);
       // The provider owns the process range, but pipes are caller-owned. An
       // escaped descendant can keep one open after the range is empty.
       await drainPipes();
@@ -112,12 +131,23 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
         error: { type: 'execution_error', message: error.message } };
     } finally {
       clearDeadline();
-      let cleanupFailure;
+      const cleanupFailures = [];
       try {
-        if (child && processes.has(child)) { child.terminate(); await child.waitForExit(); processes.delete(child); }
-      } catch (error) { cleanupFailure = error; }
-      finally { await drainPipes(); }
-      if (cleanupFailure) throw failure ?? cleanupFailure;
+        if (child && processes.has(child)) {
+          terminate();
+          // A signalling error cannot skip the independent range observation.
+          await rangeOf(child); processes.delete(child);
+        }
+      } catch (error) { cleanupFailures.push(error); }
+      try { await drainPipes(); } catch (error) { cleanupFailures.push(error); }
+      cleanupFailures.push(...terminationFailures, ...pipeFailures);
+      if (cleanupFailures.length) {
+        const causes = [...new Set([failure, ...cleanupFailures].filter(Boolean))];
+        const detail = cleanupFailures.slice(0, 4).map(error => String(error?.message ?? error).slice(0, 256)).join('; ');
+        throw new WorkflowError(failure instanceof WorkflowError ? failure.code : 'DriverError',
+          `${failure?.message ?? 'Native world command did not fully settle.'} Cleanup: ${detail}`.slice(0, 2048),
+          { cause: new AggregateError(causes, 'Native world command cleanup failed.') });
+      }
     }
   }
   const fileSystemPort = {
@@ -191,6 +221,10 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
       });
   }
   return {
+    updatePrepared(next) {
+      prepared = next; sites.clear();
+      for (const site of prepared.sites.worldReads) sites.set(site.id, site.op);
+    },
     argumentsFor,
     async execute(request) {
       await directoryReady;
@@ -202,9 +236,15 @@ export function createWorldReads({ ctx, parent, prepared, signal, check, actor, 
       finally { calls.delete(call); }
     },
     async close() {
-      for (const child of processes) child.terminate();
-      await Promise.allSettled([...calls]);
-      await Promise.all([...processes].map(child => child.waitForExit()));
+      const failures = [], waiting = [];
+      for (const child of processes) {
+        try { child.terminate(); } catch (error) { failures.push(error); }
+        waiting.push(rangeOf(child));
+      }
+      // Start every cleanup before waiting and retain every range failure.
+      const [, outcomes] = await Promise.all([Promise.allSettled([...calls]), Promise.allSettled(waiting)]);
+      for (const outcome of outcomes) if (outcome.status === 'rejected') failures.push(outcome.reason);
+      if (failures.length) throw new AggregateError(failures, 'Native world resources did not fully settle.');
     },
   };
 }

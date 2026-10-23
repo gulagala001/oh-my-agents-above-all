@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { build } from 'esbuild';
-import { chromium } from 'playwright';
+import { launchChromium } from './fixtures/browser.mjs';
 
 test('saved tool cards validate parameters, submit native requests and invalidate callbacks across navigation', { timeout: 45000 }, async t => {
   const bundle = await build({ stdin: { contents: `export { ZCodeSavedWorkflowTool } from './src/client/zcode-saved-workflow-tool.jsx'; export { default as React } from 'react'; export { createRoot } from 'react-dom/client'; export { flushSync } from 'react-dom';`, resolveDir: new URL('../', import.meta.url).pathname },
     bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'savedFixture', target: 'es2022',
     plugins: [{ name: 'css-text', setup(builder) { builder.onLoad({ filter: /\.css$/ }, async args => ({ contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`, loader: 'js' })); } }],
   });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
   const page = await browser.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.setContent('<div id="app"></div>'); await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await page.evaluate(() => {
@@ -17,7 +17,7 @@ test('saved tool cards validate parameters, submit native requests and invalidat
     const root = createRoot(document.getElementById('app')), listeners = new Set(), mountedListeners = new Set();
     let state = { sessionId: 'one', agentPreset: 'omaa-zcode', data: { product: { id: 'zcode' }, mode: 'default', running: false } }, mounted = 'one', props, pending, calls = 0;
     const prompts = [], submissions = [], opened = [];
-    const session = { getSnapshot: () => ({ running: state.data.running }), beginSubmission(value) { const item = { ...value, requestId: 'receipt', abandon() { item.abandoned = true; } }; submissions.push(item); return item; },
+    const session = { getSnapshot: () => ({ openState: 'open', running: state.data.running }), projections: { faceOf: () => ({ getSnapshot: () => ({ 'next-turn': [], 'next-step': [] }) }) }, beginSubmission(value) { const item = { ...value, requestId: 'receipt', abandon() { item.abandoned = true; } }; submissions.push(item); return item; },
       async prompt(...args) { prompts.push(args); return { ok: true, value: { accepted: true } }; } };
     const settings = { getSnapshot: () => state, subscribe: fn => { listeners.add(fn); return () => listeners.delete(fn); } };
     const sidebarRight = { mounted: { getSnapshot: () => mounted, subscribe: fn => { mountedListeners.add(fn); return () => mountedListeners.delete(fn); } }, openTabIn(...args) { opened.push(args); } };
@@ -43,10 +43,10 @@ test('saved tool cards validate parameters, submit native requests and invalidat
   assert.match(await page.locator('.omaa-saved-body').innerText(), /项目/); assert.match(await page.locator('.omaa-saved-body').innerText(), /全局/);
   await page.getByText('invalid_metadata', { exact: true }).waitFor();
   await page.getByRole('button', { name: '读取定义', exact: true }).nth(1).click();
-  await page.getByRole('status').filter({ hasText: '请求已发送' }).waitFor();
+  await page.getByRole('status').filter({ hasText: '宿主已接受请求' }).waitFor();
   await page.locator('.omaa-saved-title').click();
   assert.equal(await page.locator('.omaa-saved-body').count(), 0);
-  assert.equal(await page.getByRole('status').filter({ hasText: '请求已发送' }).isVisible(), true, 'accepted request remains visible when the tool body is collapsed');
+  assert.equal(await page.getByRole('status').filter({ hasText: '宿主已接受请求' }).isVisible(), true, 'accepted request remains visible when the tool body is collapsed');
   await page.locator('.omaa-saved-title').click();
   assert.match(await page.evaluate(() => savedActions.prompts[0][0][0].text), /"scope":"global"/);
   await render('read_saved_workflow', definition);
@@ -55,7 +55,7 @@ test('saved tool cards validate parameters, submit native requests and invalidat
   await page.getByRole('checkbox', { name: '传入 enabled', exact: true }).check(); await page.getByRole('combobox', { name: '参数 enabled', exact: true }).selectOption('false');
   await page.getByRole('checkbox', { name: '传入 data', exact: true }).check(); await page.getByRole('textbox', { name: '参数 data', exact: true }).fill('null');
   await page.getByRole('button', { name: '发送运行请求', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: '请求已发送' }).waitFor();
+  await page.getByRole('status').filter({ hasText: '宿主已接受请求' }).waitFor();
   const sent = await page.evaluate(() => savedActions.prompts[1]);
   assert.match(sent[0][0].text, /"args":\{"text":"","count":0,"enabled":false,"data":null\}/); assert.equal(sent[3], 'receipt');
   await page.getByRole('checkbox', { name: '传入 text', exact: true }).uncheck(); await page.getByRole('button', { name: '发送运行请求', exact: true }).click();
@@ -70,7 +70,7 @@ test('saved tool cards validate parameters, submit native requests and invalidat
   assert.equal(await page.evaluate(() => savedActions.prompts.length), 2);
   await page.evaluate(() => patchSaved({ data: { mode: 'ask' } }));
   assert.equal(await page.getByRole('button', { name: '发送运行请求', exact: true }).isDisabled(), true);
-  await page.getByRole('button', { name: '重新读取定义', exact: true }).click(); await page.getByRole('status').filter({ hasText: '请求已发送' }).waitFor();
+  await page.getByRole('button', { name: '重新读取定义', exact: true }).click(); await page.getByRole('status').filter({ hasText: '宿主已接受请求' }).waitFor();
   await page.evaluate(() => patchSaved({ data: { mode: 'default' } }));
   await render('read_saved_workflow', { ...definition, args: { count: { type: 'number', default: false } } });
   await page.getByRole('button', { name: '发送运行请求', exact: true }).click(); await page.getByRole('alert').filter({ hasText: 'default value' }).waitFor();

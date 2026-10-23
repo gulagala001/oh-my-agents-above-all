@@ -4,6 +4,7 @@ import { build, transform } from 'esbuild';
 import ts from 'typescript';
 import { buildHost } from '../src/host/compatibility.mjs';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
+import { buildGrokDocuments } from './build-grok-documents.mjs';
 
 import { products } from '../src/shared/products.mjs';
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
@@ -12,8 +13,15 @@ import { buildZCodeArtifacts } from './build-zcode-artifacts.mjs';
 import { buildZCodeImportCache } from './build-zcode-import-cache.mjs';
 import { buildZCodeRunProjection } from './build-zcode-run-projection.mjs';
 import { buildZCodeGraphUiAssets } from './build-zcode-graph-ui-assets.mjs';
+import { buildZCodeArtifactChartView } from './build-zcode-artifact-chart-view.mjs';
+import { buildZCodeStreams } from './build-zcode-streams.mjs';
+import { buildZCodeProjectMemory } from './build-zcode-memory.mjs';
+import { buildZCodeAgentProfiles } from './build-zcode-agent-profiles.mjs';
+import { buildZCodeCalendarRule } from './build-zcode-calendar.mjs';
+import { PROFILE_SKILL_PRESET, profileSkillPresetPlugins } from '../src/presets/zcode/profile-skill-policy.mjs';
 
 await buildPiPromptHelpers({ write: true });
+await buildGrokDocuments();
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 const nativeActivations = buildHost(manifest.devDependencies['@deepseek-ai/dsh']).activation === 'activation';
@@ -51,20 +59,34 @@ const composition = product => [
     row('command-compact', '@deepseek-ai/dsh-command-compact'),
   ], { group: true, isolate: { compaction: true } }),
   ...product.id === 'pi' ? [row('pi-extensions', 'oh-my-agents-above-all/pi-extensions'), row('pi-resources', 'oh-my-agents-above-all/pi-resources'), row('pi-steering', 'oh-my-agents-above-all/pi-steering'), row('pi-branches', 'oh-my-agents-above-all/pi-branches')] : [],
-  ...product.id === 'grok' ? [row('grok-monitor', 'oh-my-agents-above-all/grok-monitor'), row('grok-scheduler', 'oh-my-agents-above-all/grok-scheduler')] : [],
-  ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow'),
+  ...product.id === 'grok' ? [row('grok-documents', 'oh-my-agents-above-all/grok-documents'), row('grok-monitor', 'oh-my-agents-above-all/grok-monitor'), row('grok-scheduler', 'oh-my-agents-above-all/grok-scheduler')] : [],
+  ...product.id === 'zcode' ? [row('zcode-session-context', 'oh-my-agents-above-all/zcode-session-context'), row('zcode-workflow', 'oh-my-agents-above-all/zcode-workflow'), row('zcode-scheduler', 'oh-my-agents-above-all/zcode-scheduler'),
     row('zcode-typed-workflow', 'cordis:group', [row('ptc-runtime', '@deepseek-ai/dsh-ptc-runtime-node'), row('zcode-actor-workflow', 'oh-my-agents-above-all/zcode-typed-workflow')], { group: true, isolate: { ptcRuntime: true } })] : [],
   ...product.id === 'cursor' ? [row('cursor-rules', 'oh-my-agents-above-all/cursor-rules'), row('cursor-checkpoints', 'oh-my-agents-above-all/checkpoints')] : [],
   row('omaa-preset', 'oh-my-agents-above-all/agent', { product: product.id }),
   row('omaa-enhancement', 'oh-my-agents-above-all/enhancement'),
 ];
-const patch = [{ insert: [row('omaa', 'oh-my-agents-above-all'), ...products.map((product, index) => row('preset-' + product.preset, '@deepseek-ai/dsh-agent-preset', {
+const definitions = products.map((product, index) => ({
   id: product.preset, name: product.name + ' · OMAA', description: product.name + ' 深度预设 · DSH 模型', order: 20 + index,
   plugins: [row('working', 'cordis:group', [
     row('working-policy', 'oh-my-agents-above-all/working-policy'),
+    ...product.id === 'grok' ? [row('grok-monitor-shell', 'oh-my-agents-above-all/grok-monitor-shell')] : [],
     row('working-tools', 'oh-my-agents-above-all/working-tools', composition(product), { group: true }),
-  ], { group: true, isolate: { sandboxPolicy: true, ...product.id === 'pi' ? { omaaPiExtensions: true, omaaPiResources: true, omaaPiSteering: true } : {} } })],
-}))] }];
+  ], { group: true, isolate: { sandboxPolicy: true, ...product.id === 'grok' ? { shell: true, omaaGrokMonitorShell: true } : {}, ...product.id === 'pi' ? { omaaPiExtensions: true, omaaPiResources: true, omaaPiSteering: true } : {} } })],
+}));
+const zcodeDefinition = definitions.find(definition => definition.id === 'omaa-zcode');
+const patch = [{ id: 'session-controller', name: '@deepseek-ai/dsh-api-session-controller',
+  isolate: { sessionSkillCatalog: 'omaa-native-skill-catalog' } },
+{ insert: [row('omaa', 'oh-my-agents-above-all'), row('zcode-output-limits', 'oh-my-agents-above-all/output-limits'),
+  row('zcode-skill-catalog', 'oh-my-agents-above-all/zcode-skill-catalog', undefined,
+    { isolate: { sessionSkillCatalog: 'omaa-native-skill-catalog' } }),
+  ...definitions.map(definition => row('preset-' + definition.id, '@deepseek-ai/dsh-agent-preset', definition)),
+  row('preset-' + PROFILE_SKILL_PRESET, '@deepseek-ai/dsh-agent-preset', {
+    id: PROFILE_SKILL_PRESET, name: 'ZCode · 受限本地技能',
+    description: '仅供已核准的 ZCode Agent profile 子会话使用；直接选择的会话不能执行任务。', order: 25,
+    plugins: profileSkillPresetPlugins(zcodeDefinition.plugins),
+  }),
+] }];
 // JSON is a YAML subset; only the platform expressions need Cordis' JS tag.
 const yaml = JSON.stringify(patch, null, 2).replaceAll('"WINDOWS_DISABLED"', '!!js process.platform === \'win32\'').replaceAll('"UNIX_DISABLED"', '!!js process.platform !== \'win32\'');
 await writeFile(root + 'cordis.patch.yml', yaml + '\n');
@@ -72,7 +94,7 @@ await mkdir(root + 'lib', { recursive: true });
 // Keep ZCode's actual ranking, chunk selection and formatting implementation.
 // Only the native message/part boundary and unused reference-reminder export
 // differ; source stays immutable and the derived runtime is regenerated here.
-const sessionSource = await readFile(root + 'src/presets/zcode/sources/upstream/apps/zcode-cli/packages/core/src/session-context/read-session-context.ts', 'utf8');
+const sessionSource = await readFile(root + 'src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/session-context/read-session-context.ts', 'utf8');
 const sessionAdapter = '../src/presets/zcode/session-material-adapter.mjs';
 const adaptedSessionSource = sessionSource
   .replace('"../agent/session-history-hydrator.js"', JSON.stringify(sessionAdapter))
@@ -94,11 +116,16 @@ for (const [input, output, adapt] of [
   await writeFile(root + 'lib/' + output, '// Derived from fixed Apache-2.0 ZCode source; see THIRD_PARTY_NOTICES.md.\n' + generated.code);
 }
 await buildZCodeWorkflowCompiler();
+await buildZCodeStreams();
+await buildZCodeProjectMemory();
+await buildZCodeAgentProfiles();
+await buildZCodeCalendarRule();
 await buildZCodeWorldReads();
 await buildZCodeArtifacts();
 await buildZCodeImportCache();
 await buildZCodeRunProjection();
 await buildZCodeGraphUiAssets({ mode: 'check' });
+await buildZCodeArtifactChartView();
 const graphAliases = JSON.parse(await readFile(root + 'scripts/zcode-graph-ui-aliases.json', 'utf8'));
 for (const [key, entry] of Object.entries(manifest.exports)) {
   if (key !== './client' && key !== './package.json') await import(new URL('../' + entry, import.meta.url));

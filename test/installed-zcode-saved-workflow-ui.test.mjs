@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { chromium } from 'playwright';
+import { launchChromium } from './fixtures/browser.mjs';
 import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
 
 const textOf = message => typeof message.content === 'string' ? message.content : (message.content || []).map(part => part.text || '').join('\n');
@@ -12,19 +12,25 @@ const toolResult = (snapshot, name) => {
   assert(result, 'Actual tool result is missing: ' + name); return result.data.message;
 };
 
-test('installed saved workflow cards reuse actual project/global definitions through native permissions and open the actual run', { timeout: 180000 }, async t => {
+const authorizedSessionPolicy = process.env.OMAA_TEST_SAFE === '1' && process.env.OMAA_TEST_SOURCE_LINKED === '1'
+  && process.env.OMAA_TEST_SESSION_SANDBOX_MODE === 'danger-full-access';
+test('installed saved workflow cards reuse actual project/global definitions through native permissions and open the actual run', { timeout: 180000, skip: !authorizedSessionPolicy }, async t => {
   const f = await installedHost(t, { safeEnvironment: true, piResources: true, isolatedHome: true });
   const evidenceDir = resolve(process.env.OMAA_SAVED_WORKFLOW_EVIDENCE_DIR || '.cache/zcode-saved-workflow-ui');
   await mkdir(evidenceDir, { recursive: true }); await f.install(); await f.boot();
   const workspace = await f.rpc('workspace/create', { path: f.workspace });
   const { sessionId } = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-zcode' });
+  const control = await f.call('session/create', { request: { cwd: f.workspace, agentPreset: 'omaa-zcode' } });
+  const controlPolicy = await f.policy(control.sessionId);
   const metadata = { text: { type: 'string', required: true }, count: { type: 'number', default: 0 }, enabled: { type: 'boolean', default: false }, data: { type: 'json', default: null } };
   const saved = { name: 'reuse', scope: 'project', description: 'Project reusable parameter fixture', whenToUse: 'Explicit parameter reuse', args: metadata, facade: 'zcode',
     script: `await artifact.markdown('params', JSON.stringify(args), {primary:true, title:'Actual parameters'}); return args;` };
   const globalPath = join(f.userHome, '.zcode/workflows/reuse.dwf.ts');
   const setPermission = async mode => {
-    const result = await f.call('commands/execute', { agentId: sessionId, line: '/permission ' + mode, submittedAttachments: [] });
-    assert.equal(result?.result?.kind, 'success', JSON.stringify(result));
+    const result = await f.policy(sessionId, true, mode);
+    assert.equal(result.after.sandbox, mode); assert.equal(result.after.approval, 'ask');
+    assert.equal(result.approvalEventsBefore, result.approvalEventsAfter);
+    assert.deepEqual(result.globalBefore, result.globalAfter);
   };
   await setPermission('read-only');
   let deniedStep = 0;
@@ -38,7 +44,7 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   assert.equal(toolResult(denied, 'save_workflow').isError, true);
   await assert.rejects(readFile(globalPath), { code: 'ENOENT' });
   await setPermission('danger-full-access');
-  assert((await f.snapshot(sessionId)).records.some(row => row.event?.type === 'sandbox/mode' && row.event.data.mode === 'danger-full-access'), 'the native command must actually authorize the isolated global write');
+  assert((await f.snapshot(sessionId)).records.some(row => row.event?.type === 'sandbox/mode' && row.event.data.mode === 'danger-full-access'), 'the official session setter must actually authorize the isolated global write');
   let step = 0;
   f.replyWith(payload => {
     if (!payload.tools?.length) return textReply('Fixture title');
@@ -65,7 +71,7 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   f.replyWith(() => textReply('OTHER_SESSION_READY'));
   await f.prompt(other.sessionId, 'Keep this separate session for native navigation testing.');
   await f.rpc('session/rename', { sessionId: other.sessionId, title: 'ZCode saved other fixture' });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1100 }, colorScheme: 'light' });
   await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
   const page = await context.newPage(), errors = []; page.setDefaultTimeout(18000); page.on('pageerror', error => errors.push(error.message));
@@ -75,9 +81,8 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   const reveal = async card => {
     const turn = await card.locator('xpath=ancestor::*[@data-chat-turn][1]').getAttribute('data-chat-turn');
     assert.match(turn, /^\d+$/, 'the native renderer must identify the actual tool result turn');
-    const turnProcess = page.locator(`[data-chat-flow-kind="turn-process"][data-chat-turn="${turn}"]`);
-    const collapsed = page.locator(`[data-turn-process-hidden][data-chat-turn="${turn}"]`);
-    if (await collapsed.count()) await turnProcess.getByText(/^Completed in/).click();
+    const turnProcess = page.locator(`[data-turn-process="${turn}"]`);
+    if (await turnProcess.getAttribute('aria-expanded') === 'false') await turnProcess.click();
     if (!(await card.locator('.omaa-saved-title').isVisible())) {
       await card.locator('xpath=ancestor::*[@data-step-process][1]').locator('button[data-process-activity]').first().click();
     }
@@ -139,10 +144,11 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   assert.equal((await f.snapshot(sessionId)).records.filter(row => row.event?.type === 'user/message').length, usersBeforeOverflow, 'Unsafe integers must not become a native prompt with a rounded value');
   await page.screenshot({ path: join(evidenceDir, 'invalid-json.png') });
   await readCard.getByRole('checkbox', { name: '传入 data', exact: true }).uncheck();
+  await setPermission('danger-full-access');
   const respondToRun = () => {
     step = 0; f.replyWith(payload => {
       if (!payload.tools?.length) return textReply('Fixture title');
-      const user = textOf(payload.messages.findLast(value => value.role === 'user') || {});
+      const user = textOf(payload.messages.findLast(value => value.role === 'user' && textOf(value).includes('arguments: ')) || {});
       if (step++ === 0) return toolReply('skill', { name: 'zcode-workflows' });
       if (step === 2) {
         const match = user.match(/arguments: (\{.*\})\. Read the current saved definition/s); assert(match, 'UI must send the actual selected arguments');
@@ -196,6 +202,7 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   const material = JSON.parse(nativeMaterialText.match(/arguments: (\{.*\})\. Read the current saved definition/s)[1]);
   assert(Object.is(material.args.count, -0)); assert(Object.is(material.args.data.nested[0], -0));
   assert.match(nativeMaterialText, /"count":-0/); assert.match(nativeMaterialText, /"nested":\[-0,false,0,null\]/);
+  await setPermission('workspace-write');
   for (const [args, expected] of [[{ name: 'reuse', args: {} }, /missing required argument/], [{ name: 'reuse', args: { text: 'invalid', count: 'wrong', extra: 1 } }, /unknown argument.*extra/], [{ name: 'broken', args: {} }, /invalid_metadata/]]) {
     const snapshot = await single('run_saved_workflow', args, 'Run the selected workflow with deliberately invalid arguments for the permission fixture.');
     const result = toolResult(snapshot, 'run_saved_workflow'); assert(result.isError); assert.match(textOf(result), expected);
@@ -244,6 +251,8 @@ test('installed saved workflow cards reuse actual project/global definitions thr
     assert.equal((await f.snapshot(sessionId)).records.filter(row => row.event?.type === 'user/message').length, originalUserCount, 'Theme clicks never submit a workflow request');
     assert.equal(frontendThemes.length, 10);
   }
-  await writeFile(join(evidenceDir, 'result.json'), JSON.stringify({ evidence: f.evidence, isolatedUserHome: f.userHome, catalog, globalCatalog, runs: [first.result.runId, second.result.runId], actualValue: second.result.value, nativeNavigation: { sessions: [sessionId, other.sessionId], oldCallbackDeclined: true }, nativeMaterial: { negativeZeroNumber: true, negativeZeroNested: true, text: nativeMaterialText }, contrastEvidence, frontendThemes, uiErrors: errors, nativeErrors: f.errors }, null, 2) + '\n');
+  assert.deepEqual((await f.policy(control.sessionId)).after, controlPolicy.after);
+  assert.equal((await f.policy(sessionId)).after.approval, 'ask');
+  await writeFile(join(evidenceDir, 'result.json'), JSON.stringify({ evidence: f.evidence, isolatedUserHome: f.userHome, sessionPolicies: f.sessionPolicies, controlPolicy, catalog, globalCatalog, runs: [first.result.runId, second.result.runId], actualValue: second.result.value, nativeNavigation: { sessions: [sessionId, other.sessionId], oldCallbackDeclined: true }, nativeMaterial: { negativeZeroNumber: true, negativeZeroNested: true, text: nativeMaterialText }, contrastEvidence, frontendThemes, uiErrors: errors, nativeErrors: f.errors }, null, 2) + '\n');
   assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
 });

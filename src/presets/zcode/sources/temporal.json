@@ -1,0 +1,49 @@
+{
+  "repository": "https://github.com/js-temporal/temporal-polyfill",
+  "sourceTag": "v0.5.1",
+  "installedBuildInputs": [
+    {
+      "package": "@js-temporal/polyfill",
+      "version": "0.5.1",
+      "path": "package.json",
+      "bytes": 4612,
+      "sha256": "8406de0f5b7642ee1518c01c40ee6b797da7bc97575fea406e1f17876493e9cc"
+    },
+    {
+      "package": "@js-temporal/polyfill",
+      "version": "0.5.1",
+      "path": "dist/index.cjs",
+      "bytes": 128887,
+      "sha256": "9e3d7aae022f5ec391fc5e3639e474fe90f740c4631806fd741401b9c50f4ee0"
+    },
+    {
+      "package": "@js-temporal/polyfill",
+      "version": "0.5.1",
+      "path": "LICENSE",
+      "bytes": 750,
+      "sha256": "ffc4aee7f1279fc0494ff2b27f6829e6b4d16c20aa93aa008c3bd8d8af176387"
+    },
+    {
+      "package": "jsbi",
+      "version": "4.3.2",
+      "path": "package.json",
+      "bytes": 1626,
+      "sha256": "756c2c1b6e80e9e8488fe7ad66403a8307b115a0dc141966e69adf41eb39efc6"
+    },
+    {
+      "package": "jsbi",
+      "version": "4.3.2",
+      "path": "dist/jsbi-cjs.js",
+      "bytes": 29223,
+      "sha256": "b952fc88337eae5d90b397da4251e207d816056ea4c574df576f17e68626dd94"
+    },
+    {
+      "package": "jsbi",
+      "version": "4.3.2",
+      "path": "LICENSE",
+      "bytes": 10174,
+      "sha256": "9568a2b155e66ac3e0ba1fd80b52b827b9460e6cf6f233125e7cbca8e206ddc3"
+    }
+  ],
+  "timezoneData": "Uses the host Intl/ICU timezone data."
+}

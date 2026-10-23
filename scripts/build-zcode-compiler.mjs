@@ -7,7 +7,8 @@ import { build } from 'esbuild';
 import ts from 'typescript';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const sourceRoot = join(root, 'src/presets/zcode/sources/upstream/apps/zcode-cli/packages/dynamic-workflow/src');
+const snapshots = join(root, 'src/presets/zcode/sources/upstream-3.15.1');
+const sourceRoot = join(snapshots, 'apps/zcode-cli/packages/dynamic-workflow/src');
 const pureModule = /^\.\/(compiler|analysis|schema|lowering|facade)\//;
 
 // Same stdlib reference closure as the fixed upstream generate-libs.mjs. The
@@ -34,7 +35,7 @@ async function embeddedLibs() {
 }
 
 function adaptAnalysis(source) {
-  if (createHash('sha256').update(source).digest('hex') !== 'a70965143a76ddb95dc2ff2e3a08c790e55fcf8db09b0b93d3731014012ee643') {
+  if (createHash('sha256').update(source).digest('hex') !== '2321a47ca2c9b84036c89e157bb6b369fb6ef572dd6d7f10dbe2900471f9282a') {
     throw new Error('Fixed ZCode analysis source changed');
   }
   const file = ts.createSourceFile('analyze.ts', source, ts.ScriptTarget.Latest, true);
@@ -55,6 +56,12 @@ function adaptAnalysis(source) {
 }
 
 export async function buildZCodeWorkflowCompiler() {
+  const manifest = JSON.parse(await readFile(join(snapshots, 'source.json'), 'utf8'));
+  if (manifest.commit !== 'aac4755666d09fdcd70272fcf063c077a639015f') throw new Error('Unexpected ZCode compiler source commit');
+  for (const row of manifest.files) {
+    const bytes = await readFile(join(snapshots, row.path));
+    if (createHash('sha256').update(bytes).digest('hex') !== row.sha256) throw new Error('Fixed ZCode 3.15.1 compiler source changed: ' + row.path);
+  }
   const original = await readFile(join(sourceRoot, 'index.ts'), 'utf8');
   const file = ts.createSourceFile('index.ts', original, ts.ScriptTarget.Latest, true);
   // Keep the real public export names/signatures; omit the original engine barrel.
@@ -63,6 +70,8 @@ export async function buildZCodeWorkflowCompiler() {
   if (!declarations.length) throw new Error('Fixed ZCode pure compiler exports were not found');
   const entry = declarations.map(statement => statement.getText(file)).join('\n')
     + '\nexport { SchemaEmitter, SchemaRejection } from "./schema/emit.js";'
+    + '\nexport { resolveSymbol, isFacadeDeclared } from "./analysis/sites.js";'
+    + '\nexport { valueFunctionOfSymbol } from "./facade/registry.js";'
     + '\nexport { projectSiteGraph } from "./analysis/graph.js";'
     + '\nexport { projectCausalityGraph } from "./analysis/causality-graph.js";'
     + '\nexport { analyzeWorkflowProgram } from "./analysis/analyze.js";';

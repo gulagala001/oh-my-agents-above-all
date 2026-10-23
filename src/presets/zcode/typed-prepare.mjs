@@ -8,3 +8,11 @@ export async function prepareTypedWorkflow(script, signal) {
   signal?.throwIfAborted();
   return compiler.prepareTypedWorkflow(script);
 }
+
+export async function prepareTypedSnippet(script, signal) {
+  validateWorkflowSource(script);
+  signal?.throwIfAborted();
+  const compiler = await import('./typed-compiler.mjs');
+  signal?.throwIfAborted();
+  return compiler.prepareTypedSnippet(script);
+}

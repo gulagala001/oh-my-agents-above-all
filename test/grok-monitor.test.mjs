@@ -1,6 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { apply, MonitorBatch, MonitorLines, MonitorRateLimiter } from '../src/presets/grok/monitor.mjs';
+import { apply, MonitorLines, MonitorRateLimiter } from '../src/presets/grok/monitor.mjs';
+import { setTimeout as delay } from 'node:timers/promises';
+
+function fixture({ failNotice = false, foreign = false } = {}) {
+  let listener, tool, offset = 0; const disposers = [], pending = [], messages = [], killed = [];
+  const job = { id: 'owned-job', owner: foreign ? 'foreign' : 'owner', kind: 'bash', label: 'owned command', status: 'running' };
+  const agent = { id: 'owner', status: 'idle', followup(message) { if (failNotice) throw Error('notice unavailable'); messages.push(message); }, inject(message) { messages.push(message); } };
+  const ctx = { omaaGrokMonitorShell: { run: (_call, next) => next() }, agents: { get: () => agent }, logger: { warn() {} }, effect(fn) { disposers.push(fn()); },
+    jobs: { events: { subscribe(_filter, fn) { listener = fn; } }, get() { return job; },
+      readAt(id, from, owner) { assert.equal(id, job.id); assert.equal(owner, agent.id); assert.equal(from, offset);
+        const value = pending.shift() ?? { chunks: [] }; offset += value.chunks.reduce((n, row) => n + Buffer.byteLength(row.text), 0);
+        return { lossy: false, ...value, next: offset }; },
+      kill(id, owner, reason) { killed.push({ id, owner, reason }); job.status = 'killed'; listener({ type: 'stopping', job }); } },
+    tools: { register(value) { tool = value; }, get: name => name === 'bash', async execute() {
+      listener({ type: 'registered', job }); return { isError: false, value: { kind: 'background', jobId: job.id } };
+    } },
+  };
+  apply(ctx);
+  return { job, messages, killed,
+    start: args => tool.execute({ command: 'owned command', description: 'watch "own"\nstate', ...args },
+      { agent, callId: 'outer', token: Symbol('accepted'), signal: new AbortController().signal }),
+    output(chunks, extra = {}) { pending.push({ chunks, ...extra }); listener({ type: 'output', id: job.id }); },
+    finish() { job.status = 'completed'; listener({ type: 'settled', job, cause: 'completed' }); },
+    async close() { for (const fn of disposers.reverse()) await fn?.(); } };
+}
 
 test('monitor preserves partial UTF-8 stdout lines and rate overload eventually stops rather than only suppressing', () => {
   const lines = new MonitorLines();
@@ -43,12 +67,14 @@ test('monitor byte cap and fragmented Unicode retain the original tail and reset
 
 test('cancel after native job registration kills the exact started job even when final tool materialization loses its value', async () => {
   let listener, tool, registeredExec; const killed = [], controller = new AbortController();
+  const job = { id: 'bash-exact', owner: 'owner', kind: 'bash', label: 'sleep 30', status: 'running' };
   const ctx = {
+    omaaGrokMonitorShell: { run: (_call, next) => next() },
     logger: { warn() {} }, effect() {},
-    jobs: { events: { subscribe(_filter, callback) { listener = callback; } }, kill(id, owner, reason) { killed.push({ id, owner, reason }); } },
+    jobs: { events: { subscribe(_filter, callback) { listener = callback; } }, get() { return job; }, kill(id, owner, reason) { killed.push({ id, owner, reason }); } },
     tools: { register(definition) { tool = definition; }, get(name) { return name === 'bash'; }, async execute(exec) {
       registeredExec = exec;
-      listener({ type: 'registered', job: { id: 'bash-exact', owner: 'owner', kind: 'bash' } });
+      listener({ type: 'registered', job });
       controller.abort(new Error('late cancellation'));
       return { isError: true, error: { message: 'ABORTED' } };
     } },
@@ -62,53 +88,33 @@ test('cancel after native job registration kills the exact started job even when
   assert(killed.every(value => value.id === 'bash-exact' && value.owner === 'owner'));
 });
 
-test('notification batches retain the exact UTF-8 prefix and reset after delivery', () => {
-  const truncate = text => {
-    const bytes = Buffer.from(text); if (bytes.length <= 3000) return text;
-    let end = 3000; while ((bytes[end] & 0xc0) === 0x80) end--;
-    return bytes.subarray(0, end).toString('utf8') + '...(truncated)';
-  };
-  for (const lines of [
-    ['first', '世界', '🚀', 'tail'],
-    ['x'.repeat(2999), '世界', 'tail'],
-    ['x'.repeat(2998), '🚀', 'tail'],
-    ['x'.repeat(3000), 'tail'],
-    ['\ud800', ...Array(100).fill('中文🙂'.repeat(70))],
-  ]) {
-    const batch = new MonitorBatch(); batch.push([]);
-    for (let i = 0; i < lines.length; i++) batch.push([lines[i]]);
-    assert.ok(batch.length <= 3014); assert.equal(batch.flush(), truncate(lines.join('\n')));
-    assert.equal(batch.length, 0); assert.equal(batch.flush(), '');
-    batch.push(['new']); assert.equal(batch.flush(), 'new');
-  }
+test('monitor timeout zero is persistent and a producer gap severs earlier partial stdout', async t => {
+  const f = fixture(); t.after(() => f.close());
+  const started = await f.start({ timeout_ms: 0 }); assert.equal(started.timeoutMs, 0); assert.equal(started.persistent, true);
+  f.output([{ channel: 'stdout', text: 'BEFORE_PARTIAL' }]);
+  f.output([{ channel: 'stdout', text: 'AFTER\n', gapBefore: true }, { channel: 'stderr', text: 'HIDDEN_STDERR\n' }]);
+  f.finish();
+  const text = f.messages.map(row => row.content[0].text).join('\n');
+  assert.match(text, /Monitor output gap/); assert.match(text, /AFTER/);
+  assert(!text.includes('BEFORE_PARTIAL')); assert(!text.includes('HIDDEN_STDERR'));
+  assert.match(text, /description="watch 'own' state"/);
 });
 
-test('stopping a monitor releases queued notice and partial line without changing the output cursor', async t => {
-  let tool, listener, batch, lines, reads = 0; const notices = [], killed = [];
-  const pushBatch = MonitorBatch.prototype.push, pushLines = MonitorLines.prototype.push;
-  t.mock.method(MonitorBatch.prototype, 'push', function (values) { batch = this; return pushBatch.call(this, values); });
-  t.mock.method(MonitorLines.prototype, 'push', function (text) { lines = this; return pushLines.call(this, text); });
-  const agent = { id: 'owner', status: 'idle', followup: message => notices.push(message) };
-  const ctx = {
-    logger: { warn() {} }, effect() {},
-    jobs: {
-      events: { subscribe(_filter, callback) { listener = callback; } },
-      kill(...args) { killed.push(args); },
-      readAt(_id, offset) { reads++; assert.equal(offset, reads === 1 ? 0 : 12); return reads === 1
-        ? { next: 12, chunks: [{ channel: 'stdout', text: 'notice\npartial' }], lossy: false }
-        : { next: 12, chunks: [], lossy: false }; },
-    },
-    tools: { register(value) { tool = value; }, get() { return true; }, async execute() {
-      listener({ type: 'registered', job: { id: 'watch', owner: agent.id, kind: 'bash' } });
-      return { isError: false, value: { kind: 'background', jobId: 'watch' } };
-    } },
-  };
-  apply(ctx);
-  await tool.execute({ command: 'synthetic', description: 'release', persistent: true }, { agent, callId: 'call', signal: new AbortController().signal });
-  assert.ok(batch.length); assert.equal(lines.pending, 'partial');
-  listener({ type: 'stopping', job: { id: 'watch' } });
-  assert.equal(batch.length, 0); assert.equal(lines.pending, '');
-  listener({ type: 'output', id: 'watch' });
-  listener({ type: 'settled', job: { id: 'watch', status: 'killed' } });
-  assert.equal(reads, 1); assert.deepEqual(notices, []); assert.deepEqual(killed, []);
+test('monitor complete batches include gap and truncation notices inside the UTF-8 body budget', async t => {
+  const f = fixture(); t.after(() => f.close()); await f.start({ persistent: true });
+  f.output([{ channel: 'stdout', text: ('世界'.repeat(800) + '\n').repeat(20), gapBefore: true }]); f.finish();
+  assert.equal(f.messages.length, 1);
+  const body = f.messages[0].content[0].text.split('\n').slice(1, -1).join('\n');
+  assert(Buffer.byteLength(body.replace(/\n\.\.\.\(truncated\)$/, '')) <= 3000); assert.match(body, /Monitor output gap/); assert.match(body, /truncated/); assert(!body.includes('\ufffd'));
+});
+
+test('notice transport failure stops exactly the owned native job', async t => {
+  const f = fixture({ failNotice: true }); t.after(() => f.close()); await f.start({ persistent: true });
+  f.output([{ channel: 'stdout', text: 'one event\n' }]); await delay(250);
+  assert.equal(f.killed.length, 1); assert.equal(f.killed[0].id, 'owned-job'); assert.equal(f.killed[0].owner, 'owner');
+});
+
+test('foreign native job identity is refused without canceling that other owner', async t => {
+  const f = fixture({ foreign: true }); t.after(() => f.close());
+  await assert.rejects(f.start({ persistent: true }), /identity did not match/); assert.deepEqual(f.killed, []);
 });

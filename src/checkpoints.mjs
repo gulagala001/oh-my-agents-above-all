@@ -67,7 +67,7 @@ async function readSide(root, target) {
     const entry = await fs.lstat(target);
     if (entry.isSymbolicLink() || !entry.isFile() || entry.nlink !== 1) fail('UNSAFE_PATH', 'Checkpoint files must be regular files without symbolic or hard links');
     if (entry.size > FILE_BYTES) fail('FILE_TOO_LARGE', 'The file exceeds the checkpoint byte limit');
-    handle = await fs.open(target, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await fs.open(target, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const before = await handle.stat();
     if (!before.isFile() || before.nlink !== 1 || !sameIdentity(identity(entry), identity(before))) fail('FILE_CHANGED', 'The checkpoint file changed while opening');
     const bytes = await boundedRead(handle), after = await handle.stat(), named = await fs.lstat(target);
@@ -106,7 +106,8 @@ function validateMetadata(value, id, root) {
   return value;
 }
 
-export function createCheckpointStore(directory, { workspaceChanges, isIdle = () => false, writable = () => false, currentDirectory = session => session.header.cwd } = {}) {
+export function createCheckpointStore(directory, { workspaceChanges, isIdle = () => false, writable = () => false,
+  ownerOf = session => session, currentDirectory = session => session.header.cwd } = {}) {
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) fail('INVALID_STORE', 'An absolute checkpoint directory is required');
   const sessions = new Map(), sessionLocks = new Map(), installed = new WeakSet();
   let storageRoot, storageIdentity;
@@ -131,8 +132,13 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     let state = sessions.get(id);
     if (!state) {
       try {
-        const handle = await fs.open(metadataPath(id), constants.O_RDONLY | constants.O_NOFOLLOW);
-        try { state = validateMetadata(JSON.parse((await boundedRead(handle, META_BYTES)).toString('utf8')), id, binding.root); } finally { await handle.close(); }
+        const handle = await fs.open(metadataPath(id), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+        try {
+          const stat = await handle.stat();
+          if (!stat.isFile()) fail('INVALID_METADATA', 'Checkpoint metadata must be a regular file');
+          if (stat.size > META_BYTES) fail('FILE_TOO_LARGE', 'The file exceeds the checkpoint byte limit');
+          state = validateMetadata(JSON.parse((await boundedRead(handle, META_BYTES)).toString('utf8')), id, binding.root);
+        } finally { await handle.close(); }
       } catch (error) { if (error.code !== 'ENOENT') throw error; state = { version: 1, sessionId: id, ...binding, turns: [] }; }
       sessions.set(id, state);
     }
@@ -151,10 +157,27 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     await prepare(state.sessionId); const folder = location(state.sessionId);
     await privateDirectory(path.join(folder, 'content'));
     const temporary = path.join(folder, randomUUID() + '.tmp');
-    try { await fs.writeFile(temporary, text, { flag: 'wx', mode: 0o600 }); await fs.rename(temporary, metadataPath(state.sessionId)); }
-    finally { await fs.rm(temporary, { force: true }); }
+    let temporaryCreated = false;
+    try {
+      const handle = await fs.open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
+      temporaryCreated = true;
+      try { await handle.writeFile(text); } finally { await handle.close(); }
+      await fs.rename(temporary, metadataPath(state.sessionId));
+      temporaryCreated = false; // A successful rename consumed this owned path.
+    } finally { if (temporaryCreated) await fs.rm(temporary, { force: true }); }
     const blobs = path.join(folder, 'content'), keep = referenced(state);
-    for (const entry of await fs.readdir(blobs).catch(error => { if (error.code === 'ENOENT') return []; throw error; })) if (/^[a-f0-9]{64}$/.test(entry) && !keep.has(entry)) await fs.unlink(path.join(blobs, entry));
+    for (const entry of await fs.readdir(blobs).catch(error => { if (error.code === 'ENOENT') return []; throw error; })) {
+      if (!/^[a-f0-9]{64}$/.test(entry) || keep.has(entry)) continue;
+      const target = path.join(blobs, entry);
+      let stat;
+      try { stat = await fs.lstat(target); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+      // A bad legacy capture is evidence, not a verified orphan blob. Do not
+      // erase it just because remember() correctly refused to reference it.
+      if (!stat.isFile() || stat.size > FILE_BYTES) continue;
+      try { await content(state, { kind: 'bytes', hash: entry, size: stat.size }); }
+      catch (error) { if (error.code === 'CONTENT_CORRUPT') continue; throw error; }
+      await fs.unlink(target);
+    }
   }
   async function remember(state, side) {
     if (side.kind !== 'bytes') return cleanSide(side);
@@ -162,14 +185,32 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     if (!refs.has(side.hash) && [...refs.values()].reduce((sum, size) => sum + size, 0) + side.size > CONTENT_BYTES) return { kind: 'unavailable', reason: 'CONTENT_LIMIT' };
     await prepare(state.sessionId); const folder = path.join(location(state.sessionId), 'content'); await privateDirectory(folder);
     const target = path.join(folder, side.hash);
-    try { await fs.writeFile(target, side.bytes, { flag: 'wx', mode: 0o600 }); } catch (error) { if (error.code !== 'EEXIST') throw error; }
+    const temporary = path.join(folder, randomUUID() + '.tmp');
+    let temporaryCreated = false;
+    try {
+      const handle = await fs.open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
+      temporaryCreated = true;
+      try { await handle.writeFile(side.bytes); await handle.sync(); } finally { await handle.close(); }
+      // Publish complete bytes without replacing a blob another capture owns.
+      try { await fs.link(temporary, target); } catch (error) { if (error.code !== 'EEXIST') throw error; }
+      // EEXIST is not evidence of a complete blob (an older failed capture may
+      // have left partial bytes). Never reference it until verified, or repair
+      // it by overwriting/deleting a path whose ownership we cannot establish.
+      await content(state, side);
+    } finally { if (temporaryCreated) await fs.rm(temporary, { force: true }); }
     return cleanSide(side);
   }
   async function content(state, side) {
     if (side.kind !== 'bytes') return null;
     await prepare(state.sessionId); await privateDirectory(path.join(location(state.sessionId), 'content'));
-    const handle = await fs.open(path.join(location(state.sessionId), 'content', side.hash), constants.O_RDONLY | constants.O_NOFOLLOW);
-    try { const bytes = await boundedRead(handle); if (bytes.length !== side.size || hash(bytes) !== side.hash) fail('CONTENT_CORRUPT', 'The checkpoint content hash does not match'); return bytes; }
+    const handle = await fs.open(path.join(location(state.sessionId), 'content', side.hash), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+      const stat = await handle.stat();
+      if (!stat.isFile() || stat.size !== side.size) fail('CONTENT_CORRUPT', 'The checkpoint content is not a complete regular blob');
+      const bytes = await boundedRead(handle);
+      if (bytes.length !== side.size || hash(bytes) !== side.hash) fail('CONTENT_CORRUPT', 'The checkpoint content hash does not match');
+      return bytes;
+    }
     finally { await handle.close(); }
   }
   async function observed(state, target) {
@@ -187,32 +228,43 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     if (expected.kind === 'bytes' && !sameIdentity(expected.identity, current.identity)) fail('CHECKPOINT_CONFLICT', 'The file was replaced after this checkpoint');
     for (const parent of expected.parents ?? []) if (!sameIdentity(parent, current.parents?.find(value => value.path === parent.path))) fail('CHECKPOINT_CONFLICT', 'A checkpoint parent directory was replaced');
   }
-  async function check(state, file, session, signal) {
-    authorize(session, signal);
+  async function check(state, file, session, guard = () => authorize(session)) {
+    guard();
     const current = await readSide(state.root, path.resolve(state.root, file.path));
+    guard();
     const expected = file.restored ? file.restored.side : file.after;
     if (!expected || expected.kind === 'unavailable' || file.before.kind === 'unavailable' || file.discontinuous) fail('RESTORE_UNAVAILABLE', 'Exact checkpoint bytes are not available for this file');
     matchCurrent(expected, current);
     await content(state, file.before); // Verify every baseline before any file is changed.
-    authorize(session, signal);
+    guard();
     return current;
   }
-  async function replace(state, file, session, applied, signal) {
+  async function replace(state, file, session, applied, guard, cleanup) {
     const target = path.resolve(state.root, file.path), before = file.before;
-    await check(state, file, session, signal);
+    await check(state, file, session, guard);
     if (file.restored) return;
-    if (before.kind === 'absent') { await check(state, file, session, signal); authorize(session, signal); await fs.unlink(target); applied(); return; }
+    if (before.kind === 'absent') { await check(state, file, session, guard); guard(); await fs.unlink(target); applied(); return; }
     const bytes = await content(state, before), temporary = path.join(path.dirname(target), '.omaa-restore-' + randomUUID() + '.tmp');
+    let temporaryCreated = false;
     try {
-      authorize(session, signal);
+      guard();
       const handle = await fs.open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, before.mode);
-      try { await handle.writeFile(bytes); await handle.chmod(before.mode); await handle.sync(); } finally { await handle.close(); }
-      await check(state, file, session, signal);
-      authorize(session, signal);
-      if (file.after.kind === 'absent') { await fs.link(temporary, target); await fs.unlink(temporary); }
-      else await fs.rename(temporary, target);
+      temporaryCreated = true;
+      try { guard(); await handle.writeFile(bytes); guard(); await handle.chmod(before.mode); guard(); await handle.sync(); } finally { await handle.close(); }
+      await check(state, file, session, guard);
+      guard();
+      if (file.after.kind === 'absent') await fs.link(temporary, target);
+      else {
+        await fs.rename(temporary, target);
+        temporaryCreated = false;
+      }
       applied();
-    } finally { await fs.rm(temporary, { force: true }); }
+    } finally {
+      if (temporaryCreated) {
+        try { await fs.rm(temporary, { force: true }); }
+        catch (error) { cleanup.push({ path: path.relative(state.root, temporary), code: error.code ?? 'CLEANUP_UNCONFIRMED', message: error.message }); }
+      }
+    }
   }
   const store = {
     limits: Object.freeze({ fileBytes: FILE_BYTES, contentBytes: CONTENT_BYTES, turns: MAX_TURNS, filesPerTurn: MAX_FILES }),
@@ -254,6 +306,7 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
     async inspect(sessionId, session, { turn, seq, index, signal = new AbortController().signal } = {}) {
       signal.throwIfAborted();
       const state = await locked(sessionLocks, sessionId, () => load(sessionId, session));
+      signal.throwIfAborted();
       const native = changesIn(session).map(record => ({ ...record, summary: workspaceChanges?.summary?.(sessionId, record.seq) }));
       const checkpoints = [...new Set([...state.turns.map(value => value.turn), ...native.map(value => value.turn)])].sort((a, b) => a - b).map(number => {
         const captured = state.turns.find(value => value.turn === number), review = native.find(value => value.turn === number);
@@ -265,35 +318,48 @@ export function createCheckpointStore(directory, { workspaceChanges, isIdle = ()
         integer(index, 'index'); const selected = checkpoints.find(value => value.turn === turn);
         if (!selected?.reviewAvailable || !selected.summary.files[index]) fail('CHECKPOINT_UNAVAILABLE', 'The native comparison is unavailable');
         const diff = await workspaceChanges.diff(sessionId, selected.seq, index, signal); if (!diff) fail('CHECKPOINT_UNAVAILABLE', 'The native comparison is unavailable');
+        signal.throwIfAborted();
         return { checkpoint: selected, diff: structuredClone(diff) };
       }
       if (turn !== undefined) { integer(turn, 'turn'); const selected = checkpoints.find(value => value.turn === turn); if (!selected) fail('CHECKPOINT_NOT_FOUND', 'This turn has no checkpoint'); return { checkpoint: selected }; }
       return { sessionId, limits: store.limits, checkpoints, restoredAt: state.restoredAt, lastRestoredPaths: state.lastRestoredPaths ?? [] };
     },
     async restore(sessionId, session, { turn, paths, signal = new AbortController().signal } = {}) {
-      integer(turn, 'turn'); signal.throwIfAborted(); authorize(session, signal);
+      integer(turn, 'turn'); signal.throwIfAborted(); authorize(session);
+      const owner = ownerOf(session);
+      if (!owner) fail('SESSION_OWNER_CHANGED', 'The native checkpoint Session is no longer loaded by its actual owner');
+      const guard = () => {
+        signal.throwIfAborted();
+        if (ownerOf(session) !== owner) fail('SESSION_OWNER_CHANGED', 'The native checkpoint Session or owning agent changed');
+        authorize(session);
+      };
+      guard();
       return locked(sessionLocks, sessionId, async () => {
-        authorize(session, signal);
+        guard();
         const state = await load(sessionId, session), record = state.turns.find(value => value.turn === turn);
+        guard();
         if (!record) fail('CHECKPOINT_NOT_FOUND', 'This turn has no captured file checkpoint');
         if (paths !== undefined && (!Array.isArray(paths) || paths.some(value => typeof value !== 'string') || new Set(paths).size !== paths.length)) fail('INVALID_CHECKPOINT', 'Checkpoint paths must be a unique list');
         const files = record.files.filter(file => file.changed !== false && (paths === undefined || paths.includes(file.path)));
         if (!files.length || paths?.some(value => !files.some(file => file.path === value))) fail('FILE_NOT_FOUND', 'The selected checkpoint files are unavailable');
-        const restored = [], changed = [], conflicts = [];
+        const restored = [], changed = [], conflicts = [], temporaryCleanup = [];
         return lockFiles(files.map(file => path.resolve(state.root, file.path)).sort(), async () => {
-          for (const file of files) try { signal.throwIfAborted(); await check(state, file, session, signal); }
+          for (const file of files) try { await check(state, file, session, guard); }
           catch (error) { conflicts.push({ path: file.path, code: error.code ?? 'RESTORE_FAILED', message: error.message }); }
           if (conflicts.length) return { ok: false, partial: false, restored, changed, notRestored: files.map(file => file.path), conflicts };
           for (const file of files) {
             try {
-              signal.throwIfAborted(); await replace(state, file, session, () => changed.push(file.path), signal);
+              guard(); await replace(state, file, session, () => changed.push(file.path), guard, temporaryCleanup);
               const current = await readSide(state.root, path.resolve(state.root, file.path));
               if (!sameSide(file.before, current)) fail('RESTORE_VERIFICATION_FAILED', 'The restored bytes or permissions do not match the checkpoint');
               restored.push(file.path); file.restored = { side: cleanSide(current) };
               state.restoredAt = new Date().toISOString(); state.lastRestoredPaths = [...restored]; await save(state);
             } catch (error) { conflicts.push({ path: file.path, code: error.code ?? 'RESTORE_FAILED', message: error.message }); break; }
           }
-          return { ok: conflicts.length === 0, partial: conflicts.length > 0 && changed.length > 0, restored, changed, notRestored: files.filter(file => !restored.includes(file.path)).map(file => file.path), conflicts };
+          let interruption;
+          try { guard(); } catch (error) { interruption = { interrupted: true, interruptionReason: error.code ?? error.name ?? 'RESTORE_INTERRUPTED' }; }
+          return { ok: conflicts.length === 0, partial: conflicts.length > 0 && changed.length > 0, restored, changed,
+            notRestored: files.filter(file => !restored.includes(file.path)).map(file => file.path), conflicts, temporaryCleanup, ...interruption };
         });
       });
     },
@@ -322,12 +388,18 @@ export function apply(ctx) {
   ctx.omaa.checkpoints ??= createCheckpointStore(ctx.omaa.checkpointDirectory, {
     workspaceChanges: ctx.get('workspaceChanges'),
     currentDirectory: session => ctx.get('workingDirectory')?.get(session) ?? session.header.cwd,
+    ownerOf: session => {
+      if (ctx.get('sessions')?.get(session.id) !== session || ctx.omaa.product(session)?.id !== 'cursor') return undefined;
+      const agent = agents.get(session.id);
+      return agent ? agent.session === session ? agent : undefined : session;
+    },
     isIdle: session => {
       const agent = agents.get(session.id);
-      return !agent || agent.status === 'idle' && !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length;
+      return !agent || agent.session === session && agent.status === 'idle' && !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length;
     },
     writable: session => {
       const agent = agents.get(session.id);
+      if (agent && agent.session !== session) return false;
       const policy = (agent?.ctx.get('sandboxPolicy') ?? ctx.omaa.sandboxPolicy())?.resolve({ session });
       return Boolean(policy && policy.mode !== 'read-only' && ctx.omaa.modeFor(session, agent) === 'default');
     },

@@ -3,7 +3,17 @@ import { readFileSync, writeFileSync, mkdirSync, renameSync, rmSync } from 'node
 import { createHash, randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 
-export const preferenceSchema = z.object({ enhancement: z.boolean(), theme: z.string(), mode: z.enum(['default', 'ask']) }).strict();
+export const outputStyleSchema = z.object({
+  name: z.string().trim().min(1).max(128),
+  prompt: z.string().min(1).max(16384).refine(value => value.trim().length > 0),
+  keepCodingInstructions: z.boolean().optional(),
+}).strict();
+export const projectMemoryRootSchema = z.string().min(1).max(4096).refine(value => !value.includes('\0')
+  && (value.startsWith('/') || /^[A-Za-z]:[\\/]/.test(value) || /^\\\\[^\\/]+[\\/][^\\/]+/.test(value)), 'Directory paths must be absolute and contain no NUL.');
+export const projectMemorySchema = z.object({ root: projectMemoryRootSchema, workspacePath: projectMemoryRootSchema }).strict();
+export const preferenceSchema = z.object({ enhancement: z.boolean(), theme: z.string(), mode: z.enum(['default', 'ask']),
+  outputStyle: outputStyleSchema.optional(), projectMemory: projectMemorySchema.optional(),
+  agentProfileDirectory: projectMemorySchema.optional(), agentMemory: projectMemorySchema.optional() }).strict();
 export const defaults = Object.freeze({ enhancement: false, theme: 'product', mode: 'default' });
 export function createPreferencesStore(directory) {
   const folder = join(directory, 'preferences');
@@ -37,9 +47,14 @@ export function createPreferencesStore(directory) {
   };
 }
 export function validatePreferences(previous, patch, themes) {
-  const keys = ['enhancement', 'theme', 'mode'];
+  const keys = ['enhancement', 'theme', 'mode', 'outputStyle', 'projectMemory', 'agentProfileDirectory', 'agentMemory'];
   if (!patch || typeof patch !== 'object' || Array.isArray(patch) || Object.keys(patch).some(key => !keys.includes(key))) throw new Error('无效的预设设置');
-  const value = preferenceSchema.parse({ ...previous, ...patch });
+  const merged = { ...previous, ...patch };
+  if (patch.outputStyle === null) delete merged.outputStyle;
+  if (patch.projectMemory === null) delete merged.projectMemory;
+  if (patch.agentProfileDirectory === null) delete merged.agentProfileDirectory;
+  if (patch.agentMemory === null) delete merged.agentMemory;
+  const value = preferenceSchema.parse(merged);
   if (!new Set(['product', 'host', 'omd', ...themes]).has(value.theme)) throw new Error('此主题不可用');
   return value;
 }

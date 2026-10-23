@@ -1,9 +1,14 @@
 import { FileSystemSkillProvider } from '@deepseek-ai/dsh-skill-filesystem';
 import { fileURLToPath } from 'node:url';
 import { installSavedWorkflowTools } from './saved-workflows.mjs';
+import { installRunInspectionTools } from './run-tools.mjs';
+import { installListModelsTool } from './list-models.mjs';
+import { installZCodeNativeSessionTools } from './native-session-tools.mjs';
+import { installReadPdfTool } from './read-pdf.mjs';
+import { installZCodeProfileDelegation } from './profile-delegation.mjs';
 
 export const name = 'omaa-zcode-workflow';
-export const inject = ['skills', 'tools', 'fs'];
+export const inject = ['skills', 'tools', 'fs', 'omaa', 'agents', 'sessions', 'subagents', 'sessionQuery', 'sessionProjections', 'sandboxPolicy', 'jobs'];
 export const workflowGuidance = `# Dynamic workflows
 Create and run a dynamic workflow: a JavaScript script that orchestrates multiple model-driven subagents with plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results. The script is syntax checked by the host runtime and runs under the selected permission mode. Start it in the background when the work can continue independently; you are notified with its final result when it settles. Runtime errors come back as diagnostics.
 
@@ -17,6 +22,14 @@ Use the actual workflow schema: supply the plain JavaScript body in script and t
 
 export function workflowGuidanceFor(mode = 'off', tools = new Set(), submode = 'free') {
   let guidance = workflowGuidance;
+  if (tools.has('list_models')) guidance += '\nUse list_models with an empty object to discover advertised native model IDs and reasoning levels for a user-requested subagent_model choice. It does not switch the parent model; catalog membership does not prove credentials, permissions or availability.';
+  if (tools.has('todo_read')) guidance += '\nUse todo_read to inspect this session\'s actual native checklist. turn/start resets it to null; null is not a recovered cross-turn task list. Follow the native todo_write schema; items have no inferred priority.';
+  if (tools.has('read_pdf')) guidance += '\nUse read_pdf for actual page images from a local PDF, or explicitly select format="text" for extracted text on text-only routes. Supply pages for documents over 10 pages, at most 20 contiguous pages per request. Images require image input on the current effective route; both formats require existing converters under full read-only confinement. Continue text with its nextOffset and text_sha256, keeping format/pages fixed. Returned page images or text do not establish native PDF file-input capability or model consumption.';
+  if (tools.has('respond_to_coordinator')) guidance += '\nA resident child may use respond_to_coordinator to queue a progress update for its own direct parent without ending its task. A returned messageId confirms inbox admission, not parent consumption. Unknown acceptance must not be automatically resent.';
+  if (tools.has('cron_create')) guidance += '\nOn an explicit user request, cron_create/list/update/delete manage this native session\'s persistent reminders. Relative delayMinutes is one-shot; calendar cron repeats indefinitely and requires an explicitly selected time_zone. They require default mode and native approval, and scheduled turns cannot create, edit or delete them. Finite runs, interval carriers and creation-time model pinning are unavailable. A reminder delivery receipt is not model task completion; unknown mutations must not be retried automatically.';
+  if (tools.has('zcode_agent')) guidance += '\nUse zcode_agent with an empty object to discover supported project .zcode/agents profiles and diagnostics. In default mode, provide the exact profile and task prompt to queue its native child work. It preserves literal profile instructions and native tool restrictions; explicit models must satisfy the existing native child model-selection policy. Unsupported profile runtime fields and nested Agent rules are refused. Returned child/message identity is acceptance; the native parent delivery carries the eventual result.';
+  if (tools.has('update_saved_workflow')) guidance += '\nTo change only a saved definition\'s description, whenToUse or args, use update_saved_workflow with an explicit scope. It re-reads the actual definition and preserves its body under a native version guard. Do not reconstruct the script through read/save for a metadata-only change. Move and delete are separate operations; save to another scope is not a move.';
+  if (tools.has('move_saved_workflow') || tools.has('delete_saved_workflow')) guidance += '\nFor saved definition management, first read the explicit scope and use its full sourceSha256 as expected_source_sha256. move_saved_workflow moves only global to project with the same name; it refuses an existing target and preserves the full source. delete_saved_workflow requires the explicitly reviewed scope. Native standing permissions apply without escalation. These are digest-checked two-step/file operations, not cross-process CAS. Partial or unknown outcomes must be re-read on both relevant paths; never automatically retry, roll back or infer completion from request acceptance or a promoted job.';
   if (tools.has('create_workflow')) {
     guidance = guidance.replace('Create and run a dynamic workflow: a JavaScript script that orchestrates multiple model-driven subagents with plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results.',
       'Create and run a dynamic workflow with create_workflow: a TypeScript script using the ZCode Actor facade, plain control flow (loops, conditionals, fan-out) and schema-checked intermediate results. agent(name, persona?) creates an Actor; await actor.ask<T>(instructions) reuses that Actor\'s native child context and executes its tasks FIFO.');
@@ -27,6 +40,10 @@ export function workflowGuidanceFor(mode = 'off', tools = new Set(), submode = '
     guidance = guidance.replace('A workflow saved in a file is read with read; submit its body through the same workflow tool. Keep reusable scripts in a user-requested project file using write or edit.',
       'Check list_saved_workflows before writing a workflow from scratch. Use run_saved_workflow to run a fitting saved definition by name through its recorded facade; pass actual JSON arguments matching its declarations. Project definitions shadow global definitions unless scope is specified. Use read_saved_workflow or read to inspect a definition before revising it. Save only when the user asks or agrees: save_workflow stores the body and metadata in the selected project or global .zcode/workflows directory; choose facade="zcode" for TypeScript Actors or the default facade="native" for JavaScript, and pass script or script_path, never both.');
   }
+  if (tools.has('amend_workflow')) guidance = guidance.replace('To revise a running workflow, stop its actual job before submitting a revised script; preserve useful completed results and report the new run identity.',
+    'To revise an existing typed ZCode run, call amend_workflow with its actual run_id and revised source; it validates before stopping and draining the predecessor, then creates a linked successor. Do not stop it first. A running native JavaScript workflow still uses its actual job stop before resubmission.');
+  if (tools.has('resume_workflow')) guidance += '\nFor an interrupted typed run with a prospective native replay journal, resume_workflow requests the same-run replay of exact archived settings. It refuses unknown effects or missing completed Actor context; use amendment for revised settings.';
+  if (tools.has('list_workflow_runs') && tools.has('get_workflow_run')) guidance += '\nUse list_workflow_runs and get_workflow_run to inspect this session\'s actual native typed run records without executing them. These native readers preserve session ownership; they do not enumerate another session\'s project history.';
   if (mode !== 'ultra') return guidance;
   const ordinaryRule = '- Without such an explicit request, do not start a workflow: delegate with subagent or do the work yourself, even for multi-step or multi-subagent tasks.';
   const collaboration = 'Participating agents must contribute to implementation, fixes and iteration until the requested outcome is complete; do not limit collaboration to a one-off investigation or review. Workflow, Team and Free share the same complete OMD quality and initiative guidance and differ only in collaboration method. The main agent owns integration, resolving findings and final verification. For substantive work, proactively delegate a scoped task or reuse an existing agent promptly while continuing useful work yourself; do not wait until all investigation or implementation is finished. Choose collaborators and responsibilities according to the task without a fixed headcount, role lineup, process, or review count. You may work alone on casual conversation, simple questions, or trivial mechanical actions. Respect explicit user restrictions and the actual tools available; if collaboration is unavailable, state the limitation and continue what is possible.';
@@ -38,12 +55,17 @@ export function workflowGuidanceFor(mode = 'off', tools = new Set(), submode = '
 
 export function apply(ctx) {
   installSavedWorkflowTools(ctx);
+  installRunInspectionTools(ctx);
+  installListModelsTool(ctx);
+  installZCodeNativeSessionTools(ctx);
+  installReadPdfTool(ctx);
+  installZCodeProfileDelegation(ctx);
   let provider;
   ctx.skills.registerProvider(control => (provider = new FileSystemSkillProvider(ctx, control, { providerName: 'omaa-zcode', includeDefaultRoots: false,
     customSkillDirs: [fileURLToPath(new URL('./skills/', import.meta.url))], watch: false })));
   ctx.effect(() => () => provider?.dispose(), 'ZCode workflow skill');
   ctx.tools.guard(exec => {
-    if (!['workflow', 'create_workflow', 'amend_workflow', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
+    if (!['workflow', 'create_workflow', 'amend_workflow', 'fill_workflow', 'resume_workflow', 'eval_workflow_snippet', 'save_workflow', 'run_saved_workflow'].includes(exec.name)) return;
     if (exec.name === 'amend_workflow' && exec.arguments.script === undefined && exec.arguments.path === undefined) return;
     const events = exec.agent.session.snapshotEvents();
     const calls = new Set(events.filter(event => {

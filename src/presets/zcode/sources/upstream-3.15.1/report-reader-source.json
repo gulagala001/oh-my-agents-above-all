@@ -1,0 +1,21 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "files": [
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "sha256": "9f7c6d7ab87ba54b36923b1dd6553d0dc5e83c1f27633ff507ec2b3d7d276d31",
+      "gitBlobSha1": "3086087469b2c1208864abf52fdc05cfd84c8669",
+      "bytes": 18031,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/workflow-artifacts.ts",
+      "runtimeRole": "reference-only"
+    },
+    {
+      "path": "packages/shared/src/zcode-protocol-v4/core.ts",
+      "sha256": "97750a7bab0a7580c1d27c8e0155981786fdbfa07373d46c77829f25eb407a39",
+      "gitBlobSha1": "69712ccd60a49fe33725ea34aa77b34e457d7fa8",
+      "bytes": 3859,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/zcode-protocol-v4/core.ts",
+      "runtimeRole": "reference-only"
+    }
+  ]
+}

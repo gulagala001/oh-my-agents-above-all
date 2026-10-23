@@ -1,4 +1,4 @@
-import { original } from './texts.mjs';
+import { memoryTrustOriginal, original, workflowActorOriginal } from './texts.mjs';
 import { workflowGuidanceFor } from './workflow.mjs';
 
 export const product = Object.freeze({
@@ -8,11 +8,66 @@ export const product = Object.freeze({
   upstreamVersion: '3.14.3', license: 'Apache-2.0',
 });
 
+export function isZCodeWorkflowActor(descriptor) {
+  return Boolean(descriptor && descriptor.mode === 'continuable'
+    && (descriptor.provider === 'spawn' || typeof descriptor.provider === 'string' && descriptor.provider.startsWith('omaa-zcode-continuity-'))
+    && typeof descriptor.label === 'string' && descriptor.label.startsWith('ZCode Actor · ')
+    && (descriptor.persona === undefined || typeof descriptor.persona === 'string'));
+}
+
+function outputStyleSection(style) {
+  if (!style || typeof style.prompt !== 'string' || !style.prompt.trim()) return undefined;
+  if (typeof style.name !== 'string' || !style.name.trim()) throw Error('Selected output style must have a name.');
+  return '# Output Style: ' + style.name + '\n' + style.prompt.trim();
+}
+
+export function buildWorkflowActorPrompt({ tools = new Set(), cwd, platform, mode = 'default', persona, outputStyle } = {}) {
+  if (persona !== undefined && typeof persona !== 'string') throw Error('Native Actor persona must be literal text.');
+  const styleSection = outputStyleSection(outputStyle);
+  const identity = original.identity.slice(original.identity.indexOf('\n\nIMPORTANT:') + 2)
+    .replace('Text you output outside of tool use is displayed to the user as Github-flavored markdown in a terminal.',
+      tools.has('submit_result') ? 'The workflow script consumes the value committed through submit_result for this typed ask.'
+        : 'Your final assistant text is consumed by the workflow script as the task result.')
+    .replace('Tools run behind a user-selected permission mode; a denied call means the user declined it — adjust, don\'t retry verbatim.',
+      'Tools run under the native delegated permission scope; do not retry a denied operation or widen that scope.')
+    .replace('Hooks may intercept tool calls; treat hook output as user feedback.',
+      'Treat tool results as execution evidence, and the task owner\'s instructions as task guidance.')
+    .replace("Reference code as `file_path:line_number` — it's clickable.",
+      'Reference code with Markdown file links using absolute paths, adding a line number when useful.');
+  const task = tools.has('submit_result') ? workflowActorOriginal.task
+    : 'Each ask states what to do. Your final assistant text is the task result; return the requested content there.';
+  const workingTools = ['read', 'glob', 'grep', 'read_image', 'edit', 'write', 'bash', 'pwsh', 'skill', 'web_search', 'web_fetch', 'send_message']
+    .filter(name => tools.has(name));
+  const contract = ['# Working inside a workflow',
+    ...(workingTools.length ? ['- Working tools registered for this ask: ' + workingTools.map(name => '`' + name + '`').join(', ') + '.'] : []),
+    '- The registered tools and their schemas describe this ask\'s actual tool surface. Use their real names and observe the native permission scope.',
+    '- ' + task,
+    '- ' + workflowActorOriginal.evidence.replace('Cite code as `path:line`.', 'Cite code with absolute Markdown file links and useful line numbers.'),
+    '- ' + workflowActorOriginal.outcome,
+    '- ' + (tools.has('escalate') ? workflowActorOriginal.escalation
+      : 'When required context or access is unavailable, state the blocker faithfully in the task\'s actual result contract.'),
+    '- ' + workflowActorOriginal.artifact.replace(' — the script publishes it to the user.', '.'),
+  ].join('\n');
+  const environment = [];
+  if (cwd !== undefined) environment.push('Primary working directory: ' + String(cwd));
+  if (platform !== undefined) environment.push('Platform: ' + String(platform));
+  if (mode !== 'default') environment.push('Active host mode: ' + String(mode));
+  return [workflowActorOriginal.opening, ...(persona === undefined || persona.length === 0 ? [] : [persona]), identity, contract,
+    ...(environment.length ? ['# Environment\n' + environment.join('\n')] : []),
+    '# Recalled memory\n' + memoryTrustOriginal,
+    ...(styleSection === undefined ? [] : [styleSection]),
+    original.context.replace("The user is not watching in real time and cannot answer questions mid-task, so asking 'Want me to…?' or 'Shall I…?' will block the work.",
+      'The script consumes your task result; do not make progress depend on a person watching this child session.')].join('\n\n');
+}
+
 /** Product behavior only; DSH owns the model, tools, permissions and session. */
-export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', child = false, workMode = 'off', workSubmode = 'free' } = {}) {
+export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default', child = false, workMode = 'off', workSubmode = 'free', workflowActor = false, outputStyle } = {}) {
+  if (workflowActor) return buildWorkflowActorPrompt({ tools, cwd, platform, mode, outputStyle });
   const has = name => tools.has(name);
   const sections = [original.prefix];
-  const identity = child ? original.identity.replace('You are an interactive ZCode agent that helps users with software engineering tasks.', 'You are a subagent working on a delegated task. The parent agent or workflow script consumes your result; keep your work within the assigned scope.') : original.identity;
+  const styleSection = outputStyleSection(outputStyle);
+  const identity = child ? original.identity.replace('You are an interactive ZCode agent that helps users with software engineering tasks.', 'You are a subagent working on a delegated task. The parent agent or workflow script consumes your result; keep your work within the assigned scope.') : styleSection === undefined ? original.identity
+    : original.identity.replace('You are an interactive ZCode agent that helps users with software engineering tasks.', "You respond to the user according to the active Output Style below while using ZCode's tools and instructions.");
   if (child) sections.length = 0;
   sections.push(identity
     .replace('Text you output outside of tool use is displayed to the user as Github-flavored markdown in a terminal.',
@@ -72,6 +127,8 @@ export function buildPrompt({ tools = new Set(), cwd, platform, mode = 'default'
   if (platform !== undefined) environment.push('Platform: ' + String(platform));
   if (mode !== 'default') environment.push('Active host mode: ' + String(mode));
   if (environment.length) sections.push('# Environment\n' + environment.join('\n'));
+  sections.push('# Recalled memory\n' + memoryTrustOriginal);
+  if (styleSection !== undefined) sections.push(styleSection);
   sections.push(original.context.replace(
     "The user is not watching in real time and cannot answer questions mid-task, so asking 'Want me to…?' or 'Shall I…?' will block the work.",
     "Do not make progress depend on the user watching in real time. Asking 'Want me to…?' or 'Shall I…?' when you already have enough information will block the work."));

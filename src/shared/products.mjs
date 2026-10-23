@@ -5,4 +5,7 @@ export const products = Object.freeze([
   { id: 'pi', name: 'Pi Coding Agent', preset: 'omaa-pi', theme: 'pi-coding-agent' },
   { id: 'zcode', name: 'ZCode', preset: 'omaa-zcode', theme: 'zcode' },
 ]);
-export const productForPreset = preset => products.find(product => product.preset === preset);
+// This exact internal identity carries the ZCode composition while enforcing
+// its separate profile admission; arbitrary similarly named presets do not.
+export const productForPreset = preset => products.find(product => product.preset ===
+  (preset === 'omaa-zcode-profile-skills-local' ? 'omaa-zcode' : preset));

@@ -442,7 +442,7 @@
     {
       "source": "system-prompt.ts hiddenTools and buildRules",
       "original": "Only declared selected tools contribute snippets/rules; hidden read/bash retains skills with an indirect file-loading hint; available grep/find/ls suppress shell search guidance.",
-      "adapted": "Pure prompt renderer follows visible selected-tool order and indirect hints; native pwsh and glob map actual host tools. Native extension frames derive hiddenTools from the host-owned loadout, currently empty because prepareLoadout is unsupported.",
+      "adapted": "Pure prompt renderer follows visible selected-tool order and indirect hints; native pwsh and glob map actual host tools. Native extension frames derive hiddenTools from the host-owned loadout, currently empty because full historical hiddenDeclarations projection is unsupported; prepareLoadout descriptions are supported.",
       "reason": "Prompt text must match actual native request declarations; mutable prompt options cannot hide declared tools or imply an indirect executor."
     }
   ],
@@ -459,7 +459,7 @@
     "Pi output truncation artifact contracts",
     "Remote npm/git package installation, full Pi extension API beyond the opt-in native guest profile, custom TUI, theme packages and autoload:false cross-scope resource deltas; existing local directory skill/prompt packages are implemented separately",
     "Original same-JSONL tree leaf navigation, custom-compaction extension callbacks and complete Pi tree-entry semantics; native-session branches and optional leave-summary are implemented separately",
-    "v1.1.0 prepareLoadout/ToolLoadout.getPromptGuidelines, hidden indirect tool execution, tool_execution_start/end including durationMs, agent_settled.aborted and editable turn_end/agent_before_settle/full-history replacement remain unsupported; saved official types are reference data, not an implemented event surface."
+    "v1.1.0 full prepareLoadout hiddenDeclarations/executable ToolLoadout and synchronous setActiveTools hook timing, hidden indirect tool execution, tool_execution_start/end including durationMs, agent_settled.aborted and editable turn_end/agent_before_settle/full-history replacement remain unsupported; saved official types are reference data, not an implemented event surface."
   ],
   "nativeAbsences": [
     "Default plan mode",
@@ -495,7 +495,7 @@
       "Existing local directory packages support convention skills/prompts or package.json.pi declarations, package !glob/+exact/-exact filters and empty-array disablement. Project declarations replace the same resolved user package identity; package filters cannot expose manifest-excluded files. No package installation, dependency installation or JS/TS extension execution occurs. Remote sources are diagnosed/skipped, autoload:false deltas skip the affected package identity, and non-Markdown explicit files are rejected by the native provider contract.",
       "v1.1.0 disabledBuiltinExtensions filters original builtin: extension paths even when CLI/settings enable them. OMAA has no original built-in extension loader; existing local resource discovery and explicit factory allowlist remain its actual scope, with no inert disabledBuiltinExtensions setting."
     ],
-    "sha256": "32da4dd5e184cf85a7142ae94fccf1e6c3f379dd2de99f208053c8b46265188c",
+    "sha256": "626f011422bdd26abdb4728f257fd022e92e6e025e6af7ca31f25ea7691a2512",
     "helpers": [
       {
         "module": "resource-ignore.mjs",
@@ -503,7 +503,7 @@
       },
       {
         "module": "resource-paths.mjs",
-        "sha256": "868df4f12ba17ff32a14a201f1747dd78be8d4edd935c6eee5f1a21bfc276ecf"
+        "sha256": "6af4b42d64cadb25dabd823a5f743710fea829f7c6ed3ef466f929a826060a04"
       },
       {
         "module": "skill-discovery.mjs",
@@ -529,11 +529,11 @@
   },
   "guestAdapter": {
     "module": "extensions/guest.mjs",
-    "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978",
+    "sha256": "261d207176696ac634a861a47792f13be4e3db947ac8d85c488594e10954f4d3",
     "helpers": [
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
+        "sha256": "7ca2ddfe41d928c51cd5ae8c3f036e1841d7f46738d34bdd91270210c1feb319"
       },
       {
         "module": "extensions/validation.ts",
@@ -544,6 +544,11 @@
       {
         "module": "extensions/wire.mjs",
         "sha256": "ea7a0f8b3fc002f32511549b04644cdfdce4645fd50d2bb0f67ec947d6b62864"
+      },
+      {
+        "module": "extensions/loadout.mjs",
+        "sha256": "50497e928a0941f43bb8e214557cdf5ff4e2c9ca1319b9c2b2bed07820c682ae",
+        "source": "packages/coding-agent/src/core/agent-session.ts _applyToolLoadout; descriptions subset only"
       }
     ],
     "source": [
@@ -562,7 +567,7 @@
     "adaptations": [
       "jiti@2.7.0 loads original TS/JS default factories with fsCache/moduleCache disabled. Original fixed typebox@1.3.27 modules and explicit pure Pi defineTool/typeguard/StringEnum helpers are virtual imports; @sinclair/typebox@0.34.41 remains a separate legacy module alias. Unsupported original runtime exports are absent.",
       "Original validateToolArguments from packages/ai/src/utils/validation.ts is loaded byte-for-byte as a pure helper. It uses fixed typebox/compile Compile, Value.Convert, optional-null normalization and upstream plain JSON Schema coercion. StringEnum retains original Type.Unsafe. No private JSON schema matcher or Pi agent runtime is used. Native host schema/guard checks remain authoritative before guest invocation, so native argument acceptance may be narrower than the original coerced Pi contract.",
-      "All factories must succeed before a new registration batch commits. Tools expose original serialized parameters and callback IDs; unsupported prepareArguments/prepareLoadout are exposed as booleans and rejected by the native host. constrainedSampling/renderShell metadata is also rejected because those contracts are not adapted. Active callback registrations and event subscriptions/unsubscriptions use a serial host-acknowledged operation queue. Same-extension replacement and cross-extension first-wins are preserved; a rejected operation rolls back to the acknowledged base and replays later pending changes. Old callback IDs remain valid for already captured native definitions.",
+      "All factories must succeed before a new registration batch commits. Tools expose original serialized parameters and callback IDs; prepareArguments is exposed as a boolean and rejected by the native host; prepareLoadout descriptions run during native assembly with readonly catalog/getPromptGuidelines metadata, while nonempty hiddenDeclarations explicitly blocks the request. constrainedSampling/renderShell metadata is also rejected because those contracts are not adapted. Active callback registrations and event subscriptions/unsubscriptions use a serial host-acknowledged operation queue. Same-extension replacement and cross-extension first-wins are preserved; a rejected operation rolls back to the acknowledged base and replays later pending changes. Old callback IDs remain valid for already captured native definitions.",
       "Supported events are input, before_agent_start, agent_start, turn_start, agent_end, tool_call, tool_result, session_start and session_shutdown. Unknown event subscriptions fail the factory. Registration order is retained; input transforms form a pipeline and handled stops it; tool_call block stops early and the final input is returned so the native host can reject argument mutations.",
       "Bidirectional complete JSON messages are bounded to 128 MiB through strict wire fragmentation/reassembly; each JSONL frame remains bounded to 2 MiB. Registration descriptions retain a separate budget; 32 modules, 64 active callbacks and 256 pending API calls. Reentrant stdin dispatch and AsyncLocalStorage isolate callback context; cancellation uses per-invocation AbortController. Console output uses stderr. Tool updates retain requestId.",
       "ui.notify/select/confirm/input, exec, executeTool, sendUserMessage and setActiveTools request native host actions; void actions drain their host acknowledgements before callback completion. executeTool is restricted to tool callbacks. setActiveTools updates the callback snapshot immediately for known tools only and waits for preceding registration acknowledgements; nested executeTool also waits for those acknowledgements.",
@@ -588,7 +593,7 @@
   },
   "branchesAdapter": {
     "module": "branches.mjs",
-    "sha256": "7107fd18422341f02c673619b990a62cd3f7fbf78ef8872824b3001e9c2190c9",
+    "sha256": "bca4ffef64fb7096dd7ec77c3c95d508b460055685de965c4ed739219ae1e2bf",
     "source": [
       {
         "path": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
@@ -634,10 +639,10 @@
   },
   "extensionHostAdapter": {
     "module": "extensions.mjs",
-    "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742",
+    "sha256": "6a79d2f95d1ff01a2e38cb4755927b43b7783189b54413d38f794c0612082b7a",
     "transport": {
       "module": "extensions/transport.mjs",
-      "sha256": "3a04e0271b9895af70416bdce510c9cd73e9fa61093b44a914d199c8ee7730cd",
+      "sha256": "d3b169a4a5eb7da92b597545e26acd706cd0fdc52f7f1eccb65d9dd74d352485",
       "wire": {
         "module": "extensions/wire.mjs",
         "sha256": "ea7a0f8b3fc002f32511549b04644cdfdce4645fd50d2bb0f67ec947d6b62864"
@@ -662,19 +667,19 @@
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742"
+        "sha256": "6a79d2f95d1ff01a2e38cb4755927b43b7783189b54413d38f794c0612082b7a"
       },
       {
         "module": "extensions/guest.mjs",
-        "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978"
+        "sha256": "261d207176696ac634a861a47792f13be4e3db947ac8d85c488594e10954f4d3"
       },
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
+        "sha256": "7ca2ddfe41d928c51cd5ae8c3f036e1841d7f46738d34bdd91270210c1feb319"
       },
       {
         "module": "resources.mjs",
-        "sha256": "32da4dd5e184cf85a7142ae94fccf1e6c3f379dd2de99f208053c8b46265188c"
+        "sha256": "626f011422bdd26abdb4728f257fd022e92e6e025e6af7ca31f25ea7691a2512"
       },
       {
         "module": "steering.mjs",
@@ -682,7 +687,7 @@
       },
       {
         "module": "extension-prompt.mjs",
-        "sha256": "20a42d0905c54e4666821385d767290f28eeaea17d511a1a07671a469f109db6"
+        "sha256": "25d7f06b8b21704f4a62d7602a9ef09d935ed6007a12dfe46b25ad16cc9adac1"
       }
     ],
     "pureHelpers": {
@@ -741,19 +746,19 @@
     "modules": [
       {
         "module": "extensions.mjs",
-        "sha256": "3cab9848f9add42297c3ed1b14f2efda18cc3d600e901dc03aff2b8fdcb4e742"
+        "sha256": "6a79d2f95d1ff01a2e38cb4755927b43b7783189b54413d38f794c0612082b7a"
       },
       {
         "module": "extensions/guest.mjs",
-        "sha256": "bee3f1597c5e9a395f0e2c71dfcae6c073ee45d3bc085dbcaf5ef69a96c69978"
+        "sha256": "261d207176696ac634a861a47792f13be4e3db947ac8d85c488594e10954f4d3"
       },
       {
         "module": "extensions/pi-api.mjs",
-        "sha256": "daff6f1b72b3555775d7775cf964757d8900480eba02d773397f008aa9c5fbfe"
+        "sha256": "7ca2ddfe41d928c51cd5ae8c3f036e1841d7f46738d34bdd91270210c1feb319"
       },
       {
         "module": "extensions/transport.mjs",
-        "sha256": "3a04e0271b9895af70416bdce510c9cd73e9fa61093b44a914d199c8ee7730cd"
+        "sha256": "d3b169a4a5eb7da92b597545e26acd706cd0fdc52f7f1eccb65d9dd74d352485"
       },
       {
         "module": "extensions/wire.mjs",

@@ -2,8 +2,9 @@ import { createServer } from 'node:http';
 import { spawn, execFile } from 'node:child_process';
 import { once } from 'node:events';
 import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
-import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, stat, lstat } from 'node:fs/promises';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, stat, lstat, symlink, cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve, basename } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -69,8 +70,15 @@ export async function stopFixtureChild(child, timeoutMs = 5000) {
   } finally { clearTimeout(timer); }
 }
 
-export async function installedHost(t, { liveSettings, piResources = true, cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = true, storeDir = process.env.OMAA_TEST_PUBLIC_STORE, installTimeoutMs = 600000 } = {}) {
+export async function installedHost(t, { liveSettings, piResources = true, cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = true, storeDir = process.env.OMAA_TEST_PUBLIC_STORE, installTimeoutMs = 600000, sourceLinked = process.env.OMAA_TEST_SOURCE_LINKED === '1', sessionSandboxMode = process.env.OMAA_TEST_SESSION_SANDBOX_MODE, offlineInstall = false, offlineCacheDir = process.env.OMAA_TEST_OFFLINE_CACHE } = {}) {
   if (safeEnvironment && liveSettings) throw new Error('Safe host matrix only permits the localhost fixture provider');
+  if (sourceLinked && (!safeEnvironment || omdPackagePath || liveSettings)) throw new Error('Cache-linked acceptance requires safe isolation without OMD or live providers');
+  if (sessionSandboxMode !== undefined && (sessionSandboxMode !== 'danger-full-access' || !safeEnvironment
+    || !sourceLinked && !(offlineInstall && packagePath) || liveSettings))
+    throw new Error('Session policy selection requires an explicitly authorized safe source route or owned offline package');
+  if (offlineInstall && (!safeEnvironment || sourceLinked || !packagePath || omdPackagePath || liveSettings))
+    throw new Error('Offline installation requires one explicit owned package and a safe native fixture');
+  if (offlineCacheDir && !offlineInstall) throw new Error('Registry metadata seeding requires explicit offline installation');
   const cli = await regularPath(cliPath, 'DSH CLI');
   const artifact = packagePath ? await packageEvidence(packagePath) : undefined;
   const omdArtifact = omdPackagePath ? await packageEvidence(omdPackagePath) : undefined;
@@ -82,7 +90,13 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
   for (const directory of ['user-home', 'tmp', 'config', 'cache', 'cache/npm', 'cache/corepack', 'data', 'state', 'bin', 'npm-global', 'pi-agent', 'chrome-profile']) await mkdir(join(home, directory), { recursive: true });
   await writeFile(join(home, 'user-home', '.npmrc'), '');
   await writeFile(join(home, 'fixture-empty.npmrc'), '');
+  if (offlineCacheDir) for (const name of ['metadata', 'metadata-full']) {
+    const source = join(await realpath(offlineCacheDir), 'pnpm/v11', name);
+    if ((await stat(source).catch(error => { if (error.code !== 'ENOENT') throw error; }))?.isDirectory())
+      await cp(source, join(home, 'cache/pnpm/v11', name), { recursive: true, force: false, errorOnExist: true });
+  }
   const env = fixtureEnvironment(home, safeEnvironment);
+  if (offlineInstall) Object.assign(env, { npm_config_offline: 'true', COREPACK_ENABLE_NETWORK: '0' });
   // Legacy false options no longer opt into the personal HOME/Pi directory.
   // They remain recorded so old callers are reviewable without losing APIs.
   const userHome = env.HOME, piAgentDir = env.PI_CODING_AGENT_DIR;
@@ -103,7 +117,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
   const liveProviderId = liveSettings?.providerId ?? 'configured-dsh';
   const liveModel = liveSettings?.modelDefinition ?? { id: liveSettings?.model, name: liveSettings?.model, contextWindow: liveSettings?.contextWindow || 128000, maxTokens: liveSettings?.maxTokens || 8192, input: ['text'] };
   let child, origin, cookie, loginUrl, log = '', responder, gate;
-  const requests = [], errors = [];
+  const requests = [], errors = [], sessionPolicies = [];
   const provider = createServer(async (req, res) => {
     try {
       let body = ''; for await (const chunk of req) body += chunk;
@@ -144,9 +158,10 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
   }));
   await writeFile(join(home, '.credentials.yaml'), JSON.stringify({ version: 1, refs: liveSettings ? { OMAA_LIVE_CONFIGURED_KEY: liveSettings.apiKey } : { OMAA_INSTALL_FIXTURE:'local-dummy-key' } }), { mode: 0o600 });
   const command = async args => {
+    if (offlineInstall && args[0] === 'plugin' && args.includes('add')) args = [...args, '--offline', '--ignore-scripts'];
     if (storeDir && args[0] === 'plugin' && (args.includes('add') || args.includes('remove'))) args = [...args, '--store-dir', resolve(storeDir)];
     try { return await runFile(process.execPath, [cli, ...args], { cwd: workspace, env, encoding: 'utf8', timeout: installTimeoutMs, maxBuffer: 16 * 1024 * 1024 }); }
-    catch (error) { throw new Error(redact(error.stderr || error.stdout || error.message)); }
+    catch (error) { throw new Error(redact([error.stdout, error.stderr].filter(Boolean).join('\n') || error.message)); }
   };
   const versionOutput = (await command(['--version'])).stdout.trim();
   if (expectedHostVersion && versionOutput !== expectedHostVersion) throw new Error('CLI version mismatch: expected ' + expectedHostVersion + ', received ' + versionOutput);
@@ -160,8 +175,40 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
     if (await hash() !== value.sha256) throw new Error('Tarball changed during native installation');
     return value;
   };
+  const configureSessionPolicy = async () => {
+    if (!sessionSandboxMode) return;
+    const patch = join(home, 'profiles', 'omaa-fixture', 'cordis.patch.yml');
+    const prior = await readFile(patch, 'utf8').catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
+    const priorRows = prior.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n').trim();
+    if (priorRows && priorRows !== '[]') throw Error('Refusing to overwrite an existing fixture profile patch');
+    const nativeRequire = createRequire(cli);
+    const policyModule = pathToFileURL(nativeRequire.resolve('@deepseek-ai/dsh-sandbox-policy')).href;
+    await writeFile(patch, JSON.stringify([{ insert: [{ id: 'omaa-fixture-session-policy',
+      name: new URL('./session-sandbox-policy.mjs', import.meta.url).href,
+      config: { workspace, policyModule } }] }], null, 2) + '\n');
+  };
   const install = async () => {
-    if (artifact) return installArtifact(artifact);
+    if (sourceLinked) {
+      const profile = join(home, 'profiles', 'omaa-fixture');
+      const manifestPath = join(profile, 'package.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      await mkdir(join(profile, 'node_modules'), { recursive: true });
+      let pluginRoot = repo;
+      if (artifact) {
+        if (artifact.files.some(row => row.path.startsWith('/') || row.path.split('/').includes('..'))) throw Error('Package member is outside the owned extraction directory');
+        const unpack = join(root, 'frozen-plugin'); await mkdir(unpack);
+        await runFile('tar', ['-xzf', artifact.path, '-C', unpack]);
+        pluginRoot = join(unpack, 'package');
+        await symlink(join(repo, 'node_modules'), join(pluginRoot, 'node_modules'), 'dir');
+      }
+      await symlink(pluginRoot, join(profile, 'node_modules', 'oh-my-agents-above-all'), 'dir');
+      manifest.dependencies['oh-my-agents-above-all'] = 'file:' + pluginRoot;
+      manifest.dsh.profile.bundles.push('oh-my-agents-above-all');
+      await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+      await configureSessionPolicy();
+      return { mode: artifact ? 'frozen-package-cache-linked' : 'source-linked', path: pluginRoot, installedPackage: false };
+    }
+    if (artifact) { const installed = await installArtifact(artifact); await configureSessionPolicy(); return installed; }
     const npm = npmCommand(['pack', '--json', '--ignore-scripts', '--pack-destination', root], { env });
     const result = await runFile(npm.program, npm.args, { cwd: repo, env, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
     const [packed] = JSON.parse(result.stdout);
@@ -183,12 +230,22 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
       const providerId = liveSettings ? liveProviderId : 'fixture', modelId = liveSettings ? liveModel.id : 'fixture';
       const model = await call('session/selectModel', { request: { sessionId: value.sessionId, provider: providerId, model: modelId } });
       if (model.selected?.provider !== providerId || model.selected?.model !== modelId) throw new Error('Fixture did not select its declared model');
+      if (sessionSandboxMode) await policy(value.sessionId, true);
     }
     return value;
   };
   const api = async (sessionId, patch) => {
     const response = await fetch(origin + '/omaa/api/session?session=' + encodeURIComponent(sessionId), { headers: { cookie, 'content-type': 'application/json' }, ...(patch === undefined ? {} : { method: 'POST', body: JSON.stringify(patch) }) });
     return { status: response.status, value: await response.json() };
+  };
+  const policy = async (sessionId, change = false, mode = sessionSandboxMode) => {
+    const response = await fetch(origin + '/omaa-fixture/session-policy?' + new URLSearchParams({ session: sessionId }), {
+      headers: { cookie, 'content-type': 'application/json' },
+      ...(change ? { method: 'POST', body: JSON.stringify({ sessionId, mode }) } : {}) });
+    const value = await response.json();
+    if (!response.ok) throw Error('Fixture session policy refused: ' + JSON.stringify(value));
+    if (change) sessionPolicies.push(value);
+    return value;
   };
   const boot = async () => {
     log = '';
@@ -219,12 +276,18 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
       const end = value.records.findLast(record => record.event?.type === 'turn/end' && record.event.seq > before)?.event;
       if (end?.data.reason?.kind === 'error') throw new Error(redact(JSON.stringify(end.data.reason)) + '\n' + redact(log.slice(-4000)));
       return end && value;
-    }, timeout);
+    }, timeout).catch(async error => {
+      const last = await snapshot(sessionId).catch(() => undefined);
+      throw new Error(error.message + '\n' + redact(JSON.stringify({
+        fixtureRequests: requests.length, providerErrors: errors,
+        recentEvents: last?.records.slice(-6), hostLog: log.slice(-3000),
+      })));
+    });
   };
   return {
     get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
-    root, home, userHome, workspace, piAgentDir, requests, errors, install, boot, stop, call, rpc, api, snapshot, prompt, send,
-    evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, cleanup, isolation: { safeEnvironment, isolatedHome: true, requestedIsolatedHome: isolatedHome, requestedPiResources: piResources, piAgentDir, userHome, paths: Object.fromEntries(['DSH_HOME','HOME','USERPROFILE','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_DATA_HOME','XDG_STATE_HOME','APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','PI_CODING_AGENT_DIR','PNPM_HOME','COREPACK_HOME','npm_config_userconfig','npm_config_cache','npm_config_prefix'].map(key => [key, env[key]])), userPiSkillBodiesExcluded: safeEnvironment, projectResourcesEnabled: true, ancestorBoundary: true, metadataScanning: 'Owned HOME/Pi/config/cache/Chrome paths; this is environment isolation, not OS-level filesystem isolation.', omd: { chromeUserDataDir: join(home, 'chrome-profile'), automaticSetupDisabled: safeEnvironment, ...(safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver') } : {}) } } },
+    root, home, userHome, workspace, piAgentDir, requests, errors, sessionPolicies, install, boot, stop, call, rpc, api, policy, snapshot, prompt, send,
+    evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, cleanup, loadMode: sourceLinked ? artifact ? 'frozen-package-cache-linked' : 'source-linked' : 'installed-package', isolation: { safeEnvironment, isolatedHome: true, requestedIsolatedHome: isolatedHome, requestedPiResources: piResources, piAgentDir, userHome, paths: Object.fromEntries(['DSH_HOME','HOME','USERPROFILE','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_DATA_HOME','XDG_STATE_HOME','APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','PI_CODING_AGENT_DIR','PNPM_HOME','COREPACK_HOME','npm_config_userconfig','npm_config_cache','npm_config_prefix'].map(key => [key, env[key]])), userPiSkillBodiesExcluded: safeEnvironment, projectResourcesEnabled: true, ancestorBoundary: true, metadataScanning: 'Owned HOME/Pi/config/cache/Chrome paths; this is environment isolation, not OS-level filesystem isolation.', omd: { chromeUserDataDir: join(home, 'chrome-profile'), automaticSetupDisabled: safeEnvironment, ...(safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver') } : {}) } } },
     command,
     installOmd: () => { if (!omdArtifact) throw new Error('No explicit OMD tarball configured'); return installArtifact(omdArtifact); },
     removeOmd: () => command(['plugin', '--profile', 'omaa-fixture', 'remove', 'oh-my-dsh']),

@@ -3,35 +3,24 @@ import { createUserMessage, boundContextSummary } from '@deepseek-ai/dsh-llm';
 import { readFileSync } from 'node:fs';
 
 export const name = 'omaa-grok-monitor';
-export const inject = ['tools', 'jobs'];
+export const inject = ['tools', 'jobs', 'agents', 'omaaGrokMonitorShell'];
 const source = readFileSync(new URL('./sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/monitor/tool.rs', import.meta.url), 'utf8');
 const description = source.match(/fn description_template\(&self\) -> &str \{\s*r#"([\s\S]*?)"#/)[1]
   .replaceAll('${%- if system_reminders_enabled %}', '').replaceAll('${%- endif %}', '')
   .replaceAll('${%- if tools.by_kind.kill_task_action %}', '').replaceAll('${{ tools.by_kind.kill_task_action }}', '`job_kill`');
 const duration = 36_000_000;
-function truncate(text, size) {
+const batchLimit = 3000;
+const startupSettlementLimit = 32;
+const gapNotice = '[Monitor output gap: bytes were dropped by the native output source or retention.]';
+function utf8Prefix(text, size) {
   const buffer = Buffer.from(text);
   if (buffer.length <= size) return text;
   let end = size;
   while (end > 0 && (buffer[end] & 0xc0) === 0x80) end--;
-  return buffer.subarray(0, end).toString('utf8') + '...(truncated)';
+  return buffer.subarray(0, end).toString('utf8');
 }
-export class MonitorBatch {
-  #text = '';
-  #bytes = 0;
-  #truncated = false;
-  get length() { return this.#text.length; }
-  push(lines) {
-    for (const line of lines) {
-      if (this.#truncated) break;
-      const text = (this.#text ? '\n' : '') + line, bytes = Buffer.byteLength(text);
-      if (this.#bytes + bytes > 3000) {
-        this.#text = truncate(this.#text + text, 3000); this.#truncated = true; break;
-      }
-      this.#text += text; this.#bytes += bytes;
-    }
-  }
-  flush() { const text = this.#text; this.#text = ''; this.#bytes = 0; this.#truncated = false; return text; }
+function truncate(text, size) {
+  return Buffer.byteLength(text) <= size ? text : utf8Prefix(text, size) + '...(truncated)';
 }
 export class MonitorLines {
   #chunks = [];
@@ -103,94 +92,213 @@ export class MonitorRateLimiter {
   }
 }
 const safeAttribute = value => value.replaceAll('"', "'").replace(/[\r\n]/g, ' ');
+function appendBatch(state, lines) {
+  for (const line of lines) {
+    if (state.batchTruncated) break;
+    const separator = state.batch.length ? 1 : 0, bytes = Buffer.byteLength(line);
+    if (state.batchBytes + separator + bytes <= batchLimit) {
+      state.batch.push(line); state.batchBytes += separator + bytes;
+    } else {
+      const room = batchLimit - state.batchBytes - separator;
+      if (room >= 0) {
+        const prefix = utf8Prefix(line, room);
+        state.batch.push(prefix); state.batchBytes += separator + Buffer.byteLength(prefix);
+      }
+      state.batchTruncated = true;
+    }
+  }
+}
 
 export function apply(ctx) {
-  const starting = new AsyncLocalStorage(), monitors = new Map();
+  const starting = new AsyncLocalStorage(), startups = new Set(), monitors = new Map();
+  let closed = false;
   const clear = state => { clearTimeout(state.debounce); clearTimeout(state.deadline); state.debounce = undefined; state.deadline = undefined; };
+  const matchesJob = (state, job) => job && typeof job.id === 'string' && job.id
+    && job.owner === state.agent.id && job.kind === state.shell && job.label === state.command;
+  const observeJob = (state, job) => {
+    if (!matchesJob(state, job)) return false;
+    state.knownJobs.add(job.id);
+    state.id ??= job.id;
+    if (state.id === job.id && job.status === 'running') armDeadline(state, job);
+    return true;
+  };
   const notice = (state, text) => {
-    if (state.disabled) return;
+    if (closed || state.disabled || ctx.agents.get(state.agent.id) !== state.agent) return;
     const message = createUserMessage({ content: [{ type: 'text', text: `<monitor-event description="${safeAttribute(state.description)}" task_id="${state.id}">\n${text}\n</monitor-event>` }],
       source: { kind: 'tool-jobs', form: 'notice', summary: boundContextSummary('Monitor event: ' + state.description) } });
     if (state.agent.status === 'idle') state.agent.followup(message); else state.agent.inject(message);
   };
-  const kill = (state, reason) => {
-    state.disabled = true; clear(state); state.batch.flush(); state.lines.pending = '';
-    if (state.stopRequested) return;
-    state.stopRequested = true;
-    try { ctx.jobs.kill(state.id, state.agent.id, reason); } catch (error) { ctx.logger.warn('Grok monitor stop: ' + error.message); }
+  const kill = (state, reason, drainOutput = false) => {
+    if (!drainOutput) state.disabled = true;
+    clear(state);
+    for (const id of state.knownJobs) {
+      if (state.stopRequested.has(id) || state.stopInFlight.has(id)) continue;
+      state.stopInFlight.add(id);
+      try {
+        const job = ctx.jobs.get(id, state.agent.id);
+        if (job.id !== id || !matchesJob(state, job)) { ctx.logger.warn('Grok monitor stop refused: native job identity changed.'); continue; }
+        const outcome = ctx.jobs.kill(id, state.agent.id, reason);
+        if (drainOutput && !state.disabled && outcome === 'requested') state.stopping = true;
+        state.stopRequested.add(id);
+      } catch (error) { ctx.logger.warn('Grok monitor stop not confirmed: ' + error.message); }
+      finally { state.stopInFlight.delete(id); }
+    }
   };
-  const deliver = state => {
+  function armDeadline(state, job) {
+    if (!state.timeout || state.deadlineArmed || state.disabled || state.stopping || closed || state.signal.aborted) return;
+    if (!Number.isSafeInteger(job.startedAt) || job.startedAt < 0 || !Number.isSafeInteger(job.startedAt + state.timeout))
+      throw Error('Native monitor job has no valid registration timestamp.');
+    state.deadlineArmed = true;
+    // Public startedAt is Date.now() at registration, not an OS-spawn or
+    // monotonic lease. Clamp clock rollback to at most one requested duration.
+    const remaining = Math.min(state.timeout, Math.max(0, job.startedAt + state.timeout - Date.now()));
+    state.deadline = setTimeout(() => kill(state, 'monitor deadline reached', true), remaining);
+    state.deadline.unref();
+  }
+  const deliver = (state, final = false) => {
     state.debounce = undefined;
-    if (state.disabled || !state.batch.length) return;
-    const batch = state.batch.flush();
-    const outcome = state.limiter.process();
-    if (outcome.kind === 'allowed') { if (outcome.notice) notice(state, outcome.notice); notice(state, batch); }
-    else if (outcome.kind === 'kill') { notice(state, outcome.notice); kill(state, 'monitor output rate exceeded for 30s'); }
+    if (closed || state.disabled || state.stopping && !final || (!state.batch.length && !state.batchGap)) return;
+    try {
+      // Reserve body room for the loss fact even when stdout filled the
+      // collector first. Fixed batch_lines caps the body at 3000 UTF-8 bytes,
+      // then appends its separate newline + truncation marker.
+      const gap = state.batchGap ? gapNotice + '\n' : '', text = state.batch.join('\n');
+      const suffix = '\n...(truncated)', available = batchLimit - Buffer.byteLength(gap);
+      const prefix = utf8Prefix(text, available);
+      const truncated = state.batchTruncated || prefix !== text;
+      const batch = gap + prefix + (truncated ? suffix : '');
+      state.batch = []; state.batchBytes = 0; state.batchTruncated = false; state.batchGap = false;
+      const outcome = state.limiter.process();
+      if (outcome.kind === 'allowed') { if (outcome.notice) notice(state, outcome.notice); notice(state, batch); }
+      else if (outcome.kind === 'kill') {
+        try { notice(state, outcome.notice); }
+        finally { kill(state, 'monitor output rate exceeded for 30s'); }
+      }
+    } catch (error) {
+      ctx.logger.warn('Grok monitor delivery failed: ' + error.message);
+      kill(state, 'monitor notification delivery failed');
+    }
   };
   const collect = (state, final = false) => {
-    if (state.disabled) return;
+    if (closed || state.disabled || state.stopping && !final) return;
     const output = ctx.jobs.readAt(state.id, state.offset, state.agent.id);
     state.offset = output.next;
-    if (output.lossy) { state.lines.pending = ''; state.batch.push(['[Monitor output gap: earlier bytes were dropped by the host output ring.]']); }
-    for (const chunk of output.chunks) if (chunk.channel !== 'stderr') state.batch.push(state.lines.push(chunk.text));
-    if (final) state.batch.push(state.lines.flush());
-    if (state.batch.length && !state.debounce) {
+    if (output.lossy) { state.lines.pending = ''; state.batchGap = true; }
+    for (const chunk of output.chunks) if (chunk.channel !== 'stderr') {
+      if (chunk.gapBefore) { state.lines.pending = ''; state.batchGap = true; }
+      appendBatch(state, state.lines.push(chunk.text));
+    }
+    if (final) appendBatch(state, state.lines.flush());
+    if ((state.batch.length || state.batchGap) && !state.debounce) {
       state.debounce = setTimeout(() => deliver(state), 200); state.debounce.unref();
     }
     // Flush the last partial stdout line; the existing job service owns completion.
-    if (final) { clear(state); deliver(state); }
+    if (final) { clear(state); deliver(state, true); }
   };
   ctx.jobs.events.subscribe({ owners: 'scope' }, event => {
+    if (event.type === 'settled') for (const state of startups) {
+      // These are bounded, observe-only candidates. They grant no job id or
+      // authority until the actual returned receipt and owner/kind/label match.
+      if (matchesJob(state, event.job) && state.startupSettlements.size < startupSettlementLimit)
+        state.startupSettlements.set(event.job.id, { cause: event.cause, startedAt: event.job.startedAt });
+    }
     if (event.type === 'registered') {
       const state = starting.getStore();
-      if (state && event.job.owner === state.agent.id && event.job.kind === state.shell && !state.id) {
-        state.id = event.job.id; monitors.set(state.id, state);
+      if (state && startups.has(state) && observeJob(state, event.job)) {
+        if (closed || state.signal.aborted) kill(state, 'monitor launch cancelled or scope disposed');
+        else if (state.id === event.job.id) monitors.set(state.id, state);
       }
       return;
     }
     const id = event.type === 'output' ? event.id : event.job?.id;
     const state = monitors.get(id);
-    if (!state) return;
+    if (!state || (event.job && !matchesJob(state, event.job))) return;
     try {
       if (event.type === 'output') collect(state);
       else if (event.type === 'settled') {
-        if (event.cause !== 'teardown' && event.job.status !== 'killed') collect(state, true);
-        state.disabled = true; clear(state); state.batch.flush(); state.lines.pending = ''; monitors.delete(id);
-      } else if (event.type === 'stopping') { state.disabled = true; state.stopRequested = true; clear(state); state.batch.flush(); state.lines.pending = ''; }
+        if (event.cause !== 'teardown') collect(state, true);
+        state.disabled = true; clear(state); monitors.delete(id);
+      } else if (event.type === 'stopping') {
+        // The stopping event has no cause. Retain bounded output until settled
+        // distinguishes explicit kill from teardown, without waking meanwhile.
+        state.stopping = true; state.stopRequested.add(id); clear(state);
+      }
     } catch (error) { kill(state, 'monitor observer failed'); ctx.logger.warn('Grok monitor: ' + error.message); }
   });
-  ctx.effect(() => () => { for (const state of monitors.values()) kill(state, 'monitor scope disposed'); monitors.clear(); }, 'Grok monitor teardown');
+  ctx.effect(() => async () => {
+    closed = true;
+    const launching = [...startups], running = new Set([...launching, ...monitors.values()]);
+    for (const state of running) {
+      state.control.abort(Error('monitor scope disposed'));
+      kill(state, 'monitor scope disposed');
+    }
+    // Native tool dispatch waits for canceled started bodies to settle. Keep
+    // launch state until late registered/returned owned jobs are reclaimed.
+    await Promise.allSettled(launching.map(state => state.launch));
+    for (const state of running) kill(state, 'monitor scope disposed');
+    monitors.clear();
+  }, 'Grok monitor teardown');
   ctx.tools.register({ name: 'monitor', description,
     parameters: { type: 'object', properties: {
       command: { type: 'string', description: 'Shell command or script. Each stdout line is an event; exit ends the watch.' },
       description: { type: 'string', description: 'Short human-readable description of what you are monitoring (shown in every notification).' },
-      timeout_ms: { type: 'integer', minimum: 0, description: 'Kill the monitor after this deadline (ms). Ignored when persistent is true. Default: 36000000 (10 hr). Max: 36000000 unless persistent is true; 0 means no deadline.' },
+      timeout_ms: { type: ['integer', 'null'], minimum: 0, description: 'Kill the monitor after this deadline (ms). Ignored when persistent is true. Omitted or null: 36000000 (10 hr). Max: 36000000 unless persistent is true; 0 means no deadline.' },
       persistent: { type: 'boolean', description: 'Run for the lifetime of the session (no timeout). Stop with job_kill.' },
     }, required: ['command', 'description'], additionalProperties: false },
     output: { schema: { type: 'object', properties: { taskId: { type: 'string' }, timeoutMs: { type: 'integer' }, persistent: { type: 'boolean' } }, required: ['taskId', 'timeoutMs', 'persistent'] },
       render: (_args, result) => [{ type: 'text', text: JSON.stringify(result) }] },
     async execute(args, exec) {
+      if (closed) throw new Error('monitor scope is closed');
       if (!exec.agent) throw new Error('monitor requires a session agent');
       const shell = ctx.tools.get('bash', exec.agent) ? 'bash' : ctx.tools.get('pwsh', exec.agent) ? 'pwsh' : undefined;
       if (!shell) throw new Error('monitor requires a native command tool');
-      const state = { agent: exec.agent, shell, description: args.description, id: undefined, offset: 0, lines: new MonitorLines(), batch: new MonitorBatch(), limiter: new MonitorRateLimiter(), disabled: false };
       const persistent = args.persistent === true, timeout = persistent ? 0 : args.timeout_ms ?? duration;
       if (!persistent && timeout > duration) throw new Error('persistent must be true when timeout_ms exceeds 36000000ms');
-      const stopOnAbort = () => { if (state.id) kill(state, 'monitor call cancelled'); };
-      exec.signal.addEventListener('abort', stopOnAbort, { once: true });
-      try {
-        const result = await starting.run(state, () => ctx.tools.execute({ name: shell, callId: exec.callId + ':monitor-command', rootCallId: exec.rootCallId ?? exec.callId,
-          arguments: { description: args.description, command: args.command, run_in_background: true }, agent: exec.agent, signal: exec.signal, parent: exec.token }));
-        if (result.isError) throw new Error(result.error?.message ?? 'native command failed');
-        if (result.value?.kind !== 'background' || !result.value.jobId || result.value.jobId !== state.id) throw new Error('native command did not return the monitored background job');
-        exec.signal.throwIfAborted();
-        if (monitors.has(state.id)) {
-          collect(state);
-          if (timeout) { state.deadline = setTimeout(() => kill(state, 'monitor deadline reached'), timeout); state.deadline.unref(); }
-        }
-        return { taskId: state.id, timeoutMs: timeout, persistent };
-      } catch (error) { if (state.id) kill(state, 'monitor launch failed or cancelled'); throw error; }
-      finally { exec.signal.removeEventListener('abort', stopOnAbort); }
+      const control = new AbortController(), signal = AbortSignal.any([exec.signal, control.signal]);
+      const state = { agent: exec.agent, shell, command: args.command, description: args.description, id: undefined, offset: 0, lines: new MonitorLines(), batch: [], batchBytes: 0, batchTruncated: false, batchGap: false, limiter: new MonitorRateLimiter(), disabled: false, stopping: false, timeout, deadlineArmed: false, control, signal, knownJobs: new Set(), stopRequested: new Set(), stopInFlight: new Set(), startupSettlements: new Map() };
+      const stopOnAbort = () => kill(state, 'monitor call cancelled or scope disposed');
+      signal.addEventListener('abort', stopOnAbort, { once: true });
+      const launch = Promise.withResolvers(); state.launch = launch.promise;
+      startups.add(state);
+      (async () => {
+        try {
+          signal.throwIfAborted();
+          if (closed) throw new Error('monitor scope is closed');
+          const call = { name: shell, callId: exec.callId + ':monitor-command', rootCallId: exec.rootCallId ?? exec.callId,
+            arguments: { description: args.description, command: args.command, run_in_background: true }, agent: exec.agent, signal, parent: exec.token };
+          const result = await ctx.omaaGrokMonitorShell.run(call, () => starting.run(state, () => ctx.tools.execute(call)));
+          // A return is usable only after an authoritative owner/kind/label
+          // lookup. Never derive an id or kill a job from an unknown receipt.
+          if (result.value?.kind === 'background' && typeof result.value.jobId === 'string') {
+            const returned = ctx.jobs.get(result.value.jobId, state.agent.id);
+            if (returned.id !== result.value.jobId || !observeJob(state, returned)) throw new Error('native background job identity did not match this monitor');
+            if (!result.isError && !closed && !signal.aborted && !state.disabled) {
+              if (returned.status === 'running' || returned.status === 'stopping') {
+                const previous = monitors.get(returned.id);
+                if (previous && previous !== state) throw new Error('native background job already belongs to another monitor');
+                monitors.set(returned.id, state);
+                if (returned.status === 'stopping') { state.stopping = true; state.stopRequested.add(returned.id); clear(state); }
+              } else if (['completed', 'failed', 'killed'].includes(returned.status)) {
+                const candidate = state.startupSettlements.get(returned.id);
+                const cause = candidate?.startedAt === returned.startedAt ? candidate.cause : undefined;
+                if (['producer', 'kill'].includes(cause)) collect(state, true);
+                state.disabled = true; clear(state); monitors.delete(returned.id);
+              } else throw new Error('native background job has an unsupported observation state');
+            }
+          }
+          if (result.isError) throw new Error(result.error?.message ?? 'native command failed');
+          if (result.value?.kind !== 'background' || !result.value.jobId || result.value.jobId !== state.id || state.knownJobs.size !== 1)
+            throw new Error('native command did not return exactly one monitored background job');
+          signal.throwIfAborted();
+          if (closed) throw new Error('monitor scope is closed');
+          if (monitors.has(state.id)) {
+            collect(state);
+          }
+          return { taskId: state.id, timeoutMs: timeout, persistent: timeout === 0 };
+        } catch (error) { kill(state, 'monitor launch failed or cancelled'); throw error; }
+        finally { signal.removeEventListener('abort', stopOnAbort); startups.delete(state); state.startupSettlements.clear(); }
+      })().then(launch.resolve, launch.reject);
+      return await state.launch;
     },
   });
 }

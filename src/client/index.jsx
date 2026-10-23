@@ -13,7 +13,10 @@ import { applyPiExtensionNotices } from './pi-extensions.jsx';
 import { applyPiExtensionMessages } from './pi-extension-messages.jsx';
 import { ZCodeWorkflows } from './zcode-workflows.jsx';
 import { ZCodeWorkflowTool } from './zcode-workflow-tool.jsx';
+import { ZCodeWorkflowInspectionTool } from './zcode-workflow-inspection-tool.jsx';
+import { ZCodeWorkflowSnippetTool } from './zcode-workflow-snippet-tool.jsx';
 import { ZCodeSavedWorkflowTool } from './zcode-saved-workflow-tool.jsx';
+import { assertSavedWorkflowSession } from './zcode-saved-workflow-state.mjs';
 import workbenchCss from './workbench.css';
 
 export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation', 'uiConversation'];
@@ -32,7 +35,7 @@ export function apply(ctx) {
   }
   function WorkflowPanel(props) {
     const { tab } = props.useTabInfo();
-    return <ZCodeWorkflows settings={settings} sidebarRight={ctx.sidebarRight} visible={tab.visible}
+    return <ZCodeWorkflows settings={settings} sessions={ctx.sessions} sidebarRight={ctx.sidebarRight} visible={tab.visible}
       requestedRunId={typeof tab.navigation?.params?.runId === 'string' ? tab.navigation.params.runId : undefined}
       onOpenActor={actor => {
         const current = settings.getSnapshot();
@@ -53,10 +56,20 @@ export function apply(ctx) {
   const workflowPanelId = 'omaa/omaa-zcode-workflows';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: workflowPanelId, kind: 'omaa-zcode-workflows', title: () => '工作流产物', guide: [] }));
   ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: workflowPanelId }, WorkflowPanel));
-  for (const key of ['create_workflow', 'amend_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
-    inject: sessionId => ({ openArtifacts: runId => ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } }) }),
+  for (const key of ['create_workflow', 'amend_workflow', 'fill_workflow', 'resume_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
+    inject: sessionId => ({ toolName: key, openArtifacts: runId => {
+      assertSavedWorkflowSession(settings, ctx.sidebarRight, sessionId, false, false);
+      return ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } });
+    } }),
   }, ZCodeWorkflowTool));
-  for (const key of ['save_workflow', 'list_saved_workflows', 'read_saved_workflow', 'run_saved_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
+  for (const key of ['list_workflow_runs', 'get_workflow_run']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
+    inject: sessionId => ({ sessionId, toolName: key, openArtifacts: runId => {
+      assertSavedWorkflowSession(settings, ctx.sidebarRight, sessionId, false, false);
+      return ctx.sidebarRight.openTabIn(sessionId, 'omaa-zcode-workflows', { params: { runId } });
+    } }),
+  }, ZCodeWorkflowInspectionTool));
+  ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key: 'eval_workflow_snippet', priority: 100 }, ZCodeWorkflowSnippetTool));
+  for (const key of ['save_workflow', 'list_saved_workflows', 'read_saved_workflow', 'run_saved_workflow', 'update_saved_workflow', 'move_saved_workflow', 'delete_saved_workflow']) ctx.slots.inject('tool.call.toolview', () => ctx.slots.register({ name: 'tool.call.toolview', key, priority: 100,
     inject: sessionId => ({ sessionId, toolName: key, settings, sessions: ctx.sessions, sidebarRight: ctx.sidebarRight }),
   }, ZCodeSavedWorkflowTool));
 }

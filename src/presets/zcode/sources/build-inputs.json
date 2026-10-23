@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Pinned build inputs for ZCode memory, profile parsing and calendar rules.",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/core/src/memory/index-content.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/memory/index-content.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "60fd754a38785421f3841610e626aadaec4887ab",
+      "sha256": "09397af14b35c25822e901c44dc702c927b94b75c072a6f5cd595b7d9e9f4e71",
+      "bytes": 2990,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/memory/index-content.ts",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/shared/src/subagent-profile-parser.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/shared/src/subagent-profile-parser.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "e5935050d98074fb84cd6ffccf3869d275fb718e",
+      "sha256": "0c5a9a3ad0e98d5efe65b412c08183fa6c0edd800c12d9a924b5f895dedd46cc",
+      "bytes": 7578,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/subagent-profile-parser.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/shared/src/subagent-markdown-selection.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/shared/src/subagent-markdown-selection.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "2ce8b55305f559b3a6d99553bef00bbf5aef401f",
+      "sha256": "ab0665d9be49b7d22d24b7cb4d63f1cb1f095476d9927c22356549f9df309512",
+      "bytes": 4826,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/subagent-markdown-selection.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/shared/src/subagent-profile-frontmatter.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/shared/src/subagent-profile-frontmatter.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "1786cb3814b9db4454507038434858c4205067a1",
+      "sha256": "60634bd5dc4fe0a73e71e12468e1d83f15f8778b8ce21c015b2a427a3883b7c3",
+      "bytes": 7732,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/subagent-profile-frontmatter.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/shared/src/model-selection.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/shared/src/model-selection.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "5f46f4c929ff0d0f63f8cdf1e8cfbf3eab84a522",
+      "sha256": "653a4671723d4a3302e84ba13f29d4d55a17e5e8082b44d54ba1f9087dbd3e44",
+      "bytes": 2457,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/model-selection.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/shared/src/custom-model-value.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/shared/src/custom-model-value.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "47e8582242ea138e2af3197053f6bacf5432c058",
+      "sha256": "b825ca3b3f32cebf4f1876457c79d683cd37fd5b2a24c20c0547519de3b0b493",
+      "bytes": 1501,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/custom-model-value.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/services/src/session/automationCron.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/services/src/session/automationCron.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "f88046a12cd6326c4c59a0e85d6d6902e342cca8",
+      "sha256": "b331bf272403a58db005b5d0d2e46e67400a567bbb19d60023e2e760b5eb9f33",
+      "bytes": 15238,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/services/src/session/automationCron.ts",
+      "byteIdenticalToRetained3143": false,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/subagent/persistent-memory-prompt.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/subagent/persistent-memory-prompt.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "2bad445849dc579b21ac35c8db9c1e1e27d43fd0",
+      "sha256": "ed2298b5582d4be07676fef739ad50239e9b68c63ca4595bd54252cb867fa7c3",
+      "bytes": 14856,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/subagent/persistent-memory-prompt.ts",
+      "byteIdenticalToRetained3143": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "LICENSE.md",
+      "file": "src/presets/zcode/sources/marked-16.4.2/LICENSE.md",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "4bd2d4a084987ab634893a29f72ff6d1a67bf658",
+      "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c",
+      "bytes": 2942,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/LICENSE.md",
+      "license": "MIT"
+    },
+    {
+      "path": "package.json",
+      "file": "src/presets/zcode/sources/marked-16.4.2/package.json",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "9c3ba4619331db9496dd070fe71e28c048cfec63",
+      "sha256": "78e27dac3c5de404026c6f703b8c0adf1900f9067c8bd16fa83b058f0fb34aa9",
+      "bytes": 3398,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/package.json",
+      "license": "MIT"
+    },
+    {
+      "path": "src/Lexer.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/Lexer.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "a54910ab8da6f4120c431da7f8aede07a981ace1",
+      "sha256": "1d1a4614b0fdac4621198abb55d6b884bbb509616b3efc60821a1b2217a320ec",
+      "bytes": 14213,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/Lexer.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/Tokenizer.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/Tokenizer.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "925074e71a613bac7b2a55e4ec767554acf72bb1",
+      "sha256": "43a2ff09122364b8199f2a38065220287c46e3bba188ecb0da6f918a18a211bb",
+      "bytes": 26675,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/Tokenizer.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/defaults.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/defaults.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "28314f367dbee6f8bb061baa1581c0dac20f65a6",
+      "sha256": "fc15453d9c34ba9e51476f792eab6896652ade89cc03f635cdb2f25ac0d68475",
+      "bytes": 745,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/defaults.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/rules.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/rules.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "84be5eff4ba9d25eb738f205db6f15f17a82ffbe",
+      "sha256": "01a3c3ba5f07173748bb9515ea2b0587905504dbab6b7cf04b3173af93d11b82",
+      "bytes": 17837,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/rules.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/Tokens.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/Tokens.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "77649c81fc1cee98169b5a07877e1b5d61201efb",
+      "sha256": "e2e27aaa9f0343f4a635780fda0ce33a2a5686860536f398e7bfa0aaf1442760",
+      "bytes": 3651,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/Tokens.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/MarkedOptions.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/MarkedOptions.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "6ef3353330da0b715969e6d5b46e71cd12d05be2",
+      "sha256": "744801a1617d778828c76143e49656147ad4ffb1230031f90c50412d12608fd3",
+      "bytes": 6248,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/MarkedOptions.ts",
+      "license": "MIT"
+    },
+    {
+      "path": "src/helpers.ts",
+      "file": "src/presets/zcode/sources/marked-16.4.2/src/helpers.ts",
+      "commit": "244941a19225303f94aa60cb728373dc56e1dadf",
+      "gitBlobSha1": "16f07d2654b8b88233246c7182e832c9ca2cbad9",
+      "sha256": "78a700b7c75dab3531912e7ba921454b3b11904d29ec9b8dae251754cee99d8a",
+      "bytes": 3522,
+      "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/helpers.ts",
+      "license": "MIT"
+    }
+  ]
+}

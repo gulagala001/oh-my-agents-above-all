@@ -9,7 +9,8 @@ export function isPrivateFile(path) {
   if (path === 'test/fixtures/configured-project/project/AGENTS.md') return false;
   return /(^|\/)(?:\.git|node_modules|\.cache|\.local|\.codegraph|work|profiles|credentials|coverage|dist|release-assets)(\/|$)/.test(path)
     || /(^|\/)(?:AGENTS|CLAUDE|AI_README|OMAA_HANDOFF|COMPUTER_USE_HANDOFF|COMPUTER_USE_BASELINE|COMPUTER_USE_ASSESSMENT|WINDOWS_HANDOFF|PROMPT_MAINTENANCE|PROMPT_CHANGES)\.md$/.test(path)
-    || /^docs\/(?:plan\.md|verification(?:\.md|\/)|images\/.*\/source\.json$)/.test(path)
+    || /^docs\/(?:plan\.md|recovery\/|verification(?:\.md|\/)|images\/.*\/source\.json$)/.test(path)
+    || /^(?:baseline\.diff|WIP\.diff|checkpoint\.json|SHA256SUMS\.json|scripts\/recovery-checkpoint\.py)$/.test(path)
     || /^assets\/marketing\/.*\.source\.json$/.test(path)
     || /(^|\/)(?:codegraph\.json|\.DS_Store|\.env(?:\..*)?)$/.test(path)
     || /\.(?:log|tgz|pem|key)$/.test(path);

@@ -19,7 +19,9 @@ OMAA retains pinned prompt/source material and theme references, with its own ho
 - **Cursor interface references:** official IDE/Agents Window documentation and public Desktop observations are recorded in `src/client/themes/sources/cursor/agent-window.json`. Historical logged-out CLI observations remain separately scoped. Host color inheritance is an adaptation choice; no proprietary product bundle, marketing CSS, fonts, icons or official screenshots are redistributed as theme assets, and no fixed native RGB palette is claimed.
 - **Oh My DSH:** the Codex theme and shared layout/mapping snapshot were copied with the rights holder's authorization. The rights holder additionally authorized Apache-2.0 redistribution of these OMD-authored assets on 2026-10-06. Provenance is in `src/client/themes/sources/codex-desktop.provenance.json` and `src/client/themes/shared/provenance.json`. These are OMD assets, covered by that explicit grant for the copied material; the historical source snapshot itself had no declared SPDX license. Optional enhancements reuse the separately installed OMD implementation rather than copying its whole runtime into this package.
 - **Tailwind CSS:** the fixed 4.2.2 theme reference retains its MIT license at `src/client/themes/sources/licenses/tailwindcss-LICENSE.txt`.
-- **DSH:** host packages are version-pinned to `0.2.1-alpha.1` from the MIT-licensed `deepseek-ai/deepseek-harness` project. They remain host dependencies; OMAA does not ship a modified DSH loop.
+- **DSH:** host packages are version-pinned to `0.2.1-rc.2` from the MIT-licensed `deepseek-ai/deepseek-harness` project. Fixed interface source snapshots and the Grok settlement-message layout adaptation use commit `d743267388641bc76f17c45ce8b4c231aed1d32c`; its original MIT notice is retained at `src/presets/grok/licenses/dsh-sandbox-LICENSE`. Host packages remain dependencies; OMAA does not ship a modified DSH loop.
+
+- **ZCode 3.15.1 pure compiler update:** the separate `src/presets/zcode/sources/upstream-3.15.1/` snapshot pins the pure compiler/analysis/schema/lowering/facade closure to official source commit `aac4755666d09fdcd70272fcf063c077a639015f`. Its Apache-2.0 LICENSE is byte-identical to the official file at that commit. Other retained source components have their own version pins; this compiler upgrade does not establish closed-distribution or full-runtime equivalence.
 
 See [product sources](docs/product-sources.md), [theme sources](docs/theme-sources.md) and per-product manifests for file paths, hashes and scope. Original licenses and notices remain beside retained material.
 
@@ -1224,3 +1226,53 @@ SOFTWARE.
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 ```
+
+- **Grok PPTX XML worker:** bundles already installed saxes 6.0.0 (ISC) and xmlchars 2.2.0 (MIT); exact notices are retained at `src/presets/grok/licenses/`. The saxes license is from upstream v6.0.0 blob `187f3ba399862022f4e670b2a3a1dbc6d7e6a800`; XML character code remains its existing locked version. ZIP/CRC validation and native integration are OMAA code; extraction behavior derives from the fixed Grok Apache-2.0 `read_file/pptx.rs`. No package installation is performed by this build.
+
+- **Grok PDF image adapter:** declares the already installed/locked public `@deepseek-ai/libreoffice-kit` 0.1.5 (MIT) and `sharp` 0.35.5 (Apache-2.0) APIs as ordinary external dependencies. Their primary license notices are retained under `src/presets/grok/licenses/`; installed providers retain their own optional native/WASM and codec notices. These dependencies are not copied into recovery archives. No installer or engine is run by the source/syntax/build checks.
+
+- **Grok conversation image adapter:** structural JPEG/PNG/WebP checks, image caps, PNG transcode and compression-selection behavior derive from fixed Apache-2.0 `crates/codegen/xai-grok-image/src/lib.rs`, `read_file/image.rs` and `util/image_compress.rs`. The retained fixed source and Grok license identify that provenance. Sharp is the external alternate codec; decoder, filter and encoded-byte equivalence with image-rs is not claimed. BMP/ICO use an optional existing external ImageMagick executable through public fully confined process APIs. Poppler pdfinfo/pdftotext similarly provide an existing external PDF-text backend; no CLI binary is redistributed in this package. Original-engine equivalence is not claimed.
+
+- **Grok conversion failure classification:** interprets the fixed DSH public sandbox runner/denial rule protocol. The MIT source contract is [the fixed DSH diagnostics interface](https://github.com/deepseek-ai/deepseek-harness/blob/d743267388641bc76f17c45ce8b4c231aed1d32c/packages/sandbox/sandbox/src/diagnostics.ts), with the installed SDK's MIT notice at `src/presets/grok/licenses/dsh-sandbox-LICENSE`. No unconfined fallback or escalation workflow is added.
+# Project memory index lexer
+
+The ZCode project-memory index formatter uses the Marked 16.4.2 runtime lexer
+closure, source-pinned to `markedjs/marked` commit
+`244941a19225303f94aa60cb728373dc56e1dadf`, under the MIT license. Unmodified
+source and license are retained in
+`src/presets/zcode/sources/marked-16.4.2/`;
+`src/presets/zcode/sources/build-inputs.json` records exact hashes.
+Only the existing static build bundles the lexer into
+`lib/zcode-project-memory.mjs`. No Marked package installation, original ZCode
+runtime, model loop or automatic memory extraction is added.
+
+The project Agent profile parser is derived from the fixed Apache-2.0 ZCode
+3.15.1 shared parser/frontmatter/model-selection sources recorded in
+`src/presets/zcode/sources/build-inputs.json`.
+`scripts/build-zcode-agent-profiles.mjs` selects the original pure parser closure
+and emits `lib/zcode-agent-profile-parser.mjs`; it excludes writers, migrations,
+accounts and the original runtime. Zod remains the existing external dependency.
+
+ZCode PDF page images and explicit text extraction invoke existing external Poppler utilities through fully
+confined native subprocess APIs. No Poppler binary or source is redistributed
+by this adapter. The adapter invokes the installed `pdfinfo`, `pdftotext` and `pdftoppm` commands; their binaries are external runtime requirements.
+Sharp remains the existing external Apache-2.0 dependency with the license
+retained under `src/presets/grok/licenses/`; no codec or converter is installed
+by source generation, syntax checks or builds.
+
+The ZCode skill bridge uses the fixed DSH skill-filesystem pure YAML/frontmatter
+and invocation rules in `src/presets/zcode/project-skill-parser.mjs`, under the
+DSH MIT notice above. The bridge performs its own bounded native filesystem
+reads before parsing; original ZCode root/scan and directory substitutions are
+Apache-2.0 source adaptations. Plain Markdown admission and native name
+precedence are documented differences, not full original skill identity parity.
+
+The ZCode explicit-zone calendar binding bundles the already installed and
+locked public Temporal polyfill 0.5.1 (ISC) and JSBI 4.3.2 (Apache-2.0).
+Their unmodified licenses are retained in `src/presets/zcode/licenses/`.
+`src/presets/zcode/sources/temporal.json` identifies
+installed build inputs by exact bytes/SHA256 separately from retained upstream
+public API source blobs. The static build declares the existing Temporal version
+directly and bundles its public export without installing software. The original
+ZCode five-function calendar closure remains Apache-2.0; host timezone data and
+original application runtime equivalence have not been validated.

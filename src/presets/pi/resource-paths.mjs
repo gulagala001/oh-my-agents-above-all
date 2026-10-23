@@ -138,7 +138,14 @@ export async function loadPiResourcePaths(fs, { cwd, agentDir, signal }) {
         const filter = object(declaration) ? strings(declaration[type], source + ':' + type) : undefined;
         if (filter?.length === 0) continue;
         const manifestEntries = strings(manifest?.[type], root + '/package.json:pi.' + type);
-        const entries = manifest ? manifestEntries ?? [] : [type];
+        // Fixed Pi package-manager.ts:2220-2229,2271-2275,2340-2355.
+        // A declaration object uses default collection for omitted filters, or
+        // collectManifestFiles for a supplied filter. The latter falls back to
+        // convention directories for an absent OR explicitly empty manifest
+        // list; an unfiltered manifest's empty list still disables that type.
+        const convention = object(declaration) && (manifest?.[type] === undefined
+          || filter !== undefined && Array.isArray(manifest?.[type]) && manifest[type].length === 0);
+        const entries = convention ? [type] : manifest ? manifestEntries ?? [] : [type];
         const filters = [{ entries: entries.filter(override), baseDir: root }];
         if (filter) filters.push({ entries: filter, baseDir: root });
         await addPaths(entries, root, { type, source: 'package-pi', rank: 80,

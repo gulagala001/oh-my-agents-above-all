@@ -1,0 +1,29 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "files": [
+    {
+      "path": "packages/shared/src/model-selection.ts",
+      "sha256": "653a4671723d4a3302e84ba13f29d4d55a17e5e8082b44d54ba1f9087dbd3e44",
+      "gitBlobSha1": "5f46f4c929ff0d0f63f8cdf1e8cfbf3eab84a522",
+      "bytes": 2457,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/shared/src/model-selection.ts",
+      "runtimeRole": "reference-only"
+    },
+    {
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/provider-registry-selection.ts",
+      "sha256": "cb7458442d727c7eec05d233a319d39472d2318c2c5012e9b7cf1f029fd3dc72",
+      "gitBlobSha1": "9279edb4de5161405d6d8043a4cb6498fb3a90d6",
+      "bytes": 7448,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/provider-registry-selection.ts",
+      "runtimeRole": "reference-only"
+    },
+    {
+      "path": "apps/zcode-cli/packages/bootstrap/src/app/workflow-actor-model.ts",
+      "sha256": "9585449a70e916f3c41310daec2a1e3a9aba8db132c0e0d02a2bc434a47c1fd0",
+      "gitBlobSha1": "59be0e796279a7006df4a0d19498441b970757cb",
+      "bytes": 11728,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/workflow-actor-model.ts",
+      "runtimeRole": "reference-only"
+    }
+  ]
+}

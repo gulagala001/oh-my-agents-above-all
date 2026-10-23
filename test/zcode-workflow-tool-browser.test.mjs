@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
-import { chromium } from 'playwright';
+import { launchChromium } from './fixtures/browser.mjs';
 
 test('workflow view reads rc.2 raw arguments and live native preparing arguments', { timeout: 30000 }, async t => {
   const bundle = await build({ stdin: { contents: `
@@ -11,7 +11,7 @@ test('workflow view reads rc.2 raw arguments and live native preparing arguments
     export { flushSync } from 'react-dom';
   `, resolveDir: new URL('../', import.meta.url).pathname }, bundle: true, write: false,
   platform: 'browser', format: 'iife', globalName: 'workflowFixture', target: 'es2022' });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   t.after(() => browser.close());
   const page = await browser.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -87,7 +87,7 @@ test('workflow view reads rc.2 raw arguments and live native preparing arguments
 
 test('workflow navigation rejects duplicate opens and discards late failures after a different tool call', { timeout: 30000 }, async t => {
   const bundle = await build({ stdin: { contents: `export { ZCodeWorkflowTool } from './src/client/zcode-workflow-tool.jsx'; export { default as React } from 'react'; export { createRoot } from 'react-dom/client'; export { flushSync } from 'react-dom';`, resolveDir: new URL('../', import.meta.url).pathname }, bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'workflowFixture', target: 'es2022' });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] }); t.after(() => browser.close());
   const page = await browser.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.setContent('<div id="app"></div>'); await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await page.evaluate(() => {

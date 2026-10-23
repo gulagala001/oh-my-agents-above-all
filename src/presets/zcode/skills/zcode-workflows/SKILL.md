@@ -62,6 +62,15 @@ A background run is a native workflow job with actual
 stop/completion behavior. Read the returned job identity and wait for its final
 outcome when the user asks you to wait.
 
+A live Actor escalation commits its question before sending a producer notice
+to this run's own parent with native nearest-step steering. Read the current
+pending facts with `get_workflow_run` and use `resolve_workflow_question` only
+for a still-live question. Notice enqueue, claim or request setup is not proof
+of an answer. Native steering can wake an idle background-run parent; it cannot
+preempt a foreground parent awaiting that same workflow tool. Do not duplicate
+or retry a parked question, create another parent, or treat a notice as user
+permission approval.
+
 To save this Actor body, set `save_workflow.facade` to `zcode`. Named reuse through
 `run_saved_workflow` retains that facade. The default `native` keeps existing
 plain JavaScript definitions compatible. The saved source contains a comment
@@ -133,6 +142,19 @@ body only. Syntax errors are returned without writing. The actual write is
 performed by the native `write` tool, including its permission and stale-read
 checks; this tool does not execute the body while saving.
 
+For metadata-only changes, use `update_saved_workflow` with an explicit scope;
+it preserves the current script body. Do not reconstruct old source through
+read/save. For an explicitly requested move or deletion, read the explicit
+scope first. Pass its COMPLETE `sourceSha256` as `expected_source_sha256`.
+`move_saved_workflow` moves only global to project with the same name and refuses
+any existing target. `delete_saved_workflow` requires the reviewed scope. Both
+retain standing native permissions without escalation. Move is a guarded copy
+followed by native Shell unlink; hash/unlink is not cross-process CAS. Require
+the actual terminal receipt and readback before claiming completion. Partial or
+unknown results, cancellation and promoted jobs may have effects; retain their
+call/job identities, re-read the relevant paths, and never automatically retry
+or roll back. User request acceptance is not an operation-completion receipt.
+
 A native definition begins with a YAML block comment, followed by the exact
 JavaScript body. A ZCode definition also retains its Actor facade marker:
 
@@ -172,7 +194,50 @@ match by operation, arguments and occurrence order; a cached `world.run` returns
 its prior observation without executing the effect again. Live world commands
 close this import window. Native tools without an authoritative effect
 classification close it conservatively; after closure only cached asks with no
-world tool dispatches remain reusable. Pending predecessor asks are canceled,
-not continued from half-finished transcripts. This path does not provide
-same-run journal replay. Runs created before task-prefix metadata was added
+world tool dispatches remain reusable. Pending predecessor asks are canceled and drained. Actual accepted/admitted
+tasks may carry an exactly validated settled aborted transcript into a successor
+with a fresh identical prompt. An unbalanced, unadmitted, non-canceled or
+effect-closed partial is omitted. Eligibility is checked during selection and
+native preparation, not atomically through physical activation. This path does
+not revive the original driver or provide same-run journal replay. Runs created before task-prefix metadata was added
 must be recreated before they can be amended.
+
+Use `resume_workflow` for an interrupted, failed or stopped run that already
+saved the prospective native v3 journal. It keeps the same `run_id` and exact
+archived source, args, working directory and resolved model routes. It refuses
+a live or superseded run. Legacy v1/v2 archives remain readable; they cannot be
+retroactively given replay evidence. Use amendment when changing source or
+settings instead.
+
+Resume verifies the whole journal before reopening the archive. Completed
+Actor asks require their exact native completed context and acceptance proof.
+Running asks, Actor failures without that context, and commands whose complete
+external outcome is unknown stop before source execution. No automatic retry
+or synthetic transcript repair resolves those cases. Cached successful asks do
+not execute their old native tools again. Completed values and eligible saved
+failures use the committed global settlement sequence at one common script
+delivery gate. This native format is separate from the original engine journal.
+
+Cached report and artifact calls publish no new rows, versions, quota or report
+preview events. The returned report preview/count covers newly published
+reports in this attempt; the artifact panel retains the full saved run data.
+Current DSH models, permissions and sandbox remain authoritative. A verified
+journal alone does not prove all external tool or background-job outcomes;
+amendment retains its conservative effect-closure refusal.
+
+Live TypeScript workflows also support `await hole<T>(name, prompt?)`. A supplied
+body runs locally at its lexical site. An open hole waits; its native job output
+and artifact panel identify the waiting site. Use `fill_workflow` with that
+`run_id`, `site_id` and TypeScript **body statements**, for example `return value;`.
+The original splicer supplies the surrounding async function; do not supply an
+outer `async () => { ... }`. The body can refer to bindings at the hole's lexical
+site. Load this skill before authoring the body.
+
+The host validates the full revised source, existing sites/schemas/phases and
+launch-resolved model routes, saves the effective source and fill facts, updates
+native binding tables, then releases waiting occurrences. Filling and amendment
+cannot revise the same run concurrently. A stopped or superseded run cannot be
+filled; use successor amendment instead. Live fill does not imply crash replay,
+and it cannot introduce an unresolved model route. A prospective v3 run also
+saves the journal's effective-source ownership in the same fill transaction;
+on eligible resume the filled body runs directly at its original lexical site.

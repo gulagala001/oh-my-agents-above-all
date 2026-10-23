@@ -1,3 +1,5 @@
+import { Context } from '@deepseek-ai/cordis';
+import { createScope } from '@deepseek-ai/dsh-scope';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { apply } from '../src/preset-agent.mjs';
@@ -29,7 +31,7 @@ test('Pi Team membership preserves native communication without inheriting unrel
 test('Pi final prompt assembly preserves native Team lead tools with enhancement disabled', async () => {
   const hooks = new Map(), states = new Map();
   const schemas = ['read', 'send_message', 'interrupt_agent', 'list_agents', 'workflow', 'subagent', 'job_kill', 'computer_use'].map(name => ({ name }));
-  const agent = { id: 'lead', session: { id: 'lead', header: { origin: 'user', cwd: '/workspace' }, snapshotEvents: () => [] } };
+  const agent = { ctx: createScope(new Context(), {}).ctx, id: 'lead', session: { id: 'lead', header: { origin: 'user', cwd: '/workspace' }, snapshotEvents: () => [] } };
   let membership = { role: 'lead' }, enhancement = false;
   const resources = {
     prepare: async () => ({ users: [], messages: [], customMessages: [], startsRun: false }),
@@ -40,7 +42,7 @@ test('Pi final prompt assembly preserves native Team lead tools with enhancement
     omaa: { product: () => ({ id: 'pi' }), enhancementEnabled: () => enhancement,
       piExtensions: { states, settings: { read: () => ({ files: [] }) } } },
     sandboxPolicy: { resolve: () => ({ mode: 'danger-full-access' }) },
-    get: name => name === 'agentTeams' ? { tryMembership: () => membership } : name === 'omaaPiResources' ? resources : undefined,
+    get: name => name === 'agentTeams' ? { tryMembership: () => membership } : name === 'omaaPiResources' ? resources : name === 'agents' ? { get: () => agent } : undefined,
     on: (name, fn) => hooks.set(name, fn), provide() {}, effect() {},
   };
   applyPiExtensions(ctx);

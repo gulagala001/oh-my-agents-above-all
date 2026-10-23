@@ -2,7 +2,6 @@
   "id": "grok",
   "repository": "https://github.com/xai-org/grok-build",
   "commit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
-  "version": null,
   "license": "Apache-2.0",
   "retrievedAt": "2026-10-05",
   "files": [
@@ -469,13 +468,181 @@
       "sha256": "60d3bff109d04b6fdaae236e0acb8ccf8cd1961ce15b6d691eb02141c2341604",
       "bytes": 19809,
       "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-version/Cargo.toml",
+      "snapshot": "sources/crates/codegen/xai-grok-version/Cargo.toml",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-version/Cargo.toml",
+      "sha256": "4ba1dc95efbc675ebae42625821d8042e71fcbdda6faec38c6de0cb653bb9fad",
+      "bytes": 221,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-version/src/lib.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-version/src/lib.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-version/src/lib.rs",
+      "sha256": "e48e64f30b2ba8061d0c68bc7140849f27f287a2ee40c3261d29ea4c8862ce06",
+      "bytes": 3720,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/reminders/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/reminders/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/reminders/mod.rs",
+      "sha256": "7b3e45604b410f8a6951124ef12146a1cc399c64b08db18ce60f54eac6d84af3",
+      "bytes": 11329,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/grok_build/task/coordinator_state.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/grok_build/task/coordinator_state.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/grok_build/task/coordinator_state.rs",
+      "sha256": "2f5ba0e50350fdb03da67fd91f0cf12ea61f8cb8e8f651ed49cf0d39637fbaf2",
+      "bytes": 38213,
+      "gitBlob": "e5204ed022171e64a7ec0082e9676e09791d7abd",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/util/truncate.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/util/truncate.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/util/truncate.rs",
+      "sha256": "06cea10e7f94ecb7242835b7c5c4d1639093ce64b58d61af505cf9ea221e526e",
+      "bytes": 27058,
+      "gitBlob": "893fa3442a50ce64d521540c48a0a0e7f4304dab",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/read_file/image.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/read_file/image.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/read_file/image.rs",
+      "sha256": "59dfc8521c37d3a6dcdb990ff3b724567d2e2857696441a105ed1b0431272729",
+      "bytes": 20428,
+      "gitBlob": "dffc3857e9b7972a0d39859ff35235b498668cfc",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/read_file/metadata.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/read_file/metadata.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/read_file/metadata.rs",
+      "sha256": "86218122f163f52d6ec86c3d2851b2257d4311531418df3cf7c71847a12d8cf2",
+      "bytes": 10023,
+      "gitBlob": "99333ed10107714860c722c10065c8a38485300b",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/read_file/mod.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/read_file/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/read_file/mod.rs",
+      "sha256": "d078f5e16daf2d29add8d05fc5e8acf6360eda73eb2b32ea281c3272c0c2dd8a",
+      "bytes": 658,
+      "gitBlob": "01d51e376d51c6dda177b47ca68ed1fb63bf85e7",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/read_file/pdf.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/read_file/pdf.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/read_file/pdf.rs",
+      "sha256": "f096fdb5493ac475e93501d89d7a7c1d807118e2f07e74cb52ce36154a2dbe0f",
+      "bytes": 17867,
+      "gitBlob": "3413a0ffef451e0f769a1912ff2cf42f67cb5238",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/implementations/read_file/pptx.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/implementations/read_file/pptx.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/implementations/read_file/pptx.rs",
+      "sha256": "a4419d6db13861e2cff4cc457eb84ec8f59c6ddc6493dd8e7e53045b99922718",
+      "bytes": 11269,
+      "gitBlob": "c10b2c9a54e7f4a7fa8a52d4ab5faf08f0eb0219",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-shell/src/session/acp_session_impl/prompt_queue.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-shell/src/session/acp_session_impl/prompt_queue.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-shell/src/session/acp_session_impl/prompt_queue.rs",
+      "sha256": "f194e60d7234657d68079abb52ea25923172369e74a5093c4a14193b54438c0d",
+      "bytes": 53724,
+      "gitBlob": "2033b2b8bf4762201b6a6586065ffe2823bf159f",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/Cargo.toml",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/Cargo.toml",
+      "sha256": "4d710e0e830ddce7ffdfbf3639bf43cca3424d8058dfebc02c8bfa918469f1d1",
+      "bytes": 4880,
+      "gitBlob": "f4bc978ecf954a9b41e7a3fe139e341cf27fa4e5",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/Cargo.toml",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "Cargo.toml",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/Cargo.toml",
+      "sha256": "00dc8f4cce1f0a17dd9e78ca1c359c476d4cefbd8c41af70208f802c9dac7dcb",
+      "bytes": 19639,
+      "gitBlob": "f9fd54ee919af62819f3ca099e3dcd6bdeb80cf1",
+      "snapshot": "sources/Cargo.toml",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/util/image_compress.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/util/image_compress.rs",
+      "sha256": "ba5af1614b34521934cdb2d488c42c75baac8f2841db81ffb7ca4a1bc2f6c3d2",
+      "bytes": 11585,
+      "gitBlob": "37cb9d98540ee12bd17a2aeea20d013d274fd835",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/util/image_compress.rs",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-shell/src/session/acp_session_impl/queue_mutation.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-shell/src/session/acp_session_impl/queue_mutation.rs",
+      "sha256": "769ce834c1764d52596f8c76854f200481c87e0ea0bd796db92e0abda5d86e87",
+      "bytes": 3051,
+      "gitBlob": "949da09d8d668a63252a6e6cb75f3179840f3605",
+      "snapshot": "sources/crates/codegen/xai-grok-shell/src/session/acp_session_impl/queue_mutation.rs",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/util/mod.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/util/mod.rs",
+      "sha256": "f5ff7f346dbf72619da1cf9d0ddb1ca527826c595b413e3d642ded1183ca9110",
+      "bytes": 1720,
+      "gitBlob": "46b05f0fa05737fae905d9922bf73da7cc0ca81c",
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/util/mod.rs",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-image/Cargo.toml",
+      "snapshot": "sources/crates/codegen/xai-grok-image/Cargo.toml",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-image/Cargo.toml",
+      "gitBlob": "3042019563dbebd119ce004862230b54bb545bd3",
+      "sha256": "c49c5cb7d422f29134beaaf957dd67809ecb9d2e80f0c6700dc6bd5f946a8b9e",
+      "bytes": 442,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-image/src/lib.rs",
+      "snapshot": "sources/crates/codegen/xai-grok-image/src/lib.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-image/src/lib.rs",
+      "gitBlob": "8d130f6767695cfde281251c4dcfbed1960860b6",
+      "sha256": "581e3afe57ba712fe5bf89b5d040b8234ae83061ff89e52a6ed3be20ddae986d",
+      "bytes": 15186,
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "crates/codegen/xai-grok-tools/src/util/binary.rs",
+      "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-tools/src/util/binary.rs",
+      "gitBlob": "dba991c4fbae6680710687aa2c26b857c439a719",
+      "sha256": "45df0fdfd91a2688f849b88d7e52adc48daad33d5a7a52c9b5c1fc1fa9787fe4",
+      "bytes": 4882,
+      "snapshot": "sources/crates/codegen/xai-grok-tools/src/util/binary.rs",
+      "license": "Apache-2.0"
     }
   ],
   "activePromptEntry": "crates/codegen/xai-grok-agent/templates/prompt.md",
   "sourcesAreData": true,
   "runtime": "DSH model/API/tool loop/session; source files are reference data, never an external runtime",
   "toolMapping": {
-    "read_file": "read",
+    "read_file": "read (ordinary text/notebooks); read_document (PPTX/PDF); read_grok_image (conversation image conversion); native read_image remains available",
     "search_replace": "edit",
     "grep": "grep",
     "glob": "glob",
@@ -560,13 +727,14 @@
   "deferredBehaviors": [
     "Upstream queue reorder/edit/send-now and interjection UI",
     "Upstream disk memory and index generation",
-    "Binary-format read conversion",
+    "Original binary conversion engine fidelity/admission outside the documented bounded adapters; no generic backend integration gate remains",
     "Grok subagent coordination beyond native host subagent",
-    "Grok interval scheduler cross-session durable, fire_immediately, interval changes preserving phase, seven-day TTL and scheduled subagent chain execution differ from native session reminders"
+    "Cross-session durable retarget and interval changes preserving phase remain refused; native child identity/cadence, upstream durable tombstones and completion-output cap are not claimed equivalent. Immediate recurring dispatch, bounded continuation and independent seven-day expiry are implemented with explicit proof/fallback boundaries."
   ],
   "adaptedPrompt": {
     "module": "prompt.mjs",
-    "sha256": "34dbd028b8fdc8e2a8001b281a5610cb8dca34de34ce6ee59d1d2ff24c67dfa9"
+    "sha256": "1454e3c9d54fbe06b3bc74af63b226d2d1604f7d76e473e964918880b04848bc",
+    "childEntry": "crates/codegen/xai-grok-agent/templates/subagent_prompt.md"
   },
   "monitorAdapter": {
     "module": "monitor.mjs",
@@ -578,22 +746,32 @@
     ],
     "hostIntegration": "Native tools.execute nested bash/pwsh passes guards/policy; same native jobs absolute readAt cursor and lifecycle; legal tool-jobs notice via native agent inject/followup. Existing job service alone reports completion.",
     "adaptations": [
-      "Original descriptor conditional reminders enabled because actual notices exist; kill tool resolved to job_kill.",
-      "Original timeout_ms/persistent retained, original camelCase result taskId is the native job id; timeoutMs is the resolved deadline. One monitor-scoped timer cancels same job at timeout; native owner disposal cancels persistent jobs.",
-      "stdout only, trim empty lines, UTF-8 safe 500-byte line cap, 3000-byte batch cap, 1MiB partial buffer; native output ring can separately report a gap.",
-      "200ms batching, capacity10/refill1 every2000ms, suppression notices and auto-kill after continuous suppression exceeds30s.",
-      "Launch registered-event correlation uses AsyncLocalStorage and exact owner/call, including late cancellation. No competing scheduler, process runner, queue or session events."
+      "Original descriptor reminders resolve to actual native notices and job_kill; existing native job service alone reports terminal completion.",
+      "Nullable timeout_ms: omitted/null defaults to 36000000ms, zero/persistent remains deadline-free. One timer starts on verified registration using public epoch-ms startedAt with rollback clamped; this is not an exact monotonic OS-spawn deadline.",
+      "stdout only, trim empty lines; UTF-8 500-byte line prefix plus marker, 3000-byte batch body plus separate newline/truncation marker, bounded 1MiB partial tail. Native retention loss is explicitly reported inside the body budget.",
+      "200ms batching, capacity10/refill1 every2000ms, suppression notices and overload stop after suppression exceeds30s.",
+      "Stopping waits quietly for real settled.cause. Producer/kill gets final drain and partial flush; teardown gets no wake. Cancel throw leaves capture alive; stop markers follow native confirmation.",
+      "Registered correlation uses AsyncLocalStorage and exact owner/kind/command; returned ID is verified by native lookup. A bounded 32-entry observe-only settlement candidate map cannot grant ID/read/kill authority; exact live owner is required for notices.",
+      "Exact admitted native background call receives PYTHONUNBUFFERED=1 through a Grok-only scoped public ShellExecutor decorator. Command, policy, managed env, signals and executor stay native; unrelated/nested calls clear context.",
+      "Original physical capture/log and job owner/lifetime transfer remain incomplete; no memory/spill budget or provider deadline change."
     ],
-    "sha256": "57082c442e2d3c1b0600f0763842714015ee90b0a0b052c04ba30f5851777450",
-    "verification": [
+    "sha256": "6fcca7148567262d42acc16f2d2f0b39c13efcbf41a2d3cbfbea708d7f0af874",
+    "historicalVerificationReferences": [
       "test/installed-grok-monitor.test.mjs: actual guarded native launch, stdout notices exactly once, final partial line, unchanged model output cursor, explicit jobkill killed state and absence of delayed file side effect, deadline killed, Ask denial, Pi scope exclusion",
       "test/grok-monitor.test.mjs: sustained-overload kill decision; late abort after job registration kills exact native job only once; persistent ignores deadline above10h"
-    ]
+    ],
+    "verification": [],
+    "environmentAdapter": {
+      "module": "working-tools.mjs",
+      "sha256": "7a8d91a510ced22cdc17616b80fca2ec66e6505b84f0f747bb4e8f9a4353a5e8",
+      "hostIntegration": "Public Cordis isolate/provide plus read-only tools/execute wrapper; inherited ShellExecutor.resolve/execute; exact real nested-call identity.",
+      "runtimeVerificationCount": 0
+    }
   },
   "memoryDefault": "Experimental opt-in; config-types/src/memory.rs resolves legacy flag with default(false). v2 requires its own enabled gate. Neither default-on memory nor Dream is claimed.",
   "schedulerAdapter": {
     "module": "scheduler.mjs",
-    "sha256": "bbfe17c4e4072355f83c2d6d5b9644ce60044970e72465474289670a41bcaead",
+    "sha256": "1006fbaab6f08272afda63b834a4bcf6f362d55ac37b5a914b9fc0abd60dee59",
     "source": [
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
@@ -602,20 +780,95 @@
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs"
     ],
-    "hostIntegration": "Public native ctx.schedule create/list/delete/update; same native domain, delivery runtime, journal and same-session persistence. No adapter timer or delivery source fabrication.",
+    "hostIntegration": "Native Schedule owns reminders and delivery; owner sidecar admits controlled children. Existing internal host-only continuation remains explicit. Independent expiry fences dispatch only: fixed public delete has no expected-record CAS, so matching native rows are retained for explicit review instead of automatically deleted.",
     "adaptations": [
-      "Official fixed contract is integer interval s/m/h/d, clamped to minimum60s, not cron. Reject overflow beyond native safe integer range.",
-      "Original create/list/delete descriptor text retained; replace only host-incompatible immediate/cross-session durability/phase/TTL/one-shot guidance.",
-      "Create/list/delete and same-interval prompt update map directly. Update uses expected complete native record, so concurrent changes return explicit conflict. Changed interval is refused because native would reset phase.",
-      "durable:true and fire_immediately:true explicitly refused on creation; as upstream they are ignored on update.",
-      "Original hidden recurring:false is rejected by upstream; explicit host-compatible recurring:false is supplied as native after_seconds one-shot, per authorized scope.",
-      "Native records remain active until deleted and resume with the same session across host restarts; Grok seven-day automatic expiry and cross-session durable registry are not emulated.",
-      "List exposes available real id/prompt/interval/next-fire/recurring fields, omits unavailable createdAt rather than inventing timestamps.",
-      "50-task cap is serialized across adapter creates for each session; separate native task controls remain host-owned."
+      "Fixed source interval format s/m/h/d and minimum 60 seconds retained; reject unsafe native integer ranges.",
+      "Create recurring tasks with inert native marker plus exact owner row. Explicit fire_immediately:true admits one controlled initial child; default false. durable:true is refused before native creation. Both fields are ignored on update, matching source create-only semantics.",
+      "Same-cadence prompt updates retain native phase and start a fresh chain when text actually changes. Changed cadence is refused because the fixed native timing update cannot preserve the original anchor.",
+      "Original public create rejects hidden recurring:false despite legacy actor support; authorized host extension supplies native after_seconds, no recurring TTL, and explicitly refuses immediate one-shot execution.",
+      "Recurring deadline remains creation+7d. Expiry observes ABSENT or fences mismatched/current rows; matching rows become EXPIRED/FENCED and are retained because unconditional delete cannot preserve concurrent edits. Existing removal receipts and cold UNKNOWN facts remain historical; accepted children survive.",
+      "Successful proven chain iterations are 1 through 10, then fresh 1 with at most 600 Unicode-code-point summary plus ellipsis. Changed prompt/policy or missing durable transcript/interface proof starts a fresh or explicit fallback chain without unverified summary.",
+      "DSH resumes the same child with a new run ID; source creates a new child with resume_from. The host-only continuation seam is not a public Service operation. Missing capability/proof falls back fresh; no claim of identity equivalence.",
+      "Accepted inbox message ID is distinct from paired native end/targeted flush durability. Intent/high-water history is bounded; cold ambiguous outcomes are not automatically replayed.",
+      "Public native delete lacks expected-record CAS and native/owner storage lack a shared transaction. Cross-session authority/retarget remain unavailable. Completion_output_cap limits closing text in completion notices, not model generation. Caller delivery and proof-gated native continuation preview now use real parent inbox receipts and scheduler_output full readback. Verified cold local teardown-result disagreement now uses the complete tail-free native notice; captured status and failed lifecycle remain separate. Unverified receipt/barrier/store or unknown-format cases retain full notices; universal cap equivalence is not claimed.",
+      "Listings use real catalog session binding/status, retain ordinary reminders, enforce 50 rows/24000 UTF-8 JSON bytes and label separate current reads. Native task controls outside adapter creation remain host-owned."
     ],
-    "verification": [
+    "relatedModulesSha256": {
+      "src/presets/grok/schedule-runtime.mjs": "63e1fdda4655118384adb4d888ec99e1c4d534bcbfad693c072591f71a3380bc",
+      "src/presets/grok/schedule-expiry.mjs": "aefb4e9e3470ec0fd3bc792c25db4dbafffa2eff078ffe2f9b8435fc6c7ba491",
+      "src/host/grok-schedule-records.mjs": "26c8072ff4bf8cab43dede1a2976b69381e8a3208def38c0a94a676c92a5373d",
+      "src/presets/grok/completion-preview.mjs": "9e4c406f1a7d79afab67b17e46c4369eafe24d9ef6666aa50dcf17530c874f11",
+      "src/presets/grok/completion-receipts.mjs": "90bb6cf613edf746df72745645f3fbb28d15ebcada313bfe8e6121637961cf8e",
+      "src/preset-agent.mjs": "606ef7ed63edd39ab84c5357a252bfa2fc0872db4813cce835481c38b4c0e7ff"
+    },
+    "historicalVerificationReferences": [
       "test/installed-grok-scheduler.test.mjs: actual original CLI package install, native CRUD and catalog, same-interval prompt update keeps exact target, explicit unsupported-field refusal without mutation, cold restart preserves identity/target, real60s due reminder invokes native write with updated prompt, valid schedule source, native next target advances, delete removes task, native one-shot record, Pi excludes scheduler tools, child node --test executes its marker",
       "test/grok-scheduler.test.mjs: original interval minimum/invalid/overflow and concurrent50-task cap"
-    ]
+    ],
+    "verification": [],
+    "continuationCompatibility": {
+      "package": "@deepseek-ai/dsh-subagent",
+      "version": "0.2.1-alpha.2",
+      "subpath": "./internal",
+      "exportedTarget": "./lib/types/internal.js",
+      "pluginReachability": "Statically conditional: DSH profile bootstrap installs installation/profile package routing; linked OMAA declares this peer, and the installed dsh -> dsh-base -> dsh-subagent graph supplies the exported file. Standalone Node from this worktree has no top-level subagent link; no runtime import was attempted this stage.",
+      "contract": "Published package subpath, host-only and outside the public Service Definition; import reachability is distinct from supported public continuation semantics.",
+      "publicAlternatives": "sendMessage derives Agent source and steers; prompt derives human user/rpc source; startActivation starts a fresh managed child. None is a source-preserving host queue continuation equivalent in the checked fixed interface.",
+      "requiredPublicContract": "Exact live parent authorizes a queued separate-turn direct-child host message with durable adapter provenance, real inbox receipt, cold admission and pre-accept cancellation. Existing lifecycle/flush/drain observations remain required.",
+      "onMissingCapability": "Existing fresh-fallback with native-host-continuation-unavailable; no unverified summary, fabricated user/Agent source or direct manager access.",
+      "currentStageRuntimeValidationCount": 0,
+      "installedArtifactBinding": "Installed version/exports/body hashes checked locally; these packaging/loader artifacts were not freshly bound to the fixed Git commit."
+    }
+  },
+  "sourceVersionDefault": "1.0.45",
+  "versionBinding": "Source package fallback only; release GROK_VERSION is unknown. No association with old 1.0.46 binary.",
+  "documentsAdapter": {
+    "modulesSha256": {
+      "src/presets/grok/documents.mjs": "504718fcdfc5e485c95092d970dbb30062f43431c4574e8b149cb915fa6ded01",
+      "src/presets/grok/pptx-codec.mjs": "cd1ca46cb9bd0150b851fcea812936575e0293a53cdd0bfbc1e875469ea75f0c",
+      "src/presets/grok/pptx-worker.mjs": "597328620614dbc9c15959149cc134a6cd846524931411708d8801c7ff611dba",
+      "src/presets/grok/pdf-images.mjs": "d18740b34ffa77fe7ffb28c3fd88f2fbf5b5746d0cb194293c0a1951a60445f9",
+      "src/presets/grok/pdf-text.mjs": "e800b82f5af3998fdc446cb59c1328a5e6dd3f4b782e0ea9c7eaab6b0d92fa20",
+      "src/presets/grok/image-codec.mjs": "72c7fbd7a0815cd86466504e242138711336868995c10203e50ec7b09e4ffff2",
+      "src/presets/grok/image-read.mjs": "c09a4a27ae7950a6b06f9824e3a8c7b30fccd2ddbd22c814cd4e3758e80863d4",
+      "src/presets/grok/native-codec.mjs": "88a6f58336922a0f64b795a8ebce07217014e71398e37036ee5f34c86a892d13",
+      "lib/grok-pptx-worker.mjs": "7d5bbd82b3f0d8b1246acb2b7a93f4cd6f5d8ef1284992ba743a4d945bd4f1a8",
+      "scripts/build-grok-documents.mjs": "22c13028506165d67f9430cd0992380f4ba9305d147cc00d74f1f941999155f1",
+      "src/presets/grok/conversion-cleanup.mjs": "0cb14d915461e3c2b91812ef9d3ec8b03f9387ebd4fa6e9444fa0849e21550ff",
+      "src/presets/grok/document-files.mjs": "a803f6b369e1858765fee8cba78b84ea3b9bcd883f4c304299c02b59d711972e",
+      "src/presets/grok/document-text.mjs": "f6d8bc297fa0f375f9aa0cb1be70b25346416fa7026f61a085d8896bd7afbf4e",
+      "src/presets/grok/conversion-errors.mjs": "f3083ab5b72749b5a3cd2b84fc846e70b89ec8206f5cf1f2ea09e95d0b24152b"
+    },
+    "fixedSourceCommit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
+    "fixedDshCommit": "d743267388641bc76f17c45ce8b4c231aed1d32c",
+    "tools": [
+      "read_document",
+      "read_grok_image"
+    ],
+    "implemented": [
+      "PPTX bounded worker text/notes and UTF-8 byte pagination",
+      "PDF image pages via public kit/PDFium plus Sharp/native attachments",
+      "PDF text via existing Poppler binary pipes and full read-only confinement",
+      "PNG/JPEG/WebP/GIF/TIFF conversation compression via Sharp",
+      "BMP/ICO existing ImageMagick first-frame PNG path through full read-only confinement"
+    ],
+    "nativeCliBoundary": "Public subprocess/sandbox/policy only, full read-only required before spawn, no raw spawn or shell or install or permission widening; bounded stdout and awaited managed-range termination. Deployment readiness is unexecuted.",
+    "fidelityBoundary": "Alternate engines, parser/container admission, colours, alpha, icon/frame choice, text order/errors and host normalization can differ. No original Rust-engine or pixel/binary/text equivalence.",
+    "runtimeValidationCount": 0,
+    "hardening": [
+      "Awaited cleanup and cancellation after cleanup, preserving nested cleanup failure facts",
+      "Physically bounded regular private PNG reads and verified probe/final/actual attachment manifests",
+      "8-MiB raw-text admission and copied incremental UTF-8 pages with full numbered-text fingerprint",
+      "No nonzero-offset continuation without matching text_sha256; no persistent refs/cache",
+      "Native transport failures classified using actual process outcome and active public sandbox rules; lossy first line excluded",
+      "Typed native failure/timeout/output-limit/cleanup receipts, no partial stdout acceptance or escalation fallback"
+    ],
+    "textProtocol": {
+      "rawTextAdmissionBytes": 8388608,
+      "contentPageBytesMax": 24000,
+      "jsonOverheadAdditional": true,
+      "continuation": "offset > 0 requires previous textSha256 as text_sha256; complete numbered-text fingerprint checked",
+      "persistentStoreOrRefs": false
+    }
   }
 }

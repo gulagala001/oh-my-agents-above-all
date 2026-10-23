@@ -3,9 +3,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
 import ts from 'typescript';
+import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const snapshots = join(root, 'src/presets/zcode/sources/upstream/apps/zcode-cli/packages');
+const currentSnapshots = join(root, 'src/presets/zcode/sources/upstream-3.15.1');
 const banner = '// Derived from fixed Apache-2.0 ZCode world-read sources; see THIRD_PARTY_NOTICES.md.\n';
 
 function replaceImport(source, from, to) {
@@ -60,6 +62,11 @@ async function buildFileSystemHelpers(outputRoot) {
 }
 
 export async function buildZCodeWorldReads() {
+  const manifest = JSON.parse(await readFile(join(currentSnapshots, 'artifact-helper-source.json'), 'utf8'));
+  const row = manifest.files.find(value => value.path.endsWith('/engine/errors.ts'));
+  if (manifest.commit !== 'aac4755666d09fdcd70272fcf063c077a639015f' || !row) throw new Error('Unmapped current WorkflowError source');
+  const errorPath = join(currentSnapshots, row.path), errorBytes = await readFile(errorPath);
+  if (createHash('sha256').update(errorBytes).digest('hex') !== row.sha256) throw new Error('Current WorkflowError source changed');
   const outputRoot = join(root, 'lib');
   await mkdir(outputRoot, { recursive: true });
   // The only engine-folder code is the pure error class. Its imports are type
@@ -72,10 +79,11 @@ export async function buildZCodeWorldReads() {
     banner: { js: banner.trimEnd() },
     plugins: [{ name: 'pure-world-error', setup(builder) {
       builder.onResolve({ filter: /.*/ }, args => {
-        const target = resolve(args.resolveDir, args.path).replace(/\.js$/, '.ts');
-        if (![join(snapshots, 'dynamic-workflow/src/facade/world-read-caps.ts'), join(snapshots, 'dynamic-workflow/src/engine/errors.ts')].includes(target)) {
+        const target = args.path === './engine/errors.js' ? errorPath : resolve(args.resolveDir, args.path).replace(/\.js$/, '.ts');
+        if (![join(snapshots, 'dynamic-workflow/src/facade/world-read-caps.ts'), errorPath].includes(target)) {
           throw new Error('Unexpected world-read runtime dependency: ' + args.path);
         }
+        return { path: target };
       });
     } }],
   });

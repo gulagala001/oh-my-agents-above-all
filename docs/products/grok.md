@@ -42,3 +42,9 @@ Monitor 保存完整上游工具说明及 line processor/rate limiter 来源。`
 `test/installed-grok-monitor.test.mjs` 通过原版 CLI 隔离安装：实际模型收到 stdout 各事件及完成部分行一次，原生 job_output 仍完整读到输出；job_kill 后状态 killed，延迟写文件没有发生；deadline 实际取消进程，Ask 拒绝启动，Pi 不暴露 monitor。`test/grok-monitor.test.mjs` 核对持续超限的停止决策及已注册作业后的 late-cancel 精确取消一次。测试只用 loopback，没有执行 Grok 客户端或真实账号。
 
 `test/installed-grok-scheduler.test.mjs` 通过原版隔离安装：native catalog 的 id 与 next target、同间隔 prompt 更新保相位、拒绝项不改任务、冷重启恢复、**真实等待 60 秒首轮到期**、合法 schedule 源消息和原生 write 实际生成更新后的文件、next target 前移、列表/删除及一次性 native after 记录均核对。Pi 没有这些工具。测试同时确认独立子进程 `node --test` 真正执行并写出 marker，不受外层 Node runner 的递归跳过环境影响。未实测 Grok 原厂 durable/subagent scheduler，不宣称等价。
+
+## 当前源码的文档与调度工具
+
+`read_document` 支持 PPTX 文本／备注和 PDF 图片／文本，`read_grok_image` 读取图片。分页结果保留字节边界与内容哈希；图片解码和外部转换通过宿主受限进程执行，所需转换器必须已经可用。
+
+监控保留有界输出、UTF-8 边界和丢失通知，并只停止实际归属的作业。调度记录区分创建、派发、子任务完成和过期；续跑核对已有记录，不把未知结果自动重试为成功。源码增量尚未单独发行。

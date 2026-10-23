@@ -4,7 +4,7 @@ import path from 'node:path';
 import { load as yamlLoad, JSON_SCHEMA } from 'js-yaml';
 
 export const name = 'omaa-cursor-rules';
-export const inject = ['tools', 'systemPrompt'];
+export const inject = ['tools', 'systemPrompt', 'agents'];
 const limits = { entries: 512, files: 128, depth: 12, fileBytes: 32 * 1024, totalBytes: 256 * 1024, contextBytes: 64 * 1024, paths: 256 };
 const within = (root, target) => { const rel = path.relative(root, target); return rel === '' || !rel.startsWith('..' + path.sep) && rel !== '..' && !path.isAbsolute(rel); };
 const failure = message => new Error('Cursor rules: ' + message);
@@ -17,7 +17,7 @@ async function safeFile(root, file) {
     const stat = await fs.lstat(current);
     if (stat.isSymbolicLink()) throw failure('symbolic links are not read: ' + path.relative(root, current));
   }
-  const handle = await fs.open(file, constants.O_RDONLY | constants.O_NOFOLLOW);
+  const handle = await fs.open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   try {
     const stat = await handle.stat();
     if (!stat.isFile() || stat.nlink > 1) throw failure('rule must be a regular, unlinked file: ' + path.relative(root, file));
@@ -142,6 +142,7 @@ function select({ root, rules }, paths, requested) {
   if (Buffer.byteLength(JSON.stringify({ automatic, available })) > limits.contextBytes) throw failure('selected rules exceed context budget');
   return { automatic, available };
 }
+const agentRequested = rule => !rule.always && !rule.globs.length && Boolean(rule.description);
 export async function loadCursorRules({ cwd, paths = [], requested = [] }) {
   const catalog = await discover(cwd);
   return select(catalog, await scopedPaths(catalog.root, paths), requested);
@@ -149,15 +150,33 @@ export async function loadCursorRules({ cwd, paths = [], requested = [] }) {
 
 export function apply(ctx) {
   const scopes = new WeakMap();
+  const selections = new WeakMap();
+  const lifetime = new AbortController();
+  ctx.effect(() => () => lifetime.abort(failure('rule scope disposed')));
+  const live = agent => !lifetime.signal.aborted && agent && ctx.agents.get(agent.id) === agent;
+  const projectRoot = agent => agent.session.header.cwd
+    ?? (agent.ctx.get('workingDirectory') ?? ctx.get('workingDirectory'))?.get(agent.session);
   const rememberPath = (state, file) => {
     state.paths.delete(file);
     if (state.paths.size >= limits.paths) state.paths.delete(state.paths.values().next().value);
-    state.paths.add(file);
+    state.paths.add(file); state.inputRevision++;
   };
   const stateFor = agent => {
-    if (!agent || typeof agent !== 'object') throw failure('rule operation requires an agent');
+    if (!live(agent)) throw failure('rule operation requires its actual live agent');
+    const project = projectRoot(agent);
     let state = scopes.get(agent);
-    if (!state) { state = { paths: new Set(), requested: new Set(), pendingMentions: new Set(), catalog: null, text: '' }; scopes.set(agent, state); }
+    if (!state) {
+      state = { paths: new Set(), requested: new Set(), userRequested: new Set(), applied: new Set(), pendingMentions: new Set(),
+        catalog: null, text: '', scopeRoot: project, inputRevision: 0, selectionRevision: 0, epoch: 0 };
+      scopes.set(agent, state);
+    } else if (state.scopeRoot !== project) {
+      // When no creation-time project anchor exists, an effective-directory
+      // change starts a separate rules scope. Old names cannot select a new
+      // workspace's same-named manual rule.
+      state.paths.clear(); state.requested.clear(); state.userRequested.clear(); state.applied.clear(); state.pendingMentions.clear();
+      state.catalog = null; state.text = ''; state.project = undefined;
+      state.scopeRoot = project; state.inputRevision++; state.selectionRevision++; state.epoch++;
+    }
     return state;
   };
   ctx.systemPrompt.section({ name: 'omaa:cursor-rules', order: 10, interpolate: false, text: ({ agent }) => scopes.get(agent)?.text ?? '' });
@@ -165,52 +184,126 @@ export function apply(ctx) {
     description: 'Load a discovered Cursor project rule by name. Select an Agent Requested rule from the available description list, or a rule the user explicitly names. The rule is applied at the next step; this does not read arbitrary files.',
     parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'], additionalProperties: false },
     output: { schema: { type: 'string' }, render: (_args, text) => [{ type: 'text', text }] },
-    execute({ name }, { agent }) { const state = stateFor(agent); if (!state.catalog) throw failure('rule catalog has not loaded'); const selected = resolveName(state.catalog.rules, name); state.requested.add(selected); return 'Rule requested for the next step: ' + selected; },
+    execute({ name }, exec) {
+      exec.signal.throwIfAborted();
+      const state = stateFor(exec.agent);
+      if (!state.catalog || state.project !== projectRoot(exec.agent)) throw failure('rule catalog has not loaded for the current project');
+      const selected = resolveName(state.catalog.rules, name);
+      const rule = state.catalog.rules.find(rule => rule.name === selected);
+      if (agentRequested(rule)) {
+        // Body execution is not the final tool outcome: native post-policy or
+        // cancellation can still turn it into an error. Keep this candidate
+        // keyed by the original registry execution until tools/result below.
+        selections.set(exec, { agent: exec.agent, token: exec.token, args: exec.arguments, signal: exec.signal,
+          state, catalog: state.catalog, project: state.project, inputRevision: state.inputRevision, epoch: state.epoch, selected });
+      } else if (!state.userRequested.has(selected) && !state.applied.has(selected))
+        throw failure('rule requires a native user @mention or an already applied file scope: ' + selected);
+      return 'Rule requested for the next step: ' + selected;
+    },
   });
   ctx.on('tools/result', (exec, result) => {
-    if (!exec.agent || result.isError || !['read', 'edit', 'write'].includes(exec.name)) return;
-    const file = exec.arguments?.file_path;
-    if (typeof file === 'string') rememberPath(stateFor(exec.agent), file);
+    const candidate = selections.get(exec);
+    selections.delete(exec);
+    if (candidate && result.isError === false && exec.name === 'cursor_rule' && live(exec.agent)
+      && !exec.signal?.aborted && !candidate.signal.aborted && exec.agent === candidate.agent
+      && exec.token === candidate.token && exec.arguments === candidate.args && projectRoot(exec.agent) === candidate.project) {
+      const state = scopes.get(exec.agent);
+      if (state === candidate.state && state.catalog === candidate.catalog && state.project === candidate.project
+        && state.inputRevision === candidate.inputRevision && state.epoch === candidate.epoch
+        && agentRequested(state.catalog.rules.find(rule => rule.name === candidate.selected))) {
+        // Independent successes from the same admitted input/catalog merge.
+        // They invalidate an in-flight assembly, not each other's candidates.
+        if (!state.requested.has(candidate.selected)) { state.requested.add(candidate.selected); state.selectionRevision++; }
+      }
+    }
+    if (!live(exec.agent) || exec.signal?.aborted || result.isError !== false || !['read', 'edit', 'write'].includes(exec.name)
+      || typeof exec.arguments?.file_path !== 'string') return;
+    // Fixed native tool-fs outputs stamp the canonical execution-world path.
+    // A raw relative argument cannot be reinterpreted after a later cd.
+    const file = result.value?.path;
+    if (typeof file === 'string' && path.isAbsolute(file)) rememberPath(stateFor(exec.agent), file);
   });
   ctx.on('agent/inbox/claimed', ({ agent, message }) => {
-    if (!agent || !message || message.source?.kind && message.source.kind !== 'user') return;
+    // Native user attribution is not physical UI authentication. Fresh
+    // subagent prompts also use kind:user; their mentions are restricted below.
+    if (!live(agent) || message?.source?.kind !== 'user') return;
     const state = stateFor(agent);
     for (const part of message.content ?? []) {
       // Uploaded display labels are not workspace paths.
-      if (part.type === 'file' && typeof part.file_path === 'string') rememberPath(state, part.file_path);
+      if (part.type === 'file' && typeof part.file_path === 'string') {
+        const root = projectRoot(agent);
+        if (typeof root === 'string' && path.isAbsolute(root)) rememberPath(state, path.resolve(root, part.file_path));
+      }
       if (part.type === 'text' && typeof part.text === 'string') {
         for (const match of part.text.matchAll(/(?:^|\s)@([\w./-]+)/g)) {
           const mention = match[1].replace(/[.,;:!?]+$/, '');
-          if (mention.length <= 512 && state.pendingMentions.size < limits.files) state.pendingMentions.add(mention);
+          if (mention.length <= 512 && state.pendingMentions.size < limits.files) { state.pendingMentions.add(mention); state.inputRevision++; }
         }
       }
     }
   });
-  async function prepare(agent) {
+  async function prepare(agent, signal) {
+    signal.throwIfAborted();
     const state = stateFor(agent);
+    const epoch = ++state.epoch, inputRevision = state.inputRevision, selectionRevision = state.selectionRevision, project = projectRoot(agent);
+    const paths = [...state.paths], requested = new Set(state.requested), userRequested = new Set(state.userRequested), mentions = [...state.pendingMentions];
+    const current = () => {
+      signal.throwIfAborted();
+      if (!live(agent) || state.epoch !== epoch || state.inputRevision !== inputRevision || state.selectionRevision !== selectionRevision || projectRoot(agent) !== project)
+        throw failure('rule assembly ownership or inputs changed');
+    };
     try {
-      state.catalog = await discover(agent.session.header.cwd);
-      for (const mention of state.pendingMentions) {
-        try { state.requested.add(resolveName(state.catalog.rules, mention)); } catch { /* Unrelated @-mentions are not rule requests. */ }
+      current();
+      const catalog = await discover(project);
+      current();
+      // A removed canonical request must not poison every future selection, nor
+      // silently acquire a newly created basename alias or restored file.
+      const rules = new Map(catalog.rules.map(rule => [rule.name, rule]));
+      const delegated = agent.session.header.origin === 'subagent';
+      for (const name of userRequested) if (delegated || !rules.has(name)) userRequested.delete(name);
+      // A model selection authorizes only Agent Requested rules. A later edit
+      // into Manual or Auto Attached cannot borrow that old model request.
+      for (const name of requested) if (!rules.has(name) || !agentRequested(rules.get(name))) requested.delete(name);
+      for (const mention of mentions) {
+        try {
+          const name = resolveName(catalog.rules, mention);
+          // Fixed manager.ts:464-466 attributes a model-delegated child prompt
+          // as user. It cannot grant Manual selection or a lasting user request
+          // that could authorize a later metadata edit into Manual. Ordinary
+          // inputs retain trusted host user attribution, not a physical UI proof.
+          if (!delegated) userRequested.add(name);
+          else if (agentRequested(rules.get(name))) requested.add(name);
+        } catch { /* Unrelated @-mentions are not rule requests. */ }
       }
-      state.pendingMentions.clear();
-      const selected = select(state.catalog, await scopedPaths(state.catalog.root, [...state.paths]), [...state.requested]);
-      state.text = selected.automatic.map(rule => `# Cursor project rule: ${rule.name} (${rule.reason})\n${rule.content}`).join('\n\n');
-      if (selected.available.length) state.text += '\n\n# Available Cursor project rules\nUse cursor_rule with an exact name when its description is relevant.\n' + selected.available.map(rule => `${rule.name}: ${rule.description}`).join('\n');
-      if (Buffer.byteLength(state.text) > limits.contextBytes) throw failure('rendered rules exceed context budget');
+      const scoped = await scopedPaths(catalog.root, paths);
+      current();
+      const selected = select(catalog, scoped, [...new Set([...requested, ...userRequested])]);
+      let text = selected.automatic.map(rule => `# Cursor project rule: ${rule.name} (${rule.reason})\n${rule.content}`).join('\n\n');
+      if (selected.available.length) text += '\n\n# Available Cursor project rules\nUse cursor_rule with an exact name when its description is relevant.\n' + selected.available.map(rule => `${rule.name}: ${rule.description}`).join('\n');
+      if (Buffer.byteLength(text) > limits.contextBytes) throw failure('rendered rules exceed context budget');
+      state.catalog = catalog; state.project = project; state.requested = requested; state.userRequested = userRequested;
+      state.applied = new Set(selected.automatic.map(rule => rule.name));
+      for (const mention of mentions) state.pendingMentions.delete(mention);
+      state.text = text;
+      return { text, current };
     } catch (error) {
+      current(); // Cancellation or stale work never replaces a later cache.
       state.catalog = null;
+      state.applied.clear();
       state.text = 'Cursor project rules were not applied: ' + error.message;
       ctx.logger?.warn?.(state.text);
+      return { text: state.text, current };
     }
   }
   ctx.on('system-prompt/assemble', async (_initial, context, next) => {
     if (!context.agent) return next();
-    await prepare(context.agent);
+    const signal = context.signal === undefined ? lifetime.signal : AbortSignal.any([context.signal, lifetime.signal]);
+    const prepared = await prepare(context.agent, signal);
     const assembly = await next();
+    prepared.current();
     // DSH evaluates section.text before the waterfall and assembles before pre-step.
     // Replace this section in the current request rather than waiting for another step.
     return { ...assembly, sections: assembly.sections.map(section => section.name === 'omaa:cursor-rules'
-      ? { ...section, text: stateFor(context.agent).text, interpolate: false } : section) };
+      ? { ...section, text: prepared.text, interpolate: false } : section) };
   });
 }

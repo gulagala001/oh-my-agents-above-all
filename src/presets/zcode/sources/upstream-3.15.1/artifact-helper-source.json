@@ -1,0 +1,19 @@
+{
+  "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+  "files": [
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts",
+      "sha256": "6d8c70bc553320fd7ac55dac75ad09ee4e6db1f60991f3690094f192aeaced6e",
+      "gitBlobSha1": "f52cd97517a4c6add5a41993503ee118df2d5ecb",
+      "bytes": 8423,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/errors.ts"
+    },
+    {
+      "path": "apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts",
+      "sha256": "273274d148c051b41c88cd524f0bbfe3ff81333b8df7b6fa19548aea8c103036",
+      "gitBlobSha1": "b2ccd8ee0566c340e8a5a099fc7cd842095a5fb9",
+      "bytes": 1920,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/dynamic-workflow/src/engine/engine-artifacts-primary.ts"
+    }
+  ]
+}

@@ -38,6 +38,13 @@ codegraph.json
 docs/plan.md
 docs/verification.md
 docs/verification/
+docs/recovery/
+.local/
+baseline.diff
+WIP.diff
+checkpoint.json
+SHA256SUMS.json
+scripts/recovery-checkpoint.py
 docs/images/**/source.json
 assets/marketing/*.source.json
 
