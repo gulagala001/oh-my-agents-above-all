@@ -7,7 +7,7 @@ export function ComposerChips({ settings, sidebarRight, sessionId, getThemeRunti
   const mounted = useSyncExternalStore(sidebarRight.mounted.subscribe, sidebarRight.mounted.getSnapshot);
   // Child composers share the mounted parent's settings store. Only the
   // matching main composer can expose or open those session settings.
-  if (!sessionId || session.sessionId !== sessionId || mounted !== sessionId) return null;
+  if (!session.data?.product || !sessionId || session.sessionId !== sessionId || mounted !== sessionId) return null;
   const openPanel = () => {
     if (settings.getSnapshot().sessionId === sessionId && sidebarRight.mounted.getSnapshot() === sessionId) {
       sidebarRight.openTabIn(sessionId, 'omaa-preset');

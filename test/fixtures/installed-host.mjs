@@ -70,7 +70,7 @@ export async function stopFixtureChild(child, timeoutMs = 5000) {
   } finally { clearTimeout(timer); }
 }
 
-export async function installedHost(t, { liveSettings, piResources = true, cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = true, storeDir = process.env.OMAA_TEST_PUBLIC_STORE, installTimeoutMs = 600000, sourceLinked = process.env.OMAA_TEST_SOURCE_LINKED === '1', sessionSandboxMode = process.env.OMAA_TEST_SESSION_SANDBOX_MODE, offlineInstall = false, offlineCacheDir = process.env.OMAA_TEST_OFFLINE_CACHE } = {}) {
+export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cursor', 'pi', 'zcode'], liveSettings, piResources = true, cliPath = process.env.OMAA_TEST_HOST_CLI ?? defaultCli, packagePath = process.env.OMAA_TEST_HOST_PACKAGE, omdPackagePath, expectedHostVersion = process.env.OMAA_TEST_HOST_VERSION, safeEnvironment = process.env.OMAA_TEST_SAFE === '1', isolatedHome = true, storeDir = process.env.OMAA_TEST_PUBLIC_STORE, installTimeoutMs = 600000, sourceLinked = process.env.OMAA_TEST_SOURCE_LINKED === '1', sessionSandboxMode = process.env.OMAA_TEST_SESSION_SANDBOX_MODE, offlineInstall = false, offlineCacheDir = process.env.OMAA_TEST_OFFLINE_CACHE } = {}) {
   if (safeEnvironment && liveSettings) throw new Error('Safe host matrix only permits the localhost fixture provider');
   if (sourceLinked && (!safeEnvironment || omdPackagePath || liveSettings)) throw new Error('Cache-linked acceptance requires safe isolation without OMD or live providers');
   if (sessionSandboxMode !== undefined && (sessionSandboxMode !== 'danger-full-access' || !safeEnvironment
@@ -247,6 +247,12 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
     if (change) sessionPolicies.push(value);
     return value;
   };
+  const presets = async patch => {
+    const response = await fetch(origin + '/omaa-base/api/presets', { headers: { cookie, 'content-type': 'application/json' },
+      ...(patch === undefined ? {} : { method: 'POST', body: JSON.stringify(patch) }) });
+    return { status: response.status, value: await response.json() };
+  };
+  let initializedPresets = false;
   const boot = async () => {
     log = '';
     child = spawn(process.execPath, [cli, '--profile', 'omaa-fixture', '--no-open', '--port', '0'], { cwd: workspace, env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -261,6 +267,14 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
     loginUrl = url;
     cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
     await until(async () => (await call('llm/listProviders', {})).some(value => value.id === (liveSettings ? liveProviderId : 'fixture')));
+    // Feature fixtures explicitly opt in. Default-install coverage passes [];
+    // subsequent boots always preserve the actual saved activation choices.
+    if (!initializedPresets && enabledPresets.length && (!artifact || artifact.files.some(row => row.path === 'src/host/preset-activation.mjs'))) {
+      const state = await presets();
+      const selected = await presets({ enabled: enabledPresets, revision: state.value.revision });
+      if (selected.status !== 200) throw Error('Fixture preset activation failed: ' + JSON.stringify(selected.value) + '\n' + redact(log.slice(-6000)));
+      initializedPresets = true;
+    }
   };
   const snapshot = async sessionId => {
     const projections = await rpc('session/projections', { sessionId });
@@ -286,7 +300,7 @@ export async function installedHost(t, { liveSettings, piResources = true, cliPa
   };
   return {
     get origin() { return origin; }, get cookie() { return cookie; }, get loginUrl() { return loginUrl; },
-    root, home, userHome, workspace, piAgentDir, requests, errors, sessionPolicies, install, boot, stop, call, rpc, api, policy, snapshot, prompt, send,
+    root, home, userHome, workspace, piAgentDir, requests, errors, sessionPolicies, install, boot, stop, call, rpc, api, presets, policy, snapshot, prompt, send,
     evidence: { cli, version: versionOutput, node: process.version, platform: process.platform, arch: process.arch, artifact, omdArtifact, cleanup, loadMode: sourceLinked ? artifact ? 'frozen-package-cache-linked' : 'source-linked' : 'installed-package', isolation: { safeEnvironment, isolatedHome: true, requestedIsolatedHome: isolatedHome, requestedPiResources: piResources, piAgentDir, userHome, paths: Object.fromEntries(['DSH_HOME','HOME','USERPROFILE','XDG_CONFIG_HOME','XDG_CACHE_HOME','XDG_DATA_HOME','XDG_STATE_HOME','APPDATA','LOCALAPPDATA','TEMP','TMP','TMPDIR','PI_CODING_AGENT_DIR','PNPM_HOME','COREPACK_HOME','npm_config_userconfig','npm_config_cache','npm_config_prefix'].map(key => [key, env[key]])), userPiSkillBodiesExcluded: safeEnvironment, projectResourcesEnabled: true, ancestorBoundary: true, metadataScanning: 'Owned HOME/Pi/config/cache/Chrome paths; this is environment isolation, not OS-level filesystem isolation.', omd: { chromeUserDataDir: join(home, 'chrome-profile'), automaticSetupDisabled: safeEnvironment, ...(safeEnvironment ? { componentAutoSetup: false, nativeBinary: join(root, 'missing-native-driver') } : {}) } } },
     command,
     installOmd: () => { if (!omdArtifact) throw new Error('No explicit OMD tarball configured'); return installArtifact(omdArtifact); },

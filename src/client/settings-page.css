@@ -1,10 +1,45 @@
-.omaa-settings-page { box-sizing:border-box; width:100%; max-width:700px; margin:0 auto; padding:20px; color:var(--dsw-alias-label-primary); font:inherit; font-size:13px; }
+/* Use the same DSH primitives, card geometry and spacing as the OMD settings. */
+.omaa-settings-page {
+  --omaa-set-bg:var(--dsw-alias-bg-base,Canvas);
+  --omaa-set-text:var(--dsw-alias-label-primary,CanvasText);
+  --omaa-set-muted:var(--dsw-alias-label-tertiary,GrayText);
+  --omaa-set-line:color-mix(in srgb,var(--omaa-set-text) 10%,var(--omaa-set-bg));
+  --omaa-set-hover:color-mix(in srgb,var(--omaa-set-text) 5%,var(--omaa-set-bg));
+  display:flex; flex-direction:column; width:100%; height:100%; min-height:0;
+  box-sizing:border-box; color:var(--omaa-set-text); font:inherit; font-size:13px; line-height:1.6;
+  container:omaa-settings / inline-size;
+}
+.omaa-settings-page *, .omaa-settings-page *::before, .omaa-settings-page *::after { box-sizing:border-box; }
+.omaa-settings-page :is(h3,p) { margin:0; }
+.omaa-set-body { flex:1; min-height:0; overflow:auto; padding:4px 22px 28px; scrollbar-width:thin; overscroll-behavior:contain; }
+.omaa-set-group { margin-top:22px; }
+.omaa-set-group:first-child { margin-top:8px; }
+.omaa-set-group > h3 { margin:0 0 8px 2px; font-size:13px; font-weight:600; }
+.omaa-set-card { border:.5px solid var(--dsw-alias-settings-card-stroke,var(--omaa-set-line)); background:var(--dsw-alias-settings-card-fill,transparent); border-radius:12px; }
+.omaa-set-row { padding:12px 14px; border-top:.5px solid var(--omaa-set-line); }
+.omaa-set-row:first-child { border-top:0; }
+.omaa-set-line { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.omaa-set-copy { min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
+.omaa-set-copy strong { font-size:13px; font-weight:500; }
+.omaa-set-copy small, .omaa-settings-page .omaa-set-hint { color:var(--omaa-set-muted); font-size:12px; line-height:1.55; }
+.omaa-set-control { flex:none; display:flex; align-items:center; }
+.omaa-settings-page .omaa-set-hint { margin:10px 2px 0; }
+.omaa-set-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 0 2px; color:var(--omaa-set-muted); font-size:12px; }
+.omaa-set-status { margin-top:6px; font-size:12px; color:var(--omaa-set-muted); overflow-wrap:anywhere; }
+.omaa-set-error { color:var(--dsw-alias-state-error-primary,#be555e); }
+.omaa-set-fold { border-top:.5px solid var(--omaa-set-line); }
+.omaa-set-fold:first-child { border-top:0; }
+.omaa-set-fold > summary { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 14px; font-size:13px; font-weight:500; cursor:pointer; list-style:none; border-radius:12px; }
+.omaa-set-fold > summary::-webkit-details-marker { display:none; }
+.omaa-set-fold > summary:hover { background:var(--omaa-set-hover); }
+.omaa-set-fold > summary > svg { width:16px; height:16px; color:var(--omaa-set-muted); transform:rotate(-90deg); }
+.omaa-set-fold[open] > summary > svg { transform:none; }
+.omaa-set-fold > summary:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:-2px; }
+.omaa-set-fold-body { padding:0 14px 14px; }
 .omaa-settings-page .omaa-preset-controls,.omaa-settings-page .omaa-pi-extensions { max-width:none; margin:0; padding:0; }
-.omaa-settings-fold { margin-top:20px; border-top:1px solid var(--dsw-alias-border-l2); }
-.omaa-settings-fold > summary { display:flex; align-items:center; gap:8px; padding:15px 0; font-size:14px; font-weight:600; cursor:pointer; list-style:none; }
-.omaa-settings-fold > summary::-webkit-details-marker { display:none; }
-.omaa-settings-fold > summary::before { content:''; width:6px; height:6px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); margin-right:3px; }
-.omaa-settings-fold[open] > summary::before { transform:rotate(45deg); }
-.omaa-settings-fold > summary:focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; border-radius:4px; }
-.omaa-settings-fold .omaa-pi-extensions header { justify-content:flex-end; margin-bottom:10px; }
-@media(max-width:420px) { .omaa-settings-page { padding:15px; } }
+.omaa-set-fold .omaa-pi-extensions header { justify-content:flex-end; margin-bottom:10px; }
+@container omaa-settings (max-width:460px) {
+  .omaa-set-body { padding:4px 14px 22px; }
+  .omaa-set-line { gap:12px; }
+  .omaa-set-footer { align-items:flex-start; }
+}

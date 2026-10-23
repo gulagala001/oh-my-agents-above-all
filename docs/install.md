@@ -1,6 +1,6 @@
 # 安装、更新与卸载
 
-OMAA 使用 DSH 已配置的模型、工具、权限与会话，无需登录五个产品的官方客户端。当前 OMAA **0.16.4** 匹配 DSH **0.2.1-rc.2**；rc.1 提供对应 OMAA 0.16.5。独立使用 OMAA 不需要 OMD；可选增强配对同宿主 OMD **0.18.4**。[功能边界](compatibility.md) · [更新记录](../CHANGELOG.md)
+OMAA 使用 DSH 已配置的模型、工具、权限与会话，无需登录五个产品的官方客户端。当前 OMAA **0.16.5** 匹配 DSH **0.2.1-rc.2**；rc.1 提供对应 OMAA 0.16.5。独立使用 OMAA 不需要 OMD；可选增强配对同宿主 OMD **0.18.4**。[功能边界](compatibility.md) · [更新记录](../CHANGELOG.md)
 
 <a id="ai"></a>
 ## 方法一：复制给 AI 安装
@@ -39,7 +39,11 @@ https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-r
 
 [rc.2 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.5) · [rc.1 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.5) · [可选 OMD 增强安装](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)
 
-安装后在新会话中选择带有 `· OMAA` 的产品预设。更新沿用同一安装入口；不要根据 GitHub latest 混用不同宿主包。
+已发行的 0.16.5 在安装后直接提供带有 `· OMAA` 的产品预设。当前主线源码改为只加载基座，全部预设默认关闭；在 **设置 → OMAA → 代理预设** 中分别开启 Codex、Grok Build、Cursor、Pi 或 ZCode，开启后再到新会话选择。此改动尚未单独发行，不改变上面的固定包。
+
+开关保存在当前 `DSH_HOME/omaa/presets.json`，重启沿用明确保存的选择。开启预设不会改变 DSH 默认预设。关闭时保留会话、检查点、记忆和个人设置；有运行中或排队的相关任务时拒绝关闭，等待任务结束后可重试。关闭后的旧预设会话需重新开启对应预设才能继续执行，历史仍由宿主保留。若该预设已被手动设为 DSH 默认，先在「Agent 预设」选择其他默认值，再关闭。
+
+更新沿用同一安装入口；不要根据 GitHub latest 混用不同宿主包。
 
 <details>
 <summary>可选：Web／CLI 安装</summary>

@@ -1,6 +1,6 @@
 # OMAA 架构
 
-OMAA 是 DSH 预设与界面插件。`cordis.patch.yml` 由构建脚本生成，注册五个宿主 `agent-preset`；DSH 负责模型/API、原生 agent loop、权限、工具执行、停止、会话与文件交付。
+OMAA 是 DSH 预设与界面插件。`cordis.patch.yml` 由构建脚本生成，只注册安装基座。`src/host/preset-activation.mjs` 按设置中的明确选择加载 `src/runtime.mjs`，并通过原生 registry 注册 `src/host/preset-definitions.mjs` 中对应的预设；全部关闭时释放运行服务与前端接管。DSH 负责模型/API、原生 agent loop、权限、工具执行、停止、会话与文件交付。
 
 ## 提示词与工具
 
@@ -15,6 +15,8 @@ Pi 模板、SYSTEM/APPEND、规则和技能目录由实际 filesystem 与原生 
 可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
 
 ## 状态与恢复
+
+启用列表保存在 `DSH_HOME/omaa/presets.json`，默认为空。`/omaa-base/api/presets` 使用宿主认证、修订号和串行写入；活动任务、排队任务及仍作为宿主默认值的预设不能直接停用。关闭不改写会话或删除个人设置，旧会话再次执行前须重新开启对应预设。设置页调用原生预设菜单的读取动作刷新列表，保留默认值和选择逻辑；其他窗口通过同源通知和重新聚焦读取最新状态。
 
 消息、工具、计划模式和执行恢复使用 DSH 日志。宿主当前拒绝未知自定义 journal 事件，主题、基础增强和执行/Ask 偏好由 `src/host/preferences.mjs` 在 `DSH_HOME/omaa/preferences/` 按会话原子保存，文件名使用会话 ID 的 hash；多个 profile 不互相覆盖其它会话的记录。高级工作方式复用 OMD 的模式持久化，不另存一份 OMAA 高级状态或执行历史。
 

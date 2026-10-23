@@ -8,7 +8,7 @@ const textOf = message => typeof message?.content === 'string' ? message.content
   : (message?.content ?? []).map(part => part.text ?? '').join('\n');
 
 test('rc.2 profiles use literal personas and scoped tool restrictions with explicit project memory', { timeout: 60000 }, async t => {
-  const f = await installedHost(t, { safeEnvironment: true, sourceLinked: true });
+  const f = await installedHost(t, { safeEnvironment: true, sourceLinked: true, enabledPresets: ['zcode'] });
   const profiles = join(f.workspace, 'profiles'), memory = join(f.workspace, 'memory');
   await mkdir(profiles); await mkdir(memory);
   await writeFile(join(memory, 'MEMORY.md'), '# Workspace\nPROJECT_MEMORY_MARKER\n');

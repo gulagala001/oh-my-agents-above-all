@@ -22,6 +22,21 @@ function fixture(initial = 'a') {
   return { mounted, list, calls, store };
 }
 
+test('opt-in runtime does not read settings for native or disabled preset sessions', async () => {
+  const mounted = source('a'), list = source({ byId: { a: { projectionValues: { agentPreset: 'standard' } } } });
+  const calls = [];
+  const settings = createSessionSettings({ sidebarRight: { mounted }, sessions: { list } }, async (...args) => {
+    calls.push(args); return new Response(JSON.stringify(value()));
+  }, ['codex']);
+  await tick(); await settings.refresh();
+  assert.equal(calls.length, 0);
+  list.set({ byId: { a: { projectionValues: { agentPreset: 'omaa-zcode' } } } });
+  await tick(); assert.equal(calls.length, 0);
+  list.set({ byId: { a: { projectionValues: { agentPreset: 'omaa-codex' } } } });
+  await tick(); assert.equal(calls.length, 1);
+  settings.dispose();
+});
+
 test('visible host session is the only API target, with host cookies and no recurring polling', async () => {
   const f = fixture(); await tick();
   assert.equal(f.calls.length, 1); assert.equal(f.calls[0].url, 'omaa/api/session?session=a');

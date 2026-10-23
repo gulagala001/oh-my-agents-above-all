@@ -13,7 +13,7 @@ const workLabel = (mode, submode) => mode === 'ultra' ? `Ultra · ${enhancementW
 const workModeOf = data => data?.enhancement && enhancementWorkModes.some(([id]) => id === data.enhancementWorkMode) ? data.enhancementWorkMode : 'off';
 const workModeAvailable = data => data?.omdAvailable === true && data.enhancementWorkModeAvailable === true;
 
-export function createSessionSettings(ctx, request = fetch) {
+export function createSessionSettings(ctx, request = fetch, enabled) {
   const listeners = new Set();
   let disposed = false, controller, revision = 0, signature = '', queued = false, refreshAfterSave = false;
   let state = { sessionId: undefined, agentPreset: undefined, data: null, loading: false, saving: false, error: '' };
@@ -37,7 +37,7 @@ export function createSessionSettings(ctx, request = fetch) {
   };
   const refresh = async () => {
     const sessionId = state.sessionId;
-    if (disposed || !sessionId) return;
+    if (disposed || !sessionId || enabled && !enabled.includes(productForPreset(state.agentPreset)?.id)) return;
     if (state.saving) { refreshAfterSave = true; return; }
     controller?.abort(); controller = new AbortController();
     const ticket = ++revision, signal = controller.signal;
@@ -69,7 +69,14 @@ export function createSessionSettings(ctx, request = fetch) {
       if (changedProduct) { controller?.abort(); ++revision; refreshAfterSave = false; }
       state = { ...state, agentPreset, ...(changedProduct ? { data: null, loading: true, saving: false, pendingPatch: undefined, error: '' } : {}) }; emit();
     }
-    if (!sessionId) return;
+    const product = productForPreset(agentPreset);
+    if (!sessionId || enabled && (!product || !enabled.includes(product.id))) {
+      controller?.abort(); ++revision; signature = ''; refreshAfterSave = false;
+      if (state.data || state.loading || state.saving || state.error) {
+        state = { ...state, data: null, loading: false, saving: false, pendingPatch: undefined, error: '' }; emit();
+      }
+      return;
+    }
     const nextSignature = JSON.stringify([sessionId, row?.running, row?.projectionValues?.agentPreset,
       row?.projectionValues?.plan, row?.projectionValues?.omdUltracode, row?.projectionValues?.omdWorkModes, row?.projectionValues?.modelSelection]);
     if (nextSignature === signature) return;

@@ -37,6 +37,8 @@ https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-r
 
 ### 2. 先试这一件事
 
+当前源码默认关闭全部预设。先到 **设置 → OMAA** 按需开启，再在新会话中选择；不会替换宿主默认预设，全部关闭时会话、工具和主题保持原样。这项按需启用行为尚未包含在上方的 0.16.5 固定发行包中。
+
 新建会话，选择 **Codex · OMAA** 或其他预设，输入：
 
 ```text

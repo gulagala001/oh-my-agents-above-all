@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 async function requestUpdate(input, signal) {
-  const response = await fetch('omaa/api/updates' + (input === true ? '?refresh=1' : ''),
+  const response = await fetch('omaa-base/api/updates' + (input === true ? '?refresh=1' : ''),
     typeof input === 'object' ? { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input), signal }
       : { credentials: 'same-origin', cache: 'no-store', signal });
   const data = await response.json();

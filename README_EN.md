@@ -37,6 +37,8 @@ Wait for active tasks to finish, then follow the host’s activation/restart pro
 
 ### 2. Try this first
 
+The current source starts with all presets disabled. Open **Settings → OMAA** and enable only the presets you want, then select one when creating a conversation. The host default remains unchanged; with every preset off, conversations, tools and appearance retain their native behavior. This opt-in behavior is not yet included in the fixed 0.16.5 package above.
+
 Create a conversation, select **Codex · OMAA** or another preset, and ask:
 
 ```text
