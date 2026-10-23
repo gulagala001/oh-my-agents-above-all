@@ -56,7 +56,7 @@ OMAA provides independent source prompts, workflows and light/dark themes for Co
 | **Codex** | Sustained code work, actual Git ranges, file/hunk operations, line feedback and a desktop layout. |
 | **Grok Build** | Planning and execution, live stdout monitoring and native interval scheduling. |
 | **Cursor** | MDC/project rules, Ask/Plan, file checkpoints, multi-scope review, persistent line comments, exact local-editor navigation and batch feedback to continue editing. |
-| **Pi** | Minimal default tools, SYSTEM/templates/rules, sequential steering, native branch navigation and explicit local extensions. |
+| **Pi** | Minimal default tools, SYSTEM/templates/rules, sequential steering, native branch navigation, extension drafts, settlement continuation and message events. |
 | **ZCode** | Saved workflows, TypeScript Actors, static execution graphs, file/Git/command facades and artifact panels. |
 
 Themes can follow the preset, use another preset’s theme or return to native DSH. Light/dark preference follows the host. Each preset retains its own behavior; see the [product documentation](docs/products/) for details.

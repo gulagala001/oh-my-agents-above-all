@@ -204,6 +204,30 @@ async function dispatchEvent(frame, context) {
   const handlers = context.runtime.extensions.flatMap(extension => (extension.events.get(eventName) ?? []).map(registration => ({ ...registration, extensionPath: extension.file })));
   const event = { ...(frame.event ?? {}), type: eventName };
   const ctx = createCallbackContext(context.runtime);
+  if (eventName === 'turn_end' || eventName === 'agent_before_settle') {
+    let entries = [], shouldContinue = false, preview = frame.preview, valid = true;
+    const errors = [];
+    for (const { handler, extensionPath } of handlers) {
+      context.controller.signal.throwIfAborted();
+      try {
+        const result = await handler({ ...event, entries, continue: shouldContinue, context: preview }, ctx);
+        if (result?.entries !== undefined) entries = result.entries;
+        if (result?.continue !== undefined) {
+          if (typeof result.continue !== 'boolean') throw Error('Pi boundary continue must be boolean');
+          shouldContinue = result.continue;
+        }
+      } catch (error) { context.controller.signal.throwIfAborted(); errors.push({ extensionPath, error: errorText(error) }); }
+      try {
+        await drain(context);
+        preview = await apiRequest(context, 'boundary.preview', { entries }, false);
+        valid = true;
+      } catch (error) {
+        context.controller.signal.throwIfAborted(); valid = false;
+        errors.push({ extensionPath, error: 'Invalid boundary entries: ' + errorText(error) });
+      }
+    }
+    return { entries: valid ? entries : [], continue: valid && shouldContinue, valid, errors };
+  }
   if (eventName === 'before_agent_start') {
     const promptFrame = frame.promptFrame, options = promptFrame.options;
     const messages = [], errors = [];

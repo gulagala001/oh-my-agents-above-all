@@ -12,9 +12,11 @@ Plan/Ask 的 shell 使用 preset 私有 `sandboxPolicy` 代理，逐调用只收
 
 Pi 模板、SYSTEM/APPEND、规则和技能目录由实际 filesystem 与原生 provider 加载；根选择扩展显式依赖固定宿主内部 `roots`，升级须核对该边界。默认逐条 steer 通过公开 pre-step mutable message payload 与 Inbox splice 保留原 id/source，仅调整本步接受顺序。宿主在 pre-step 之前先 claim/assemble，取消在该更早边界的差异见 Pi 文档。
 
-Pi 的 context/system 回调通过 `host/pi-loop.mjs` 作用于拥有该扩展的原生 Agent。`build-pi-loop.mjs` 校验固定 rc.2 模块、原方法与许可，提取原生 step、请求构造和工具／流辅助代码，仅增加冻结前的异步投影边界；实际 registry、dispatcher、preparedCall 和日志仍来自原实例。其他预设及共享服务不变。工具列表变化同步记录 native request header，消息改写为单次请求副本；后续请求重新由原始 surface 生成。原厂 Pi 1.1.0 transcript/text helper 原样保留在 `sources/npm-pi-ai/`，同一构建校验哈希后生成纯 helper。普通 context 的系统恢复和 full-system 回调顺序遵循固定 runner。
+Pi 的 context/system 回调通过 `host/pi-loop.mjs` 作用于拥有该扩展的原生 Agent。`build-pi-loop.mjs` 校验固定 rc.2 模块、原方法与许可，提取原生 step、turn、请求构造和工具／流辅助代码，增加冻结前的异步投影、消息通知与停止前收尾边界；实际 registry、dispatcher、preparedCall 和日志仍来自原实例。其他预设及共享服务不变。工具列表变化同步记录 native request header，消息改写为单次请求副本；后续请求重新由原始 surface 生成。原厂 Pi 1.1.0 transcript/text helper 原样保留在 `sources/npm-pi-ai/`，同一构建校验哈希后生成纯 helper。普通 context 的系统恢复和 full-system 回调顺序遵循固定 runner。
 
 Pi 自定义条目与尚未投递的消息使用原生 `appendPluginRecord` 的 `plugin:omaa/pi-entry` / `plugin:omaa/pi-pending-message`，原生日志负责冷恢复与分叉继承。非触发消息在整批工具完成后进入 surface；nextTurn 在下一次用户输入接纳，同一消息 ID 的 user/message 是消费凭据。条目不进入模型上下文；自定义消息复用现有原生事件与 Pi 默认 renderer。插件记录允许未知读取器保留并跳过，不能用于改变宿主已存在事件的解释。
+
+Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯投影函数由固定 `session-manager.ts`／`messages.ts` 构建为 `lib/pi-session-projection.mjs`。后续 Pi 请求和预览应用该记录，可见消息原生副本仅为带条目 ID 的展示回执。新生命周期在原生 turn 结束／下一次调度判定之间等待，继续使用同一 inbox；续跑的空隐藏调度回执不进入模型。取消撤销未提交批次，并在有界通知后关闭 guest。此持久投影属于 Pi 请求边界，未改写共享原生日志解释器；原厂树与原生自动压缩的完整协调仍需后续接线。
 
 可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
 
