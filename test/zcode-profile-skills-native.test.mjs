@@ -63,7 +63,7 @@ test('ZCode restricted profile skills load, deny unselected bodies and cold-resu
     assert(results.some(row => !row.isError && textOf(row).includes('BODY_review-only')));
     assert(results.some(row => row.isError && /unknown|no longer|unavailable/.test(textOf(row))));
     assert(results.some(row => !row.isError && textOf(row).includes('PROFILE_FILE_MARKER')));
-    assert(results.some(row => row.isError && (profile === 'planner' ? /plan mode permits/ : /outside the child profile restriction/).test(textOf(row))), results.map(textOf).join('\n'));
+    assert(results.some(row => row.isError && (profile === 'planner' ? /plan mode permits/ : /outside the child profile restriction|frozen profile MCP grant/).test(textOf(row))), results.map(textOf).join('\n'));
     const events = child.records.map(row => row.event).filter(Boolean);
     assert.equal(events.filter(event => event.type === 'plugin:omaa/zcode/profile-skills-admission').length, 1);
     assert.equal(events.find(event => event.type === 'agent-preset/selected').data.agentPreset, 'omaa-zcode-profile-skills-local');

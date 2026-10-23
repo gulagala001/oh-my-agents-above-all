@@ -28,7 +28,7 @@ CI 冻结安装当前宿主依赖、构建并检查实际包。tag workflow 仅�
 
 原创贡献采用 Apache-2.0。保留第三方许可、署名、固定来源与适配说明；Cursor 样本权利边界见 [许可范围](LICENSING.md)。测试保留维护所需的合成 fixture，使用隔离临时目录，不提交真实会话或账号数据。
 
-ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile 与日历构建所需的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和交接快照文件。
+ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile 与日历构建输入，以及 MCP 借用／子任务工具限制参照的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和交接快照文件。
 
 文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。
 

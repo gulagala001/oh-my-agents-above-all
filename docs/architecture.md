@@ -32,6 +32,10 @@ Pi 分支服务只调用原生 `sessionController.list/inspect/fork`，原生 pa
 
 `/omaa/api/pi-branches` 复用宿主认证，GET 读取当前 Pi 原生分支族与完成点，POST 在 revision 核对后调用原生 fork；分支面板打开同一宿主会话。摘要 checkbox 默认未选，不会因查看或切换分支自动调用模型。
 
+ZCode profile 使用原生 continuable 子会话保存人格、模型和工具限制。`profile-mcp.mjs` 在原生创建事件中核对父子归属并记录 MCP 准入，冷恢复重新核对相同声明摘要与公共 schema；`host/zcode-mcp-ownership.mjs` 只借用管理员明确组合的 native client，连接、重连和资源释放仍由父实例负责。工具过滤、MCP 指令范围及普通文件工具共同受宿主 guard 约束。未受管实例不通过名字推定归属，凭据不进入子会话记录。
+
+工作流 Amend／恢复从实际继承前缀内的最后一个 `request/header` 读取模型与思考档位；角色显式选择与本次运行选择仍优先。冷恢复不会被父会话后来选定的模型覆盖，也不采用已丢弃任务后缀的路由。
+
 ## 外观与增强
 
 五主题通过共享 appearance coordinator 独占前台颜色与布局，释放时恢复此前外观。Cursor 桌面 Agent 布局与 CLI 证据分开；颜色继承当前 DSH 是适配选择。主题、模型、预设和增强开关分别负责自己的状态。

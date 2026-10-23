@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { symbols } from '@deepseek-ai/cordis';
-import { scopeOf, scopeChainOf } from '@deepseek-ai/dsh-scope';
+import { scopeOf, scopeChainOf, scopeParentOf } from '@deepseek-ai/dsh-scope';
 
 const original = value => value?.[symbols.original] ?? value;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -52,6 +52,7 @@ export function installZCodeMcpOwnership(ctx) {
       semantics: 'explicit owned-native composition; immutable initial startup outcome; native public tool names; live connection health is not inferred',
       statuses: Object.fromEntries(records.map(record => [record.serverName, {
         startupStatus: record.startup.status, disposed: record.closed,
+        ...(record.declarationSha256 ? { declarationSha256: record.declarationSha256 } : {}),
         ...(record.startup.error ? { error: record.startup.error } : {}), toolCount: record.initialToolCount ?? record.initialTools.length,
       }])),
       tools: records.flatMap(record => record.initialTools.map(tool => copy(tool))),
@@ -59,7 +60,8 @@ export function installZCodeMcpOwnership(ctx) {
   };
   const service = {
     diagnostics() { return copy(diagnostics); },
-    reserve(context, serverName, registry) {
+    serverNames(parent) { return [...selected(parent)].filter(([, record]) => !record.closed).map(([name]) => name); },
+    reserve(context, serverName, registry, declarationSha256) {
       if (closed || !/^[A-Za-z0-9_-]{1,32}$/.test(serverName) || typeof registry?.get !== 'function')
         throw Error('Owned MCP composition requires an available host, explicit native server name and exact original registry.');
       if (activeRecords.size >= MAX_OWNERS) throw Error('Owned MCP composition budget exhausted (128 active owners).');
@@ -68,7 +70,7 @@ export function installZCodeMcpOwnership(ctx) {
       if (!layer) layers.set(key, layer = new Map());
       if (layer.get(serverName) && !layer.get(serverName).closed) throw Error('Owned MCP server name is already reserved in this scope.');
       let resolve;
-      const record = { serverName, key, registry, closed: false, currentMetadataBytes: 0, startupMetadataBytes: 0, definitions: new Map(), borrows: new Set(), closePromise: undefined, initialTools: [], startup: undefined,
+      const record = { serverName, key, registry, declarationSha256, closed: false, currentMetadataBytes: 0, startupMetadataBytes: 0, definitions: new Map(), borrows: new Set(), closePromise: undefined, initialTools: [], startup: undefined,
         ready: new Promise(done => { resolve = done; }) };
       layer.set(serverName, record); activeRecords.add(record);
       const descriptor = definition => {
@@ -128,7 +130,7 @@ export function installZCodeMcpOwnership(ctx) {
           settle('unresolved', Error('Owned composition closed before startup settled.'));
           leases.delete(lease); activeRecords.delete(record);
           if (layer.get(serverName) === record) { layer.delete(serverName); if (!layer.size) layers.delete(key); }
-          const tombstone = { serverName, closed: true, startup: record.startup, initialTools: [],
+          const tombstone = { serverName, declarationSha256, closed: true, startup: record.startup, initialTools: [],
             initialToolCount: record.initialToolCount, ready: Promise.resolve() };
           const tombstoneKey = key ?? globalKey;
           let retired = tombstones.get(tombstoneKey);
@@ -151,13 +153,16 @@ export function installZCodeMcpOwnership(ctx) {
     async snapshot(parent, serverNames) {
       return track(snapshotFor(parent, serverNames).then(value => copy(value.snapshot)));
     },
-    // Explicit narrow subset, not profile inheritance: every inherited tool
-    // is masked except the selected owned names. Unknown/arbitrary MCP tools
-    // therefore cannot leak through an incomplete ownership inventory.
-    async borrowOwnedOnly(parent, child, { serverNames, toolNames } = {}) {
+    // Every inherited capability is explicit: selected owned MCP names plus
+    // ordinary native tools. Unknown MCP instances cannot leak through this
+    // ownership catalogue; a profile never creates a connection.
+    async borrowOwnedOnly(parent, child, { serverNames, toolNames, nativeToolNames = [], expectedSnapshot } = {}) {
       return track((async () => {
-        if (!names(toolNames)) throw Error('Borrowing requires an explicit unique native-public tool-name allowlist.');
+        if (!names(toolNames) || !names(nativeToolNames) || nativeToolNames.some(name => name.startsWith('mcp__') || toolNames.includes(name)))
+          throw Error('Borrowing requires disjoint explicit native and MCP tool-name allowlists.');
         const captured = await snapshotFor(parent, serverNames), parentKey = checkParent(parent);
+        if (expectedSnapshot && !isDeepStrictEqual(captured.snapshot, expectedSnapshot))
+          throw Error('The owned MCP declaration or startup schemas changed; the frozen profile cannot be rebound.');
         if (captured.records.some(record => record.closed || record.startup.status !== 'connected'))
           throw Error('An explicitly selected owned MCP server did not have a successful live-owner startup.');
         const childKey = child?.ctx && scopeOf(child.ctx), session = original(child?.session), parentSession = original(parent.session);
@@ -192,14 +197,15 @@ export function installZCodeMcpOwnership(ctx) {
           const registry = child.ctx.tools;
           const visible = new Set(registry.schemas(childKey).map(tool => tool.name));
           if (toolNames.some(name => !visible.has(name))) throw Error('Borrowing cannot add a tool absent from the child’s current native authority.');
-          filters.push(registry.restrict({ allow: toolNames }));
+          const allowed = [...toolNames, ...nativeToolNames];
+          filters.push(registry.restrict({ allow: allowed.filter(name => registry.get(name, scopeParentOf(childKey))) }));
           filters.push(registry.guard(exec => {
             if (stopped || closed) return 'Borrowed MCP child access is closed.';
             // The reserved PTC transport retains its native mode contract;
             // each SDK sub-dispatch still passes this capability guard.
             if (exec.name === 'run_code') return;
-            if (!toolNames.includes(exec.name) || original(registry.get(exec.name, childKey)) !== original(definitions.get(exec.name)))
-              return 'This explicit owned-MCP-only child grant denies every other tool registration.';
+            if (!nativeToolNames.includes(exec.name) && (!toolNames.includes(exec.name) || original(registry.get(exec.name, childKey)) !== original(definitions.get(exec.name))))
+              return 'This frozen profile MCP grant denies unselected or replaced tool registrations.';
           }));
           for (const name of toolNames) {
             const { record, tool } = initial.get(name), executions = new WeakMap();

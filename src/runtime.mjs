@@ -20,6 +20,7 @@ import { installZCodeProfilePermissions } from './presets/zcode/profile-permissi
 import { installFiniteScheduleGate } from './presets/zcode/finite-schedule-gate.mjs';
 import { installCalendarChainGate } from './presets/zcode/calendar-chain-gate.mjs';
 import { installZCodeMcpOwnership } from './host/zcode-mcp-ownership.mjs';
+import { installZCodeProfileMcp } from './presets/zcode/profile-mcp.mjs';
 import { installZCodeProfileSkills } from './presets/zcode/profile-skills.mjs';
 import { createWorkflowQuestionNotices } from './presets/zcode/question-notices.mjs';
 
@@ -390,6 +391,7 @@ export async function enableProduct(ctx, product) {
     hub.workflowQuestionNotices = createWorkflowQuestionNotices(ctx);
     installZCodeMcpOwnership(ctx);
     installSubagentOverrides(ctx);
+    installZCodeProfileMcp(ctx);
     installZCodeProfileInstructions(ctx);
     installZCodeProfilePermissions(ctx);
     // Both use prepend: skills admission must precede the plan gate.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Pinned build inputs for ZCode memory, profile parsing and calendar rules.",
+  "purpose": "Pinned build inputs and implementation references for ZCode memory, profile parsing, MCP borrowing and calendar rules.",
   "files": [
     {
       "path": "apps/zcode-cli/packages/core/src/memory/index-content.ts",
@@ -178,6 +178,39 @@
       "bytes": 3522,
       "url": "https://github.com/markedjs/marked/blob/244941a19225303f94aa60cb728373dc56e1dadf/src/helpers.ts",
       "license": "MIT"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/subagent/mcp-config.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/subagent/mcp-config.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "1eaf650b7dbdba637b5bc1d59b2b0d1cbe4bcee5",
+      "sha256": "ddc8826f77b2681cdf95408be85630928817b2bf43a94354784cadc10cb42566",
+      "bytes": 3685,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/subagent/mcp-config.ts",
+      "license": "Apache-2.0",
+      "runtimeRole": "reference for native profile MCP and child restriction adaptation"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/subagent/borrowed-mcp-port.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/subagent/borrowed-mcp-port.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "a771b05560718889369f4f2e86266a8296a08cff",
+      "sha256": "670d0b8ae171c7a1f330aa30f45c123d35c9d05123f71a1a4d16c611b66621e5",
+      "bytes": 2520,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/subagent/borrowed-mcp-port.ts",
+      "license": "Apache-2.0",
+      "runtimeRole": "reference for native profile MCP and child restriction adaptation"
+    },
+    {
+      "path": "apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "b3bb25418b9bf73e3122a46e0affb931af39354b",
+      "sha256": "43992310797f001e0500dad6feeecb7980db06b221e95e6f12e00568c4ab7c3c",
+      "bytes": 960,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
+      "license": "Apache-2.0",
+      "runtimeRole": "reference for native profile MCP and child restriction adaptation"
     }
   ]
 }

@@ -84,7 +84,7 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 缓存使用固定原 `ImportedActorState`、`ImportedWorldQueue` 与 persona/hash 函数，按唯一有效 Actor 名、原 persona 及连续 instruction hash 匹配。匿名／改 persona／首次分歧不复活后缀结果。首次 live ask 继承到最后命中任务的精确 native canonical event offset，不拼摘要，不复制旧 run 后半段；native manager 建新 descriptor、真实 parent 与当前权限。每个结果存 native immutable attachment，完整执行事实独立于有界 UI。失败 ask 截断可导入前缀，脚本 catch 后仍能继续 live ask。
 
-world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执行效果。live world.run 关闭导入窗口；read/glob/grep/read_image/skill 只记 native dispatch，其它缺少 effect 分类的工具保守关闭，不当作原厂精确按入参分类。关闭后仅 `worldToolCalls === 0` 的缓存 ask 可命中。当前 DSH 模型/API 仍生效，不继承原厂模型 pin；pending ask 会取消，不继承半转录；同 run 恢复按上述持久化记录与已确认结果边界执行。旧 0.8 run 无任务缓存，在停前驱前拒绝 Amend。
+world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执行效果。live world.run 关闭导入窗口；read/glob/grep/read_image/skill 只记 native dispatch，其它缺少 effect 分类的工具保守关闭，不当作原厂精确按入参分类。关闭后仅 `worldToolCalls === 0` 的缓存 ask 可命中。Actor 的模型选择按角色显式模型、本次运行 `subagent_model`、导入前缀内最后一次实际请求、父会话当前模型的顺序确定；模型与思考档位由原生会话保留，已丢弃后缀中的模型选择不参与恢复。pending ask 会取消，不继承半转录；同 run 恢复按上述持久化记录与已确认结果边界执行。旧 0.8 run 无任务缓存，在停前驱前拒绝 Amend。
 
 未声明 phase 的 ask/world 现已避免把 undefined 带入原生 lossless JSON 传输，修复无 phase 的正常调用失败。
 
@@ -111,8 +111,33 @@ TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已
 - 保存定义支持编辑、移动、删除和参数填写；提交前重新校验文件版本、会话归属与执行模式。
 - `list_workflow_runs`／`get_workflow_run` 查看运行、日志和原始脚本；`fill_workflow` 填入运行中等待的代码空位，先提交有效源码再继续执行。`eval_workflow_snippet` 执行有界片段。
 - 在会话设置中显式选择已有项目记忆目录后，读取其 `MEMORY.md`；Agent 目录与 Agent 记忆分别配置。设置不会自动创建目录。
-- `zcode_agent` 列出或运行本地 profile；人格原文与工具限制随原生子会话保留。支持的工具、技能、默认／计划权限按实际宿主校验，未知字段会给出诊断。非空 `skills` 在启动前选定受限原生预设，模型只能发现和加载选定的本地技能；原生计划模式、人格原文与父会话指令快照仍生效。宿主重启后，技能目录可只读查看，父会话用原生 `send_message` 继续同一个子会话；技能来源改变时明确拒绝加载，不悄悄换成新正文。`mcpServers` 仍未接入 profile 委派，模型钉住与完整 MCP 冷恢复不由这条技能流程推定完成。
+- `zcode_agent` 列出或运行本地 profile；人格原文与工具限制随原生子会话保留。支持的工具、技能、默认／计划权限按实际宿主校验，未知字段会给出诊断。非空 `skills` 在启动前选定受限原生预设，模型只能发现和加载选定的本地技能；原生计划模式、人格原文与父会话指令快照仍生效。宿主重启后，技能目录可只读查看，父会话用原生 `send_message` 继续同一个子会话；技能来源改变时明确拒绝加载，不悄悄换成新正文。`model: provider/model` 与 `thoughtLevel` 选择实际目录中的模型和档位，宿主重启后保留；无效选择明确拒绝，不回退到父模型。`mcpServers` 指定已有的受管 MCP 连接，省略时继承受管目录，`[]` 禁用 MCP。子会话只借用已选工具，结束不会关闭父连接；冷恢复重新核对连接声明与启动工具 schema，发生变化时拒绝续跑。
 - `cron_create`／`cron_list`／`cron_update`／`cron_delete` 使用宿主调度；日历规则要求显式时区，有限次数与逻辑日历链保留持久记录。已受理、已派发和任务完成分别记录。
 - `list_models` 读取真实模型目录；`todo_read` 读取当前待办；`read_pdf` 使用已有受限转换器读取 PDF。实际权限、工具能力与转换器可用性继续由宿主决定。
+
+### Agent profile 的模型与 MCP 配置
+
+在会话设置中选择已有 Agent 目录，或将定义放在项目 `.zcode/agents/`，再通过 `zcode_agent` 指定 profile。使用 `list_models` 读取宿主的真实 provider/model 与可选档位。例：
+
+```yaml
+---
+name: researcher
+description: Read files and selected MCP notes
+model: my-provider/my-model
+thoughtLevel: high
+tools: Read, mcp__notes__*
+disallowedTools: mcp__notes__private_note
+mcpServers: [notes]
+skills: research-guide
+injectAgentsMd: false
+---
+Read the task materials and report the findings with source references.
+```
+
+请替换示例模型、档位、技能与服务器名。非空 `skills` 自动保留 `Skill` 入口，除非明确禁用；工具声明和实际执行使用同一限制。`tools` 支持实际宿主 MCP 公共工具名、`mcp`／`mcp__*` 和 `mcp__服务器名__*`；不从公共工具名反推服务器归属。原厂规则忽略项目 profile 的 `permissionMode`，需要原生计划模式时使用设置中显式选定的 Agent 目录。
+
+MCP 连接由管理员在该 DSH profile 的 Cordis 配置中明确使用 `oh-my-agents-above-all/zcode-owned-mcp-client` 注册，配置字段与同版本 `@deepseek-ai/dsh-mcp-client` 相同。一个服务器只注册一次；启用 ZCode 后其归属服务可用。OMAA 不自动替换其他 MCP 插件，不启动第二条连接。普通文件工具与已选 MCP 工具可以共同使用；未选服务器、非受管 MCP、原生服务器级资源工具及未选服务器的指令不会进入该子会话。计划模式与宿主审批仍能拒绝已声明的工具。
+
+profile 的连接名、公共 schema、声明摘要与工具限制随原生会话保存，原始地址、凭据和进程环境不写入该记录。父会话通过原生 `send_message` 继续同一个子会话；连接消失、声明／schema 改变或注册被替换时拒绝旧绑定，需要重新启动 profile。MCP 记录最大 512 KiB，最多选 64 个服务器；不截断后声称完整。
 
 这些源码增量尚未单独发行；固定安装入口继续对应已发布版本。

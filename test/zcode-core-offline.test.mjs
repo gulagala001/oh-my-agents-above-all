@@ -105,6 +105,18 @@ test('continuity clones exact authorized completed prefix and disposes observati
   await assert.rejects(readActorContinuation(f.ctx, { id: 'parent' }, f.source, signal()), /does not belong/);
   assert.equal(f.disposed(), 2);
 });
+test('Actor model pin follows the actual request inside the carried prefix, never a later suffix', async () => {
+  const f = transcriptFixture();
+  f.events.splice(4, 0, event('request/header', { header: { config: { provider: 'b', model: 'shared', reasoningEffort: 'high' } } }));
+  f.events.forEach((row, seq) => row.seq = seq);
+  const source = { ...f.source, eventCount: f.events.length };
+  f.events.push(event('request/header', { header: { config: { provider: 'later', model: 'discarded' } } }, f.events.length));
+  assert.deepEqual((await readActorContinuation(f.ctx, { id: 'parent' }, source, signal())).nativeModel,
+    { provider: 'b', model: 'shared', reasoningEffort: 'high' });
+  delete f.events[4].data.header.config.model;
+  await assert.rejects(readActorContinuation(f.ctx, { id: 'parent' }, source, signal()), /no complete native model pin/);
+});
+
 test('accepted continuity requires balanced native cancellation and rejects undrained queued input', async () => {
   const f = transcriptFixture(); f.events.at(-1).data.reason = { kind: 'aborted', reason: { kind: 'parent' } };
   const source = { ...f.source, messageId: 'accepted' };

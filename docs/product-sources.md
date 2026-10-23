@@ -16,7 +16,7 @@
 
 ## 构建源码与来源维护
 
-ZCode 3.15.1 的编译、运行图、profile、记忆和日历代码固定到 `aac4755666d09fdcd70272fcf063c077a639015f`；仍有消费者的 3.14.3 快照继续保留。记忆格式化使用 Marked 16.4.2 的最小词法闭包，显式时区计算使用 Temporal 0.5.1／JSBI 4.3.2。原文、许可证和哈希在 `src/presets/zcode/sources/`，具体归属见 [第三方许可](../THIRD_PARTY_NOTICES.md)。阶段记录、恢复报告和运行输出不作为产品来源清单。
+ZCode 3.15.1 的编译、运行图、profile、记忆和日历代码固定到 `aac4755666d09fdcd70272fcf063c077a639015f`；仍有消费者的 3.14.3 快照继续保留。记忆格式化使用 Marked 16.4.2 的最小词法闭包，显式时区计算使用 Temporal 0.5.1／JSBI 4.3.2。MCP 借用、服务器作用域与子任务工具限制依据同版本 `core/src/subagent/borrowed-mcp-port.ts`、`mcp-config.ts`、`tool-policy.ts`；这三份原文以实现参照保留，实际连接与授权使用 DSH 公共服务。原文、许可证和哈希在 `src/presets/zcode/sources/`，具体归属见 [第三方许可](../THIRD_PARTY_NOTICES.md)。阶段记录、恢复报告和运行输出不作为产品来源清单。
 
 Grok 与 Cursor 的浏览器队列复用固定 `@deepseek-ai/dsh-client-ui-conversation@0.2.1-rc.2` 的真实 QueueDock，原始片段及 MIT 许可位于 `src/client/sources/grok-queue/`。`source.json` 记录 npm 工件、完整 bundle 与片段 SHA-256；构建校验原文，适配层提供共享队列操作及按预设授权的宿主接线；原始快照路径沿用，不复制第二份组件。
 

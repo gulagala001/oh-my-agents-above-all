@@ -86,9 +86,19 @@ export async function readActorContinuation(ctx, parent, source, signal, options
         || boundary.data.reason?.kind !== 'completed') throw Error('Actor continuity requires an exact completed task boundary.');
     }
     signal.throwIfAborted();
-    const nativeModel = typeof descriptor.agentProvider === 'string' && typeof descriptor.agentModel === 'string'
-      ? { provider: descriptor.agentProvider, model: descriptor.agentModel,
-        ...(descriptor.agentReasoningEffort === undefined ? {} : { reasoningEffort: descriptor.agentReasoningEffort }) } : undefined;
+    // Pin the last actual request INSIDE the carried prefix. A source may
+    // have changed routes after creation or after the imported task boundary;
+    // neither the constructor nor a later discarded suffix owns this choice.
+    const request = observation.events.slice(0, eventCount).findLast(event => event.type === 'request/header');
+    const route = request?.data?.header?.config;
+    if (request && (!route || !['provider', 'model'].every(name => typeof route[name] === 'string' && route[name])
+      || route.reasoningEffort !== undefined && (typeof route.reasoningEffort !== 'string' || !route.reasoningEffort)))
+      throw Error('The carried Actor prefix has no complete native model pin; parent-model fallback is forbidden.');
+    const nativeModel = route ? { provider: route.provider, model: route.model,
+      ...(route.reasoningEffort === undefined ? {} : { reasoningEffort: route.reasoningEffort }) }
+      : typeof descriptor.agentProvider === 'string' && typeof descriptor.agentModel === 'string'
+        ? { provider: descriptor.agentProvider, model: descriptor.agentModel,
+          ...(descriptor.agentReasoningEffort === undefined ? {} : { reasoningEffort: descriptor.agentReasoningEffort }) } : undefined;
     return { ...(options.includeEvents === false ? {} : { events: structuredClone(observation.events.slice(0, eventCount)) }), nativeModel, eventCount };
   } finally { observation[Symbol.dispose](); }
 }

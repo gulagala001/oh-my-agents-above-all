@@ -7,7 +7,7 @@ import { PROFILE_PLAN_SNAPSHOT_PREFIX, PROFILE_PLAN_NO_AGENTS_PREFIX } from './p
 import { PROFILE_SKILL_PROVIDERS, PROFILE_SKILL_PRESET } from './profile-skill-policy.mjs';
 
 const PROVIDER_PREFIX = 'omaa-zcode-profile-', LABEL = 'ZCode Profile · ';
-const PROFILE_PERMISSION_GUIDANCE = 'permissionMode:default inherits native parent authority; permissionMode:plan commits native logged plan mode and durable admission before first work. Plan guidance does not replace the native sandbox or approvals. Missing initialization proof on resume is refused; later native user mode changes are preserved. Nonempty skills admits at most 128 exact local native names after source, owner and declaration checks. Its cold catalog, model tool and user slash reads use the same frozen allowlist; source drift is refused. Qualified/plugin/official aliases are not inferred. Omitted skills or [] retains the ordinary profile path. ';
+const PROFILE_PERMISSION_GUIDANCE = 'permissionMode:default inherits native parent authority; permissionMode:plan commits native logged plan mode and durable admission before first work. Plan guidance does not replace the native sandbox or approvals. Missing initialization proof on resume is refused; later native user mode changes are preserved. Nonempty skills admits at most 128 exact local native names after source, owner and declaration checks. Its cold catalog, model tool and user slash reads use the same frozen allowlist; source drift is refused. Qualified/plugin/official aliases are not inferred. Omitted skills or [] retains the ordinary profile path. mcpServers selects existing owned native MCP servers (omission inherits the owned catalog; an empty list denies MCP); tools accepts exact native public names or mcp/server wildcard selectors. Startup declarations and schemas are frozen for cold continuation; children never own the connection. Explicit model/thoughtLevel selects an advertised native route, retained in the native descriptor on restart. ';
 const NO_AGENTS_PROVIDER_PREFIX = PROVIDER_PREFIX + 'no-agents-';
 const aliases = { Read: 'read', Write: 'write', Edit: 'edit', Glob: 'glob', Grep: 'grep', Bash: 'bash',
   WebSearch: 'web_search', WebFetch: 'web_fetch', Skill: 'skill', TodoWrite: 'todo_write', TodoRead: 'todo_read',
@@ -20,18 +20,10 @@ function renderProfileOutput(value) {
   return [{ type: 'text', text: JSON.stringify(metadata) }, ...(output ?? [])];
 }
 
-function policyOf(ctx, session) {
-  const policy = ctx.get('sessionProjections')?.stateOf(session, 'subagentModelSelectionPolicy');
-  if (policy == null) return null;
-  if (!Array.isArray(policy) || !policy.length || policy.some(route => !route || typeof route.provider !== 'string'
-    || !route.provider || typeof route.model !== 'string' || !route.model)) throw Error('Native child model-selection policy is malformed.');
-  return policy.map(route => ({ provider: route.provider, model: route.model }));
-}
-
-function toolFilter(ctx, agent, profile) {
+function toolFilter(ctx, agent, profile, mcpSnapshot) {
   const visible = new Set(ctx.tools.schemas(agent).map(tool => tool.name));
   const map = (name, denying = false) => {
-    const mapped = aliases[name];
+    const mapped = aliases[name] ?? (mcpSnapshot?.tools.some(tool => tool.name === name) ? name : undefined);
     if (!mapped || !visible.has(mapped)) throw Error('Profile tool ' + JSON.stringify(name) + ' has no exact visible native mapping.');
     if (!denying && ['subagent', 'zcode_agent'].includes(mapped)) throw Error('The fixed original child runtime disables its SubagentPort, so its explicit Agent/Task rule does not provide working recursive delegation. This adapter does not enable a separate nested extension.');
     return mapped;
@@ -40,15 +32,29 @@ function toolFilter(ctx, agent, profile) {
   // filtering; only the parent's global disallowlist can remove it. Preserve
   // that path only when the exact native parent scope authorizes the tool.
   const coordinator = 'respond_to_coordinator', coordinatorVisible = visible.has(coordinator);
-  const profileDeny = (profile.disallowedTools ?? []).filter(name => name !== 'RespondToCoordinator').map(name => map(name, true));
-  const deny = [...new Set([...forbidden.filter(name => visible.has(name)), ...profileDeny])];
+  const expand = names => names.flatMap(name => {
+    if (!mcpSnapshot || !(name === 'mcp' || name === 'mcp__*' || /^mcp__[A-Za-z0-9_-]+__\*$/.test(name))) return [name];
+    const server = name === 'mcp' || name === 'mcp__*' ? undefined : name.slice(5, -3);
+    const matches = mcpSnapshot.tools.filter(tool => server === undefined || tool.serverName === server).map(tool => tool.name);
+    if (server !== undefined && !Object.hasOwn(mcpSnapshot.statuses, server)) throw Error('Profile MCP selector is outside its selected owned servers: ' + name);
+    return matches;
+  });
+  const profileDeny = expand(profile.disallowedTools ?? []).filter(name => name !== 'RespondToCoordinator').map(name => map(name, true));
+  const deny = [...new Set([...forbidden.filter(name => visible.has(name)), ...profileDeny,
+    // Native generic MCP-resource tools are separate server-wide dispatchers;
+    // the original borrowed port grants tool calls, not those side channels.
+    ...(mcpSnapshot ? ['list_mcp_resources', 'list_mcp_resource_templates', 'read_mcp_resource'].filter(name => visible.has(name)) : [])])];
   const inherited = !profile.tools?.length || profile.tools.includes('*');
   if (!inherited && profile.tools.some(name => ['subagent', 'zcode_agent'].includes(aliases[name])))
     throw Error('The fixed original child runtime has subagents.enabled:false and no injected SubagentPort; explicit Agent/Task rules are not a working recursive capability. No nested native extension was enabled.');
   // Original global disallow rules may remove the control channel. Retain
   // that restriction when this native parent scope does not expose it.
-  const allow = inherited ? undefined : [...new Set([...profile.tools.map(map), ...(coordinatorVisible ? [coordinator] : [])])].filter(name => !deny.includes(name));
-  return { ...(allow === undefined ? {} : { allow }), deny };
+  const allow = inherited ? undefined : [...new Set([...expand([...profile.tools, ...(profile.skills?.length && !profile.disallowedTools?.includes('Skill') ? ['Skill'] : [])]).map(name => map(name)), ...(coordinatorVisible ? [coordinator] : [])])].filter(name => !deny.includes(name));
+  // The native MCP client reserves mcp__ names. Server identity comes only
+  // from owned descriptors, never by splitting that public name.
+  const boundedAllow = mcpSnapshot ? (allow ?? [...visible]).filter(name => !deny.includes(name)
+    && (!name.startsWith('mcp__') || mcpSnapshot.tools.some(tool => tool.name === name))) : allow;
+  return { ...(boundedAllow === undefined ? {} : { allow: boundedAllow }), deny };
 }
 
 async function liveProfileDescriptor(ctx, agent, signal) {
@@ -158,7 +164,10 @@ export function installZCodeProfileDelegation(ctx) {
     const skillProviderNames = PROFILE_SKILL_PROVIDERS.map(prefix => prefix + instanceId);
     const skillProviders = skillProviderNames.map(name => ({ ...provider, name }));
     const unregisterSkills = skillProviders.map(value => ctx.subagents.registerProvider(value));
-    const registrations = [unregister, unregisterNoAgents, unregisterSnapshot, unregisterPlanSnapshot, unregisterPlanNoAgents, ...unregisterSkills];
+    const mcpProviders = [snapshotProviderName, noAgentsProviderName, planSnapshotProviderName, planNoAgentsProviderName, ...skillProviderNames]
+      .map(name => ({ ...provider, name: name.replace(instanceId, 'mcp-' + instanceId) }));
+    const unregisterMcp = mcpProviders.map(value => ctx.subagents.registerProvider(value));
+    const registrations = [unregister, unregisterNoAgents, unregisterSnapshot, unregisterPlanSnapshot, unregisterPlanNoAgents, ...unregisterSkills, ...unregisterMcp];
     const calls = new Set(), activations = new Set(), disposals = new WeakMap();
     let closing = false;
     const disposeActivation = activation => {
@@ -272,6 +281,7 @@ export function installZCodeProfileDelegation(ctx) {
             || ctx.subagents.getProvider(snapshotProviderName) !== snapshotProvider
             || ctx.subagents.getProvider(planSnapshotProviderName) !== planSnapshotProvider
             || ctx.subagents.getProvider(planNoAgentsProviderName) !== planNoAgentsProvider
+            || mcpProviders.some(value => ctx.subagents.getProvider(value.name) !== value)
             || skillProviders.some(value => ctx.subagents.getProvider(value.name) !== value)
             || ctx.subagents.getProvider('spawn') !== spawn)
             throw Error('Profile delegation requires the exact live ZCode owner in default mode and its original native provider.');
@@ -288,6 +298,7 @@ export function installZCodeProfileDelegation(ctx) {
             ...(profile.permissionMode === undefined ? {} : { permissionMode: profile.permissionMode }),
             ...(profile.injectAgentsMd === undefined ? {} : { injectAgentsMd: profile.injectAgentsMd }),
             ...(profile.skills === undefined ? {} : { skills: [...profile.skills], skillValidation: profile.skills.length ? 'at-launch-native-local-provenance' : 'unrestricted' }),
+            ...(profile.mcpServers === undefined ? {} : { mcpServers: [...profile.mcpServers], mcpValidation: 'at-launch-owned-native-snapshot' }),
             ...(profile.color === undefined ? {} : { color: profile.color }), ...(profile.modelSelection === undefined ? {} : { modelSelection: profile.modelSelection }) })), diagnostics: loaded.diagnostics };
           if (Buffer.byteLength(JSON.stringify(result)) > 100_000) throw Error('Profile discovery exceeds the 100000-byte response bound.');
           return result;
@@ -306,27 +317,32 @@ export function installZCodeProfileDelegation(ctx) {
         const memoryReceipt = { effectiveEnabled: memory.enabled,
           ...(profile.memory === undefined ? {} : { memoryScope: profile.memory }) };
         const background = args.run_in_background === true || profile.background === true;
-        const selectedProviderName = skillTicket ? skillProviderNames[profile.permissionMode === 'plan'
+        let selectedProviderName = skillTicket ? skillProviderNames[profile.permissionMode === 'plan'
           ? profile.injectAgentsMd === false ? 3 : 2 : profile.injectAgentsMd === false ? 1 : 0] : profile.permissionMode === 'plan'
           ? profile.injectAgentsMd === false ? planNoAgentsProviderName : planSnapshotProviderName
           : profile.injectAgentsMd === false ? noAgentsProviderName : snapshotProviderName;
         if (!background && typeof ctx.subagents.startActivation !== 'function')
           throw Error('Foreground profiles require native caller-delivery activations; the legacy continuation fallback cannot prove exclusive result delivery.');
-        const filter = toolFilter(ctx, agent, profile), selection = profile.modelSelection;
-        let agentOptions, policy;
+        const mcp = ctx.get('omaaZcodeProfileMcp');
+        const mcpTicket = await (async () => {
+          if (!mcp?.prepare || !mcp.reserve) throw Error('The profile MCP admission boundary is unavailable.');
+          const ticket = await mcp.prepare(agent, profile.mcpServers, signal); check(); return ticket;
+        })();
+        if (mcpTicket) selectedProviderName = selectedProviderName.replace(instanceId, 'mcp-' + instanceId);
+        const filter = toolFilter(ctx, agent, profile, mcpTicket?.snapshot), selection = profile.modelSelection;
+        let agentOptions;
         if (selection) {
-          policy = policyOf(ctx, session);
-          if (!policy?.some(route => route.provider === selection.providerId && route.model === selection.modelId))
-            throw Error('The profile explicit model is not authorized by this Session’s existing native child model-selection policy. No parent-model fallback was used.');
           const llm = ctx.get('llm');
-          if (!spawn.capabilities.agentOptions || !llm?.resolveModelInfo || !llm.resolveCallConfig) throw Error('Native exact child model metadata or route preflight is unavailable.');
+          if (!spawn.capabilities.agentOptions || !llm?.resolveModelInfo || !llm.resolveCallConfig || !llm.listModels) throw Error('Native exact child model metadata or route preflight is unavailable.');
+          const catalog = await llm.listModels(selection.providerId); check();
+          if (!catalog.some(model => model.provider === selection.providerId && model.id === selection.modelId))
+            throw Error('The profile model is not advertised by its exact native provider. No parent-model fallback was used.');
           const metadata = await llm.resolveModelInfo(selection.providerId, selection.modelId, signal); check();
           if (metadata?.provider !== selection.providerId || metadata.id !== selection.modelId) throw Error('Native exact model metadata changed route identity.');
           const effort = selection.options?.reasoningLevel;
           if (effort !== undefined && !metadata.reasoning?.efforts.some(value => value.id === effort)) throw Error('The profile reasoning level is not advertised by its exact native model.');
           agentOptions = { provider: selection.providerId, model: selection.modelId, ...(effort === undefined ? {} : { reasoningEffort: effort }) };
           await llm.resolveCallConfig(agentOptions, signal); check();
-          if (JSON.stringify(policyOf(ctx, session)) !== JSON.stringify(policy)) throw Error('The native child model-selection policy changed during profile validation.');
         }
         const maxDepth = ctx.subagents.resolveMaxDepth();
         if (maxDepth !== undefined && !spawn.capabilities.depthLimit) throw Error('The native profile provider cannot enforce the current delegation depth.');
@@ -335,8 +351,9 @@ export function installZCodeProfileDelegation(ctx) {
         // assembly is authenticated by the root hook's durable descriptor,
         // including after a later cold resume or process restart.
         const childId = randomUUID();
-        let releasePlan, releaseSkills, activation;
+        let releasePlan, releaseSkills, releaseMcp, activation;
         try {
+          if (mcpTicket) releaseMcp = mcp.reserve(exec, { ticket: mcpTicket, filter, childId, provider: selectedProviderName, persona: profile.systemPrompt }, signal, check);
           if (skillTicket) {
             releaseSkills = await skills.reserve(exec, { ticket: skillTicket, childId, provider: selectedProviderName, persona: profile.systemPrompt }, signal, check);
             check();
@@ -360,7 +377,7 @@ export function installZCodeProfileDelegation(ctx) {
                 persona: profile.systemPrompt, toolFilter: filter, ...(agentOptions === undefined ? {} : { agentOptions }),
                 ...(maxDepth === undefined ? {} : { maxDepth }) } });
           } catch (error) { throw unknown(error); }
-        } finally { releasePlan?.(); releaseSkills?.(); }
+        } finally { releasePlan?.(); releaseSkills?.(); releaseMcp?.(); }
         // Track the exact returned execution before validating its receipt or
         // checking cancellation. Shutdown cannot lose an accepted late return.
         if (activation && typeof activation.dispose === 'function') activations.add(activation);

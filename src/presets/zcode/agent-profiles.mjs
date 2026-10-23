@@ -5,7 +5,7 @@ const unsupported = ['permissionMode', 'maxTurns', 'mcpServers', 'skills'];
 const fieldReason = {
   permissionMode: 'requires the original child permission-mode resolver and PermissionService; native parent authority is retained without a guessed mapping',
   maxTurns: 'the fixed original child config receives this field, but executable enforcement has not been found; no native step or turn budget is invented',
-  mcpServers: 'requires the parent connected-server startup snapshot and scoped borrowed MCP port; server names are not inferred from tool names',
+  mcpServers: 'requires at most 64 distinct exact native owned server names (letters, digits, underscores and hyphens)',
   skills: 'only at most 128 distinct exact native kebab-case local skills can be admitted at launch; qualified/plugin and official identities require authentic provenance, not a name heuristic',
 };
 
@@ -85,6 +85,8 @@ export async function loadProjectAgentProfiles(ctx, agent, signal, { check: exte
       // plan-admission gate. Neither selects a new sandbox or approval mode.
       const fields = unsupported.filter(name => profile[name] !== undefined
         && !(name === 'permissionMode' && ['default', 'plan'].includes(profile.permissionMode))
+        && !(name === 'mcpServers' && Array.isArray(profile.mcpServers) && profile.mcpServers.length <= 64
+          && new Set(profile.mcpServers).size === profile.mcpServers.length && profile.mcpServers.every(value => /^[A-Za-z0-9_-]{1,32}$/.test(value)))
         && !(name === 'skills' && Array.isArray(profile.skills) && profile.skills.length <= 128
           && new Set(profile.skills).size === profile.skills.length
           && profile.skills.every(value => typeof value === 'string' && value.length <= 200 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))));

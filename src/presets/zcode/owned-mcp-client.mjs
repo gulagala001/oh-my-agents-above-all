@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as nativeMcp from '@deepseek-ai/dsh-mcp-client';
 
 // Explicit opt-in composition only. This plugin owns ONE native MCP instance;
@@ -8,7 +9,11 @@ export const Config = nativeMcp.Config;
 
 export async function apply(ctx, config) {
   const registry = ctx.tools, ownership = ctx.omaaZCodeMcpOwnership;
-  const lease = ownership.reserve(ctx, config.serverName, registry);
+  // Persist only the digest, never server credentials or process environment.
+  const canonical = value => Array.isArray(value) ? value.map(canonical)
+    : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+  const declarationSha256 = createHash('sha256').update(JSON.stringify(canonical(config))).digest('hex');
+  const lease = ownership.reserve(ctx, config.serverName, registry, declarationSha256);
   let unprovide, closing;
   const close = () => closing ??= (async () => {
     // This catalogue close revokes borrowed access. Native apply's own
