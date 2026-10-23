@@ -298,7 +298,8 @@ export function apply(ctx, config = {}) {
       });
       for (const message of selected) origins.get(ownerKey(agent))?.delete(message.id);
       const users = messages.filter(message => message.role === 'user' && message.source?.kind === 'user');
-      const boundary = { claimedIds: new Set(original.map(message => message.id)), messages, users, customMessages: [],
+      const boundary = { claimedIds: new Set(original.map(message => message.id)), messages, users,
+        customMessages: users.length ? extension?.pendingMessages(agent) ?? [] : [],
         startsRun: users.some(message => !inputMetadata.get(message.id)?.streaming),
         handled: selected.some(message => message.source?.kind === 'user') && !users.length };
       boundaries.set(ownerKey(agent), boundary); preparedAssemblies.add(ownerKey(agent));
