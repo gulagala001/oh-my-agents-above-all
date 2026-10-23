@@ -45,7 +45,13 @@ Monitor 保存完整上游工具说明及 line processor/rate limiter 来源。`
 
 ## 当前源码的文档与调度工具
 
-`read_document` 支持 PPTX 文本／备注和 PDF 图片／文本，`read_grok_image` 读取图片。分页结果保留字节边界与内容哈希；图片解码和外部转换通过宿主受限进程执行，所需转换器必须已经可用。
+在 **设置 → OMAA** 开启 Grok 后，进入 Grok 会话，直接说明需要读取的文件和 PDF 页码。`read_document` 读取 PPTX 文字／演讲备注、PDF 页面图片或 PDF 文本；`read_grok_image` 读取 PNG、JPEG、WebP、GIF、TIFF、BMP 和 ICO。图片作为原生附件显示在工具结果中，并随后续模型请求发送，冷重启后继续可用。
+
+- PDF 默认为页面图片；例如读取 `report.pdf` 的第 2、4 页，参数是 `file_path: "report.pdf", pages: "2,4"`。要求文字时加 `format: "text"`。省略页码最多读取 10 页，明确选择最多 20 页；图片还受宿主的每条消息上限约束。
+- PPTX 包含幻灯片文字和对应演讲备注。文本输出使用 UTF-8 字节分页；继续时同时提交返回的 `nextOffset` 和 `textSha256`，分别作为 `offset` 与 `text_sha256`。文件、页码选择或完整提取文字变化时拒绝旧游标，应从零开始。
+- GIF、TIFF、ICO 读取第一帧／页；按固定 Grok 压缩规则转成宿主可接受的 PNG、JPEG 或 WebP，最多 768 KiB Base64、1,048,576 像素和单边 2000 像素。需要当前模型声明支持图片输入。
+
+PDF 文本使用随包 PDFium WASM，BMP／ICO 使用随包 ImageMagick WASM，无需预装 Poppler 或 ImageMagick 命令。WASM 在独立 worker 中只接收经过原生文件权限检查的字节；超时、取消和异常等待 worker 退出。每个 WASM 内存上限为 512 MiB，文本提取上限 8 MiB，单个输入上限 50 MiB。PDF 页面渲染仍使用已声明的 LibreOffice kit／PDFium 和 Sharp；依赖自身的当前平台组件须正常安装。格式、字体、颜色、提取顺序可能与原厂引擎不同。
 
 监控保留有界输出、UTF-8 边界和丢失通知，并只停止实际归属的作业。调度记录区分创建、派发、子任务完成和过期；续跑核对已有记录，不把未知结果自动重试为成功。源码增量尚未单独发行。
 

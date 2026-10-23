@@ -1,0 +1,2 @@
+# Preserve the exact upstream license bytes verified by the codec build.
+src/presets/grok/licenses/** -text -whitespace

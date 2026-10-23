@@ -824,20 +824,23 @@
   "versionBinding": "Source package fallback only; release GROK_VERSION is unknown. No association with old 1.0.46 binary.",
   "documentsAdapter": {
     "modulesSha256": {
-      "src/presets/grok/documents.mjs": "504718fcdfc5e485c95092d970dbb30062f43431c4574e8b149cb915fa6ded01",
+      "src/presets/grok/documents.mjs": "067357c1cdfdf74b499466664fb13f7091c547bcab425306080f099567d6219b",
       "src/presets/grok/pptx-codec.mjs": "cd1ca46cb9bd0150b851fcea812936575e0293a53cdd0bfbc1e875469ea75f0c",
       "src/presets/grok/pptx-worker.mjs": "597328620614dbc9c15959149cc134a6cd846524931411708d8801c7ff611dba",
-      "src/presets/grok/pdf-images.mjs": "d18740b34ffa77fe7ffb28c3fd88f2fbf5b5746d0cb194293c0a1951a60445f9",
-      "src/presets/grok/pdf-text.mjs": "e800b82f5af3998fdc446cb59c1328a5e6dd3f4b782e0ea9c7eaab6b0d92fa20",
+      "src/presets/grok/pdf-images.mjs": "6be94a516beb5b312a0bb3477e44c9246f59353046fc6de9413f81b72ba78ba9",
+      "src/presets/grok/pdf-text.mjs": "3b2aec69d54bcef1d404b3b05b46d18f7fa254869a7b49f8a7a3215bded5987a",
       "src/presets/grok/image-codec.mjs": "72c7fbd7a0815cd86466504e242138711336868995c10203e50ec7b09e4ffff2",
-      "src/presets/grok/image-read.mjs": "c09a4a27ae7950a6b06f9824e3a8c7b30fccd2ddbd22c814cd4e3758e80863d4",
-      "src/presets/grok/native-codec.mjs": "88a6f58336922a0f64b795a8ebce07217014e71398e37036ee5f34c86a892d13",
-      "lib/grok-pptx-worker.mjs": "7d5bbd82b3f0d8b1246acb2b7a93f4cd6f5d8ef1284992ba743a4d945bd4f1a8",
-      "scripts/build-grok-documents.mjs": "22c13028506165d67f9430cd0992380f4ba9305d147cc00d74f1f941999155f1",
+      "src/presets/grok/image-read.mjs": "862021088cf8d70a4b7a75b6a90ed00c80f13297a1bab9b6c154546494075548",
+      "scripts/build-grok-documents.mjs": "4a6237112d67b36e8a52096ce17480c15706887a2c5e3994f2cca75b0056acce",
       "src/presets/grok/conversion-cleanup.mjs": "0cb14d915461e3c2b91812ef9d3ec8b03f9387ebd4fa6e9444fa0849e21550ff",
       "src/presets/grok/document-files.mjs": "a803f6b369e1858765fee8cba78b84ea3b9bcd883f4c304299c02b59d711972e",
       "src/presets/grok/document-text.mjs": "f6d8bc297fa0f375f9aa0cb1be70b25346416fa7026f61a085d8896bd7afbf4e",
-      "src/presets/grok/conversion-errors.mjs": "f3083ab5b72749b5a3cd2b84fc846e70b89ec8206f5cf1f2ea09e95d0b24152b"
+      "src/presets/grok/conversion-errors.mjs": "f3083ab5b72749b5a3cd2b84fc846e70b89ec8206f5cf1f2ea09e95d0b24152b",
+      "src/presets/grok/codec-worker-client.mjs": "acad5a106c807d18c08a9206976eee5ec716372a583001c8fa89deb79222eea6",
+      "src/presets/grok/pdf-text-worker.mjs": "b69377addfff4ae1e59322e76849aad91e7b648c00745d6b6dd4cd45dc4aa349",
+      "src/presets/grok/image-worker.mjs": "4d41ee60e09933ed390358f769e9644eac1c0731eb645db214babc3e2beb4748",
+      "src/presets/grok/pdf-pages.mjs": "3f9d06baa3ed094cadf1d7e7465216023dafee6508da529650377acb9330c77e",
+      "scripts/build-grok-codecs.mjs": "c54721868c1ec840901454a6109ab2b86875e473b8df7fceb91ae56eb87ef8d1"
     },
     "fixedSourceCommit": "2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8",
     "fixedDshCommit": "d743267388641bc76f17c45ce8b4c231aed1d32c",
@@ -848,20 +851,18 @@
     "implemented": [
       "PPTX bounded worker text/notes and UTF-8 byte pagination",
       "PDF image pages via public kit/PDFium plus Sharp/native attachments",
-      "PDF text via existing Poppler binary pipes and full read-only confinement",
+      "PDF text via bundled PDFium WASM byte-only worker",
       "PNG/JPEG/WebP/GIF/TIFF conversation compression via Sharp",
-      "BMP/ICO existing ImageMagick first-frame PNG path through full read-only confinement"
+      "BMP/ICO first-frame PNG via bundled ImageMagick WASM byte-only worker"
     ],
-    "nativeCliBoundary": "Public subprocess/sandbox/policy only, full read-only required before spawn, no raw spawn or shell or install or permission widening; bounded stdout and awaited managed-range termination. Deployment readiness is unexecuted.",
     "fidelityBoundary": "Alternate engines, parser/container admission, colours, alpha, icon/frame choice, text order/errors and host normalization can differ. No original Rust-engine or pixel/binary/text equivalence.",
-    "runtimeValidationCount": 0,
     "hardening": [
       "Awaited cleanup and cancellation after cleanup, preserving nested cleanup failure facts",
       "Physically bounded regular private PNG reads and verified probe/final/actual attachment manifests",
       "8-MiB raw-text admission and copied incremental UTF-8 pages with full numbered-text fingerprint",
       "No nonzero-offset continuation without matching text_sha256; no persistent refs/cache",
-      "Native transport failures classified using actual process outcome and active public sandbox rules; lossy first line excluded",
-      "Typed native failure/timeout/output-limit/cleanup receipts, no partial stdout acceptance or escalation fallback"
+      "Worker output is accepted only after owned termination; no native-command fallback",
+      "Pinned JS/WASM/notice hashes and exact versions verified during build; WASM maximum memory lowered without instruction changes"
     ],
     "textProtocol": {
       "rawTextAdmissionBytes": 8388608,
@@ -869,6 +870,8 @@
       "jsonOverheadAdditional": true,
       "continuation": "offset > 0 requires previous textSha256 as text_sha256; complete numbered-text fingerprint checked",
       "persistentStoreOrRefs": false
-    }
+    },
+    "codecManifest": "src/presets/grok/codec-sources.json",
+    "workerBoundary": "Native fs resolves, authorizes and reads input before conversion. Fixed local bundled WASM consumes bytes only; no caller path/URL/command or runtime download. Dedicated workers join termination on cancellation/timeout; 512 MiB WASM memory maximum plus bounded JS heaps. ImageMagick allows BMP/ICO/PNG coders and no delegates or filters."
   }
 }

@@ -56,6 +56,8 @@
     "@deepseek-ai/dsh-tool-fs-search": "0.2.1-rc.2",
     "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.2",
     "@deepseek-ai/schemastery": "3.18.5",
+    "@hyzyla/pdfium": "3.0.0",
+    "@imagemagick/magick-wasm": "0.0.45",
     "@js-temporal/polyfill": "0.5.1",
     "esbuild": "0.25.12",
     "playwright": "1.63.0",

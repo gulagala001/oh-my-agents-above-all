@@ -1,8 +1,8 @@
 import { encodeConversationImage } from './image-codec.mjs';
-import { transcodeNativeImage } from './native-codec.mjs';
+import { runBundledCodec } from './codec-worker-client.mjs';
 
 export function registerConversationImage(ctx, imageSchema) {
-  ctx.tools.register({ name: 'read_grok_image', description: 'Read PNG/JPEG/WebP/GIF/TIFF/BMP/ICO through Grok conversation compression. GIF/TIFF/ICO use the first frame/page. BMP/ICO require existing ImageMagick plus full read-only native confinement; no install or unconfined fallback. Output is at most 768 KiB base64, 1048576 pixels and 2000 pixels per side, subject to native limits. Alternate codecs and native normalization can change output.',
+  ctx.tools.register({ name: 'read_grok_image', description: 'Read PNG/JPEG/WebP/GIF/TIFF/BMP/ICO through Grok conversation compression. GIF/TIFF/ICO use the first frame/page. BMP/ICO use the bundled ImageMagick WASM worker; no external converter is needed. Output is at most 768 KiB base64, 1048576 pixels and 2000 pixels per side, subject to native limits. Alternate codecs and native normalization can change output.',
     parameters: { type: 'object', properties: { file_path: { type: 'string', minLength: 1 } }, required: ['file_path'], additionalProperties: false },
     output: { schema: { type: 'object', properties: { path: { type: 'string' }, image: imageSchema }, required: ['path', 'image'], additionalProperties: false },
       render: (_args, result) => [{ type: 'text', text: JSON.stringify(result) }, { type: 'image', attachment: result.image }] },
@@ -27,7 +27,9 @@ export function registerConversationImage(ctx, imageSchema) {
       const raw = Buffer.from(await ctx.fs.readBytes(target, exec.signal, 50 * 1024 * 1024));
       exec.signal.throwIfAborted();
       if (!raw.byteLength || raw.byteLength > 50 * 1024 * 1024) throw Error('Image is empty or exceeds the 50 MiB input limit.');
-      const bytes = await transcodeNativeImage(ctx, exec, raw);
+      const bmp = raw[0] === 0x42 && raw[1] === 0x4d;
+      const ico = raw.length >= 6 && raw.readUInt16LE(0) === 0 && raw.readUInt16LE(2) === 1 && raw.readUInt16LE(4) > 0;
+      const bytes = bmp || ico ? Buffer.from(await runBundledCodec('image', raw, {}, exec.signal)) : raw;
       exec.signal.throwIfAborted();
       const sharp = (await import('sharp')).default;
       exec.signal.throwIfAborted();

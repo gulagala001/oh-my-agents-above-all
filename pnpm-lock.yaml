@@ -137,6 +137,12 @@ importers:
       '@deepseek-ai/schemastery':
         specifier: 3.18.5
         version: 3.18.5
+      '@hyzyla/pdfium':
+        specifier: 3.0.0
+        version: 3.0.0
+      '@imagemagick/magick-wasm':
+        specifier: 0.0.45
+        version: 0.0.45
       '@js-temporal/polyfill':
         specifier: 0.5.1
         version: 0.5.1
@@ -2952,6 +2958,13 @@ packages:
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
+
+  '@hyzyla/pdfium@3.0.0':
+    resolution: {integrity: sha512-Hw7/Pc/y2f8ZYVNXxAvDiLAV0qJT4+e5HMwbMghra/s2RKXuuWYdR/8ohoD4YwQfTL5UzSNlTtP1LJHip7LiEQ==}
+    engines: {node: '>=22'}
+
+  '@imagemagick/magick-wasm@0.0.45':
+    resolution: {integrity: sha512-ef8FHka4xLWo5/tGTV6P45bPjTvnKZz/oHN6sCDTbY8zaCdM2MeaoQHLsy9IHuiVHQhomG3TQ6ErgTnEDyuzvw==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -8085,6 +8098,10 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  '@hyzyla/pdfium@3.0.0': {}
+
+  '@imagemagick/magick-wasm@0.0.45': {}
 
   '@img/colour@1.1.0': {}
 

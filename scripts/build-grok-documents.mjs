@@ -2,8 +2,10 @@ import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { buildGrokCodecs } from './build-grok-codecs.mjs';
 
 export async function buildGrokDocuments() {
+  await buildGrokCodecs();
   const root = fileURLToPath(new URL('../', import.meta.url));
   const result = await build({ entryPoints: [root + 'src/presets/grok/pptx-worker.mjs'], outfile: root + 'lib/grok-pptx-worker.mjs',
     bundle: true, platform: 'node', format: 'esm', target: 'node22', metafile: true,
