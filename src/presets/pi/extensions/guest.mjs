@@ -11,6 +11,7 @@ import { callbackContext, codingAgentShim, aiShim, createPiAPI, createCallbackCo
 import { promptFrameText } from '../extension-prompt.mjs';
 import { encodeFrames, frameDecoder } from './wire.mjs';
 import { prepareToolLoadout } from './loadout.mjs';
+import { currentSystem } from './context.mjs';
 
 // Fixed upstream's pure argument validator; no Pi provider or agent runtime.
 const validatorImporter = createJiti(import.meta.url, { fsCache: false, moduleCache: false, tryNative: false,
@@ -270,6 +271,40 @@ async function invoke(frame, context) {
   initializeRegistrationSnapshot(runtime, context);
   projectRegistrationSnapshots(runtime);
   if (frame.kind === 'loadout') return prepareToolLoadout(frame, runtime, context.controller.signal);
+  if (frame.kind === 'context') {
+    let messages = structuredClone(frame.messages);
+    const errors = [], ctx = createCallbackContext(runtime);
+    // Fixed runner emitContext ordering: all conversation handlers first,
+    // restore the system/tool state, then all full-transcript handlers.
+    for (const name of ['context', 'context_with_system']) {
+      const handlers = runtime.extensions.flatMap(extension => (extension.events.get(name) ?? [])
+        .map(registration => ({ ...registration, extensionPath: extension.file })));
+      for (const { handler, extensionPath } of handlers) {
+        context.controller.signal.throwIfAborted();
+        try {
+          if (name === 'context') {
+            const visible = messages.filter(message => message.role !== 'system'), before = visible.slice();
+            const result = await handler({ type: name, messages: visible }, ctx);
+            const returned = result?.messages ?? visible;
+            if (!Array.isArray(returned)) throw Error('Pi context result.messages must be an array');
+            if (returned.length !== before.length || returned.some((message, index) => message !== before[index])) {
+              const head = currentSystem(messages);
+              messages = head ? [head, ...returned.filter(message => message.role !== 'system')] : returned.filter(message => message.role !== 'system');
+            }
+          } else {
+            const leading = messages[0]?.role === 'system';
+            const result = await handler({ type: name, messages }, ctx);
+            if (result?.messages !== undefined) {
+              if (!Array.isArray(result.messages)) throw Error('Pi context_with_system result.messages must be an array');
+              messages = result.messages;
+            }
+            if (leading && messages[0]?.role !== 'system') errors.push({ extensionPath, error: 'context_with_system removed the leading system message; prompt and initial tools were removed.' });
+          }
+        } catch (error) { context.controller.signal.throwIfAborted(); errors.push({ extensionPath, error: errorText(error) }); }
+      }
+    }
+    return { messages, errors };
+  }
   const ctx = createCallbackContext(runtime);
   if (frame.kind === 'event') return dispatchEvent(frame, context);
   const callback = runtime.callbacks.get(frame.callbackId);

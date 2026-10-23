@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
 import ts from 'typescript';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
+import { buildPiLoop } from './build-pi-loop.mjs';
 import { buildGrokQueue } from './build-grok-queue.mjs';
 import { buildGrokDocuments } from './build-grok-documents.mjs';
 import { buildCursorDiff } from './build-cursor-diff.mjs';
@@ -22,6 +23,7 @@ import { buildZCodeCalendarRule } from './build-zcode-calendar.mjs';
 
 verifyGrokScheduleImplementation();
 await buildPiPromptHelpers({ write: true });
+await buildPiLoop();
 await buildGrokDocuments();
 await buildGrokQueue();
 const root = fileURLToPath(new URL('../', import.meta.url));

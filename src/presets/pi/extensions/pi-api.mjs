@@ -1,9 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Type } from 'typebox';
+import { currentSystem } from './context.mjs';
 
 export { Type };
 export const callbackContext = new AsyncLocalStorage();
-export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown']);
+export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown', 'context', 'context_with_system']);
 
 // Pure helpers from Pi cd32f77 extensions/types.ts and ai/typebox-helpers.ts.
 export const defineTool = tool => tool;
@@ -22,7 +23,7 @@ export function StringEnum(values, options) {
 }
 export const codingAgentShim = { defineTool, isToolCallEventType, isBashToolResult, isPowerShellToolResult,
   isReadToolResult, isEditToolResult, isWriteToolResult, isGrepToolResult, isFindToolResult, isLsToolResult };
-export const aiShim = { Type, StringEnum };
+export const aiShim = { Type, StringEnum, getCurrentSystemMessage: currentSystem };
 
 const unsupported = name => { throw new Error('Unsupported Pi extension API: ' + name); };
 const clone = value => value === undefined ? undefined : structuredClone(value);
@@ -172,5 +173,12 @@ export function createPiAPI(runtime, extension) {
       return request(runtime, 'exec', [command, args, optionsFor(context, options)]);
     },
     sendUserMessage(content, options) { request(runtime, 'sendUserMessage', [content, options], true); },
+    sendMessage(message, options) { request(runtime, 'sendMessage', [message, options], true); },
+    appendEntry(customType, data) {
+      const context = live(runtime);
+      return request(runtime, 'appendEntry', [customType, data], true).then(value => {
+        if (value?.sessionCursor >= (context.snapshot.sessionCursor ?? -1)) for (const key of ['sessionCursor', 'sessionEntries', 'sessionBranch']) context.snapshot[key] = value[key];
+      });
+    },
   }, 'pi');
 }

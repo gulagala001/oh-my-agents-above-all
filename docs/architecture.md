@@ -10,7 +10,11 @@ OMAA 是 DSH 预设与界面插件。`cordis.patch.yml` 由构建脚本生成，
 
 Plan/Ask 的 shell 使用 preset 私有 `sandboxPolicy` 代理，逐调用只收紧为 read-only；公开 loader Group 等待 provider 后再加载会提前捕获策略的 native fs/shell，标准 DSH 的策略不变。delegation Group 隔离 `workflowEngine`：独立 DSH 使用 native PTC engine，兼容 OMD 存在时使用其 composition descriptor，禁用 native engine/tool 参考行，只启用 OMD host engine/tool，复用全局唯一 `omd-workflow` provider。disabled 参考行仅保留宿主依赖解析，避免 Symbol/WeakMap 身份分裂；不运行第二 engine。结果/子代理/作业仍属于同一宿主。ZCode 随包 SDK 技能和原生历史回查仅薄适配，Pro/Ultra 激活作为持续工作流授权时仍加载 `zcode-workflows`。Grok monitor 与 scheduler 分别使用原生 jobs 与 Schedule。`host/grok-schedule-transaction.mjs` 为间隔改动和条件删除加入固定 rc.2 的原生 Schedule FIFO，保留同一 task domain、派发计时器、收据和变更通知。构建及运行时核对固定模块 SHA-256，运行时还核对实际服务和方法身份；这是显式内部接口依赖，不替换共享服务。原生与归属记录分别持久化，写入未知时保留执行隔离。
 
-Pi 模板、SYSTEM/APPEND、规则和技能目录由实际 filesystem 与原生 provider 加载；根选择扩展显式依赖固定宿主内部 `roots`，升级须核对该边界。默认逐条 steer 通过公开 pre-step mutable message payload 与 Inbox splice 保留原 id/source，仅调整本步接受顺序；不替换 loop。宿主在 pre-step 之前先 claim/assemble，取消在该更早边界的差异见 Pi 文档。
+Pi 模板、SYSTEM/APPEND、规则和技能目录由实际 filesystem 与原生 provider 加载；根选择扩展显式依赖固定宿主内部 `roots`，升级须核对该边界。默认逐条 steer 通过公开 pre-step mutable message payload 与 Inbox splice 保留原 id/source，仅调整本步接受顺序。宿主在 pre-step 之前先 claim/assemble，取消在该更早边界的差异见 Pi 文档。
+
+Pi 的 context/system 回调通过 `host/pi-loop.mjs` 作用于拥有该扩展的原生 Agent。`build-pi-loop.mjs` 校验固定 rc.2 模块、原方法与许可，提取原生 step、请求构造和工具／流辅助代码，仅增加冻结前的异步投影边界；实际 registry、dispatcher、preparedCall 和日志仍来自原实例。其他预设及共享服务不变。工具列表变化同步记录 native request header，消息改写为单次请求副本；后续请求重新由原始 surface 生成。原厂 Pi 1.1.0 transcript/text helper 原样保留在 `sources/npm-pi-ai/`，同一构建校验哈希后生成纯 helper。普通 context 的系统恢复和 full-system 回调顺序遵循固定 runner。
+
+Pi 自定义条目与尚未投递的消息使用原生 `appendPluginRecord` 的 `plugin:omaa/pi-entry` / `plugin:omaa/pi-pending-message`，原生日志负责冷恢复与分叉继承。非触发消息在整批工具完成后进入 surface；nextTurn 在下一次用户输入接纳，同一消息 ID 的 user/message 是消费凭据。条目不进入模型上下文；自定义消息复用现有原生事件与 Pi 默认 renderer。插件记录允许未知读取器保留并跳过，不能用于改变宿主已存在事件的解释。
 
 可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
 

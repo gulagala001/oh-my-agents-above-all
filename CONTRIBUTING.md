@@ -37,3 +37,5 @@ Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/so
 Grok 随包转换引擎通过 `scripts/build-grok-documents.mjs` 构建，包含 `build-grok-codecs.mjs`。更新引擎必须同步精确开发依赖、锁文件、`src/presets/grok/codec-sources.json` 和其中指向的原始许可；输入哈希、版本、唯一 WASM 内存及最大页数在构建时核验。产品用法、来源与接线说明分别维护在现有 Grok 产品页、来源页和架构页。引擎仅在构建时打包，转换器运行时不得下载程序或绕过原生文件权限。
 
 Grok 调度事务使用版本锁定的宿主内部 FIFO 薄适配。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、兼容页、架构页与来源页。
+
+Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。固定 npm transcript/text 原文保存在 `src/presets/pi/sources/npm-pi-ai/`；宿主依赖原始模块、方法、helper 与许可哈希统一维护在既有 `src/presets/pi/source.json`。构建经 build／CI／prepack 校验来源及唯一适配点，运行时检查实际方法后只安装到 Pi 实例。升级须核对冻结前的异步边界、原生工具／流／重试和取消，并运行受影响的原生主流程；不得修改已冻结的 llm/stream 请求。使用说明、兼容、架构和来源在现有页面原位维护，不新增验收页面。

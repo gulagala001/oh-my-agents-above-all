@@ -1,3 +1,4 @@
+import { appendPluginRecord } from '@deepseek-ai/dsh-session';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
@@ -10,10 +11,12 @@ import { piHistoryEntries, readPiHistory } from './history.mjs';
 import { promptOptions } from './prompt.mjs';
 import { currentDirectory, ensureDirectory } from '../../host/working-directory.mjs';
 import { toolNeedsEnhancement } from '../../host/tool-enhancement.mjs';
+import { installPiLoop } from '../../host/pi-loop.mjs';
+import { requestToPi, requestFromPi } from './extensions/context.mjs';
+import { supportedEvents } from './extensions/pi-api.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
-const supportedEvents = new Set(['session_start', 'session_shutdown', 'input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result']);
 const textOf = blocks => (blocks ?? []).filter(p => p.type === 'text').map(p => p.text).join('\n');
 const json = value => JSON.parse(JSON.stringify(value));
 const catalogEdits = (before, after) => ({
@@ -130,6 +133,18 @@ export function apply(ctx) {
     const result = await store.admitPromptContent(blocks.map(p => p.type === 'text' ? p : { type: 'image', mediaType: p.mimeType, data: p.data }));
     signal?.throwIfAborted(); return result;
   }
+  function pendingCustom(agent, delivery) {
+    const pending = new Map();
+    for (const event of agent.session.snapshotEvents()) {
+      if (event.type === 'plugin:omaa/pi-pending-message' && event.data.delivery === delivery) pending.set(event.data.message.id, event.data.message);
+      if (event.type === 'user/message') pending.delete(event.data.id);
+    }
+    return [...pending.values()];
+  }
+  function flushCustom(agent, state) {
+    assertOwner(agent, state);
+    for (const message of pendingCustom(agent, 'after-step')) agent.session.append('user/message', message, { surfaceOp: 'append' });
+  }
   async function api(method, args, context, signal) {
     if (!context?.agent) throw Error('扩展 API 需要当前原生调用上下文');
     const { agent, state, exec } = context; signal.throwIfAborted();
@@ -144,7 +159,7 @@ export function apply(ctx) {
       && ['exec', 'executeTool', 'sendUserMessage', 'ui.select', 'ui.confirm', 'ui.input'].includes(method)) throw Error('原生活动已取消，结束通知不能继续执行或唤醒任务');
     if (Array.isArray(args)) {
       const fields = { 'ui.notify': ['text', 'type'], 'ui.select': ['title', 'options', 'dialogOptions'], 'ui.confirm': ['title', 'message', 'dialogOptions'], 'ui.input': ['title', 'placeholder', 'dialogOptions'],
-        sendUserMessage: ['content', 'options'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'] }[method];
+        sendUserMessage: ['content', 'options'], sendMessage: ['message', 'options'], appendEntry: ['customType', 'data'], exec: ['command', 'args', 'options'], executeTool: ['name', 'args', 'options'], setActiveTools: ['names'], syncRegistrations: ['descriptors'] }[method];
       if (!fields) throw Error('未支持 Pi API 参数: ' + method);
       args = Object.fromEntries(fields.map((key, i) => [key, args[i]]));
     }
@@ -155,6 +170,30 @@ export function apply(ctx) {
       return { allTools, activeTools, commands };
     }
     if (method === 'ui.notify') { settings.notify(agent, args.text ?? args.message, args.type); return; }
+    if (method === 'appendEntry') {
+      if (typeof args.customType !== 'string' || !args.customType || args.customType.length > 256) throw Error('Pi customType 必须为非空字符串（最多 256 字符）');
+      appendPluginRecord(state.session, 'plugin:omaa/pi-entry', { customType: args.customType, ...(args.data === undefined ? {} : { data: args.data }) });
+      return snapshot(agent, state, signal);
+    }
+    if (method === 'sendMessage') {
+      const message = args.message, options = args.options ?? {};
+      if (!message || typeof message.customType !== 'string' || !message.customType || message.customType.length > 256 || typeof message.display !== 'boolean') throw Error('Pi 自定义消息需要 customType 和 display');
+      if (options.triggerTurn !== undefined && typeof options.triggerTurn !== 'boolean'
+        || options.deliverAs !== undefined && !['steer', 'followUp', 'nextTurn'].includes(options.deliverAs)) throw Error('Pi 自定义消息投递选项无效');
+      const blocks = typeof message.content === 'string' ? [{ type: 'text', text: message.content }] : await admitContent(message.content ?? [], signal);
+      assertOwner(agent, state, context); assertPolicy(agent, state); signal.throwIfAborted();
+      const custom = createUserMessage({ content: blocks, source: { kind: 'pi-extension', form: 'context', customType: message.customType,
+        display: message.display, ...(message.details === undefined ? {} : { details: message.details }), timestamp: Date.now() } });
+      const running = agent.status === 'running';
+      const trigger = options.triggerTurn === true || running && options.triggerTurn !== false;
+      if (state.lifecycleRun?.endReason?.kind === 'aborted' && trigger) throw Error('已取消的活动不能由自定义消息重新唤醒');
+      if (options.deliverAs === 'nextTurn') appendPluginRecord(state.session, 'plugin:omaa/pi-pending-message', { message: custom, delivery: 'next-input' });
+      else if (running && !trigger) appendPluginRecord(state.session, 'plugin:omaa/pi-pending-message', { message: custom, delivery: 'after-step' });
+      else if (trigger) {
+        if (options.deliverAs === 'followUp' || !running) agent.followup(custom); else agent.steer(custom);
+      } else agent.session.append('user/message', custom, { surfaceOp: 'append' });
+      return;
+    }
     if (['ui.select', 'ui.confirm', 'ui.input'].includes(method)) {
       const questions = ctx.get('userQuestions'); if (!questions) throw Error('宿主问答不可用');
       const timeout = args.dialogOptions?.timeout;
@@ -412,7 +451,26 @@ export function apply(ctx) {
       },
     };
     if (!state.ownerKey) throw Error('Pi 扩展需要真实原生 Agent scope');
-    states.set(state.ownerKey, state); settings.states.set(agent.id, state); return state;
+    states.set(state.ownerKey, state); settings.states.set(agent.id, state);
+    state.restoreLoop = installPiLoop(agent, {
+      async afterStep() { flushCustom(agent, state); },
+      async request(request, signal) {
+        if (!state.guest || !state.events.has('context') && !state.events.has('context_with_system')) return;
+        assertOwner(agent, state); assertPolicy(agent, state);
+        const head = agent.session.seq;
+        const adapted = await requestToPi(request, { piContent, argumentsFor: (name, args) => piArguments({ name, arguments: args }), signal });
+        const response = await invoke(agent, state, { kind: 'context', messages: adapted.messages }, signal);
+        for (const error of response.errors ?? []) settings.notify(agent, 'Pi 扩展 context：' + error.error, 'error');
+        if (isDeepStrictEqual(response.messages, adapted.messages)) return;
+        const projected = await requestFromPi(response.messages, { originals: adapted.originals, parts: adapted.parts, request, admitContent, nativeArguments, signal });
+        assertOwner(agent, state); assertPolicy(agent, state); signal.throwIfAborted();
+        // Inbox writes during a callback are legitimate future input. Context
+        // rewrites are request-local; their source surface must remain stable.
+        if (agent.session.snapshotEvents(head).some(event => event.surfaceOp)) throw Error('Pi context source changed while its callback was running');
+        return projected;
+      },
+    });
+    return state;
   }
   async function ensure(agent, signal) {
     if (closed) throw Error('Pi 扩展宿主已关闭');
@@ -542,7 +600,7 @@ export function apply(ctx) {
     try {
       const events = observation.events.filter(event => event.seq > run.firstSeq && event.seq <= run.endSeq
         && (event.type === 'tool/call' || event.surfaceOp === 'append'));
-      return (await piHistoryEntries(events, { content: piContent, signal, argumentsFor: (name, args) => piArguments({ name, arguments: args }) })).map(entry => entry.message);
+      return (await piHistoryEntries(events, { content: piContent, signal, argumentsFor: (name, args) => piArguments({ name, arguments: args }) })).flatMap(entry => entry.message ? [entry.message] : []);
     } finally { observation[Symbol.dispose](); }
   }
 
@@ -563,7 +621,7 @@ export function apply(ctx) {
   async function finishLifecycle(agent, state, signal) {
     const run = state.lifecycleRun;
     if (!run?.ending) return;
-    try { await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, signal) }, signal); }
+    try { flushCustom(agent, state); run.endSeq = agent.session.snapshotEvents().at(-1)?.seq ?? run.endSeq; await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, signal) }, signal); }
     finally {
       if (state.lifecycleRun === run) {
         state.lifecycleRun = undefined;
@@ -588,6 +646,7 @@ export function apply(ctx) {
       const state = stateFor(agent), allowed = new Set(visible(agent, state ?? {}).map(t => t.name));
       return state?.descriptors?.tools.filter(t => allowed.has(t.name)) ?? [];
     },
+    pendingMessages: agent => pendingCustom(agent, 'next-input'),
     async input(agent, messages, signal) {
       if (!owns(agent)) return messages;
       const state = await ensure(agent, signal);
@@ -688,13 +747,13 @@ export function apply(ctx) {
     state.prompt = sections.map(section => section.text).filter(Boolean).join('\n\n');
     const tools = await prepareLoadout(context.agent, state, context.signal);
     return { ...assembly, tools, sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
-  });
+  }, { prepend: true });
   ctx.on('agent/status', ({ agent, status }) => {
     const state = stateFor(agent);
     if (state && status === 'running') state.nativeNextStep = 1;
     if (!state || status !== 'idle') return;
     const run = state.lifecycleRun;
-    if (!run || !state.events.has('agent_end')) { state.lifecycleRun = undefined; clearRunPrompt(state); return; }
+    if (!run) { flushCustom(agent, state); state.lifecycleRun = undefined; clearRunPrompt(state); return; }
     // Cancellation can land after the durable completed turn/end but before
     // this idle emit. The actual loop signal is authoritative in that window.
     if (run.activitySignal?.aborted) {
@@ -753,6 +812,7 @@ export function apply(ctx) {
     const work = (async () => {
       await disposal;
       if (state.loading) await Promise.allSettled([state.loading]);
+      state.restoreLoop?.();
     })();
     retiring.add(work);
     void work.catch(error => ctx.logger.warn(error.message)).finally(() => retiring.delete(work));
