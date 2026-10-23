@@ -7,7 +7,7 @@
 <p align="center"><strong>简体中文</strong> · <a href="README_EN.md">English</a></p>
 
 <p align="center">
-  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.5"><img alt="OMAA 0.16.5" src="https://img.shields.io/badge/release-OMAA%200.16.5-0969da?style=flat-square"></a>
+  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.17.0"><img alt="OMAA 0.17.0" src="https://img.shields.io/badge/release-OMAA%200.17.0-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub 累计下载量" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
   <a href="#readme-install"><img alt="DSH 0.2.1-rc.2" src="https://img.shields.io/badge/DSH-0.2.1--rc.2-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
@@ -30,14 +30,14 @@
 打开实际使用的 DSH 实例，在 **插件 → ＋ 添加插件** 中粘贴：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.5.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.17.0/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.17.0.tgz
 ```
 
-等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/SHA256SUMS).
+等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.17.0/SHA256SUMS).
 
 ### 2. 先试这一件事
 
-当前源码默认关闭全部预设。先到 **设置 → OMAA** 按需开启，再在新会话中选择；不会替换宿主默认预设，全部关闭时会话、工具和主题保持原样。这项按需启用行为尚未包含在上方的 0.16.5 固定发行包中。
+默认关闭全部预设。先到 **设置 → OMAA** 按需开启，再在新会话中选择；不会替换宿主默认预设，全部关闭时会话、工具和主题保持原样。
 
 新建会话，选择 **Codex · OMAA** 或其他预设，输入：
 
@@ -63,9 +63,9 @@ OMAA 为 Codex、Grok Build、Cursor、Pi Coding Agent 和 ZCode 提供独立的
 
 ## 审阅变更，并保留下一步
 
-Codex 预设可查看 Unstaged、Staged、Commit、Branch 和 Last turn，按文件或块暂存、取消暂存、撤回，并保存跨重启的行批注、定位本机编辑器、单条或批量反馈续改。已阅／已发送／已解决状态分别保存；操作遵守宿主权限，过期比较会被拒绝。这些审阅增量尚未包含在已发行的 0.16.5 包中。
+Codex 预设可查看 Unstaged、Staged、Commit、Branch 和 Last turn，按文件或块暂存、取消暂存、撤回，并保存跨重启的行批注、定位本机编辑器、单条或批量反馈续改。已阅／已发送／已解决状态分别保存；操作遵守宿主权限，过期比较会被拒绝。
 
-Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话回合；行级批注保存在本地，批量反馈后由当前会话继续修改。检查点恢复核对冲突并保留消息，不是任意 shell 操作的全工作区快照。Pi 分支使用原生会话树，共享目录，切换分支不会回滚文件。Cursor 审阅增量尚未包含在已发行的 0.16.5 固定包中。
+Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话回合；行级批注保存在本地，批量反馈后由当前会话继续修改。检查点恢复核对冲突并保留消息，不是任意 shell 操作的全工作区快照。Pi 分支使用原生会话树，共享目录，切换分支不会回滚文件。
 
 [工作台操作](docs/frontend-workbench.md) · [五套界面实拍](docs/frontend-gallery.md)
 

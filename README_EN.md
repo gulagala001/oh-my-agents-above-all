@@ -7,7 +7,7 @@
 <p align="center"><a href="README.md">简体中文</a> · <strong>English</strong></p>
 
 <p align="center">
-  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.16.5"><img alt="OMAA 0.16.5" src="https://img.shields.io/badge/release-OMAA%200.16.5-0969da?style=flat-square"></a>
+  <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.2.omaa.0.17.0"><img alt="OMAA 0.17.0" src="https://img.shields.io/badge/release-OMAA%200.17.0-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub total downloads" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
   <a href="#readme-install"><img alt="DSH 0.2.1-rc.2" src="https://img.shields.io/badge/DSH-0.2.1--rc.2-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
@@ -30,14 +30,14 @@ Uses your existing DSH models and credentials. Presets adapt source prompts, wor
 Open **Plugins → Add plugin** in the DSH instance you use, then paste:
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.16.5.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.17.0/oh-my-agents-above-all-0.2.1-rc.2.omaa.0.17.0.tgz
 ```
 
-Wait for active tasks to finish, then follow the host’s activation/restart prompt. Keep your existing profile and data. See the [installation guide](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.16.5/SHA256SUMS).
+Wait for active tasks to finish, then follow the host’s activation/restart prompt. Keep your existing profile and data. See the [installation guide](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.2.omaa.0.17.0/SHA256SUMS).
 
 ### 2. Try this first
 
-The current source starts with all presets disabled. Open **Settings → OMAA** and enable only the presets you want, then select one when creating a conversation. The host default remains unchanged; with every preset off, conversations, tools and appearance retain their native behavior. This opt-in behavior is not yet included in the fixed 0.16.5 package above.
+All presets start disabled. Open **Settings → OMAA** and enable only the presets you want, then select one when creating a conversation. The host default remains unchanged; with every preset off, conversations, tools and appearance retain their native behavior.
 
 Create a conversation, select **Codex · OMAA** or another preset, and ask:
 
@@ -63,9 +63,9 @@ Themes can follow the preset, use another preset’s theme or return to native D
 
 ## Review changes and keep working
 
-The Codex preset exposes Unstaged, Staged, Commit, Branch and Last turn comparisons. Stage, unstage or revert files/hunks, save comments across restarts, open exact lines in a local editor, and send one or multiple comments for follow-up edits. Reviewed, submitted and resolved states remain distinct. Host permissions apply and stale comparisons are rejected. These review additions are local source changes and are not included in the published 0.16.5 package.
+The Codex preset exposes Unstaged, Staged, Commit, Branch and Last turn comparisons. Stage, unstage or revert files/hunks, save comments across restarts, open exact lines in a local editor, and send one or multiple comments for follow-up edits. Reviewed, submitted and resolved states remain distinct. Host permissions apply and stale comparisons are rejected.
 
-Cursor's code review panel covers the working tree, index, commits, branches and recorded turns. Line comments retain context for exact navigation in Cursor or VS Code, persist locally and can be submitted together for the same conversation to continue editing. Checkpoints check conflicts before restoring and retain messages; they are not whole-workspace snapshots of arbitrary shell actions. Pi branches use the native conversation tree and share the directory; switching branches does not roll back files. The new Cursor review flow is not yet included in the published 0.16.5 package.
+Cursor's code review panel covers the working tree, index, commits, branches and recorded turns. Line comments retain context for exact navigation in Cursor or VS Code, persist locally and can be submitted together for the same conversation to continue editing. Checkpoints check conflicts before restoring and retain messages; they are not whole-workspace snapshots of arbitrary shell actions. Pi branches use the native conversation tree and share the directory; switching branches does not roll back files.
 
 [Workbench usage](docs/frontend-workbench.md) · [Actual preset screenshots](docs/frontend-gallery.md)
 
