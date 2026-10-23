@@ -824,7 +824,7 @@
   "tag": "v1.1.0",
   "historyAdapter": {
     "module": "history.mjs",
-    "sha256": "523cd5edb8a57f13435b7e9084c4ba2cfd877f62bbe59d990f3636b3f2723fe7",
+    "sha256": "781a8ccac4955e921c463bbc0f6ab1a906acd1307566b0844188382a536ddf30",
     "hostIntegration": "Public SessionQuery observeSession projection:none captures one immutable cut; public foldSurface plus registered native projections supplies the current ordered message view. Observation is disposed after adaptation. No journal writes or second loop.",
     "adaptations": [
       "getEntries supplies all supported native user/assistant/tool-result messages without the previous 100-message/4000-character truncation; getBranch uses the same cut and current projection order.",
