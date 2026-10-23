@@ -7,6 +7,7 @@ import { products, productForPreset } from './shared/products.mjs';
 import { createPreferencesStore, validatePreferences, projectMemoryRootSchema } from './host/preferences.mjs';
 import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
+import { createCursorEditor } from './host/cursor-editor.mjs';
 import { createCursorReview } from './presets/cursor/review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
 import { nativeHostVersion } from './host/compatibility.mjs';
@@ -205,7 +206,13 @@ async function mount(ctx) {
     return Boolean(policy && policy.mode !== 'read-only' && ctx.agents.get(session.id)?.status !== 'running' && hub.modeFor(session) === 'default');
   } });
   const cursorReview = createCursorReview({ directory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'cursor-reviews'),
-    hub, gitReview, controller: () => ctx.get('sessionController'), flush: session => ctx.sessions.flush(session) });
+    hub, gitReview, controller: () => ctx.get('sessionController'), flush: session => ctx.sessions.flush(session),
+    currentDirectory: session => currentDirectory(ctx, session),
+    editor: createCursorEditor({ verifyPath: async (path, signal) => {
+      const fs = ctx.get('fs');
+      const mapped = fs?.processPathFromHostPath(path);
+      if (mapped === undefined || fs.processPath(await fs.resolve(mapped, { signal })) !== path) throw Error('文件没有通过宿主权限与本机路径核验。');
+    } }) });
   ctx.on('session/event', (session, event) => {
     if (event.type === 'plan/mode' && event.data.active === true && hub.product(session) && preferences(session).mode === 'ask') {
       store.set(session.id, { ...preferences(session), mode: 'default' });
@@ -303,7 +310,19 @@ async function mount(ctx) {
             const options = Object.fromEntries(['scope', 'ref', 'path', 'revision', 'kind'].filter(key => url.searchParams.has(key)).map(key => [key, url.searchParams.get(key)]));
             if (url.searchParams.has('seq')) options.seq = Number(url.searchParams.get('seq'));
             sendJson(res, 200, await cursorReview.inspect(id, options));
-          } else if (req.method === 'POST') sendJson(res, 200, await cursorReview.update(id, await readJson(req)));
+          } else if (req.method === 'POST') {
+            if (String(req.headers['content-type']).split(';')[0].trim().toLowerCase() !== 'application/json') { sendJson(res, 415, { error: '需要 JSON 请求。' }); return; }
+            const request = await readJson(req);
+            if (request.action === 'open-editor') {
+              const cancel = new AbortController(); checkpointRequests.add(cancel);
+              const close = () => { if (!res.writableEnded) cancel.abort(Error('编辑器请求已断开。')); };
+              res.once('close', close);
+              try {
+                if (checkpointScopeClosed) throw Error('审阅服务已关闭。');
+                sendJson(res, 200, await cursorReview.openEditor(id, request, AbortSignal.any([cancel.signal, AbortSignal.timeout(15000)])));
+              } finally { checkpointRequests.delete(cancel); res.off('close', close); }
+            } else sendJson(res, 200, await cursorReview.update(id, request));
+          }
           else sendJson(res, 405, { error: '不支持此方法' });
           return;
         }

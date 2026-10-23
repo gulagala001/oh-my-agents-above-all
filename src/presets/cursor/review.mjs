@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir, rename, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rename, rm, realpath } from 'node:fs/promises';
 import { join, relative, isAbsolute, resolve, sep } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
+import { reviewLineAnchor } from '../../host/cursor-editor.mjs';
 import { cursorReviewOptions, cursorCommentNote, cursorCommentTarget, cursorLineText, cursorFeedbackText, cursorCommentLimits } from '../../shared/cursor-review.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -10,7 +11,7 @@ const matchesRequest = (source, id) => source?.kind === 'user' && source.rpcId =
 const admitted = (agent, session, id) => [...agent.inbox.nextStep, ...agent.inbox.nextTurn].some(message => matchesRequest(message.source, id)) ||
   session.snapshotEvents().some(event => event.type === 'user/message' && matchesRequest(event.data.source, id));
 
-export function createCursorReview({ directory, hub, gitReview, controller, flush }) {
+export function createCursorReview({ directory, hub, gitReview, controller, flush, editor, currentDirectory = session => session.header.cwd }) {
   const locks = new Map();
   async function serial(id, operation) {
     const previous = locks.get(id) ?? Promise.resolve();
@@ -78,18 +79,39 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
     if (summary.root !== target.root || summary.revision !== target.revision) throw conflict();
     const detail = await view(owned, target), context = cursorLineText(detail.diff, target.side, target.line);
     if (context === undefined) throw Error('该行不在所记录的比较中，请重新选择。');
-    return { target, context: context.slice(0, 2000) };
+    return { target, context: context.slice(0, 2000), anchor: reviewLineAnchor(detail.diff, target.side, target.line) };
   }
   return {
     async inspect(id, input = {}) {
       const owned = await owner(id);
       if (input.kind === 'notes') return serial(id, async () => reconcile(id, await load(id), owned));
+      if (input.kind === 'editors') return { editors: await editor.list() };
       if (input.kind === 'references') return gitReview.references(owned.session);
       if (input.kind === 'turns') {
         const result = await hub.checkpoints.inspect(id, owned.session);
         return { turns: result.checkpoints.filter(item => item.reviewAvailable).map(({ seq, turn, summary }) => ({ seq, turn, files: summary.files.length })) };
       }
       return view(owned, input);
+    },
+    async openEditor(id, request, signal) {
+      const owned = await owner(id);
+      let root, path, anchor, line;
+      if (request.commentId) {
+        const note = (await load(id)).comments.find(item => item.id === request.commentId);
+        if (!note) throw Error('批注已不存在，请刷新记录。');
+        ({ root, path, line } = note.target);
+        anchor = note.anchor ?? (await verifiedTarget(owned, note.target)).anchor;
+      } else if (request.target) {
+        const verified = await verifiedTarget(owned, request.target);
+        ({ root, path, line } = verified.target); anchor = verified.anchor;
+      } else {
+        const summary = await view(owned, { ...request.view, path: undefined });
+        if (summary.revision !== request.view?.revision || !summary.files.some(item => item.path === request.path)) throw conflict();
+        root = summary.root; path = request.path;
+      }
+      if (await realpath(root) !== await realpath(currentDirectory(owned.session))) throw Error('会话工作目录已改变，请在对应目录重新打开审阅。');
+      await owner(id); signal.throwIfAborted();
+      return editor.open({ root, path, anchor, line, editor: request.editor }, signal);
     },
     async update(id, request) {
       return serial(id, async () => {
@@ -102,7 +124,7 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
           if (request.id && !existing) throw conflict();
           if (existing && existing.status !== 'draft') throw Error('已发送的批注保留为历史；请添加新的修改意见。');
           if (!existing && state.comments.length >= cursorCommentLimits.history) throw Error('已保存 200 条批注，请删除不再需要的已解决记录。');
-          const anchor = existing ? { target: existing.target, context: existing.context } : await verifiedTarget(owned, request.target);
+          const anchor = existing ? { target: existing.target, context: existing.context, ...(existing.anchor ? { anchor: existing.anchor } : {}) } : await verifiedTarget(owned, request.target);
           const comment = { ...existing, ...anchor, id: existing?.id ?? randomUUID(), version: (existing?.version ?? 0) + 1, note,
             status: 'draft', createdAt: existing?.createdAt ?? time, updatedAt: time };
           const comments = existing ? state.comments.map(item => item.id === existing.id ? comment : item) : [...state.comments, comment];

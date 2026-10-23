@@ -6,11 +6,11 @@ export function assertCursorReview(settings, id) {
   return current;
 }
 const initial = id => ({ sessionId: id, options: { scope: 'working' }, summary: null, detail: null, notes: null,
-  refs: [], currentBranch: '', turns: [], reading: false, writing: false, notesLoading: false, error: '' });
+  editors: [], openingEditor: false, editorResult: null, refs: [], currentBranch: '', turns: [], reading: false, writing: false, notesLoading: false, error: '' });
 const instances = new WeakMap();
 
 export function createCursorReviewState(settings, request = fetch) {
-  let state = initial(settings.getSnapshot().sessionId), generation = 0, reader, notesReader, disposed = false;
+  let state = initial(settings.getSnapshot().sessionId), generation = 0, reader, notesReader, editorRequest, disposed = false;
   const listeners = new Set();
   const emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
   const owns = (id, ticket) => !disposed && generation === ticket && settings.getSnapshot().sessionId === id && settings.getSnapshot().data?.product?.id === 'cursor';
@@ -59,11 +59,25 @@ export function createCursorReviewState(settings, request = fetch) {
   }
   async function metadata() {
     const id = state.sessionId, ticket = generation; assertCursorReview(settings, id);
-    const results = await Promise.allSettled([api(id, { kind: 'references' }), api(id, { kind: 'turns' })]);
+    const results = await Promise.allSettled([api(id, { kind: 'references' }), api(id, { kind: 'turns' }), api(id, { kind: 'editors' })]);
     if (!owns(id, ticket)) return;
-    emit({ refs: results[0].status === 'fulfilled' ? results[0].value.refs : [],
+    emit({ editors: results[2].status === 'fulfilled' ? results[2].value.editors : [], refs: results[0].status === 'fulfilled' ? results[0].value.refs : [],
       currentBranch: results[0].status === 'fulfilled' ? results[0].value.current : '',
       turns: results[1].status === 'fulfilled' ? results[1].value.turns : [] });
+  }
+  async function openEditor(input) {
+    const id = state.sessionId, ticket = generation; assertCursorReview(settings, id);
+    if (state.openingEditor) throw Error('正在请求编辑器定位，请稍候。');
+    editorRequest = new AbortController(); const signal = editorRequest.signal;
+    emit({ openingEditor: true, editorResult: null, error: '' });
+    try {
+      const result = await api(id, {}, { ...input, action: 'open-editor' }, signal);
+      if (owns(id, ticket)) emit({ openingEditor: false, editorResult: result });
+      return result;
+    } catch (error) {
+      if (owns(id, ticket)) emit({ openingEditor: false, error: error.message });
+      throw error;
+    }
   }
   async function update(patch) {
     const id = state.sessionId, ticket = generation; assertCursorReview(settings, id);
@@ -81,11 +95,11 @@ export function createCursorReviewState(settings, request = fetch) {
   const off = settings.subscribe(() => {
     const current = settings.getSnapshot();
     if (current.sessionId === state.sessionId && (current.data?.product?.id === 'cursor' || current.loading)) return;
-    ++generation; reader?.abort(); notesReader?.abort(); emit(initial(current.sessionId));
+    ++generation; reader?.abort(); notesReader?.abort(); editorRequest?.abort(); emit(initial(current.sessionId));
   });
   return { getSnapshot: () => state, subscribe: callback => { listeners.add(callback); return () => listeners.delete(callback); },
-    open, select, metadata, refreshNotes, update,
-    dispose() { disposed = true; ++generation; off(); reader?.abort(); notesReader?.abort(); listeners.clear(); } };
+    open, select, metadata, refreshNotes, update, openEditor,
+    dispose() { disposed = true; ++generation; off(); reader?.abort(); notesReader?.abort(); editorRequest?.abort(); listeners.clear(); } };
 }
 
 export function cursorReviewFor(settings) {

@@ -21,6 +21,7 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
   const [editor, setEditor] = useState(null), [error, setError] = useState(''), [sending, setSending] = useState(false);
   const [split, setSplit] = useState(true), [wrap, setWrap] = useState(false), [refText, setRefText] = useState('');
   const [filter, setFilter] = useState('open');
+  const [preferredEditor, setPreferredEditor] = useState(() => { try { return localStorage.getItem('omaa.cursor.editor') ?? ''; } catch { return ''; } });
   const navigated = useRef();
   useEffect(() => { setEditor(null); setError(''); setRefText(''); setSending(false); navigated.current = undefined; }, [id, enabled]);
   useEffect(() => {
@@ -34,7 +35,7 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
   }, [store, enabled, visible, id, current.data?.running, navigation?.revision]);
   if (!enabled || !visible || state.sessionId !== id) return null;
   const { summary, detail, notes } = state, diff = detail?.diff, scope = state.options.scope;
-  const busy = state.reading || state.writing || state.notesLoading || sending;
+  const busy = state.reading || state.writing || state.notesLoading || state.openingEditor || sending;
   const canSubmit = !busy && !current.loading && !current.saving && !current.error && !current.data.running && !current.data.pendingMode && current.data.mode !== 'plan';
   const comments = notes?.comments ?? [], pending = comments.filter(item => item.status === 'draft');
   const viewComments = comments.filter(item => item.status !== 'resolved' && item.target.revision === summary?.revision && item.target.path === diff?.path);
@@ -69,6 +70,10 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     try { await submitCursorReview(settings, store, action, extra, id); }
     finally { if (settings.getSnapshot().sessionId === id) setSending(false); }
   });
+  const locate = input => act(() => store.openEditor({ ...input, editor: preferredEditor || undefined }));
+  const chooseEditor = value => {
+    setPreferredEditor(value); try { localStorage.setItem('omaa.cursor.editor', value); } catch { /* The choice remains valid for this window. */ }
+  };
   const openFile = () => act(() => {
     if (sidebarRight.mounted.getSnapshot() !== id) throw Error('会话已切换。');
     sidebarRight.openResourceIn(id, checkpointFileAddress(id, summary.root.replace(/[\\/]$/, '') + '/' + diff.path));
@@ -95,6 +100,11 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
       <datalist id="omaa-cursor-refs">{state.refs.map(ref => <option key={ref} value={ref}/>)}</datalist><Button size="sm" type="submit" disabled={busy}>比较</Button>
     </form>}
     </div>
+    <div className="omaa-cr-scope"><label>本机编辑器<select aria-label="Cursor 本机编辑器" value={preferredEditor} disabled={busy} onChange={event => chooseEditor(event.target.value)}>
+      <option value="">{state.editors.length ? '自动选择' : '未检测到 Cursor / VS Code'}</option>
+      {preferredEditor && !state.editors.some(item => item.id === preferredEditor) && <option value={preferredEditor}>所选编辑器暂不可用</option>}
+      {state.editors.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+    </select></label></div>
     <p className="omaa-cr-hint">{scope === 'working' ? 'HEAD 与当前文件比较，包含暂存、未暂存和未跟踪文件。' : scope === 'branch' ? '基准分支的共同祖先与 HEAD 比较；未提交内容在「全部未提交」中审阅。' : scope === 'turn' ? '记录的是该回合修改前后的内容；当前文件可能已经变化。' : '比较保留原始版本与行位置；批注不会自动发送。'}</p>
     {summary && <div className="omaa-cr-overview"><span>{summary.total} 个文件 · +{summary.added} −{summary.deleted}</span><span>{summary.files.filter(file => cursorReviewed(notes, summary, file.path)).length} / {summary.files.length} 已阅</span>
       <Button size="sm" variant="ghost" disabled={!canSubmit || !summary.files.length} onClick={() => submit('find-issues', { view: { ...state.options, revision: summary.revision } })}>查找范围问题</Button>
@@ -109,6 +119,7 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
       <div className="omaa-cr-content">{diff && <>
         <div className="omaa-cr-file-head"><strong title={diff.path}>{diff.path}</strong><div>
           <Button size="sm" variant="ghost" disabled={busy || diff.after === false} onClick={openFile}>当前文件</Button>
+          <Button size="sm" variant="ghost" disabled={busy || diff.after === false} onClick={() => locate({ view: { ...state.options, revision: summary.revision }, path: diff.path })}>在编辑器打开</Button>
           <Button size="sm" variant="ghost" aria-pressed={split} onClick={() => setSplit(!split)}>{split ? '并排' : '统一'}</Button>
           <Button size="sm" variant="ghost" aria-pressed={wrap} onClick={() => setWrap(!wrap)}>折行</Button>
         </div></div>
@@ -123,14 +134,14 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     {editor && <form className="omaa-cr-editor" onSubmit={event => { event.preventDefault(); void act(saveEditor); }}>
       <label>{coordinate(editor.target)}<small>{cursorReviewScopes[editor.target.scope]}{editor.target.ref ? ` · ${editor.target.ref}` : ''}</small>
         <textarea autoFocus aria-label="Cursor 行级批注" value={editor.note} disabled={state.writing || sending} onChange={event => setEditor({ ...editor, note: event.target.value })} placeholder="指出具体问题或需要修改的内容…"/>
-      </label><div><Button size="sm" type="submit" disabled={busy || !editor.note.trim()}>保存批注</Button><Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditor(null)}>取消编辑</Button></div>
+      </label><div><Button size="sm" variant="ghost" disabled={busy} onClick={() => locate(editor.id ? { commentId: editor.id } : { target: editor.target })}>在编辑器定位此行</Button><Button size="sm" type="submit" disabled={busy || !editor.note.trim()}>保存批注</Button><Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditor(null)}>取消编辑</Button></div>
     </form>}
     <section className="omaa-cr-comments" aria-label="Cursor 批注记录"><header><h3>批注 <small>{comments.length}</small></h3><select aria-label="批注状态" value={filter} onChange={event => setFilter(event.target.value)}><option value="open">未解决</option><option value="all">全部记录</option><option value="resolved">已解决</option></select></header>
       <p className="omaa-cr-hint">批注保存在本机会话中，重开仍可继续；「已发送」表示宿主已接纳，解决状态由你确认。</p>
       {filtered.map(item => <article key={item.id} className="omaa-cr-comment" data-status={item.status}>
         <header><button type="button" disabled={busy} onClick={() => showComment(item)}>{coordinate(item.target)}</button><small>{statusLabels[item.status]}</small></header>
         <small>{cursorReviewScopes[item.target.scope]}{item.target.ref ? ` · ${item.target.ref}` : ''}{item.target.revision !== summary?.revision ? ' · 原比较版本' : ''}</small><p>{item.note}</p>
-        <div>{item.status === 'draft' && <Button size="sm" variant="ghost" disabled={busy} onClick={() => showComment(item)}>编辑</Button>}
+        <div><Button size="sm" variant="ghost" disabled={busy} onClick={() => locate({ commentId: item.id })}>在编辑器定位</Button>{item.status === 'draft' && <Button size="sm" variant="ghost" disabled={busy} onClick={() => showComment(item)}>编辑</Button>}
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => act(() => store.update({ action: item.status === 'resolved' ? 'reopen-comment' : 'resolve-comment', id: item.id }))}>{item.status === 'resolved' ? '重新打开' : '标为解决'}</Button>
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => act(() => store.update({ action: 'delete-comment', id: item.id }))}>删除</Button>
         </div>
@@ -139,6 +150,7 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
       {(pending.length > 0 || notes?.delivery) && <div className="omaa-cr-submit"><span>{pending.length} 条待发送</span><Button size="sm" disabled={!canSubmit} onClick={() => submit(notes?.delivery?.kind === 'issues' ? 'find-issues' : 'submit')}>{notes?.delivery ? '重试原请求' : sending ? '正在提交…' : '批量反馈并继续修改'}</Button></div>}
     </section>
     {current.data.running && <p className="omaa-cr-hint">任务运行中。停止后可提交反馈或开始新的问题检查。</p>}
+    {state.editorResult && <p role="status" className="omaa-cr-hint">已请求 {state.editorResult.editor} 打开 {state.editorResult.path} 第 {state.editorResult.line} 行{state.editorResult.remapped ? '（已按当前内容重新定位）' : ''}。</p>}
     {(error || state.error) && <div role="alert" className="omaa-cr-error">{error || state.error}</div>}
   </section>;
 }

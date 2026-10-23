@@ -30,6 +30,8 @@ Grok 文档转换保留固定官方页码、PPTX 提取和图片压缩行为，P
 
 Grok 调度修改与到期语义来自已保存的 `scheduler/actor.rs` 和 `scheduler/types.rs`。宿主事务薄适配锁定 `@deepseek-ai/dsh-schedule@0.2.1-rc.2` 的实际 npm 模块及方法哈希，登记于既有 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility`。`scripts/build.mjs` 和运行时均校验该边界；升级必须核对原生队列、存储、派发和停止契约，不能把内部 FIFO 当作通用公开 API。
 
+Cursor 本机编辑器定位由 OMAA 的薄适配实现，使用 [VS Code 官方命令行 `--goto` 契约](https://code.visualstudio.com/docs/configure/command-line)，固定编辑器身份、安装路径与参数。界面沿用现有审阅面板和 DSH 原生按钮，没有打包编辑器或复制闭源客户端。真实文件与比较行来自当前宿主及本地批注；旧行无法唯一映射时拒绝跳转。
+
 Pi 草稿预览和上下文删改／压缩复用固定官方 `session-manager.ts`／`messages.ts` 的纯投影与转换函数，构建器核验完整原文件 SHA-256 并保留 MIT 许可。Pi 请求投影复用固定 `@earendil-works/pi-ai@1.1.0` 的 transcript/text 原文；原生请求边界从 `@deepseek-ai/dsh-agent-loop@0.2.1-rc.2` 提取，来源、方法、许可哈希见既有 `src/presets/pi/source.json`。构建与运行时核对固定实现，仅修改 Pi 实例上的等待边界，具体范围见 [Pi 用法](products/pi.md)。
 
 Pi 同会话树与压缩的纯计算继续来自同一固定版本的 `session-manager.ts`、`compaction.ts`、`branch-summarization.ts` 和 `utils.ts`。`build-pi-loop.mjs` 校验原文哈希，提取原厂只读树方法、选段、序列化及提示常量；`extensions/session-control.mjs` 与 `tree-state.mjs` 仅负责原生日志、维护锁、当前模型、取消及 Web 入口适配。来源及限制统一登记在 `src/presets/pi/source.json` 的 `sessionControlAdapter`。

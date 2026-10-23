@@ -1295,3 +1295,5 @@ ZCode scheduled-definition updates reference the unchanged Apache-2.0 3.15.1
 are in `sources/build-inputs.json`; `automationCron.ts` supplies the derived
 calendar operations and rule-equivalence function. Persistent generations,
 finite dispatch receipts and native conditional updates are OMAA adaptations.
+
+- **Editor navigation:** original OMAA glue invokes installed Cursor / Visual Studio Code editors using the [documented VS Code `--goto` argument](https://code.visualstudio.com/docs/configure/command-line). Editors are not bundled. Review anchors are checked against current host files; no proprietary editor context is imported.
