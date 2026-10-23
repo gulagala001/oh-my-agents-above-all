@@ -582,9 +582,10 @@ export function installZCodeProfileSkills(ctx) {
       throw Error('Restricted child work or admission already exists before the skill startup gate.');
     await declarations(signal, reserved.parent, reserved, async declaration => {
       validate();
-      const selected = await ctx.get('agentPresets').select(agent, PROFILE_SKILL_PRESET);
-      validate();
-      if (selected !== PROFILE_SKILL_PRESET || scopeParentOf(key(agent)) !== declaration.derived.key
+      // rc.2 can select the composition before child publication. Switching
+      // inside agent/created leaves already-captured old-preset listeners in
+      // the creation dispatch and can duplicate per-agent tool installers.
+      if (selectedPreset(agent) !== PROFILE_SKILL_PRESET || scopeParentOf(key(agent)) !== declaration.derived.key
         || native(ctx.get('agentPresets').serviceFor(agent, 'skills')) !== declaration.port)
         throw Error('The restricted child did not select its exact owned skill composition.');
       const body = { version: 1, childId: agent.id, parentSessionId: reserved.parent.id, workspace: reserved.workspace,

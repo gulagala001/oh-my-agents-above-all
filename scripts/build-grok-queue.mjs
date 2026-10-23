@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
 // Keep the actual rc.2 queue renderer, attachment previews, InlineEditor,
-// pending-admission rows, native tooltip and layout. Adapt only Grok actions.
+// pending-admission rows, native tooltip and layout. Adapt only shared preset queue actions.
 export async function buildGrokQueue() {
   const root = new URL('../src/client/sources/grok-queue/', import.meta.url);
   const meta = JSON.parse(await readFile(new URL('source.json', root), 'utf8'));

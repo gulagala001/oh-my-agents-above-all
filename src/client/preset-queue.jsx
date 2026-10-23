@@ -12,8 +12,10 @@ const labels = { 'queue.count': '{n} 条排队消息', 'queue.sending': '发送�
 const queueLabel = (key, args = {}) => (labels[key] ?? key).replace(/\{(\w+)\}/g, (_match, name) => args[name] ?? '');
 const sha256 = async text => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))].map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-export function applyGrokQueue(ctx) {
-  function GrokQueue(props) {
+export function applyPresetQueues(ctx, enabled) {
+  const products = new Set(enabled.filter(value => ['grok', 'cursor'].includes(value)));
+  const productOf = preset => [...products].find(product => preset === 'omaa-' + product);
+  function PresetQueue(props) {
     const [error, setError] = useState('');
     const inbox = props.useProjection('inbox'), running = props.useSession(value => value.running);
     const pending = props.useSessionStatus(value => value.get(props.sessionId)?.pendingInteraction);
@@ -29,7 +31,7 @@ export function applyGrokQueue(ctx) {
       const body = { itemId, kind: action.kind, target, expected: await sha256(queueFingerprint(expected, target)),
         ...(action.kind === 'edit' ? { text: action.content.map(block => block.text).join('') } : {}),
         ...(['up', 'down'].includes(action.kind) ? { order: queueOrder(target === 'next-turn' ? nextTurn : nextStep) } : {}) };
-      const response = await fetch('/omaa-grok/api/queue?session=' + encodeURIComponent(props.sessionId), {
+      const response = await fetch('/omaa-' + props.product + '/api/queue?session=' + encodeURIComponent(props.sessionId), {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
       });
       const result = await response.json();
@@ -49,7 +51,7 @@ export function applyGrokQueue(ctx) {
       </React.Fragment>;
     };
     const hasQueue = nextTurn.length + nextStep.length > 0;
-    return <div className="omaa-grok-queue" data-grok-queue="">
+    return <div className="omaa-grok-queue" data-preset-queue={props.product} data-grok-queue={props.product === 'grok' ? '' : undefined}>
       {error && <p role="alert" className="omaa-grok-queue-status">{error}</p>}
       {hasQueue && <p role="status" className="omaa-grok-queue-status">{pending
         ? '等待你的回复或权限决定；排队消息会保留。立即发送会取消当前回合。'
@@ -69,10 +71,11 @@ export function applyGrokQueue(ctx) {
   ctx.slots.inject('conversation.input.dock', () => decorateSlotComponent(ctx.slots, 'conversation.input.dock',
     (_key, entry) => entry.options.id === 'queue', entry => {
       const Original = entry.component;
-      return function GrokQueueEntry(props) {
+      return function PresetQueueEntry(props) {
         const preset = props.useProjection('agentPreset'), subagent = props.useSession(value => value.subagent);
         const pending = props.useSessionStatus(value => value.get(props.sessionId)?.pendingInteraction);
-        return preset === 'omaa-grok' && subagent === null ? pending ? null : <GrokQueue {...props}/> : <Original {...props}/>;
+        const product = productOf(preset);
+        return product && subagent === null ? pending ? null : <PresetQueue key={product + ":" + props.sessionId} {...props} product={product}/> : <Original {...props}/>;
       };
     }));
   // Native questions/approval temporarily cover the resident composer. Keep
@@ -80,10 +83,11 @@ export function applyGrokQueue(ctx) {
   // an explicit send-now remains reachable while awaiting a user decision.
   ctx.slots.inject('conversation.composer', () => decorateSlotComponent(ctx.slots, 'conversation.composer', () => true, entry => {
     const Original = entry.component;
-    return function GrokWaitingQueue(props) {
+    return function PresetWaitingQueue(props) {
       const preset = props.useProjection('agentPreset'), subagent = props.useSession(value => value.subagent);
       const pending = props.useSessionStatus(value => value.get(props.sessionId)?.pendingInteraction);
-      return <>{preset === 'omaa-grok' && subagent === null && pending && <GrokQueue {...props}
+      const product = productOf(preset);
+      return <>{product && subagent === null && pending && <PresetQueue key={product + ":" + props.sessionId} {...props} product={product}
         renderFactorySlot={(name, input) => name === 'conversation.user.text' ? <span>{input.text}</span> : null}/>}
         <Original {...props}/></>;
     };

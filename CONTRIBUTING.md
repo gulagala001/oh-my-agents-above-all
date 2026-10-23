@@ -32,4 +32,4 @@ ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记�
 
 文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。
 
-Grok 队列的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md` 和 `docs/product-sources.md`。
+Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md`、`docs/products/cursor.md` 和 `docs/product-sources.md`。共享接线维护在 `src/host/message-queue.mjs` 与 `src/client/preset-queue.jsx`，不要为各预设另存一份原生 inbox 或组件快照。

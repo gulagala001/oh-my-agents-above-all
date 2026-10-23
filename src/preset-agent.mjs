@@ -1,5 +1,5 @@
 import { applySharedIdentity, omdIdentityPrompt } from './host/identity.mjs';
-import { actorPersona } from './host/subagents.mjs';
+import { actorPersona, actorToolFilter } from './host/subagents.mjs';
 import { currentDirectory } from './host/working-directory.mjs';
 import { toolNeedsEnhancement } from './host/tool-enhancement.mjs';
 import { buildPrompt as codex, buildCompactionPrompt as codexCompact } from './presets/codex/prompt.mjs';
@@ -34,7 +34,10 @@ export function apply(ctx, config) {
   const activeTools = agent => {
     const names = ctx.tools.schemas(agent).map(tool => tool.name);
     const enabled = agent && ctx.omaa.enhancementEnabled(agent.session);
+    const filter = agent?.session.header.origin === 'subagent'
+      ? actorToolFilter(agent.session.snapshotEvents(agent.session.inheritedEventCount)) : undefined;
     return new Set(names.filter(name => (enabled || !needsEnhancement(name, agent))
+      && (!filter || !filter.deny?.includes(name) && (!filter.allow || filter.allow.includes(name)))
       && (config.product !== 'zcode' || name !== 'respond_to_coordinator' || isCoordinatorChild(ctx, agent))));
   };
   ctx.systemPrompt.section({ name: 'harness:identity', order: -1000, text: '', interpolate: false });

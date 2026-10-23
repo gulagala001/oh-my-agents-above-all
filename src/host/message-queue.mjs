@@ -1,20 +1,20 @@
 import { createHash } from 'node:crypto';
-import { queueFingerprint, queueOrder } from '../../shared/grok-queue.mjs';
-import { readJson, sendJson } from '../../host/http.mjs';
+import { queueFingerprint, queueOrder } from '../shared/grok-queue.mjs';
+import { readJson, sendJson } from './http.mjs';
 
 const digest = value => createHash('sha256').update(value).digest('hex');
 const fail = (message, statusCode = 409) => { throw Object.assign(Error(message), { statusCode }); };
 const lane = (agent, target) => target === 'next-turn' ? agent.inbox.nextTurn : agent.inbox.nextStep;
 
-export function createGrokQueue(ctx, hub) {
+export function createPresetQueue(ctx, hub, product) {
   let closed = false;
   ctx.effect(() => () => { closed = true; });
   async function owner(sessionId) {
     const { agent, session } = await hub.inspect(sessionId);
     const check = () => {
       if (closed || !agent || ctx.agents.get(sessionId) !== agent || ctx.sessions.get(sessionId) !== session
-        || hub.product(session)?.id !== 'grok' || session.header.origin === 'subagent'
-        || Number(session.header.delegationDepth ?? 0) > 0) fail('队列操作仅用于当前已启用的 Grok 主会话。', 403);
+        || hub.product(session)?.id !== product || session.header.origin === 'subagent'
+        || Number(session.header.delegationDepth ?? 0) > 0) fail('队列操作仅用于当前已启用的 ' + product + ' 主会话。', 403);
     };
     check(); return { agent, session, check };
   }
@@ -73,15 +73,17 @@ export function createGrokQueue(ctx, hub) {
   };
 }
 
-export function installGrokQueue(ctx, hub) {
-  const queue = createGrokQueue(ctx, hub);
+export function installPresetQueue(ctx, hub, product) {
+  if (!['grok', 'cursor'].includes(product)) throw Error('Unsupported preset queue');
+  const endpoint = '/omaa-' + product + '/api/queue';
+  const queue = createPresetQueue(ctx, hub, product);
   ctx.inject(['webServer', 'connection'], web => {
-    web.effect(() => web.webServer.register({ kind: 'prefix', path: '/omaa-grok/api/queue', async handler(req, res) {
+    web.effect(() => web.webServer.register({ kind: 'prefix', path: endpoint, async handler(req, res) {
       const rejected = web.connection.requestRejection(req);
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (url.pathname !== '/omaa-grok/api/queue') { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (url.pathname !== endpoint) { sendJson(res, 404, { error: '接口不存在' }); return; }
         const id = url.searchParams.get('session');
         if (!id) fail('请选择会话。', 400);
         if (req.method === 'GET') sendJson(res, 200, await queue.inspect(id));

@@ -111,7 +111,7 @@ TypeScript Actor 的针对性执行：`test/installed-zcode-actors.test.mjs` 已
 - 保存定义支持编辑、移动、删除和参数填写；提交前重新校验文件版本、会话归属与执行模式。
 - `list_workflow_runs`／`get_workflow_run` 查看运行、日志和原始脚本；`fill_workflow` 填入运行中等待的代码空位，先提交有效源码再继续执行。`eval_workflow_snippet` 执行有界片段。
 - 在会话设置中显式选择已有项目记忆目录后，读取其 `MEMORY.md`；Agent 目录与 Agent 记忆分别配置。设置不会自动创建目录。
-- `zcode_agent` 列出或运行本地 profile；人格原文与工具限制随原生子会话保留。支持的工具、技能、默认／计划权限按实际宿主校验，未知字段会给出诊断。
+- `zcode_agent` 列出或运行本地 profile；人格原文与工具限制随原生子会话保留。支持的工具、技能、默认／计划权限按实际宿主校验，未知字段会给出诊断。非空 `skills` 在启动前选定受限原生预设，模型只能发现和加载选定的本地技能；原生计划模式、人格原文与父会话指令快照仍生效。宿主重启后，技能目录可只读查看，父会话用原生 `send_message` 继续同一个子会话；技能来源改变时明确拒绝加载，不悄悄换成新正文。`mcpServers` 仍未接入 profile 委派，模型钉住与完整 MCP 冷恢复不由这条技能流程推定完成。
 - `cron_create`／`cron_list`／`cron_update`／`cron_delete` 使用宿主调度；日历规则要求显式时区，有限次数与逻辑日历链保留持久记录。已受理、已派发和任务完成分别记录。
 - `list_models` 读取真实模型目录；`todo_read` 读取当前待办；`read_pdf` 使用已有受限转换器读取 PDF。实际权限、工具能力与转换器可用性继续由宿主决定。
 

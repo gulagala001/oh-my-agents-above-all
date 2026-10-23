@@ -9,6 +9,6 @@
   "sha256": "084d97172714119d59820795a48106e3e226cc3e95d3b1cc43fefa96beef972f",
   "license": "MIT",
   "adapter": "scripts/build-grok-queue.mjs",
-  "behavior": "Grok fixed prompt_queue.rs: stale edit refusal, attachments retained, send-now and queue reordering; native DSH admission, permissions and execution remain authoritative.",
+  "behavior": "Shared Grok/Cursor native queue controls: stale edit refusal, attachments retained, send-now, steering and queue reordering. Grok behavior follows fixed prompt_queue.rs; Cursor uses native safe-boundary queue/steer. Native DSH admission, permissions and execution remain authoritative.",
   "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be"
 }

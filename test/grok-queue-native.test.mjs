@@ -4,14 +4,14 @@ import { installedHost, until, textReply, toolReply } from './fixtures/installed
 import { launchChromium } from './fixtures/browser.mjs';
 import { queueOrder } from '../src/shared/grok-queue.mjs';
 
-test('Grok native queue edits, reorders, cold-restores and sends now through the real dock and agent', { timeout: 120000 }, async t => {
-  const f = await installedHost(t, { safeEnvironment: true, sourceLinked: true, enabledPresets: ['grok', 'pi'] });
+for (const product of ['grok', 'cursor']) test(product + ' native queue edits, reorders, steers, cold-restores and sends now through the real dock and agent', { timeout: 120000 }, async t => {
+  const f = await installedHost(t, { safeEnvironment: true, sourceLinked: true, enabledPresets: [product, 'pi'] });
   await f.install(); await f.boot();
   const workspace = await f.rpc('workspace/create', { path: f.workspace });
-  const { sessionId } = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-grok' });
+  const { sessionId } = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-' + product });
   await f.rpc('session/rename', { sessionId, title: 'Grok queue flow' });
   const request = async (id = sessionId, body) => {
-    const response = await fetch(f.origin + '/omaa-grok/api/queue?session=' + id, {
+    const response = await fetch(f.origin + '/omaa-' + product + '/api/queue?session=' + id, {
       headers: { cookie: f.cookie, 'content-type': 'application/json' },
       ...(body ? { method: 'POST', body: JSON.stringify(body) } : {}),
     });
@@ -60,7 +60,7 @@ test('Grok native queue edits, reorders, cold-restores and sends now through the
   const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
   await welcome.click(); await welcome.waitFor({ state: 'hidden' });
   await page.getByText('Grok queue flow', { exact: true }).first().click();
-  const dock = page.locator('[data-grok-queue]');
+  const dock = page.locator('[data-preset-queue="' + product + '"]');
   await dock.waitFor({ timeout: 15000 });
   await dock.locator('button[aria-expanded]').click();
   await dock.getByRole('button', { name: /编辑.*消息|Edit queued message/ }).first().click().catch(async error => { throw Error(error.message + '\n' + await page.locator('body').innerText() + '\n' + JSON.stringify(errors)); });
@@ -115,5 +115,24 @@ test('Grok native queue edits, reorders, cold-restores and sends now through the
   const resumedEvents = (await f.snapshot(sessionId)).records.map(row => row.event).filter(Boolean);
   assert(resumedEvents.some(event => event.type === 'turn/end' && event.data.reason?.kind === 'aborted'));
   assert.equal(resumedEvents.filter(event => event.type === 'user/message' && JSON.stringify(event.data.content).includes('WAIT_KEEP')).length, 1);
+  // Steering and removal use the same durable inbox while a real provider
+  // request is outstanding. The remaining follow-up keeps its own turn.
+  f.replyWith(() => textReply('STEERING_STEP_DONE'));
+  const held = f.holdNextReply(), from = f.requests.length;
+  await f.send(sessionId, 'STEERING_RUNNING');
+  await until(() => f.requests.length > from);
+  await f.send(sessionId, 'FOLLOW_RETAIN'); await f.send(sessionId, 'STEER_FIRST'); await f.send(sessionId, 'REMOVE_ME');
+  const toggle = dock.locator('button[aria-expanded]'); await toggle.waitFor();
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+  await dock.locator('li').filter({ hasText: 'REMOVE_ME' }).getByRole('button', { name: '移除排队消息', exact: true }).click();
+  await dock.locator('li').filter({ hasText: 'STEER_FIRST' }).getByRole('button', { name: '插话', exact: true }).click();
+  await until(async () => (await request()).value.lanes['next-step'].some(row => JSON.stringify(row.content).includes('STEER_FIRST')));
+  held();
+  await until(async () => !(await f.api(sessionId)).value.running && (await rows()).length === 0);
+  const afterSteer = (await f.snapshot(sessionId)).records.map(row => row.event).filter(Boolean)
+    .filter(event => event.type === 'user/message').map(event => JSON.stringify(event.data.content));
+  assert.equal(afterSteer.filter(value => value.includes('STEER_FIRST')).length, 1);
+  assert(afterSteer.findIndex(value => value.includes('STEER_FIRST')) < afterSteer.findIndex(value => value.includes('FOLLOW_RETAIN')));
+  assert(!afterSteer.some(value => value.includes('REMOVE_ME')));
   assert.deepEqual(errors, []); assert.deepEqual(f.errors, []); completed = true;
 });

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { PROFILE_INSTRUCTIONS_PROVIDER_PREFIX } from './profile-instructions.mjs';
 import { prepareZCodeProfileMemory } from './profile-memory.mjs';
 import { PROFILE_PLAN_SNAPSHOT_PREFIX, PROFILE_PLAN_NO_AGENTS_PREFIX } from './profile-permissions.mjs';
-import { PROFILE_SKILL_PROVIDERS } from './profile-skill-policy.mjs';
+import { PROFILE_SKILL_PROVIDERS, PROFILE_SKILL_PRESET } from './profile-skill-policy.mjs';
 
 const PROVIDER_PREFIX = 'omaa-zcode-profile-', LABEL = 'ZCode Profile · ';
 const PROFILE_PERMISSION_GUIDANCE = 'permissionMode:default inherits native parent authority; permissionMode:plan commits native logged plan mode and durable admission before first work. Plan guidance does not replace the native sandbox or approvals. Missing initialization proof on resume is refused; later native user mode changes are preserved. Nonempty skills admits at most 128 exact local native names after source, owner and declaration checks. Its cold catalog, model tool and user slash reads use the same frozen allowlist; source drift is refused. Qualified/plugin/official aliases are not inferred. Omitted skills or [] retains the ordinary profile path. ';
@@ -356,6 +356,7 @@ export function installZCodeProfileDelegation(ctx) {
           try {
             activation = await startActivation(ctx, { provider: selectedProviderName, childId, label: LABEL + profile.name.slice(0, 160), delivery: background ? 'parent' : 'caller', signal,
               request: { parent: agent, cwd: session.header.cwd, prompt: [{ type: 'text', text: args.prompt }],
+                ...(skillTicket ? { agentPreset: PROFILE_SKILL_PRESET } : {}),
                 persona: profile.systemPrompt, toolFilter: filter, ...(agentOptions === undefined ? {} : { agentOptions }),
                 ...(maxDepth === undefined ? {} : { maxDepth }) } });
           } catch (error) { throw unknown(error); }

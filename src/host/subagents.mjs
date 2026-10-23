@@ -1,11 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import * as sessionSdk from '@deepseek-ai/dsh-session';
+import { scopeOf, scopeParentOf } from '@deepseek-ai/dsh-scope';
 
 const personaRecord = 'plugin:omaa/zcode-actor-persona';
 export function actorPersona(events) {
   const descriptor = events.find(event => event.type === 'subagent/descriptor')?.data;
   const record = events.find(event => event.type === personaRecord && event.ignorable === true)?.data;
   return typeof record?.persona === 'string' ? record.persona : descriptor?.persona;
+}
+
+export function actorToolFilter(events) {
+  const record = events.find(event => event.type === personaRecord && event.ignorable === true)?.data;
+  return record?.toolFilter === undefined ? undefined : checkedToolFilter(record.toolFilter);
 }
 
 // rc.2 keeps the native child lifecycle and exposes restrictions on the child
@@ -22,7 +28,11 @@ export function installSubagentOverrides(ctx) {
       // Some parent capabilities (notably delegation) are absent in children.
       // Native restrict() rejects unknown names; retain the full rule in a
       // scoped guard so a later registration cannot escape the durable deny.
-      const available = Object.fromEntries(Object.entries(filter).map(([key, values]) => [key, values.filter(name => name !== 'run_code' && tools.get(name, agent))]));
+      // restrict() masks inherited definitions only. Preset reselection can
+      // leave native child-local controls visible through get(name, agent);
+      // those are enforced by the guard below, never passed as global names.
+      const parentScope = scopeParentOf(scopeOf(agent.ctx));
+      const available = Object.fromEntries(Object.entries(filter).map(([key, values]) => [key, values.filter(name => name !== 'run_code' && tools.get(name, parentScope))]));
       if (available.allow !== undefined || available.deny?.length) tools.restrict(available);
       tools.guard(exec => {
         if (exec.name === 'run_code') return; // Native PTC checks every end capability.
