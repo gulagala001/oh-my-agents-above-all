@@ -71,7 +71,7 @@ Cursor's code review panel covers the working tree, index, commits, branches and
 
 ## Compatibility and source boundaries
 
-Dedicated builds are available for DSH rc.1 and rc.2; the primary installation above targets rc.2. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
+OMAA 0.17.0 targets DSH 0.2.1-rc.2 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
 
 Pi’s local extension allowlist starts empty and accepts explicitly selected absolute paths. See [Pi documentation](docs/products/pi.md) for supported APIs. ZCode workflows use DSH models, isolated execution, permissions and native child conversations; they do not claim the original product’s complete journal/replay implementation.
 
