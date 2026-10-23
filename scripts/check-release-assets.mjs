@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
-const repository = (typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url || '').replace(/^git\+/, '').replace(/\.git$/, '').replace(/^https:\/\/github.com\//, '');
+const repository = (typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url || process.env.GITHUB_REPOSITORY || '').replace(/^git\+/, '').replace(/\.git$/, '').replace(/^https:\/\/github.com\//, '');
 const privateAsset = name => /\.log$|(?:^|[-_.])(?:verification|validation|benchmark|handoff|research|evidence|plan)(?:[-_.]|$)|^(?:AGENTS|CLAUDE|AI_README|PLAN|REFERENCE)\.md$/i.test(name);
 const args = process.argv.slice(2);
 let assets = [];
