@@ -5,9 +5,9 @@ import { createUpdates } from '../src/updates.mjs';
 
 const hostVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).engines.dsh;
 const otherHost = hostVersion === '0.2.1-rc.2' ? '0.2.1-rc.1' : '0.2.1-rc.2';
-const version = `${hostVersion}.omaa.0.15.3`, omdVersion = `${hostVersion}.omd.0.99.0`;
+const version = `${hostVersion}.omaa.0.15.3`, omdVersion = `${hostVersion}.omd.0.100.0`;
 const sha256 = 'a'.repeat(64), sourceCommit = 'b'.repeat(40);
-function fixture({ wrongCommit = false, patch = '0.99.0', currentPatch = '0.99.0', invalid = '', extras = [], pages = null } = {}) {
+function fixture({ wrongCommit = false, patch = '0.100.0', currentPatch = '0.100.0', invalid = '', extras = [], pages = null } = {}) {
   const target = `${hostVersion}.omd.${patch}`, current = `${hostVersion}.omd.${currentPatch}`;
   const owner = 'gulagala001/', omaaRepo = owner + 'oh-my-agents-above-all', omdRepo = owner + 'oh-my-dsh';
   function release(repo, version, names) {
@@ -62,15 +62,15 @@ test('current host resolves OMD independently of OMAA release attachments', asyn
   assert.equal(calls.length, 0, 'checking never installs');
 });
 test('latest compatible patch uses numeric order and only updates OMD through its native transaction', async t => {
-  const { updates, calls, omd } = fixture({ patch: '0.99.7', extras: [
-    { version: `${hostVersion}.omd.0.99.6` }, { version: `${hostVersion}.omd.0.99.1` },
-    { version: `${otherHost}.omd.0.99.17` }, { version: `${hostVersion}.omd.0.100.0` },
+  const { updates, calls, omd } = fixture({ patch: '0.100.7', extras: [
+    { version: `${hostVersion}.omd.0.100.6` }, { version: `${hostVersion}.omd.0.100.1` },
+    { version: `${otherHost}.omd.0.100.17` }, { version: `${hostVersion}.omd.0.101.0` },
     { version: `${hostVersion}.omd.1.17.0` }, { version: `${hostVersion}.omd.0.17.99` },
-    { version: `${hostVersion}.omd.0.99.8`, draft: true },
+    { version: `${hostVersion}.omd.0.100.8`, draft: true },
   ] }); t.after(() => updates.close());
   const result = await updates.omdVersionCheck(true);
   assert.equal(result.error, null); assert.equal(result.status, 'update');
-  assert.equal(result.latestVersion, `${hostVersion}.omd.0.99.7`);
+  assert.equal(result.latestVersion, `${hostVersion}.omd.0.100.7`);
   assert.equal((await updates.omdUpdateStatus()).available, true);
   await updates.start('omd', result.latestVersion);
   assert.equal(updates.snapshot().phase, 'restart-required');
@@ -82,25 +82,25 @@ test('invalid newest official patch blocks updates instead of falling back to an
     [{ wrongCommit: true }, /tag 与来源提交不一致/], [{ invalid: 'host' }, /元数据与目标包不一致/],
     [{ invalid: 'checksum' }, /checksum 与元数据不一致/], [{ invalid: 'asset' }, /缺少匹配附件/],
   ]) {
-    const { updates, calls } = fixture({ ...options, patch: '0.99.1', extras: [{ version: omdVersion }] });
+    const { updates, calls } = fixture({ ...options, patch: '0.100.1', extras: [{ version: omdVersion }] });
     t.after(() => updates.close());
     const result = await updates.check(true);
     assert.match(result.error, error); assert.equal(result.latestVersion, null);
-    await updates.start('omd', `${hostVersion}.omd.0.99.1`);
+    await updates.start('omd', `${hostVersion}.omd.0.100.1`);
     assert.equal(calls.length, 0);
   }
 });
 test('patch selection refuses downgrades and rechecks a changed target before installation', async t => {
-  const ahead = fixture({ currentPatch: '0.99.2', patch: '0.99.1' }); t.after(() => ahead.updates.close());
+  const ahead = fixture({ currentPatch: '0.100.2', patch: '0.100.1' }); t.after(() => ahead.updates.close());
   await ahead.updates.check(true);
   assert.equal(ahead.updates.omdVersionSnapshot().status, 'ahead');
   assert.equal((await ahead.updates.omdUpdateStatus()).available, false);
-  await ahead.updates.start('omd', `${hostVersion}.omd.0.99.1`);
+  await ahead.updates.start('omd', `${hostVersion}.omd.0.100.1`);
   assert.equal(ahead.calls.length, 0);
-  const changed = fixture({ patch: '0.99.1' }); t.after(() => changed.updates.close());
+  const changed = fixture({ patch: '0.100.1' }); t.after(() => changed.updates.close());
   await changed.updates.check(true);
   changed.releaseRows.length = 0;
-  await changed.updates.start('omd', `${hostVersion}.omd.0.99.1`);
+  await changed.updates.start('omd', `${hostVersion}.omd.0.100.1`);
   assert.equal(changed.calls.length, 0);
   assert.match(changed.updates.snapshot().error, /尚未找到/);
 });
