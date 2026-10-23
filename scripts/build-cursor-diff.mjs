@@ -25,11 +25,23 @@ export async function buildCursorDiff() {
     if (!pattern.test(source)) throw Error('DSH FileDiff line-number binding changed: ' + line);
     source = source.replace(pattern, `(0, react_jsx_runtime.jsx)(ReviewLineNumber, {$1side: ${side}, line: ${line}, children: ${line} ?? ""`);
   }
+  for (const [original, replacement] of [
+    ['children: hunk.header', 'children: (0, react_jsx_runtime.jsx)(ReviewHunkHeader, { index: position, actions: side === "right", children: hunk.header })'],
+    ['children: hunkHeader(hunk)', 'children: (0, react_jsx_runtime.jsx)(ReviewHunkHeader, { index: position, actions: true, children: hunkHeader(hunk) })'],
+  ]) {
+    if (source.split(original).length !== 2) throw Error('DSH FileDiff hunk binding changed: ' + original);
+    source = source.replace(original, replacement);
+  }
   const prelude = `// Derived from pinned MIT DSH rc.2 FileDiff; see src/client/sources/dsh-rc2/source.json.
 import * as react from 'react';
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _deepseek_ai_dsh_client_ui_primitives from '@deepseek-ai/dsh-client-ui-primitives';
 export const ReviewLineContext = react.createContext({});
+function ReviewHunkHeader({ index, actions, children }) {
+  const { renderHunkActions } = react.useContext(ReviewLineContext);
+  return react_jsx_runtime.jsxs(react.Fragment, { children: [children, actions && renderHunkActions &&
+    react_jsx_runtime.jsx('span', { className: 'omaa-review-hunk-actions', 'data-review-hunk-actions': index, children: renderHunkActions(index) })] });
+}
 function ReviewLineNumber({ line, side, children, ...props }) {
   const { onSelect, selected, counts, disabled } = react.useContext(ReviewLineContext);
   if (!line) return react_jsx_runtime.jsx('span', { ...props, children });

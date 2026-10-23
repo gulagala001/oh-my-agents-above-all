@@ -205,14 +205,14 @@ async function mount(ctx) {
     const policy = hub.sandboxPolicy()?.resolve({ session });
     return Boolean(policy && policy.mode !== 'read-only' && ctx.agents.get(session.id)?.status !== 'running' && hub.modeFor(session) === 'default');
   } });
-  const cursorReview = createCursorReview({ directory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'cursor-reviews'),
-    hub, gitReview, controller: () => ctx.get('sessionController'), flush: session => ctx.sessions.flush(session),
+  const reviews = Object.fromEntries(['cursor', 'codex'].map(product => [product, createCursorReview({ product, directory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', product + '-reviews'),
+    hub, gitReview, workspaceChanges: session => (ctx.agents.get(session.id)?.ctx ?? ctx).get('workspaceChanges'), controller: () => ctx.get('sessionController'), flush: session => ctx.sessions.flush(session),
     currentDirectory: session => currentDirectory(ctx, session),
     editor: createCursorEditor({ verifyPath: async (path, signal) => {
       const fs = ctx.get('fs');
       const mapped = fs?.processPathFromHostPath(path);
       if (mapped === undefined || fs.processPath(await fs.resolve(mapped, { signal })) !== path) throw Error('文件没有通过宿主权限与本机路径核验。');
-    } }) });
+    } }) })]));
   ctx.on('session/event', (session, event) => {
     if (event.type === 'plan/mode' && event.data.active === true && hub.product(session) && preferences(session).mode === 'ask') {
       store.set(session.id, { ...preferences(session), mode: 'default' });
@@ -230,7 +230,7 @@ async function mount(ctx) {
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/cursor-review', '/omaa/api/pi-branches', '/omaa/api/zcode-workflows', '/omaa/api/zcode-workflow', '/omaa/api/zcode-workflow-source', '/omaa/api/zcode-artifact-data', '/omaa/api/zcode-artifact-aggregate', '/omaa/api/zcode-artifact-content', '/omaa/api/zcode-artifact-preview'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/cursor-review', '/omaa/api/codex-review', '/omaa/api/pi-branches', '/omaa/api/zcode-workflows', '/omaa/api/zcode-workflow', '/omaa/api/zcode-workflow-source', '/omaa/api/zcode-artifact-data', '/omaa/api/zcode-artifact-aggregate', '/omaa/api/zcode-artifact-content', '/omaa/api/zcode-artifact-preview'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
         if (url.pathname === '/omaa/api/pi-extensions') {
           if (req.method === 'GET') sendJson(res, 200, hub.piExtensions.describe());
           else if (req.method === 'POST') { const data = await readJson(req); sendJson(res, 200, await hub.piExtensions.update(data.files, data.revision)); }
@@ -305,11 +305,12 @@ async function mount(ctx) {
           else sendJson(res, 405, { error: '不支持此方法' });
           return;
         }
-        if (url.pathname === '/omaa/api/cursor-review') {
+        if (url.pathname === '/omaa/api/cursor-review' || url.pathname === '/omaa/api/codex-review') {
+          const review = reviews[url.pathname === '/omaa/api/codex-review' ? 'codex' : 'cursor'];
           if (req.method === 'GET') {
             const options = Object.fromEntries(['scope', 'ref', 'path', 'revision', 'kind'].filter(key => url.searchParams.has(key)).map(key => [key, url.searchParams.get(key)]));
             if (url.searchParams.has('seq')) options.seq = Number(url.searchParams.get('seq'));
-            sendJson(res, 200, await cursorReview.inspect(id, options));
+            sendJson(res, 200, await review.inspect(id, options));
           } else if (req.method === 'POST') {
             if (String(req.headers['content-type']).split(';')[0].trim().toLowerCase() !== 'application/json') { sendJson(res, 415, { error: '需要 JSON 请求。' }); return; }
             const request = await readJson(req);
@@ -319,9 +320,9 @@ async function mount(ctx) {
               res.once('close', close);
               try {
                 if (checkpointScopeClosed) throw Error('审阅服务已关闭。');
-                sendJson(res, 200, await cursorReview.openEditor(id, request, AbortSignal.any([cancel.signal, AbortSignal.timeout(15000)])));
+                sendJson(res, 200, await review.openEditor(id, request, AbortSignal.any([cancel.signal, AbortSignal.timeout(15000)])));
               } finally { checkpointRequests.delete(cancel); res.off('close', close); }
-            } else sendJson(res, 200, await cursorReview.update(id, request));
+            } else sendJson(res, 200, await review.update(id, request));
           }
           else sendJson(res, 405, { error: '不支持此方法' });
           return;

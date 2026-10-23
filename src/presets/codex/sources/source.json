@@ -105,5 +105,18 @@
     "review-rubric.md (source reference; not an automatic JSON final response requirement)"
   ],
   "compaction": "compact.md is returned unchanged by buildCompactionPrompt for the existing DSH summary call.",
-  "tag": "rust-v0.162.0"
+  "tag": "rust-v0.162.0",
+  "reviewAdapter": {
+    "uiSourceManifest": "src/client/sources/dsh-rc2/source.json",
+    "implementation": [
+      "src/client/git-review.jsx",
+      "src/client/cursor-review.jsx",
+      "src/presets/cursor/review.mjs",
+      "src/host/cursor-editor.mjs"
+    ],
+    "host": "@deepseek-ai/dsh-workspace-changes@0.2.1-rc.2 public summary/diff service and native sessionController.prompt",
+    "editorContract": "https://code.visualstudio.com/docs/configure/command-line",
+    "editorProtocol": "--goto absolute-file:line:column; fixed identities, separate argv, no shell",
+    "persistence": "Private codex-reviews namespace per session; atomic revision writes and native request ID reconciliation. Original OMAA glue; no official desktop client code or editor binary redistributed."
+  }
 }

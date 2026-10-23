@@ -19,7 +19,6 @@ const alias = Object.fromEntries([
 ].map(([key, path]) => [key, root + path]));
 const bundle = await build({ stdin: { resolveDir: root, contents: `
   export { PresetControls } from './src/client/preset-controls.jsx';
-  export { GitReview } from './src/client/git-review.jsx';
   export { CheckpointControls } from './src/client/checkpoint-controls.jsx';
   export { PiBranches } from './src/client/pi-branches.jsx';
   export { PiExtensions } from './src/client/pi-extensions.jsx';
@@ -46,7 +45,7 @@ test('five product components retain themes, fit narrow workbenches and recover 
   await page.addStyleTag({ content: (await Promise.all(cssFiles.map(name => readFile(root + 'src/client/' + name, 'utf8')))).join('\n') });
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
   await page.evaluate(() => {
-    const { React, createRoot, flushSync, PresetControls, GitReview, CheckpointControls, PiBranches, PiExtensions, ZCodeWorkflows, createThemeRuntime, products, adapterCss, codexCss, cursorCss, responsiveCss } = frontendFixture;
+    const { React, createRoot, flushSync, PresetControls, CheckpointControls, PiBranches, PiExtensions, ZCodeWorkflows, createThemeRuntime, products, adapterCss, codexCss, cursorCss, responsiveCss } = frontendFixture;
     let state = { sessionId: 'fixture', data: null, loading: false, saving: false, error: '' }, appearance = 'light';
     const listeners = new Set(), themeListeners = new Set(), actions = [];
     const emit = () => flushSync(() => { for (const fn of listeners) fn(); });
@@ -62,8 +61,7 @@ test('five product components retain themes, fit narrow workbenches and recover 
     const sessions = { refresh: async () => {}, list: { getSnapshot: () => ({ byId: {} }) } }, uiWorkspace = { openSession: value => actions.push(value) };
     window.fetch = async (target, options = {}) => {
       const url = new URL(target, 'https://fixture.invalid/'), id = state.sessionId; let value;
-      if (url.pathname.endsWith('/git-review')) value = url.searchParams.has('path') ? { diff: { path: 'src/example-with-long-name.mjs', display: 'src/example-with-long-name.mjs', kind: 'text', hunks: [{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1, lines: ['-old()', '+new()'] }] } } : { sessionId: id, root: '/fixture', revision: 'read-only-fixture-revision', scope: 'unstaged', total: 1, added: 1, deleted: 1, files: [{ path: 'src/example-with-long-name.mjs', added: 1, deleted: 1, actions: ['stage','revert'] }] };
-      else if (url.pathname.endsWith('/checkpoints')) value = { sessionId: id, checkpoints: [{ turn: 1, seq: 9, reviewAvailable: true, summary: { files: [{ path: 'src/example-with-long-name.mjs' }] }, files: [{ path: 'src/example-with-long-name.mjs', before: { kind: 'bytes' }, after: { kind: 'bytes' }, restorable: true }] }] };
+      if (url.pathname.endsWith('/checkpoints')) value = { sessionId: id, checkpoints: [{ turn: 1, seq: 9, reviewAvailable: true, summary: { files: [{ path: 'src/example-with-long-name.mjs' }] }, files: [{ path: 'src/example-with-long-name.mjs', before: { kind: 'bytes' }, after: { kind: 'bytes' }, restorable: true }] }] };
       else if (url.pathname.endsWith('/pi-branches')) value = { sessionId: id, head: 20, canFork: true, points: [{ seq: 20, turn: 2 }], branches: [{ sessionId: id, title: '当前工作分支', current: true }, { sessionId: 'other', parentSessionId: id, title: '检查错误与实现', cwd: '/fixture' }] };
       else if (url.pathname.endsWith('/pi-extensions')) value = { files: ['/fixture/explicit-extension.ts'], revision: 1, states: [] };
       else if (url.pathname.endsWith('/zcode-workflows')) value = { sessionId: id, runs: [{ runId: 'real-shape', status: 'completed', name: 'Compile and publish' }] };
@@ -81,7 +79,7 @@ test('five product components retain themes, fit narrow workbenches and recover 
       flushSync(() => root.render(React.createElement('div', { className: 'omaa-workbench', 'data-product': id },
         React.createElement(PresetControls, { settings, getThemeRuntime: () => runtime, compact: true, openPanel: () => actions.push('open') }),
         React.createElement(PresetControls, { settings, getThemeRuntime: () => runtime, visible: false }),
-        React.createElement(GitReview, { settings, sidebarRight, sessions }), React.createElement(CheckpointControls, { settings, sidebarRight, sessions }),
+        React.createElement(CheckpointControls, { settings, sidebarRight, sessions }),
         React.createElement(PiBranches, { settings, uiWorkspace, sessions }), id === 'pi' && React.createElement(PiExtensions, { settings }),
         id === 'zcode' && React.createElement(ZCodeWorkflows, { settings, sidebarRight }))));
     };
@@ -93,7 +91,6 @@ test('five product components retain themes, fit narrow workbenches and recover 
   for (const product of ['codex','grok','cursor','pi','zcode']) for (const appearance of ['light','dark']) {
     await page.evaluate(({ product, appearance }) => renderProduct(product, appearance, 260), { product, appearance });
     await page.getByRole('button', { name: new RegExp('预设设置$') }).waitFor();
-    if (product === 'codex') { await page.locator('.omaa-git-path').click(); await page.locator('.omaa-git-diff').waitFor(); }
     if (product === 'cursor') await page.getByRole('button', { name: '预览当前文件', exact: true }).waitFor();
     if (product === 'pi') await page.getByRole('button', { name: '创建并打开新分支', exact: true }).waitFor();
     if (product === 'zcode') await page.locator('.omaa-zcode-artifact').waitFor();

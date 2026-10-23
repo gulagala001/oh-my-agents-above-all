@@ -5,7 +5,7 @@ export const cursorCommentLimits = Object.freeze({ drafts: 50, history: 200, not
 const bytes = text => new TextEncoder().encode(text).byteLength;
 export function cursorReviewOptions(value = {}) {
   const scope = value.scope ?? 'working';
-  if (!Object.hasOwn(cursorReviewScopes, scope)) throw Error('请选择有效的 Cursor 审阅范围。');
+  if (!Object.hasOwn(cursorReviewScopes, scope)) throw Error('请选择有效的审阅范围。');
   const result = { scope };
   for (const key of ['ref', 'path', 'revision']) if (value[key] !== undefined && value[key] !== '') {
     if (typeof value[key] !== 'string' || value[key].includes('\0') || value[key].length > (key === 'path' ? 4096 : 256)) throw Error('审阅参数无效：' + key);

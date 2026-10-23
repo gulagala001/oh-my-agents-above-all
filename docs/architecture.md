@@ -34,7 +34,7 @@ Pi 跨会话分叉服务调用原生 `sessionController.list/inspect/fork`，原
 
 读取、保存及读取失败期间禁用会话设置；保存中的下拉显示本次选择，失败回退已确认值。保存期间到达的原生状态变化在保存后合并刷新，回包保留当前运行和模式等待限制。同一会话切换预设时立即清除旧设置；窄设置栏按自身宽度换行。
 
-`/omaa/api/git-review` 提供 Codex 四种 Git 比较与明确文件/块操作；实际 native subprocess/sandbox、字面路径、内容 revision 和当前工作模式共同保护写入。Last turn 复用原生 Review，行反馈走原生会话提交，不造审阅日志或另一个执行器。
+`/omaa/api/git-review` 提供 Codex 四种 Git 比较与明确文件/块操作；实际 native subprocess/sandbox、字面路径、内容 revision 和当前工作模式共同保护写入。`/omaa/api/codex-review` 提供原生回合比较、持久批注、已阅状态、问题检查与编辑器定位。与 Cursor 复用版本化记录及交付实现，但使用独立产品校验和私有存储目录；原生 workspaceChanges 直接提供回合摘要／差异，无需启用其他预设。批注及提交 ID 在原生 prompt 前原子保存；接纳由原生 inbox／user/message 对账，不另建模型执行器。
 
 `/omaa/api/pi-branches` 复用宿主认证，GET 读取当前 Pi 原生分支族、完成点与同会话树，POST 在 revision 核对后调用原生 fork 或执行同会话 navigate/compact；分支面板打开同一宿主会话。摘要 checkbox 默认未选，不会因查看或切换分支自动调用模型。
 
@@ -81,4 +81,6 @@ ZCode Cron 的定义、累计派发与原生消息收据保存在同一个类型
 
 Grok 文档工具先通过原生 fs 解析、授权与限量读取，再将字节传给专用转换 worker。PDF 文本使用固定 PDFium WASM，BMP／ICO 使用固定 ImageMagick WASM；构建从锁定依赖打包 JS 与 WASM，只降低线性内存最大页数，校验全部引擎输入与许可哈希。没有宿主文件路径、网络 URL、命令或 delegate 输入，ImageMagick 只允许 BMP／ICO／PNG coder。60 秒预算和取消均等待 worker 退出，再返回成功或原生错误。文字沿既有完整内容哈希分页，图片沿既有附件保存与原生工具渲染。构建不下载转换器，执行时不安装或回退到外部命令。
 
-Cursor 审阅的编辑器入口仍在认证 `/omaa/api/cursor-review` 中。`kind=editors` 只列固定编辑器身份，`action=open-editor` 校验真实比较或已保存批注及当前工作目录，经原生 composed filesystem 验证本机路径后，匹配唯一行上下文并以独立 argv 交给已检测的程序。新批注的可选 `anchor` 与原记录原子保存，旧记录可在原比较仍在时补取；不会修改原批注位置。该操作不启动模型、不更改运行模式，连接断开与插件卸载取消尚未发出的请求。
+Codex／Cursor 审阅分别使用认证 `/omaa/api/codex-review`、`/omaa/api/cursor-review`。`kind=editors` 只列固定编辑器身份，`action=open-editor` 校验真实比较或已保存批注及当前工作目录，经原生 composed filesystem 验证本机路径后，匹配唯一行上下文并以独立 argv 交给已检测的程序。新批注的可选 `anchor` 与原记录原子保存，旧记录可在原比较仍在时补取；不会修改原批注位置。该操作不启动模型、不更改运行模式，连接断开与插件卸载取消尚未发出的请求。
+
+两种审阅面板共同消费固定 FileDiff，生成器仅增加行号批注与块标题操作插槽。Codex 的文件／块动作仍交给 `/omaa/api/git-review`，读取中的操作、无权限动作和过期 revision 均拒绝；保存和回合收尾交错时延后刷新，避免把未完成的写入误报为读取失败。

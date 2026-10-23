@@ -9,5 +9,5 @@
     "FileDiff.js.txt": "46ecdce60a9d094b1d22d3afcf6a5308dd05c28300d5e7329aef7af1bc067951",
     "LICENSE": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be"
   },
-  "scope": "Original FileDiff component, helpers and CSS only; generated adapter replaces five line-number spans with accessible annotation buttons. Native syntax highlighting, layout and line budget remain unchanged."
+  "scope": "Original FileDiff component, helpers and CSS for Codex/Cursor review; generated adapter adds five accessible line-number buttons and hunk-header action slots. Native highlighting, layout and line budget remain unchanged."
 }

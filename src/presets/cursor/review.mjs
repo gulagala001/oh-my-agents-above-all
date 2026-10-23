@@ -11,7 +11,7 @@ const matchesRequest = (source, id) => source?.kind === 'user' && source.rpcId =
 const admitted = (agent, session, id) => [...agent.inbox.nextStep, ...agent.inbox.nextTurn].some(message => matchesRequest(message.source, id)) ||
   session.snapshotEvents().some(event => event.type === 'user/message' && matchesRequest(event.data.source, id));
 
-export function createCursorReview({ directory, hub, gitReview, controller, flush, editor, currentDirectory = session => session.header.cwd }) {
+export function createCursorReview({ directory, hub, gitReview, controller, flush, editor, currentDirectory = session => session.header.cwd, product = 'cursor', workspaceChanges }) {
   const locks = new Map();
   async function serial(id, operation) {
     const previous = locks.get(id) ?? Promise.resolve();
@@ -36,7 +36,7 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
   }
   async function owner(id) {
     const value = await hub.inspect(id);
-    if (hub.product(value.session)?.id !== 'cursor' || !value.agent) throw Error('代码审阅仅用于已启用的 Cursor 会话。');
+    if (hub.product(value.session)?.id !== product || !value.agent) throw Error('代码审阅仅用于对应的已启用预设会话。');
     return value;
   }
   function idle({ agent, value }, mode) {
@@ -51,13 +51,21 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
       comments: state.comments.map(comment => delivery.items?.some(item => item.id === comment.id && item.version === comment.version)
         ? { ...comment, status: 'submitted', requestId: delivery.requestId, submittedAt: time } : comment) });
   }
+  function turns(owned) {
+    const service = workspaceChanges(owned.session), latest = new Map();
+    for (const event of owned.session.snapshotEvents()) {
+      if (event.type !== 'workspace/changes' || !Number.isSafeInteger(event.seq) || !Number.isSafeInteger(event.data?.turn)) continue;
+      const summary = service?.summary(owned.session.id, event.seq);
+      if (summary) latest.set(event.data.turn, { seq: event.seq, turn: event.data.turn, summary: structuredClone(summary) });
+    }
+    return [...latest.values()].sort((a, b) => a.seq - b.seq);
+  }
   async function view(owned, input) {
     const options = cursorReviewOptions(input), { session } = owned;
     if (options.scope !== 'turn') return gitReview.inspect(session, options);
-    if (!hub.checkpoints) throw Error('文件检查点服务尚未就绪。');
-    const { checkpoint } = await hub.checkpoints.inspect(session.id, session, { seq: options.seq });
-    if (!checkpoint.reviewAvailable) throw Error('该回合的原生比较已不可用；已保存批注仍可查看。');
-    const root = session.header.cwd;
+    const checkpoint = turns(owned).find(item => item.seq === options.seq);
+    if (!checkpoint) throw Error('该回合的原生比较已不可用；已保存批注仍可查看。');
+    const root = currentDirectory(session);
     const files = checkpoint.summary.files.map((file, index) => {
       const name = relative(root, isAbsolute(file.path) ? file.path : resolve(root, file.path)).split(sep).join('/');
       if (!name || name === '..' || name.startsWith('../') || isAbsolute(name)) throw Error('回合比较包含工作目录之外的文件。');
@@ -70,7 +78,8 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
     if (!options.path) return result;
     const file = files.find(file => file.path === options.path);
     if (!file) throw Error('文件不在选定回合中。');
-    const { diff } = await hub.checkpoints.inspect(session.id, session, { seq: options.seq, index: file.nativeIndex });
+    const diff = await workspaceChanges(session)?.diff(session.id, options.seq, file.nativeIndex, AbortSignal.timeout(15000));
+    if (!diff) throw Error('该回合的原生比较已不可用；已保存批注仍可查看。');
     return { ...result, diff: { ...diff, path: file.path }, hunkActions: {} };
   }
   async function verifiedTarget(owned, input) {
@@ -88,8 +97,7 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
       if (input.kind === 'editors') return { editors: await editor.list() };
       if (input.kind === 'references') return gitReview.references(owned.session);
       if (input.kind === 'turns') {
-        const result = await hub.checkpoints.inspect(id, owned.session);
-        return { turns: result.checkpoints.filter(item => item.reviewAvailable).map(({ seq, turn, summary }) => ({ seq, turn, files: summary.files.length })) };
+        return { turns: turns(owned).map(({ seq, turn, summary }) => ({ seq, turn, files: summary.files.length })) };
       }
       return view(owned, input);
     },
@@ -151,7 +159,10 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
         if (state.delivery && state.delivery.kind !== kind) throw Error('请先确认上一批反馈的提交状态。');
         idle(owned, kind === 'feedback' ? 'default' : 'ask');
         if (!state.delivery) {
-          const items = state.comments.filter(item => item.status === 'draft');
+          const selection = request.commentIds;
+          if (selection !== undefined && (!Array.isArray(selection) || !selection.length || selection.length > cursorCommentLimits.drafts || new Set(selection).size !== selection.length || selection.some(id => typeof id !== 'string'))) throw Error('请选择有效的待发送批注。');
+          const items = state.comments.filter(item => item.status === 'draft' && (!selection || selection.includes(item.id)));
+          if (selection && items.length !== selection.length) throw conflict();
           let text;
           if (kind === 'feedback') text = cursorFeedbackText(items);
           else {

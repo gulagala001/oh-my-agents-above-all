@@ -2,58 +2,145 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { join, resolve } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { chromium } from 'playwright';
-import { installedHost, textReply, until } from './fixtures/installed-host.mjs';
-const execute = promisify(execFile);
+import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
+import { launchChromium } from './fixtures/browser.mjs';
 
-test('packed Codex collects two file comments and clears drafts only after one native batch admission', { timeout: 120000 }, async t => {
-  const f = await installedHost(t); await f.install(); await f.boot();
-  const git = (...args) => execute('git', args, { cwd: f.workspace, encoding: 'utf8' });
-  await git('init'); await git('config', 'user.email', 'fixture@example.invalid'); await git('config', 'user.name', 'OMAA fixture');
-  for (const file of ['alpha.txt', 'beta.txt']) await writeFile(join(f.workspace, file), 'First line\nOriginal line\n');
-  await git('add', 'alpha.txt', 'beta.txt'); await git('commit', '-m', 'Feedback baseline');
-  await writeFile(join(f.workspace, 'alpha.txt'), 'First line\nChanged alpha\n');
-  await writeFile(join(f.workspace, 'beta.txt'), 'First line\nChanged beta\n');
+const exec = promisify(execFile);
+const evidence = resolve(process.env.OMAA_REVIEW_EVIDENCE_DIR ?? '../.local/omaa-review-completion-20261023');
+
+test('Codex branch and turn review persist comments across a cold host, submit once and perform native edits', { timeout: 180000 }, async t => {
+  await mkdir(evidence, { recursive: true });
+  const f = await installedHost(t, { safeEnvironment: true, sourceLinked: true, enabledPresets: ['codex', 'cursor'] });
+  await f.install(); await f.boot();
+  const git = (...args) => exec('git', ['-C', f.workspace, ...args]).then(result => result.stdout.trim());
+  await git('init', '-b', 'main'); await git('config', 'user.name', 'OMAA fixture'); await git('config', 'user.email', 'fixture@invalid.example');
+  await writeFile(join(f.workspace, 'review.js'), 'export const answer = 40;\n');
+  await writeFile(join(f.workspace, 'helper.js'), 'export const enabled = false;\n');
+  await git('add', '.'); await git('commit', '-m', 'baseline'); await git('checkout', '-b', 'feature');
+  await writeFile(join(f.workspace, 'review.js'), 'export const answer = 41;\n');
+  await writeFile(join(f.workspace, 'helper.js'), 'export const enabled = null;\n');
+  await git('commit', '-am', 'feature');
   const workspace = await f.rpc('workspace/create', { path: f.workspace });
-  const created = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-codex' });
-  f.replyWith(payload => textReply(payload.tools?.length ? 'Native feedback acknowledged.' : 'Feedback title'));
-  await f.prompt(created.sessionId, 'Review these two file changes');
-  await f.rpc('session/rename', { sessionId: created.sessionId, title: 'Codex batch feedback' });
-  const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
+  const { sessionId } = await f.rpc('session/create', { workspaceId: workspace.workspace.workspaceId, agentPreset: 'omaa-codex' });
+  let step = 0;
+  f.replyWith(payload => !payload.tools?.length ? textReply('Title') : step++ === 0
+    ? toolReply('read', { file_path: 'review.js' }) : step === 2
+      ? toolReply('write', { file_path: 'review.js', content: 'export const answer = 41;\n// pending review\n' }) : textReply('Review changes ready.'));
+  await f.prompt(sessionId, 'Add the review marker.'); await f.rpc('session/rename', { sessionId, title: 'Codex review delivery' });
+  await writeFile(join(f.workspace, 'new.txt'), 'new file in whole workspace\n');
+  const api = async (query = {}, body) => {
+    const response = await fetch(f.origin + '/omaa/api/codex-review?' + new URLSearchParams({ session: sessionId, ...query }), {
+      headers: { cookie: f.cookie, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { method: 'POST', body: JSON.stringify(body) } : {}) });
+    return { status: response.status, value: await response.json() };
+  };
+  const wrongProduct = await fetch(f.origin + '/omaa/api/cursor-review?session=' + sessionId, { headers: { cookie: f.cookie } }); assert.notEqual(wrongProduct.status, 200);
+  const noAuth = await fetch(f.origin + '/omaa/api/codex-review?session=' + sessionId); assert.equal(noAuth.status, 401);
+  const working = await api({ scope: 'working' }); assert.equal(working.status, 200, JSON.stringify(working.value));
+  assert.deepEqual(working.value.files.map(file => file.path), ['new.txt', 'review.js']);
+  const branch = await api({ scope: 'branch', ref: 'main' }); assert.equal(branch.status, 200);
+  assert.equal(branch.value.files.length, 2); assert(branch.value.base); assert(branch.value.commit);
+  const turns = (await api({ kind: 'turns' })).value.turns; assert(turns.length);
+  const turn = await api({ scope: 'turn', seq: turns.at(-1).seq }); assert.equal(turn.status, 200, JSON.stringify(turn.value));
+  assert(turn.value.files.some(file => file.path === 'review.js'));
+  const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
-  const page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
-  await mkdir('.cache', { recursive: true });
-  t.after(async () => { try { if (!t.passed && !page.isClosed()) { await page.screenshot({ path: '.cache/git-feedback-batch-failure.png' }); t.diagnostic((await page.locator('body').innerText()).slice(-5500)); t.diagnostic(JSON.stringify(errors)); } } finally { await browser.close(); } });
-  await page.goto(f.origin); await page.getByRole('button', { name: /^(Continue|继续)$/ }).click();
-  await page.getByText('Codex batch feedback', { exact: true }).first().click();
-  await page.getByRole('button', { name: 'Codex 预设设置', exact: true }).click();
-  const review = page.getByRole('region', { name: 'Codex Git 审阅' });
-  for (const [path, note] of [['alpha.txt', 'Check alpha boundary.'], ['beta.txt', 'Handle beta failure.']]) {
-    await review.getByRole('button', { name: path, exact: true }).click();
-    await review.locator(`[data-omaa-git-diff="${path}"]`).waitFor();
-    await review.getByRole('button', { name: '评论新文件第 2 行', exact: true }).click();
-    await review.getByLabel('行级审阅反馈').fill(note);
-    await review.getByRole('button', { name: '加入反馈草稿', exact: true }).click();
-  }
-  const drafts = review.getByRole('region', { name: '待提交反馈草稿' });
-  assert.equal(await drafts.locator('.omaa-git-draft').count(), 2);
-  await drafts.getByText('Check alpha boundary.', { exact: true }).waitFor();
-  await drafts.getByText('Handle beta failure.', { exact: true }).waitFor();
-  await drafts.scrollIntoViewIfNeeded(); await page.screenshot({ path: '.cache/codex-feedback-batch.png' });
+  let page, review, opened = false;
+  const errors = [];
+  const open = async () => {
+    await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
+    page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => { if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(message.text()); });
+    await page.goto(f.origin);
+    const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
+    if (!opened) { await welcome.waitFor({ state: 'visible' }); await welcome.click(); await welcome.waitFor({ state: 'hidden' }); opened = true; }
+    await page.getByText('workspace', { exact: true }).first().waitFor();
+    if (!(await page.getByText('Codex review delivery', { exact: true }).first().isVisible())) await page.getByText('workspace', { exact: true }).first().click();
+    if (!(await page.getByRole('button', { name: 'Codex 预设设置', exact: true }).isVisible())) await page.getByText('Codex review delivery', { exact: true }).first().click();
+    await page.getByRole('button', { name: 'Codex 预设设置', exact: true }).click();
+    review = page.getByRole('region', { name: 'Codex Git 审阅', exact: true });
+    await review.getByLabel('Codex 比较范围').waitFor();
+    await until(async () => review.getByRole('button', { name: '刷新', exact: true }).isEnabled());
+  };
+  t.after(async () => {
+    try { if (t.passed === false && page && !page.isClosed()) { await page.screenshot({ path: join(evidence, 'failure.png') }); t.diagnostic((await page.locator('body').innerText()).slice(-6000)); t.diagnostic(JSON.stringify(errors)); } }
+    finally { await browser.close(); }
+  });
+  await open();
+  await review.getByLabel('Codex 比较范围').selectOption('branch');
+  const selectFile = name => review.getByRole('navigation', { name: '审阅文件' }).getByRole('button', { name: new RegExp(name) }).click();
+  await selectFile('review.js');
+  await review.getByRole('button', { name: '评论新文件第 1 行', exact: true }).click();
+  await review.getByLabel('Codex 行级批注').fill('ANSWER_TARGET: change the answer to 42, preserving the marker.');
+  await review.getByRole('button', { name: '保存批注', exact: true }).click();
+  await until(async () => (await api({ kind: 'notes' })).value.comments.length === 1);
+  await selectFile('helper.js');
+  await review.getByRole('button', { name: '评论新文件第 1 行', exact: true }).click();
+  await review.getByLabel('Codex 行级批注').fill('FLAG_TARGET: change enabled to true.');
+  await review.getByRole('button', { name: '保存批注', exact: true }).click();
+  await until(async () => (await api({ kind: 'notes' })).value.comments.length === 2);
+  await review.getByRole('button', { name: '标为已阅', exact: true }).click();
+  await until(async () => (await api({ kind: 'notes' })).value.reviewed.length === 1);
+  const notes = (await api({ kind: 'notes' })).value;
+  const stale = await api({}, { action: 'delete-comment', revision: notes.revision - 1, id: notes.comments[0].id }); assert.equal(stale.status, 409);
+  await until(async () => review.getByRole('button', { name: '刷新', exact: true }).isEnabled());
+  await page.screenshot({ path: join(evidence, 'cursor-review.png') });
+  // Native turn comparisons are retained by the running host. Test their real
+  // renderer before restart; durable comments do not pretend to preserve a
+  // native comparison that the host no longer serves.
+  await review.getByLabel('Codex 比较范围').selectOption('turn');
+  await until(async () => (await review.getByLabel('Codex 比较范围').inputValue()) === 'turn' && await review.getByRole('button', { name: '刷新', exact: true }).isEnabled());
+  await review.locator('[data-diff-line]').first().waitFor();
+  await review.getByRole('button', { name: '并排', exact: true }).click();
+  await review.locator('[data-review-view="unified"]').waitFor();
+  await review.getByRole('button', { name: '折行', exact: true }).click();
+  await review.locator('[data-review-wrap]').waitFor();
+  await page.close(); await f.stop(); await f.boot();
+  const cold = (await api({ kind: 'notes' })).value;
+  assert.deepEqual(cold.comments, notes.comments); assert.deepEqual(cold.reviewed, notes.reviewed);
+  await open();
+  assert.equal(await review.locator('.omaa-cr-comment').count(), 2);
+  step = 0;
+  f.replyWith(payload => !payload.tools?.length ? textReply('Title') : step++ === 0
+    ? toolReply('write', { file_path: 'review.js', content: 'BLOCKED IN ASK\n' }) : textReply('CURSOR_READONLY_REVIEW_COMPLETE'));
+  await review.getByRole('button', { name: '查找范围问题', exact: true }).click();
+  await until(async () => !(await f.api(sessionId)).value.running && f.requests.some(payload => JSON.stringify(payload.messages).includes('BLOCKED IN ASK')));
+  assert.equal((await f.api(sessionId)).value.mode, 'ask');
+  assert.equal(await f.readWorkspace('review.js'), 'export const answer = 41;\n// pending review\n');
+  step = 0;
   const from = f.requests.length;
-  await drafts.getByRole('button', { name: '批量发送并继续修改', exact: true }).click();
-  await until(() => f.requests.slice(from).some(payload => payload.tools?.length && JSON.stringify(payload.messages).includes('Please address these 2 code review comments together.')));
-  const requests = f.requests.slice(from).filter(payload => payload.tools?.length);
-  assert.equal(requests.length, 1, 'both comments use one native model request');
-  const messages = JSON.stringify(requests[0].messages);
-  for (const text of ['alpha.txt', 'beta.txt', 'Check alpha boundary.', 'Handle beta failure.', 'revision', 'unstaged']) assert(messages.includes(text), text);
-  await drafts.waitFor({ state: 'detached' });
-  await until(async () => !(await f.api(created.sessionId)).value.running);
-  const snapshot = await f.snapshot(created.sessionId);
-  const batchEvents = snapshot.records.filter(row => row.event?.type === 'user/message' && JSON.stringify(row.event.data).includes('Please address these 2 code review comments together.'));
-  assert.equal(batchEvents.length, 1, 'one durable native user message admits the full feedback batch');
+  f.replyWith(payload => {
+    if (!payload.tools?.length) return textReply('Title');
+    const replies = [toolReply('read', { file_path: 'review.js' }), toolReply('write', { file_path: 'review.js', content: 'export const answer = 42;\n// pending review\n' }),
+      toolReply('read', { file_path: 'helper.js' }), toolReply('write', { file_path: 'helper.js', content: 'export const enabled = true;\n' })];
+    return replies[step++] ?? textReply('CURSOR_FEEDBACK_IMPLEMENTED');
+  });
+  await until(async () => review.getByRole('button', { name: '批量反馈并继续修改', exact: true }).isEnabled());
+  await review.getByRole('button', { name: '批量反馈并继续修改', exact: true }).click();
+  await until(async () => await f.readWorkspace('helper.js') === 'export const enabled = true;\n' && !(await f.api(sessionId)).value.running);
+  assert.equal((await f.api(sessionId)).value.mode, 'default');
+  assert.equal(await f.readWorkspace('review.js'), 'export const answer = 42;\n// pending review\n');
+  const submitted = (await api({ kind: 'notes' })).value;
+  assert(submitted.comments.every(comment => comment.status === 'submitted'));
+  const snapshot = await f.snapshot(sessionId);
+  const sent = snapshot.records.map(record => record.event).filter(event => event?.type === 'user/message' && event.data.source?.rpcId === submitted.lastDelivery.requestId);
+  assert.equal(sent.length, 1, 'one batch admission identity owns both comments');
+  // Re-reading the accepted receipt must not enqueue the feedback again.
+  const requestsAfter = f.requests.length;
+  await api({ kind: 'notes' }); await api({ kind: 'notes' }); assert.equal(f.requests.length, requestsAfter);
+  const actual = f.requests.slice(from).find(payload => payload.tools?.length); assert(actual);
+  for (const marker of ['ANSWER_TARGET', 'FLAG_TARGET', 'revision', 'branch', 'main']) assert(JSON.stringify(actual.messages).includes(marker), marker);
+  await review.getByRole('button', { name: '标为解决', exact: true }).first().click();
+  await until(async () => (await api({ kind: 'notes' })).value.comments.some(comment => comment.status === 'resolved'));
+  await until(async () => review.getByRole('button', { name: '刷新', exact: true }).isEnabled());
+  await page.screenshot({ path: join(evidence, 'codex-review-finished.png') });
+  const finished = (await api({ kind: 'notes' })).value;
   assert.deepEqual(errors, []);
+  page.removeAllListeners('console'); await page.close(); await f.stop(); await f.boot();
+  assert.deepEqual((await api({ kind: 'notes' })).value.comments, finished.comments);
+  assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
+  await writeFile(join(evidence, 'native-review.json'), JSON.stringify({ host: f.evidence.version, source: 'local source-linked rc.2', nativeFlow: true,
+    scopes: ['working', 'branch', 'turn'], coldComments: cold.comments.length, oneNativeBatch: sent.length, actualFilesChanged: ['review.js', 'helper.js'],
+    modelRequests: f.requests.length, askWriteDenied: true, staleWriteDenied: true, frontendErrors: errors, externalModels: false }, null, 2) + '\n');
 });

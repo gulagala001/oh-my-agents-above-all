@@ -12,3 +12,5 @@
 .omaa-cr-error{color:var(--dsw-alias-state-error-primary);white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6}.omaa-cursor-review :is(button,select,input,textarea):focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 @container cursor-review (max-width:620px){.omaa-cr-layout{grid-template-columns:minmax(0,1fr)}.omaa-cr-files{max-height:160px;border-right:0;border-bottom:1px solid var(--dsw-alias-border-l3)}.omaa-cr-files button{flex-wrap:nowrap}.omaa-cr-file-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.omaa-cr-content{min-height:150px}}
 @container cursor-review (max-width:320px){.omaa-cr-header>div{align-items:flex-start;flex-direction:column;gap:3px}.omaa-cr-scope{align-items:stretch;flex-direction:column}.omaa-cr-scope form{min-width:0}.omaa-cr-overview>span{flex-basis:100%}.omaa-cr-comment>header{flex-direction:column;gap:2px}}
+
+.omaa-review-hunk-actions{display:inline-flex;gap:4px;margin-left:10px;white-space:normal}.omaa-cr-file-head>div,.omaa-cr-editor>div,.omaa-cr-comment>div{flex-wrap:wrap}.omaa-cr-error pre{white-space:pre-wrap;overflow-wrap:anywhere}
