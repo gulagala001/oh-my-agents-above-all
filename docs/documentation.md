@@ -10,7 +10,7 @@
 
 - 首页介绍本产品并提供安装、使用、兼容和来源入口；指南按用户任务组织，开发文档服务于外部贡献者。
 - 内部计划、交接、真实会话、运行日志、原始研究和验收流水只留本地，不进入仓库、站点、安装包或 Release 附件。维护测试和合成夹具保留。
-- 构建必需的上游源码与哈希清单保存在 `src/presets/`；恢复报告和阶段证据只留本地，公开文件门禁禁止 `docs/recovery/` 与交接快照。
+- 构建必需的上游源码与哈希清单保存在 `src/presets/` 和 `src/client/sources/`；恢复报告和阶段证据只留本地，公开文件门禁禁止 `docs/recovery/` 与交接快照。
 - 来源与许可保留原作者、维护者、固定版本及适配说明。历史版本和跳转页有安装、回退或外部引用时继续保留。
 - 增删、移动或改变页面职责时，同步修改清单、中英文入口、首页／目录／站点导航、素材引用和打包配置。生成器或规则改变时，同步本脚本中的公开规范。
 - 运行 `node scripts/check-docs.mjs --write` 更新本页，再运行 `npm run docs:check`。CI 与 prepack 运行同一检查，未登记页面、失效路径／锚点、错误翻译对应或过期生成页均阻止通过。
@@ -23,7 +23,7 @@
 
 - Homepages introduce this product and link to installation, usage, compatibility and sources. Guides follow user tasks; developer documentation supports contributors.
 - Keep internal plans, handoffs, real conversations, runtime logs, raw research and verification output local. They must not enter Git, the website, packages or release attachments. Retain maintenance tests and synthetic fixtures.
-- Keep required upstream build sources and hash manifests under `src/presets/`. Keep recovery reports and stage evidence local; the public file gate rejects `docs/recovery/` and handoff snapshots.
+- Keep required upstream build sources and hash manifests under `src/presets/` and `src/client/sources/`. Keep recovery reports and stage evidence local; the public file gate rejects `docs/recovery/` and handoff snapshots.
 - Preserve authorship, maintainers, pinned sources, licenses and adaptation notes. Keep historical versions and redirects needed by installation, rollback or external links.
 - Add, move or remove pages together with inventory entries, translations, homepages, indexes, website navigation, assets and packaging configuration. Update this script's public policy when changing the generator or its rules.
 - Run `node scripts/check-docs.mjs --write`, then `npm run docs:check`. CI and prepack use the same check for unregistered pages, missing paths or anchors, invalid translation pairs and stale generated documentation.

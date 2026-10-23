@@ -18,7 +18,7 @@ export function decorateSlotComponent(slots, name, accepts, decorate) {
   const installed = new Map();
   let reconciling = false, dirty = false, stopped = false;
   function publish() {
-    const entries = slots.entries(name), original = entries.find(entry => accepts(entry.options.key));
+    const entries = slots.entries(name), original = entries.find(entry => accepts(entry.options.key, entry));
     if (!original) return;
     // Fiber disposal has already deactivated the plugin receiver. Publish the
     // synchronous refresh through the live root; no effect survives this call.
@@ -28,7 +28,10 @@ export function decorateSlotComponent(slots, name, accepts, decorate) {
     if (!Number.isFinite(priority)) throw new Error('Cannot publish slot decoration at a finite non-winning priority');
     const Probe = () => null;
     Probe[refreshEntry] = true;
-    publisher.register({ name, key: original.options.key, priority }, Probe)();
+    publisher.register({ name, key: original.options.key, priority,
+      ...(typeof original.options.id === 'string' ? { id: original.options.id } : {}),
+      ...(typeof original.options.select === 'function' ? { select: () => undefined } : {}),
+    }, Probe)();
   }
   function release(entry, state) {
     state.active = false;
@@ -49,7 +52,7 @@ export function decorateSlotComponent(slots, name, accepts, decorate) {
         }
         let changed = false;
         for (const entry of entries) {
-          if (!accepts(entry.options.key) || entry.component?.[refreshEntry] || installed.has(entry)) continue;
+          if (!accepts(entry.options.key, entry) || entry.component?.[refreshEntry] || installed.has(entry)) continue;
           const previous = entry.component, component = decorate(entry);
           const state = { previous, active: true, wrapper: null };
           function Decorated(props) { return createElement(state.active ? component : previous, props); }

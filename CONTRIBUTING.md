@@ -31,3 +31,5 @@ CI 冻结安装当前宿主依赖、构建并检查实际包。tag workflow 仅�
 ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile 与日历构建所需的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和交接快照文件。
 
 文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。
+
+Grok 队列的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md` 和 `docs/product-sources.md`。

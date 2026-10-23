@@ -1,3 +1,4 @@
+import { applyGrokQueue } from './grok-queue.jsx';
 import React, { useSyncExternalStore } from 'react';
 import { createSessionSettings, PresetControls } from './preset-controls.jsx';
 import { CheckpointControls } from './checkpoint-controls.jsx';
@@ -23,6 +24,7 @@ export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'co
 export function apply(ctx, { enabled, ready }) {
   let settings;
   ctx.effect(() => { settings = createSessionSettings(ctx, fetch, enabled); return () => settings.dispose(); });
+  if (enabled.includes('grok')) applyGrokQueue(ctx);
   if (enabled.includes('pi')) { applyPiExtensionNotices(ctx, settings); applyPiExtensionMessages(ctx); }
   const getThemeRuntime = applyThemes(ctx, settings);
   ready({ settings, getThemeRuntime });

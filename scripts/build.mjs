@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { build, transform } from 'esbuild';
 import ts from 'typescript';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
+import { buildGrokQueue } from './build-grok-queue.mjs';
 import { buildGrokDocuments } from './build-grok-documents.mjs';
 
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
@@ -19,6 +20,7 @@ import { buildZCodeCalendarRule } from './build-zcode-calendar.mjs';
 
 await buildPiPromptHelpers({ write: true });
 await buildGrokDocuments();
+await buildGrokQueue();
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 // Installation adds only the opt-in base. Preset compositions are registered

@@ -17,7 +17,7 @@
 | `todo_write` 用于 3 步及以上任务，单步略过；列表实时显示。依据 todo/mod.rs。 | 使用 DSH 原生 todo_write 和会话状态；不移植 Grok workspace todo 存储。 |
 | `enter_plan_mode` 面向真实方案歧义；上游请求批准并种子化计划文件。计划中只允许计划文件编辑，`ask_user_question` 澄清，`exit_plan_mode` 提交批准。依据 plan_mode.rs 与 [官方计划文档](https://docs.x.ai/build/features/plan-mode)。 | 使用原生 planMode 状态、记录和评审。提示词仅在 enter/exit 两工具都注册时引用；DSH exit 接受 `plan` Markdown，按返回批准或继续规划。无上游计划文件承诺。宿主权限继续独立执行。 |
 | 问题工具会等待用户响应，可提供选择与推荐项。依据 ask_user_question/mod.rs。 | 原生 ask_user_question 承载；保留推荐项优先原句。自动 Other、预览、multi-select 等依赖宿主 UI，不由提示词承诺。 |
-| 独立 prompt-queue 保存队列项、优先级、运行项、combined texts；TUI 支持编辑、排序和 send-now/interjection。默认 Enter queue，follow_up_behavior=steer 可在安全间隙注入。send-now 停止当前 turn，保留后台任务与其余队列，作为下一 turn 投递。依据 xai-prompt-queue、session/prompt_queue.rs、键盘指南及 PTY 回归。 | 原生 steer/queue、队列 edit/remove/steer 和保留 inbox 的停止入口承载基本接手。DSH queue 逐 turn 取一条，steer 在整批工具后进入当前 turn；Grok 双 Enter/send-now 键位、排序和 blocked-wait 特例没有独立 UI 适配。 |
+| 独立 prompt-queue 保存队列项、优先级、运行项、combined texts；TUI 支持编辑、排序和 send-now/interjection。默认 Enter queue，follow_up_behavior=steer 可在安全间隙注入。send-now 停止当前 turn，保留后台任务与其余队列，作为下一 turn 投递。依据 xai-prompt-queue、session/prompt_queue.rs、键盘指南及 PTY 回归。 | Grok 会话输入框上方使用实际 DSH rc.2 QueueDock：支持上移／下移、保留附件的文本编辑、移除、插话与立即发送，并显示等待回复／权限及等待插话状态。排序与编辑写入原生 inbox，重启可恢复；旧编辑拒绝覆盖新内容。立即发送取消当前回合、保留其余队列与后台作业，由原生循环继续。DSH 每轮取一条排队消息，插话在整批工具后送达；使用按钮而非复制 TUI 双 Enter 键位。 |
 | 后台命令、subagent 输出和停止可共用上游输出工具；默认 toolset 包含 monitor，以 stdout 行通知状态变化。 | `monitor.mjs` 经原生 tools.execute 调用后台 bash/pwsh，保留所有 guard/权限和同一 jobs 生命周期。绝对 offset 的 stdout 观察不消耗 job_output 的 cursor；事件用合法原生 tool-jobs notice 在 running 时 inject、idle 时 followup。job_list/job_output/job_kill 操作同一实际作业，间隔调度由 `scheduler.mjs` 接入原生 schedule 服务。 |
 | memory 是实验性显式或 managed config 开关；`MemoryConfig` legacy 解析 `.default(false)`，v2 独立 enabled gate，支持 record_only/shadow/active rollout。 | 默认关闭符合固定源码；未启动自动捕获、Dream、磁盘 topic index 或原厂 memory 服务。未来显式启用必须实现真实目录和写保护，不能只启用 prompt 分支。 |
 | 首条用户消息包含 user_info、规则/技能/MCP；更深 AGENTS.md 优先。 | 宿主的环境、技能及项目上下文注入负责，避免再次扫描/拼接一份独立长期日志。 |
@@ -48,3 +48,9 @@ Monitor 保存完整上游工具说明及 line processor/rate limiter 来源。`
 `read_document` 支持 PPTX 文本／备注和 PDF 图片／文本，`read_grok_image` 读取图片。分页结果保留字节边界与内容哈希；图片解码和外部转换通过宿主受限进程执行，所需转换器必须已经可用。
 
 监控保留有界输出、UTF-8 边界和丢失通知，并只停止实际归属的作业。调度记录区分创建、派发、子任务完成和过期；续跑核对已有记录，不把未知结果自动重试为成功。源码增量尚未单独发行。
+
+## 当前源码的队列入口
+
+在 **设置 → OMAA** 开启 Grok 后，进入 Grok 会话。任务执行期间提交的消息显示在输入框上方；多条消息可展开，使用上移／下移调整相邻用户消息，编辑、移除或插话。**立即发送（停止当前回合）** 将所选消息作为下一轮输入，保留其他排队消息；正在等待用户回复或权限时也可显式取消该回合并接手。后台通知和问题回复不可作为用户消息编辑或排序。
+
+编辑保留原始图片及文件引用，发生并发修改会保留草稿并显示冲突。队列状态直接来自持久化的原生 inbox，没有另一份浏览器队列。原生排队组件、附件预览、InlineEditor 和样式固定到 DSH rc.2；快照、许可、原包哈希和必要适配见 `src/client/sources/grok-queue/source.json` 与 `scripts/build-grok-queue.mjs`。该功能属于当前源码，尚未包含在 0.16.5 固定发行包中。

@@ -1,3 +1,4 @@
+import { installGrokQueue } from './presets/grok/queue.mjs';
 import { installSubagentOverrides } from './host/subagents.mjs';
 import { currentDirectory } from './host/working-directory.mjs';
 import { homedir } from 'node:os';
@@ -348,6 +349,7 @@ async function mount(ctx) {
 export async function enableProduct(ctx, product) {
   const hub = ctx.get('omaa');
   if (product === 'grok') {
+    installGrokQueue(ctx, hub);
     // Optional host services are resolved from the actual parent at use time.
     // Keep the ownership router mounted only while Grok is explicitly enabled.
     let records;

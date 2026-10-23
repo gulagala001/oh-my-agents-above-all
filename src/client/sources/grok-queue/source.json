@@ -1,0 +1,14 @@
+{
+  "package": "@deepseek-ai/dsh-client-ui-conversation",
+  "version": "0.2.1-rc.2",
+  "url": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-conversation/-/dsh-client-ui-conversation-0.2.1-rc.2.tgz",
+  "source": "lib/client.js",
+  "bundleSha256": "8554738cbeeb5218ad1bfa4773ef094363b066d052a1893d7a96797c5bc33a63",
+  "region": "QueueDock CSS and component before queueDockEntry",
+  "snapshot": "QueueDock.js.txt",
+  "sha256": "084d97172714119d59820795a48106e3e226cc3e95d3b1cc43fefa96beef972f",
+  "license": "MIT",
+  "adapter": "scripts/build-grok-queue.mjs",
+  "behavior": "Grok fixed prompt_queue.rs: stale edit refusal, attachments retained, send-now and queue reordering; native DSH admission, permissions and execution remain authoritative.",
+  "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be"
+}
