@@ -37,3 +37,5 @@ Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/so
 Grok 随包转换引擎通过 `scripts/build-grok-documents.mjs` 构建，包含 `build-grok-codecs.mjs`。更新引擎必须同步精确开发依赖、锁文件、`src/presets/grok/codec-sources.json` 和其中指向的原始许可；输入哈希、版本、唯一 WASM 内存及最大页数在构建时核验。产品用法、来源与接线说明分别维护在现有 Grok 产品页、来源页和架构页。引擎仅在构建时打包，转换器运行时不得下载程序或绕过原生文件权限。
 
 Grok 调度事务使用版本锁定的宿主内部 FIFO 薄适配。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、兼容页、架构页与来源页。
+
+Cursor 编辑器定位维护在 `src/host/cursor-editor.mjs`，来源契约记录在 Cursor 产品来源清单。修改编辑器身份、启动参数或行映射时，保留认证、宿主文件映射、单独 argv 和取消边界；运行定点检查，并在隔离编辑器中核对实际文件与光标位置。原生主流程通过显式 `OMAA_TEST_EDITOR_RECEIPT` 接入只观察真实编辑器选择的验收扩展，默认测试不得启动个人编辑器。产品用法与来源原位更新现有产品页、架构页和来源页。

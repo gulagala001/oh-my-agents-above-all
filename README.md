@@ -55,7 +55,7 @@ OMAA 为 Codex、Grok Build、Cursor、Pi Coding Agent 和 ZCode 提供独立的
 | --- | --- |
 | **Codex** | 连续代码工作；真实 Git 范围、文件／块操作、行反馈和桌面布局。 |
 | **Grok Build** | 计划与执行、实时 stdout 监控、原生 interval 调度。 |
-| **Cursor** | MDC／项目规则、Ask／Plan、文件检查点、多范围审阅、持久行批注与批量反馈续改。 |
+| **Cursor** | MDC／项目规则、Ask／Plan、文件检查点、多范围审阅、持久行批注与本机编辑器定位与批量反馈续改。 |
 | **Pi** | 精简默认工具、SYSTEM／模板／规则、逐条 steer、原生分支导航和显式本地扩展。 |
 | **ZCode** | 保存并复用工作流、TypeScript Actor、静态执行图、文件／Git／命令 facade 与产物面板。 |
 

@@ -49,5 +49,17 @@
     }
   ],
   "repositoryLicense": "CC0-1.0",
-  "sampleBlob": "f6951fa520e3e37f0ce09ab47ee564818769d034"
+  "sampleBlob": "f6951fa520e3e37f0ce09ab47ee564818769d034",
+  "editorAdapter": {
+    "implementation": "src/host/cursor-editor.mjs",
+    "contract": "https://code.visualstudio.com/docs/configure/command-line",
+    "retrievedAt": "2026-10-23",
+    "protocol": "--goto absolute-file:line:column; separate argv, no shell",
+    "editors": [
+      "cursor",
+      "vscode",
+      "vscodeinsiders"
+    ],
+    "scope": "Original host glue; native FileDiff and buttons retained. Persistent surrounding-line anchors resolve only unique current-file matches. Editors are not redistributed."
+  }
 }

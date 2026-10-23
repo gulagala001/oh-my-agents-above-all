@@ -55,7 +55,7 @@ OMAA provides independent source prompts, workflows and light/dark themes for Co
 | --- | --- |
 | **Codex** | Sustained code work, actual Git ranges, file/hunk operations, line feedback and a desktop layout. |
 | **Grok Build** | Planning and execution, live stdout monitoring and native interval scheduling. |
-| **Cursor** | MDC/project rules, Ask/Plan, file checkpoints, multi-scope review, persistent line comments and batch feedback to continue editing. |
+| **Cursor** | MDC/project rules, Ask/Plan, file checkpoints, multi-scope review, persistent line comments, exact local-editor navigation and batch feedback to continue editing. |
 | **Pi** | Minimal default tools, SYSTEM/templates/rules, sequential steering, native branch navigation and explicit local extensions. |
 | **ZCode** | Saved workflows, TypeScript Actors, static execution graphs, file/Git/command facades and artifact panels. |
 
@@ -65,7 +65,7 @@ Themes can follow the preset, use another preset’s theme or return to native D
 
 The Codex preset exposes Unstaged, Staged, Commit, Branch and Last turn comparisons. Stage, unstage or revert files/hunks and send line feedback under host permissions. Stale comparisons are rejected.
 
-Cursor's code review panel covers the working tree, index, commits, branches and recorded turns. Line comments persist locally and can be submitted together for the same conversation to continue editing. Checkpoints check conflicts before restoring and retain messages; they are not whole-workspace snapshots of arbitrary shell actions. Pi branches use the native conversation tree and share the directory; switching branches does not roll back files. The new Cursor review flow is not yet included in the published 0.16.5 package.
+Cursor's code review panel covers the working tree, index, commits, branches and recorded turns. Line comments retain context for exact navigation in Cursor or VS Code, persist locally and can be submitted together for the same conversation to continue editing. Checkpoints check conflicts before restoring and retain messages; they are not whole-workspace snapshots of arbitrary shell actions. Pi branches use the native conversation tree and share the directory; switching branches does not roll back files. The new Cursor review flow is not yet included in the published 0.16.5 package.
 
 [Workbench usage](docs/frontend-workbench.md) · [Actual preset screenshots](docs/frontend-gallery.md)
 
