@@ -27,9 +27,13 @@
 
 Monitor 保存完整上游工具说明及 line processor/rate limiter 来源。`timeout_ms` 默认 10 小时，`persistent` 或原版 `timeout_ms:0` 直到停止或会话销毁；宿主原生进程由同一 job 取消，后台超时不只是退订。stdout 空行忽略、单行 UTF-8 字节限 500、批次限 3000、部分行缓冲限 1 MiB，200ms 合批；令牌容量 10、每 2 秒补一个，连续限流超过 30 秒会停掉进程并通知。最后部分行在正常完成时发送；普通结束由已有 job 服务唯一通知，用户取消与 owner teardown 不增加重复事件。原生输出 ring 可提前丢弃字节，此时事件明确报告 gap。后台作业为宿主进程内生命周期，重启不会冒称恢复原厂 monitor。
 
-`scheduler.mjs` 补齐默认 toolset 的 `scheduler_create/list/delete`，遵循宿主原生自动任务开关：服务关闭时仅不挂载这些定时工具，Grok 主预设继续可用；用户启用原生开关后再按需挂载，不改写用户设置。固定源码已使用 interval，**不是 cron**：整数 `s/m/h/d`，正数且最低 60 秒，保持上游低值 clamp。创建与列表/删除直接使用原生 schedule；原生到期投递与持久化均由 DSH 负责。`task_id` 更新保留 id，prompt 或同 interval 更新带完整 expected record 做并发核对，保持 next fire。改变 interval 会使宿主重新锚定时间，适配明确拒绝，让用户显式删除并重建；未知 id 不偷偷创建任务。创建最多 50 个当前会话活跃任务，适配器同时创建按会话串行核对上限。
+`scheduler.mjs` 提供 `scheduler_create/list/delete/output`。在 **设置 → OMAA** 开启 Grok，并启用宿主自动任务服务后，直接在 Grok 会话中提出定时工作；例如“每 5 分钟检查构建结果”。模型调用 `scheduler_create`，返回持久任务 ID。修改时使用同一 `task_id` 与新的 `interval` 或 `prompt`，删除使用 `scheduler_delete`。interval 使用整数 `s/m/h/d`，最低 60 秒；每会话最多创建 50 个当前活跃任务，列表保留真实任务 ID、下次时间和完成状态。
 
-创建 `durable:true` 或 `fire_immediately:true` 明确报不支持；没有新 timer、手工 followup 或伪造 delivery history。上游的七天 TTL 无原生字段，当前能力为直到删除、重启继续绑定原会话，不假称跨会话 durable；字段在 task_id 更新时按原版忽略。原版隐藏 `recurring:false` 分支实际拒绝一次性任务，预设按授权额外提供宿主 `after_seconds` 一次性提醒并在工具说明中明确。列表只返回原生可得字段，不猜 createdAt。原厂调度用独立子代理和周期性的 transcript chain 重置；这里实际使用宿主当前会话的提醒投递，不启动另一执行循环。
+间隔修改保留创建或上次实际派发的时间锚点；如果修改后的目标已经到期，则从本次修改时刻再等一个新间隔，避免补跑旧次数。prompt 单独修改保留下次时间，并让下一次执行从新子任务线程开始；只改间隔继续使用已有线程。创建时显式指定 `fire_immediately:true` 可立即执行一次，默认仍等待首个间隔；`recurring:false` 提供延迟一次执行，不能同时要求立即执行。`durable:true` 跨会话任务不在当前范围。
+
+每次派发通过原生受控子任务执行，原生提醒收据、子任务接纳和最终完成分别记录。重复任务从创建起七天到期，即使第一次执行设在八天后也会按时移除提醒；删除任务或到期不终止已经接纳的子任务。冷恢复保留已确认记录，未知持久化结果暂停执行并要求检查，不自动重复派发或删除。普通原生提醒单独标识，其他会话的任务不进入当前列表。
+
+间隔修改与到期清理由固定 DSH `0.2.1-rc.2` 的同一原生调度队列承载。薄适配核验安装模块 SHA-256 和实际方法身份，再在原队列内比较完整记录并写入；它使用了宿主内部 FIFO／domain 接口，升级宿主须重新核验，不能只放宽版本声明。并发编辑改变内容或规则时拒绝旧操作；不替换调度服务，不增加第二套派发计时器。原生提醒和 Grok 归属记录是两个持久写入，部分失败保留未知状态，不能宣称跨域原子提交。
 
 官方服务、模型表现、账号、Grok CLI/TUI、MCP 安装、独立内存索引与云端 media 等能力不由本预设提供。模型/API、原生工具循环、权限、会话、日志、恢复、压缩事务均属于 DSH。相关官方资料可从 [CLI 参考](https://docs.x.ai/build/cli/reference) 与完整固定源码回查。
 
@@ -41,7 +45,7 @@ Monitor 保存完整上游工具说明及 line processor/rate limiter 来源。`
 
 `test/installed-grok-monitor.test.mjs` 通过原版 CLI 隔离安装：实际模型收到 stdout 各事件及完成部分行一次，原生 job_output 仍完整读到输出；job_kill 后状态 killed，延迟写文件没有发生；deadline 实际取消进程，Ask 拒绝启动，Pi 不暴露 monitor。`test/grok-monitor.test.mjs` 核对持续超限的停止决策及已注册作业后的 late-cancel 精确取消一次。测试只用 loopback，没有执行 Grok 客户端或真实账号。
 
-`test/installed-grok-scheduler.test.mjs` 通过原版隔离安装：native catalog 的 id 与 next target、同间隔 prompt 更新保相位、拒绝项不改任务、冷重启恢复、**真实等待 60 秒首轮到期**、合法 schedule 源消息和原生 write 实际生成更新后的文件、next target 前移、列表/删除及一次性 native after 记录均核对。Pi 没有这些工具。测试同时确认独立子进程 `node --test` 真正执行并写出 marker，不受外层 Node runner 的递归跳过环境影响。未实测 Grok 原厂 durable/subagent scheduler，不宣称等价。
+`test/grok-schedule-transactions-native.test.mjs` 使用隔离原生宿主检查间隔修改、真实子任务请求、续跑、冷恢复、并发编辑、取消和七天到期。受控日期用来覆盖到期边界；派发、存储、原生 inbox 和子任务均为实际执行。既有 `test/grok-native-core.test.mjs` 保留真实时钟的分钟派发路径。两者使用本地合成 provider，不证明真实模型质量或 Grok 官方账号行为。
 
 ## 当前源码的文档与调度工具
 

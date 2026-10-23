@@ -35,3 +35,5 @@ ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记�
 Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md`、`docs/products/cursor.md` 和 `docs/product-sources.md`。共享接线维护在 `src/host/message-queue.mjs` 与 `src/client/preset-queue.jsx`，不要为各预设另存一份原生 inbox 或组件快照。
 
 Grok 随包转换引擎通过 `scripts/build-grok-documents.mjs` 构建，包含 `build-grok-codecs.mjs`。更新引擎必须同步精确开发依赖、锁文件、`src/presets/grok/codec-sources.json` 和其中指向的原始许可；输入哈希、版本、唯一 WASM 内存及最大页数在构建时核验。产品用法、来源与接线说明分别维护在现有 Grok 产品页、来源页和架构页。引擎仅在构建时打包，转换器运行时不得下载程序或绕过原生文件权限。
+
+Grok 调度事务使用版本锁定的宿主内部 FIFO 薄适配。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、兼容页、架构页与来源页。

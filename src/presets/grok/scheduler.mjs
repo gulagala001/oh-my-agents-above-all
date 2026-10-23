@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { withGrokScheduleTransaction, grokUpdatedTarget } from '../../host/grok-schedule-transaction.mjs';
 
 export const name = 'omaa-grok-scheduler';
 export const inject = ['tools', 'omaa', 'agents', 'sandboxPolicy', 'schedule'];
@@ -7,7 +8,7 @@ const base = './sources/crates/codegen/xai-grok-tools/src/implementations/grok_b
 const source = file => readFileSync(new URL(base + file, import.meta.url), 'utf8');
 const createDescription = source('create.rs').match(/format!\(\s*r#"([\s\S]*?)"#/)[1]
   .replace('Set fire_immediately: true to also fire once on creation; by default the first run waits for the interval.', 'Set fire_immediately: true for one immediate controlled first iteration of a newly created recurring task; otherwise the first run waits for the interval. It is ignored with task_id and refused for one-shot tasks.')
-  .replace('the schedule keeps its phase.', 'the schedule keeps its phase when the interval is unchanged. A changed interval is refused; delete and recreate the task when the user requests a new cadence.')
+  .replace('the schedule keeps its phase.', 'the schedule keeps its creation or last-fire anchor. If the revised target is already due, the next run starts one new interval after the update. Prompt-only changes preserve timing.')
   .replace('- Tasks auto-expire after {} days', '- Recurring Grok adapter dispatch expires after 7 days. Legacy ordinary native reminders retain their native lifecycle. Cross-session durable tasks are not supported.')
   .replace('- For one-time delayed work, run a background terminal command (e.g. `sleep 1800 && <command>`) instead; its completion notifies you', '- For one-time delayed work, set recurring: false to schedule a controlled one-shot Grok child.');
 const listDescription = source('list.rs').match(/fn description_template\(&self\) -> &str \{\s*"([^"]+)"/)[1];
@@ -261,8 +262,21 @@ function mountScheduler(ctx) {
             if (!result.record) throw new Error(result.message ?? result.code ?? 'Grok adapter update was not confirmed');
             return receipt(writeResult(result.record, result.updated), result.record);
           }
-          if (seconds !== undefined && (current.kind !== 'every' || seconds !== current.everySeconds)) throw new Error('Changing interval cannot preserve the native schedule phase; delete and recreate the task when the user requests a new cadence.');
           const { taskType: _type, sessionId: _binding, status: _status, lastDelivery: _delivery, ...expected } = current;
+          if (seconds !== undefined) {
+            if (!['every', 'after'].includes(current.kind)) throw Error('Interval edits require an interval or delayed task; use native calendar editing for calendar rules.');
+            const oldSeconds = current.everySeconds ?? current.afterSeconds;
+            const anchor = current.lastDelivery?.deliveredAt ?? new Date(Date.parse(current.scheduledAt) - oldSeconds * 1000).toISOString();
+            const result = await withGrokScheduleTransaction(ctx.schedule, { sessionId, id: current.id,
+              expected: { ...expected, sessionId, status: _status, ..._delivery === undefined ? {} : { lastDelivery: _delivery } }, signal, check }, async transaction => {
+              const scheduledAt = grokUpdatedTarget(anchor, seconds);
+              const record = { ...expected, scheduledAt, ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
+                ...(current.kind === 'every' ? { everySeconds: seconds } : { afterSeconds: seconds }) };
+              if (JSON.stringify(record) === JSON.stringify(expected)) return { updated: false, record: expected };
+              return { updated: true, record: await transaction.replace(record) };
+            });
+            return receipt(writeResult(result.record, result.updated), result.record);
+          }
           const result = await ctx.schedule.update({ sessionId, id: current.id, expected, ...(args.prompt === undefined ? {} : { prompt: args.prompt }) }, signal);
           if (!result.record) throw new Error(result.message ?? result.code ?? 'native schedule update failed');
           return receipt(writeResult(result.record, result.updated), result.record);

@@ -1,9 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { symbols } from '@deepseek-ai/cordis';
 import { createUserMessage, boundContextSummary } from '@deepseek-ai/dsh-llm';
 import { startActivation } from '../../host/subagents.mjs';
 import { GROK_SCHEDULE_HISTORY_LIMIT, GROK_SCHEDULE_RECORD_LIMIT, GROK_SCHEDULE_PROMPT_BYTES } from '../../host/grok-schedule-records.mjs';
 import { createGrokScheduleExpiry } from './schedule-expiry.mjs';
 import { createGrokCompletionReceipts } from './completion-receipts.mjs';
+import { withGrokScheduleTransaction, grokUpdatedTarget } from '../../host/grok-schedule-transaction.mjs';
 
 const PRESET = 'omaa-grok';
 const DAY = 86400_000;
@@ -11,11 +13,12 @@ const MAX_FRAME_BYTES = 512 * 1024;
 const MAX_CHILD_EVENTS = 4096;
 const MAX_CHILD_LOG_BYTES = 4 * 1024 * 1024;
 const FRESH_CHAIN_EVERY = 10;
-const utc = () => new Date().toISOString();
+const utc = () => new Date(Date.now()).toISOString();
 const reason = text => String(text).slice(0, 512);
 const instant = text => typeof text === 'string' && /^\d{4}-/.test(text)
   && Number.isFinite(Date.parse(text)) && new Date(Date.parse(text)).toISOString() === text;
 const markerFor = () => `[OMAA GROK DISPATCH ${randomUUID()}]\nThis is an adapter dispatch reference. It contains no task instructions. If the owning adapter is unavailable, report that scheduled dispatch is unavailable and do not infer a task.`;
+const scheduleIdentity = service => service?.[symbols.original] ?? service;
 const ownKeys = (row, names) => row && typeof row === 'object' && !Array.isArray(row)
   && Object.keys(row).sort().join(',') === [...names].sort().join(',');
 const validRow = row => ownKeys(row, ['schedule_id', 'occurrence_at', 'reminder_prompt'])
@@ -294,32 +297,34 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
   }
   const expiryEligible = owner => owner?.owningPreset === PRESET && owner.kind === 'every' && owner.expiresAt
     && !expiryPoisoned.has(owner.id) && (['ACTIVE', 'UNKNOWN'].includes(owner.status)
-      || owner.status === 'EXPIRED' && (!owner.expiryRemoval || owner.expiryRemoval.state === 'PENDING'));
+      || owner.status === 'EXPIRED' && (!owner.expiryRemoval || owner.expiryRemoval.state === 'PENDING'
+        || owner.expiryRemoval.state === 'FENCED' && owner.expiryRemoval.reason?.startsWith('Dispatch expired; native reminder retained because')));
   function expireOwner(id, signal) {
     const queued = serialize(id, async () => {
       const owner = records.get(id);
       if (closed || signal.aborted || !expiryEligible(owner) || Date.now() < Date.parse(owner.expiresAt)) return;
       const schedule = expirySchedule;
-      if (!schedule || ctx.get('schedule') !== schedule || typeof schedule.catalog !== 'function')
+      if (!schedule || scheduleIdentity(ctx.get('schedule')) !== schedule || typeof schedule.catalog !== 'function')
         throw Error('Native expiry catalog is unavailable.');
       const control = new AbortController();
       const pending = { control, schedule };
       expiryPending.add(pending); // Register before the catalog read can await.
       const guarded = AbortSignal.any([signal, control.signal]);
-      let intent = false;
+      let intent = false, expectedOwner = owner;
       const checkOwner = () => {
         guarded.throwIfAborted();
-        if (closed || expirySchedule !== schedule || ctx.get('schedule') !== schedule)
+        if (closed || expirySchedule !== schedule || scheduleIdentity(ctx.get('schedule')) !== schedule)
           throw Error('Native expiry service residency changed.');
-        if (records.get(id) !== owner || owner.revision !== records.get(id)?.revision
+        if (records.get(id) !== expectedOwner || owner.revision !== records.get(id)?.revision
           || owner.expiresAt !== records.get(id)?.expiresAt || Date.now() < Date.parse(owner.expiresAt))
           throw Error('The saved expiry owner or deadline changed.');
       };
       const fact = (state, extra = {}) => ({ state, id: owner.id, expiresAt: owner.expiresAt,
         ownerRevision: owner.revision, observedAt: utc(), ...extra });
-      const save = removal => {
+      const save = async removal => {
         intent = true;
-        return putOwner({ ...records.get(id), status: 'EXPIRED', expiryRemoval: removal });
+        expectedOwner = await putOwner({ ...records.get(id), status: 'EXPIRED', expiryRemoval: removal });
+        return expectedOwner;
       };
       try {
         if (Date.parse(owner.expiresAt) !== Date.parse(owner.createdAt) + 7 * DAY) {
@@ -337,17 +342,20 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
           await save(fact('FENCED', { reason: 'The native task binding or rule changed; its real reminder was retained.' }));
           return;
         }
-        // Fixed Schedule.delete compares only id/sessionId, not the observed
-        // marker or rule. A later edit can escape changed notification when an
-        // earlier observer throws; a second read or update CAS cannot lease
-        // the subsequent deletion. Expire dispatch, retaining the native row
-        // until an explicit reviewed deletion or a verified conditional API.
-        // Already accepted children and historical deletion receipts survive.
-        await save(fact('FENCED', { reason: 'Dispatch expired; native reminder retained because the public delete API cannot condition removal on the observed owner marker and rule. Explicitly review and delete the current reminder.' }));
+        // The condition and removal share Schedule's own FIFO slot with
+        // delivery, human edits and archive. No read-then-delete lease.
+        await withGrokScheduleTransaction(schedule, { sessionId: owner.sessionId, id, expected: native,
+          signal: guarded, check: checkOwner }, async transaction => {
+          await save(fact('PENDING'));
+          const receipt = await transaction.remove();
+          // A native committed notification may cancel the preparation signal.
+          // Its acknowledged result still owns this final persistence.
+          await save(fact('REMOVED', { receipt }));
+        });
       } catch (error) {
-        // A cancelled pre-intent read wrote nothing. An ambiguous owner-fence
-        // write remains unknown; this residency never attempted native delete.
-        if (!intent && (closed || signal.aborted || control.signal.aborted)) return;
+        // A comparison miss has no mutation; the changed notification arms a
+        // fresh read. Never turn it into a claim that a different row was deleted.
+        if (!intent && (error.code === 'schedule_conflict' || closed || signal.aborted || control.signal.aborted)) return;
         expiryPoisoned.add(id);
         try { await save(fact('UNKNOWN', { reason: reason(error?.message ?? 'Expiry owner-fence persistence is unknown.') })); }
         catch { ctx.logger.warn(`Grok schedule ${id}: expiry removal persistence is unknown; automatic cleanup stopped.`); }
@@ -596,7 +604,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
   // Independent expiry wakes without a parent/model activation. Optional native
   // Schedule residency controls eligibility; no other product gains a hard dep.
   expiry = createGrokScheduleExpiry(ctx, {
-    list: () => !closed && expirySchedule && ctx.get('schedule') === expirySchedule
+    list: () => !closed && expirySchedule && scheduleIdentity(ctx.get('schedule')) === expirySchedule
       ? records.list().filter(expiryEligible).map(owner => ({ id: owner.id, expiresAt: owner.expiresAt })) : [],
     expire: expireOwner,
   });
@@ -606,7 +614,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
   }, { global: true, prepend: true });
   const scheduleFiber = ctx.inject(['schedule'], scope => {
     if (closed) return;
-    const schedule = scope.schedule;
+    const schedule = scheduleIdentity(scope.schedule);
     expirySchedule = schedule;
     expiry.notify();
     scope.effect(() => () => {
@@ -628,7 +636,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
       // only this actual owned Schedule input; edited ordinary reminders still
       // follow the unowned path. Do not produce repeated parent-model notices.
       if (origin.kind === 'schedule' && owner.status === 'EXPIRED' && owner.expiresAt && Date.now() >= Date.parse(owner.expiresAt))
-        return 'skipped: dispatch expired; native reminder retained for explicit review';
+        return 'skipped: dispatch expired';
       let occurrence = { occurrenceAt, revision: origin.kind === 'scheduler-create' ? origin.createdOwner.revision : owner.revision, runtimeId,
         ...(origin.kind === 'schedule' ? { sourceKind: 'schedule', sourceMessageId: origin.message.id }
           : { sourceKind: 'scheduler-create', sourceCallId: origin.grant.callId, rootCallId: origin.grant.rootCallId }),
@@ -941,25 +949,67 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
       return serialize(id, async () => {
         const owner = requireOwner(agent, id); check(agent, currentPolicy);
         if (owner.status !== 'ACTIVE' || poisoned.has(id)) throw Error('This Grok task is fenced or has an unknown outcome.');
-        if (seconds !== undefined && seconds !== owner.seconds) throw Error('Changing cadence requires deleting and recreating the task.');
+        if (owner.expiresAt && Date.now() >= Date.parse(owner.expiresAt)) throw Error('The recurring task has expired.');
+        if (seconds !== undefined && (!Number.isSafeInteger(seconds) || seconds < 60 || !Number.isSafeInteger(seconds * 1000)))
+          throw Error('Scheduled interval is outside the native safe range.');
         if (prompt !== undefined && (typeof prompt !== 'string' || !prompt.trim() || Buffer.byteLength(prompt.trim()) > GROK_SCHEDULE_PROMPT_BYTES)) throw Error('Scheduled prompt is empty or exceeds the adapter bound.');
-        const native = await nativeRecord(agent, id); check(agent, currentPolicy); exec.signal.throwIfAborted();
+        const schedule = nativeSchedule(agent), native = await nativeRecord(agent, id);
+        check(agent, currentPolicy); exec.signal.throwIfAborted();
         if (!sameRule(owner, native) || native.status !== 'active') throw Error('The owned native schedule is inactive, absent or changed.');
-        const updated = prompt !== undefined && prompt.trim() !== owner.prompt;
-        if (updated) await putOwner({ ...owner, prompt: prompt.trim(), revision: owner.revision + 1 });
-        return { id, updated, record: publicRecord(records.get(id), native) };
+        let intent = false, expectedOwner = owner;
+        try {
+          return await withGrokScheduleTransaction(schedule, { sessionId: agent.id, id, expected: native, signal: exec.signal,
+            check() { check(agent, currentPolicy); if (records.get(id) !== expectedOwner) throw Error('Grok owner changed during update.'); } }, async transaction => {
+            const changedPrompt = prompt !== undefined && prompt.trim() !== owner.prompt;
+            const nextSeconds = seconds ?? owner.seconds;
+            // A timing update uses the last actual native dispatch, or the
+            // retained creation/update anchor when no later dispatch exists.
+            const anchors = [owner.phaseAnchorAt ?? new Date(Date.parse(owner.initialScheduledAt) - owner.seconds * 1000).toISOString(),
+              native.lastDelivery?.deliveredAt, ...owner.occurrences.filter(row => row.sourceKind === 'scheduler-create').map(row => row.occurrenceAt)].filter(Boolean);
+            const anchor = anchors.reduce((a, b) => a > b ? a : b);
+            const target = seconds === undefined ? native.scheduledAt : grokUpdatedTarget(anchor, nextSeconds);
+            const timingChanged = nextSeconds !== owner.seconds || target !== native.scheduledAt;
+            if (!changedPrompt && !timingChanged) return { id, updated: false, record: publicRecord(owner, native) };
+            const revision = owner.revision + 1;
+            if (!Number.isSafeInteger(revision)) throw Error('Grok schedule revision limit reached.');
+            const next = { ...owner, prompt: prompt?.trim() ?? owner.prompt, seconds: nextSeconds, revision,
+              ...(timingChanged ? { initialScheduledAt: target,
+                phaseAnchorAt: new Date(Date.parse(target) - nextSeconds * 1000).toISOString() } : {}),
+              // Cadence alone does not reset the original task transcript.
+              ...(!changedPrompt && owner.chain ? { chain: { ...owner.chain, revision } } : {}) };
+            intent = true;
+            expectedOwner = await putOwner({ ...owner, status: 'UNKNOWN', reason: 'Schedule update is pending; do not automatically retry.' });
+            let committed = native;
+            if (timingChanged) {
+              const { sessionId: _session, status: _status, lastDelivery: _delivery, ...record } = native;
+              committed = await transaction.replace({ ...record, scheduledAt: target,
+                ...(owner.kind === 'every' ? { everySeconds: nextSeconds } : { afterSeconds: nextSeconds }) });
+            } else transaction.check();
+            // Same native queue slot: a due delivery cannot overtake this owner.
+            expectedOwner = await putOwner(next);
+            return { id, updated: true, record: publicRecord(expectedOwner, committed) };
+          });
+        } catch (error) {
+          if (intent) { poisoned.add(id); throw Error('Grok schedule update has a partial or unknown outcome. Inspect its owner and native record; do not automatically retry. ' + reason(error.message)); }
+          throw error;
+        }
       });
     },
     async remove(exec, id) {
-      const agent = exec.agent; check(agent); exec.signal.throwIfAborted();
+      const agent = exec.agent, currentPolicy = check(agent); exec.signal.throwIfAborted();
       return serialize(id, async () => {
-        const owner = requireOwner(agent, id); check(agent); exec.signal.throwIfAborted();
-        await putOwner({ ...owner, status: 'DELETED', reason: 'Deleted through the owning adapter.' });
-        // Fixed Grok actor Delete removes only the future scheduler task
-        // (actor.rs:954-986). An already accepted child retains its native
-        // activation and terminal receipt; schedule deletion is not kill_task.
-        try { return await nativeSchedule(agent).delete({ sessionId: agent.id, id }, exec.signal); }
-        catch { throw Error(`Grok task ${id} is fenced, but native deletion is partial or unknown. Read native reminder state before retrying.`); }
+        const owner = requireOwner(agent, id), schedule = nativeSchedule(agent), native = await nativeRecord(agent, id);
+        check(agent, currentPolicy); exec.signal.throwIfAborted();
+        if (native && !sameRule(owner, native)) throw Error('Native reminder changed outside the Grok adapter; use native reminder management for its current contents.');
+        let expectedOwner = owner;
+        return withGrokScheduleTransaction(schedule, { sessionId: agent.id, id, expected: native, signal: exec.signal,
+          check() { check(agent, currentPolicy); if (records.get(id) !== expectedOwner) throw Error('Grok owner changed during deletion.'); } }, async transaction => {
+          expectedOwner = await putOwner({ ...owner, status: 'DELETED', reason: 'Deleted through the owning adapter.' });
+          // Fixed actor Delete leaves an accepted child and its receipt alive.
+          if (!transaction.current) return { id, deleted: false, code: 'schedule_not_found' };
+          try { return await transaction.remove(); }
+          catch { throw Error(`Grok task ${id} is fenced, but native deletion is partial or unknown. Read native reminder state before retrying.`); }
+        });
       });
     },
     async list(exec) {

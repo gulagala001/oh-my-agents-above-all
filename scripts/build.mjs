@@ -6,6 +6,7 @@ import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
 import { buildGrokQueue } from './build-grok-queue.mjs';
 import { buildGrokDocuments } from './build-grok-documents.mjs';
 import { buildCursorDiff } from './build-cursor-diff.mjs';
+import { verifyGrokScheduleImplementation } from '../src/host/grok-schedule-transaction.mjs';
 
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
@@ -19,6 +20,7 @@ import { buildZCodeProjectMemory } from './build-zcode-memory.mjs';
 import { buildZCodeAgentProfiles } from './build-zcode-agent-profiles.mjs';
 import { buildZCodeCalendarRule } from './build-zcode-calendar.mjs';
 
+verifyGrokScheduleImplementation();
 await buildPiPromptHelpers({ write: true });
 await buildGrokDocuments();
 await buildGrokQueue();

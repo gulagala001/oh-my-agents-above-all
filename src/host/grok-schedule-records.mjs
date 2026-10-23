@@ -48,7 +48,7 @@ const taskSchema = z.object({
   version: z.literal(1), id: identifier, sessionId: identifier, owningPreset: z.literal('omaa-grok'),
   marker: z.string().min(1).max(512), prompt: z.string().min(1).refine(value => Buffer.byteLength(value) <= GROK_SCHEDULE_PROMPT_BYTES),
   kind: z.enum(['every', 'after']), seconds: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
-  initialScheduledAt: instant, createdAt: instant, expiresAt: instant.optional(),
+  initialScheduledAt: instant, createdAt: instant, expiresAt: instant.optional(), phaseAnchorAt: instant.optional(),
   revision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
   status: z.enum(['ACTIVE', 'DELETED', 'FENCED', 'UNKNOWN', 'EXPIRED']), expiryRemoval: expiryRemoval.optional(),
   policyKey: z.string().min(1).max(8192), highWaterAt: instant.optional(),
@@ -56,6 +56,8 @@ const taskSchema = z.object({
     iterations: z.number().int().min(1).max(10), lastOccurrenceAt: instant, policyKey: z.string().min(1).max(8192) }).strict().optional(),
   occurrences: z.array(occurrence).max(GROK_SCHEDULE_HISTORY_LIMIT), reason: z.string().max(512).optional(),
 }).strict().superRefine((task, context) => {
+  if (task.phaseAnchorAt && Date.parse(task.phaseAnchorAt) + task.seconds * 1000 !== Date.parse(task.initialScheduledAt))
+    context.addIssue({ code: 'custom', path: ['phaseAnchorAt'], message: 'The saved cadence anchor must produce the initial target exactly.' });
   for (const [index, row] of task.occurrences.entries()) {
     const ref = row.completionRef;
     if (ref && (!row.childId || !row.runId || !row.endedAt || !['COMPLETED', 'FAILED'].includes(row.state)

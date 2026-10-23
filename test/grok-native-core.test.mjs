@@ -134,10 +134,12 @@ test('Grok native schedule receipts bind real immediate and timed children, cold
   assert.equal(updated.isError, false, updated.text); assert.equal(updated.value.updated, true);
   assert.equal((await catalog()).find(row => row.id === id).scheduledAt, first.scheduledAt);
   for (const [args, pattern] of [
-    [{ task_id: id, interval: '2h' }, /Changing cadence requires deleting and recreating/],
     [{ interval: '1h', prompt: 'No retarget', durable: true }, /Cross-session durable/],
     [{ interval: '1h', prompt: 'No undefined first fire', recurring: false, fire_immediately: true }, /requires a recurring task/],
   ]) { const denied = await call('scheduler_create', args); assert.equal(denied.isError, true); assert.match(denied.text, pattern); }
+  const cadence = await call('scheduler_create', { task_id: id, interval: '2h' });
+  assert.equal(cadence.isError, false, cadence.text);
+  assert.equal(Date.parse((await catalog()).find(row => row.id === id).scheduledAt) - Date.parse(first.scheduledAt), 3600000);
   assert.equal((await catalog()).length, 1);
   assert.equal((await call('scheduler_delete', { id })).value.success, true);
   assert.equal((await call('scheduler_delete', { id })).value.success, false);

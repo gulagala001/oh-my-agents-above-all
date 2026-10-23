@@ -729,7 +729,7 @@
     "Upstream disk memory and index generation",
     "Original binary conversion engine fidelity/admission outside the documented bounded adapters; no generic backend integration gate remains",
     "Grok subagent coordination beyond native host subagent",
-    "Cross-session durable retarget and interval changes preserving phase remain refused; native child identity/cadence, upstream durable tombstones and completion-output cap are not claimed equivalent. Immediate recurring dispatch, bounded continuation and independent seven-day expiry are implemented with explicit proof/fallback boundaries."
+    "Cross-session durable retarget remains refused; native child identity/cadence, upstream durable tombstones and completion-output cap are not claimed equivalent. Immediate recurring dispatch, bounded continuation and independent seven-day expiry are implemented with explicit proof/fallback boundaries."
   ],
   "adaptedPrompt": {
     "module": "prompt.mjs",
@@ -771,7 +771,7 @@
   "memoryDefault": "Experimental opt-in; config-types/src/memory.rs resolves legacy flag with default(false). v2 requires its own enabled gate. Neither default-on memory nor Dream is claimed.",
   "schedulerAdapter": {
     "module": "scheduler.mjs",
-    "sha256": "1006fbaab6f08272afda63b834a4bcf6f362d55ac37b5a914b9fc0abd60dee59",
+    "sha256": "aba4eb9e317dcac560c0467d42cfcc1edfb932d8c6a7e5c8f4a7ce3c1365cd4b",
     "source": [
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/create.rs",
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/list.rs",
@@ -780,30 +780,31 @@
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/types.rs",
       "crates/codegen/xai-grok-tools/src/implementations/grok_build/scheduler/actor.rs"
     ],
-    "hostIntegration": "Native Schedule owns reminders and delivery; owner sidecar admits controlled children. Existing internal host-only continuation remains explicit. Independent expiry fences dispatch only: fixed public delete has no expected-record CAS, so matching native rows are retained for explicit review instead of automatically deleted.",
+    "hostIntegration": "Native Schedule retains its own timer, FIFO, domain and inbox delivery. The rc.2 thin transaction adapter verifies the complete installed implementation and live method identities, then joins that same FIFO for phase-preserving updates and conditional expiry/deletion. Native and Grok-owner persistence are separate writes; uncertain outcomes stay fenced.",
     "adaptations": [
       "Fixed source interval format s/m/h/d and minimum 60 seconds retained; reject unsafe native integer ranges.",
       "Create recurring tasks with inert native marker plus exact owner row. Explicit fire_immediately:true admits one controlled initial child; default false. durable:true is refused before native creation. Both fields are ignored on update, matching source create-only semantics.",
-      "Same-cadence prompt updates retain native phase and start a fresh chain when text actually changes. Changed cadence is refused because the fixed native timing update cannot preserve the original anchor.",
+      "Interval updates preserve the creation or last-dispatch anchor; an already-due revised target is postponed by one full interval from update time, matching fixed actor.rs. Prompt-only edits keep the target and reset the next child transcript; cadence alone retains the chain.",
       "Original public create rejects hidden recurring:false despite legacy actor support; authorized host extension supplies native after_seconds, no recurring TTL, and explicitly refuses immediate one-shot execution.",
-      "Recurring deadline remains creation+7d. Expiry observes ABSENT or fences mismatched/current rows; matching rows become EXPIRED/FENCED and are retained because unconditional delete cannot preserve concurrent edits. Existing removal receipts and cold UNKNOWN facts remain historical; accepted children survive.",
+      "Recurring expiry remains creation+7d, including intervals longer than the TTL. Matching native records are conditionally removed in the native FIFO without activating the parent or terminating accepted children. A changed marker/rule is retained and fenced. Actual deletion receipts persist across restart; UNKNOWN outcomes are never automatically repeated.",
       "Successful proven chain iterations are 1 through 10, then fresh 1 with at most 600 Unicode-code-point summary plus ellipsis. Changed prompt/policy or missing durable transcript/interface proof starts a fresh or explicit fallback chain without unverified summary.",
       "DSH resumes the same child with a new run ID; source creates a new child with resume_from. The host-only continuation seam is not a public Service operation. Missing capability/proof falls back fresh; no claim of identity equivalence.",
       "Accepted inbox message ID is distinct from paired native end/targeted flush durability. Intent/high-water history is bounded; cold ambiguous outcomes are not automatically replayed.",
-      "Public native delete lacks expected-record CAS and native/owner storage lack a shared transaction. Cross-session authority/retarget remain unavailable. Completion_output_cap limits closing text in completion notices, not model generation. Caller delivery and proof-gated native continuation preview now use real parent inbox receipts and scheduler_output full readback. Verified cold local teardown-result disagreement now uses the complete tail-free native notice; captured status and failed lifecycle remain separate. Unverified receipt/barrier/store or unknown-format cases retain full notices; universal cap equivalence is not claimed.",
+      "Public native delete lacks expected-record CAS; the version-pinned internal FIFO seam supplies the missing comparison/write boundary. Native/owner storage still lack a cross-domain transaction and partial writes stay fenced. Cross-session authority/retarget remain unavailable. Completion_output_cap limits closing text in completion notices, not model generation. Caller delivery and proof-gated native continuation preview now use real parent inbox receipts and scheduler_output full readback. Verified cold local teardown-result disagreement now uses the complete tail-free native notice; captured status and failed lifecycle remain separate. Unverified receipt/barrier/store or unknown-format cases retain full notices; universal cap equivalence is not claimed.",
       "Listings use real catalog session binding/status, retain ordinary reminders, enforce 50 rows/24000 UTF-8 JSON bytes and label separate current reads. Native task controls outside adapter creation remain host-owned."
     ],
     "relatedModulesSha256": {
-      "src/presets/grok/schedule-runtime.mjs": "63e1fdda4655118384adb4d888ec99e1c4d534bcbfad693c072591f71a3380bc",
+      "src/presets/grok/schedule-runtime.mjs": "d79c8e4a905dcc1949c89ac0c48ff9c881cad270751c958222c292c719604d52",
       "src/presets/grok/schedule-expiry.mjs": "aefb4e9e3470ec0fd3bc792c25db4dbafffa2eff078ffe2f9b8435fc6c7ba491",
-      "src/host/grok-schedule-records.mjs": "26c8072ff4bf8cab43dede1a2976b69381e8a3208def38c0a94a676c92a5373d",
+      "src/host/grok-schedule-records.mjs": "67cd6deaa245f3760df4d98daaeae99892249af833121d5132c96656a062da4b",
       "src/presets/grok/completion-preview.mjs": "9e4c406f1a7d79afab67b17e46c4369eafe24d9ef6666aa50dcf17530c874f11",
       "src/presets/grok/completion-receipts.mjs": "90bb6cf613edf746df72745645f3fbb28d15ebcada313bfe8e6121637961cf8e",
-      "src/preset-agent.mjs": "606ef7ed63edd39ab84c5357a252bfa2fc0872db4813cce835481c38b4c0e7ff"
+      "src/preset-agent.mjs": "f009131af1404f0a111c230b6a94b950e3a5445fb7d3ffca420f28c3fbb7dafe",
+      "src/host/grok-schedule-transaction.mjs": "469931f846a838489307826cac09bdf2a486aa6ca56e1c985617a743babecd39"
     },
     "historicalVerificationReferences": [
-      "test/installed-grok-scheduler.test.mjs: actual original CLI package install, native CRUD and catalog, same-interval prompt update keeps exact target, explicit unsupported-field refusal without mutation, cold restart preserves identity/target, real60s due reminder invokes native write with updated prompt, valid schedule source, native next target advances, delete removes task, native one-shot record, Pi excludes scheduler tools, child node --test executes its marker",
-      "test/grok-scheduler.test.mjs: original interval minimum/invalid/overflow and concurrent50-task cap"
+      "test/grok-scheduler.test.mjs: original interval minimum/invalid/overflow and concurrent50-task cap",
+      "test/grok-native-core.test.mjs: unchanged-policy real-time native scheduled children and continuation; test/grok-schedule-transactions-native.test.mjs: actual native FIFO edits, phase changes, expiry receipts, cancellation and cold restart with an isolated date clock. Local synthetic provider, not external model inference."
     ],
     "verification": [],
     "continuationCompatibility": {
@@ -818,6 +819,22 @@
       "onMissingCapability": "Existing fresh-fallback with native-host-continuation-unavailable; no unverified summary, fabricated user/Agent source or direct manager access.",
       "currentStageRuntimeValidationCount": 0,
       "installedArtifactBinding": "Installed version/exports/body hashes checked locally; these packaging/loader artifacts were not freshly bound to the fixed Git commit."
+    },
+    "transactionCompatibility": {
+      "package": "@deepseek-ai/dsh-schedule",
+      "version": "0.2.1-rc.2",
+      "entry": "lib/index.js",
+      "implementationSha256": "022b9f191b6ca0f4b0f26625afc49f375933068a42712c0a75e94e439d7e6d0e",
+      "boundary": "Internal ScheduleService FIFO and task-domain handle; no service replacement, runtime patch, second timer or external RPC exposure.",
+      "methods": {
+        "serialize": "362d29c3e09968e85a5f8566cf7cdaa577f678461a505b4006dd64d7b4ced13b",
+        "getDomain": "95b84cb951e68c09ccdc29158b0e98542c9327058c6c073eca562498b37b1172",
+        "reminderTargetRefusal": "a3332f81eecff60c5b2508c09d409e52eb845362c9f3f852bb37b1fe117ed669",
+        "emitChanged": "a4950eeda82647a365df717e62e4dc4841dfb340730a06736801f61491fe8e43",
+        "update": "3c104e948abd60844c8cbfd703ddc24f4e5456ffa5bec6b84fe15ea0c57f2b37",
+        "delete": "86f10dd843958916cfb163a7afa701b981ac6c93b69c9bdd19c8a06c7022efa3"
+      },
+      "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check."
     }
   },
   "sourceVersionDefault": "1.0.45",
