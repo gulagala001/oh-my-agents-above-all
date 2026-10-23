@@ -1,4 +1,5 @@
 import { foldSurface } from '@deepseek-ai/dsh-session';
+import { boundaryRecord, chainEntries } from './extensions/boundaries.mjs';
 
 // This is a read-only DSH message view, not another Pi SessionManager or tree.
 export async function piHistoryEntries(events, { content, argumentsFor, selected, projectedMessages, signal }) {
@@ -26,6 +27,7 @@ export async function piHistoryEntries(events, { content, argumentsFor, selected
   const ordered = selected ? selected.map(seq => bySeq.get(seq)) : events;
   for (const event of ordered) {
     signal?.throwIfAborted();
+    if (event.type === boundaryRecord) { entries.push(...event.data.entries); continue; }
     if (event.type === 'plugin:omaa/pi-entry') {
       entries.push({ type: 'custom', id: String(event.seq), parentId: entries.at(-1)?.id ?? null,
         timestamp: new Date(event.time).toISOString(), ...event.data });
@@ -33,6 +35,7 @@ export async function piHistoryEntries(events, { content, argumentsFor, selected
     }
     if (!['user/message', 'assistant/message', 'tool/result'].includes(event.type)) continue;
     const source = projectedMessages?.get(event.seq) ?? event.data.message ?? event.data;
+    if (source.source?.piBoundaryEntryId || source.source?.piContinuation) continue;
     const blocks = [];
     for (const part of source.content ?? []) {
       if (part.type === 'text' || part.type === 'image') blocks.push(...(await content([part], signal)).map(value => ({ ...part, ...value })));
@@ -71,7 +74,7 @@ export async function piHistoryEntries(events, { content, argumentsFor, selected
     entries.push({ type: 'message', id: String(event.seq), parentId: entries.at(-1)?.id ?? null,
       timestamp: new Date(event.time).toISOString(), message });
   }
-  return entries;
+  return chainEntries(entries);
 }
 
 export async function readPiHistory(query, sessionId, { projections = [], ...options }) {
@@ -91,7 +94,7 @@ export async function readPiHistory(query, sessionId, { projections = [], ...opt
     const adapted = { ...options, content };
     const entries = await piHistoryEntries(events, adapted);
     const branch = await piHistoryEntries(events, { ...adapted,
-      selected: [...surface.nodes, ...events.filter(event => event.type === 'plugin:omaa/pi-entry').map(event => event.seq)].sort((a, b) => a - b),
+      selected: [...surface.nodes, ...events.filter(event => event.type === 'plugin:omaa/pi-entry' || event.type === boundaryRecord).map(event => event.seq)].sort((a, b) => a - b),
       projectedMessages: surface.projectedMessages });
     options.signal?.throwIfAborted();
     return { entries, branch, header: { ...observation.header }, cursor: observation.cursor };

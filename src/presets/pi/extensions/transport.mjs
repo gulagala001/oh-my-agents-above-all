@@ -127,7 +127,7 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
   return {
     get stopped() { return stopped; },
     close,
-    async call(request, { context, signal: caller, timeoutMs = 120000, onUpdate } = {}) {
+    async call(request, { context, signal: caller, timeoutMs = 120000, onUpdate, onCancel } = {}) {
       const deadline = AbortSignal.timeout(timeoutMs), fused = AbortSignal.any([life.signal, deadline, ...caller ? [caller] : []]);
       fused.throwIfAborted();
       const id = randomUUID();
@@ -136,7 +136,10 @@ export async function startGuest({ subprocess, sandbox, policy, cwd, signal, api
         pending.set(id, { resolve, reject, context, signal: fused, onUpdate });
         abort = () => {
           try { send({ type: 'cancel', id }); } catch {}
-          const drain = close();
+          // An active callback may publish its read-only cancelled
+          // settlement before the guest is terminated. This is bounded by the
+          // caller; cancellation still revokes this invocation immediately.
+          const drain = Promise.resolve().then(() => onCancel?.()).catch(() => {}).then(close);
           if (apiContext.getStore()?.active) { void drain.catch(() => {}); reject(fused.reason); }
           else void drain.then(() => reject(fused.reason), reject);
         };

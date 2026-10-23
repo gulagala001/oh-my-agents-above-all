@@ -12,7 +12,7 @@
 | read 的程序化 `structuredContent`、MCP tool pattern 与默认工具 modifiers | 来源保留；工具返回值、MCP 和工具选择继续按 DSH 已实现契约，不宣称原厂 codemode parity。 |
 | 完整只读消息历史 | 使用同一个原生不可变观察，提供原始消息与当前投影消息；保留长文本、图片和工具配对。 |
 | 可编辑 `context` / `context_with_system` | 在每次原生请求冻结前串行等待，支持完整消息投影、系统分段和工具声明；修改仅作用于本次请求。 |
-| `turn_end` / `agent_before_settle` | 完整草稿事务、继续决定和 settle 生命周期仍未接通，不由上下文回调推定完成。 |
+| `turn_end` / `agent_before_settle` | 已接入串行草稿预览、整批持久提交、上下文删改与压缩、继续决定及最终 settled；原厂树导航与压缩控制回调仍待接入。 |
 
 ## 生效文本
 
@@ -50,7 +50,7 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 
 源码已接入的范围：
 
-- 加载阶段及活动回调内的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`before_agent_start`、`agent_start`、`turn_start`、`agent_end`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`、`context` 和 `context_with_system`。斜杠命令注册在当前 Pi 的原生命令服务中；活动回调中的动态变更等待宿主 ACK 后完成；同一文件同名工具或命令替换，跨文件同名取第一个扩展。订阅返回的取消函数也可在活动回调内使用。注册表通过原生工具和命令服务更新，已经发出的模型请求不追改；新声明、snippets 和 guidelines 在下一次原生装配中生效，before_agent_start 内的变更可进入尚未发出的首个请求。宿主拒绝某次变更时恢复上一份已接纳定义，发起回调明确失败。
+- 加载阶段及活动回调内的 `registerTool`、`registerCommand` 和 `on`，以及 `input`、`before_agent_start`、`agent_start`、`turn_start`、`turn_end`、`agent_end`、`agent_before_settle`、`agent_settled`、`message_start/update/end`、`tool_execution_start/update/end`、`tool_call`、`tool_result`、`session_start`、`session_shutdown`、`context` 和 `context_with_system`。斜杠命令注册在当前 Pi 的原生命令服务中；活动回调中的动态变更等待宿主 ACK 后完成；同一文件同名工具或命令替换，跨文件同名取第一个扩展。订阅返回的取消函数也可在活动回调内使用。注册表通过原生工具和命令服务更新，已经发出的模型请求不追改；新声明、snippets 和 guidelines 在下一次原生装配中生效，before_agent_start 内的变更可进入尚未发出的首个请求。宿主拒绝某次变更时恢复上一份已接纳定义，发起回调明确失败。
 - TypeBox typed schema 与普通 JSON Schema 的工具参数使用固定上游的完整 `validateToolArguments` 校验，保留其转换和错误行为；validator 原文和来源由 `source.json` 维护，不导入 Pi 模型或代理运行时。
 - `input` 支持异步 continue/handled/transform，保留原生消息身份和附件；`tool_call` 可阻止工具，不能改写已经入账的工具参数或模拟整批 terminate。`tool_result` 可替换受支持的 text/image 内容，不任意改写错误状态、details 或 structuredContent。
 - `ctx.ui.select`、`confirm`、`input` 接入原生 userQuestions；`notify` 经活动 Pi 输入区的原生通知展示，按会话 cursor/ID 去重，未启用扩展时暂停读取，不伪造 assistant 消息。
@@ -63,19 +63,19 @@ guest 只由 DSH 的原生 `subprocess` 启动并按当前 `sandboxPolicy` / `sa
 
 消息沿用 DSH 过程分组，可随原生过程折叠；位置不等同原版 TUI 的独立消息行。Event 的 match 使用 rc.2 与 alpha.1 共用的函数形式，因为 rc.2 不支持 alpha 的 match table。该展示复用于 `before_agent_start` 和 `sendMessage` 已接纳的消息；不支持 `registerMessageRenderer` / 自定义 TUI 组件。原版 renderer 可获得完整 message、expanded/outputPad 和 theme，返回自有组件或回退默认展示；此接口没有移植。已在一个隔离的原生 alpha Web 会话中实际展开过程，核对类型标签、Markdown 标题/列表/代码、隐藏材料不显示，以及明暗主题切换。实际 provider 请求与原生事件仍保留隐藏文本和图片附件。桌面 rc.2 已只读核对同一事件与 renderer 接口，不据此宣称完整桌面或 Windows UI 验收。
 
-OMAA 0.12.0 增加串行等待的 `agent_start`、`turn_start` 与 `agent_end` 通知，普通 handler 异常报告后继续后续 handler。`agent_start` 仅含 type；`turn_start` 含从 0 开始的 turnIndex 和分发时 timestamp；`agent_end` 含 messages。适配按 DSH 实际 activity 与请求 step 工作，一个 step 包含一次 provider response 及其工具批次，不能把原生用户 turn 当作 Pi turn。开始通知中的工具注册和 active tools 修改在发出模型请求前重新装配并进入原生 guard；原生 journal 的 `turn/end` 先提交，idle 观察同步预占 `runMaintenance` 执行结束通知，原生 `whenIdle` 和 teardown 等待它。结束通知单独续投保持已接纳活动的 force；维护等待期间新的人工输入开启自己的 before_agent_start/force。原版低层 prompt/continue run、自动 retry 与 pre-settle 边界仍有差异，不宣称完全等价。
+OMAA 0.12.0 增加串行等待的 `agent_start`、`turn_start` 与 `agent_end` 通知，普通 handler 异常报告后继续后续 handler。`agent_start` 仅含 type；`turn_start` 含从 0 开始的 turnIndex 和分发时 timestamp；`agent_end` 含 messages。适配按 DSH 实际 activity 与请求 step 工作，一个 step 包含一次 provider response 及其工具批次，不能把原生用户 turn 当作 Pi turn。开始通知中的工具注册和 active tools 修改在发出模型请求前重新装配并进入原生 guard；接入新边界事件的扩展在原生 turn 停止前串行完成结束与收尾，界面维持运行状态并可停止；仅订阅旧通知的扩展保留 idle 预占 `runMaintenance` 路径。原生 `whenIdle` 和 teardown 等待对应回调。结束通知单独续投保持已接纳活动的 force；维护等待期间新的人工输入开启自己的 before_agent_start/force。原版低层 prompt/continue run、自动 retry 与 pre-settle 边界仍有差异，不宣称完全等价。
 
 结束通知的 messages 来自当前 scope 实际 append-origin user/assistant/tool-result 消息，保留完整 text/image/toolCall/thinking；原生专有块保留原有结构，图片经原生附件服务转换。Pi replay 有原始 api/stopReason 时沿用，否则按原生 finish reason 映射；native usage 保留并提供对应 token 字段，不猜费用，不声称 Pi SDK 成本或全部签名完全一致。
 
 `ctx.sessionManager.getEntries()` 读取当前会话原始日志中的全部已支持消息及 `appendEntry` 自定义条目，`getBranch()` 读取同一个不可变观察的当前投影，遵循宿主的替换、删除及注册投影顺序。二者取消原有 100 条消息和每条 4000 字符截断，保留完整文本、thinking、真实附件图片、原生专有块及工具身份；`argumentsRaw` 保留原始工具参数字符串，避免将 JavaScript 数值精度当作原话。getter 返回独立副本，回调中的修改不能写回宿主。日志仅由原生服务维护，重启后仍从原生日志和附件恢复。这个视图覆盖 DSH user/assistant/tool-result 消息及 Pi 自定义条目，不包括原厂 Pi 的全部 JSONL entry、可写 SessionManager 或独立分支树；传输总量仍受下文 128 MiB 限制，超过时明确失败。
 
-用户取消后的结束通知暴露已 aborted 的 `ctx.signal`；宿主拒绝 `exec`、`executeTool`、`sendUserMessage` 和 UI 问答续跑，通知与只读查询仍可用。disposed 不新建结束 maintenance。这个停止限制属于 OMAA 原生适配，原版上述事件本身未定义这一停止通知信号与 API 禁止组合。可编辑 `turn_end` / `agent_before_settle` 仍明确不支持；原版二者可替换 drafts、预览已投影上下文并请求下一 provider response，不能由这三个通知推定已实现。
+用户取消后的结束通知暴露已 aborted 的 `ctx.signal`；宿主拒绝 `exec`、`executeTool`、`sendUserMessage` 和 UI 问答续跑，通知与只读查询仍可用。disposed 不新建结束 maintenance。这个停止限制属于 OMAA 原生适配，原版上述事件本身未定义这一停止通知信号与 API 禁止组合。可编辑 `turn_end` / `agent_before_settle` 现在使用下文的草稿协议；取消时不提交未确认草稿，也不由扩展重新唤醒任务。回调等待期间的取消先尝试在一秒内通知 `agent_settled(aborted:true)`，随后终止原 guest；阻塞进程本身的扩展不能保证收到通知。
 
 双向 guest 传输通过 `extensions/wire.mjs` 严格分帧重组，完整 JSON 消息上限 128 MiB，每个 JSONL frame 上限 2 MiB；2 MiB 是 frame 预算，不是完整事件预算。序号、字节数、base64、UTF-8 和完整性检查失败会明确拒绝，不截断内容；注册描述仍有单独预算。
 
 完整 force 经 DSH 原生 journal 和 `startsRequestSeries` 首条系统消息归一化进入实际请求；原版 Pi force 仅作请求投影、不记入 transcript，两者记录语义不同。
 
-尚不支持可编辑 `turn_end` / `agent_before_settle` 草稿事务、完整 settled/消息流事件、自定义 TUI/组件渲染、写入/切换原厂 JSONL 树及扩展压缩。工具的 `prepareArguments`、`prepareLoadout.hiddenDeclarations`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；guest 收到的部分更新不被伪造成 DSH 日志或流式结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是完整的已支持原生消息视图，不等于完整 Pi SessionManager。
+尚不支持自定义 TUI/组件渲染、写入/切换原厂 JSONL 树、`session_before_compact` / `session_before_tree` 控制以及这些操作与原厂树语义的完整联动。边界中的 `compaction` 草稿已经可用。工具的 `prepareArguments`、`prepareLoadout.hiddenDeclarations`、`constrainedSampling` / `renderShell`、未接入的 exposure、`sendUserMessage` 的扩展命令/技能分派、额外自定义 AbortSignal 和嵌套工具的 onUpdate 等接口明确拒绝；扩展工具的部分更新发送 `tool_execution_update` 通知，不伪造成 DSH 日志或原生流式工具结果。其余未接入 API 也报不支持，不做空壳成功。现有只读 sessionManager 是完整的已支持原生消息视图，不等于完整 Pi SessionManager。
 
 OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已通过。before_agent_start 与异步输入链从 0.10.0 起提供，旧版本安装不包含它们。它不代表任意 Pi 扩展、完整 TUI、依赖安装或原厂运行时均可直接使用；旧安装包也不能由本文推定已经包含这些入口。
 
@@ -91,7 +91,17 @@ OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已�
 
 `pi.appendEntry(customType, data)` 保存不进入模型上下文的插件自定义条目，后续回调与冷恢复可通过 `ctx.sessionManager.getEntries()` / `getBranch()` 读取。当前桥接可 `await pi.appendEntry(...)` 等待宿主确认并刷新当前回调快照；不等待时，回调结束前仍会排空已发出的写入，但同步 getter 可能仍看到之前的快照。条目与待投递消息使用 DSH 的 `appendPluginRecord`，不写未知必需事件；其他宿主读取器保留并跳过这些记录，格式迁移遵循宿主对插件记录的保留规则。
 
-宿主接线锁定 DSH `0.2.1-rc.2` 的实际模块与方法哈希，仅在 Pi Agent 实例安装由原生源码生成的 `step` / `buildRequest` 薄适配。工具调度、流、重试、inbox、会话及权限沿用同一原生实例；不改变其他预设或共享服务。构建校验来源与适配点，运行时再核对实际方法，未匹配宿主拒绝加载。`turn_end` / settle 草稿、分支树与扩展压缩仍是独立未完成范围。
+宿主接线锁定 DSH `0.2.1-rc.2` 的实际模块与方法哈希，仅在 Pi Agent 实例安装由原生源码生成的 `step` / `buildRequest` / `turn` 薄适配。工具调度、流、重试、inbox、会话及权限沿用同一原生实例；不改变其他预设或共享服务。构建校验来源与适配点，运行时再核对实际方法，未匹配宿主拒绝加载。原厂分支树导航、扩展压缩控制回调及其与原生压缩的完整协调仍是独立未完成范围。
+
+`turn_end` 在实际 assistant 回复及整批工具结果入账后触发，包含 `messageEntryId`、`toolResultEntryIds` 和从零开始的 `turnIndex`。`agent_before_settle` 在原生运行停止前触发；`agent_end` 回调中新排队的输入先执行完，再进入最终收尾。只有没有后续输入／继续请求时才发送 `agent_settled`，取消带 `aborted:true`。这些新增边界沿原生取消信号等待，设置和停止入口仍可反映活动状态。
+
+两个边界按固定 runner 的顺序传递 `{ entries, continue, context, outcome }`。后续 handler 可以看到前序草稿投影，也可返回整份替代草稿。`context` 包含 `contextEntries`、`contextMessages`、`llmMessages`、`pendingMessages` 和 `canContinue`。支持四类草稿：`custom` 保存状态、`custom_message` 追加可见／隐藏消息、`context_edit` 以 `{ content }` 改写或用 `null` 移除本分支条目的模型内容、`compaction` 保存 summary 并从 `firstKeptEntryId` 保留后缀（`null` 仅保留摘要及后续条目）。继续决定必须有可运行上下文，不能从单独 assistant 末尾空转。
+
+例如，扩展可以在 `turn_end` 返回 `{ entries: [{ type: 'custom_message', customType: 'review', content: '请继续处理尚未完成的检查。', display: true }], continue: true }`。实际扩展须以持久状态或上下文条件控制这一分支，避免每回合无条件重复。
+
+最终草稿经完整投影和工具配对校验后，以单个原生 `plugin:omaa/pi-boundary` 记录保存。原始消息保留；Pi 的后续请求先应用持久草稿，再运行临时 context 回调。可见消息用已有 Pi 默认组件展示，原生消息 ID 是展示回执，部分展示写入失败后只补缺失回执。无效最终批次和提交前取消都不提交草稿。原厂 `session-manager.ts` 的纯投影函数及 `messages.ts` 转换函数由固定源码直接生成，未启动另一套 SessionManager 或文件日志。最新系统提示与工具声明继续由宿主装配；未修改的图片、卸载标记和消息身份保留。后来的原生 checkpoint 优先于已吸收的旧草稿；原生 `/compact` 的完整扩展控制与投影材料协调仍属下一项接线。
+
+`message_start/update/end` 读取原生消息与真实流块，提供文本、思考及工具调用的开始／增量／结束通知；`tool_execution_start/end` 围绕原生工具执行并报告实际经过的毫秒数，扩展工具 `onUpdate` 进入 `tool_execution_update`。通知 handler 的异常会报告后继续后续 handler，原生工具权限与最终结果仍由宿主管理。当前新增边界已用隔离 rc.2 和本地协议响应验证工具、草稿、续跑、系统更新、冷恢复与取消；没有据此推定外部模型质量或其他平台已验。
 
 ## 行为与宿主边界
 
@@ -103,7 +113,7 @@ OMAA 0.5 已包含此扩展入口及动态注册，隔离原生执行检查已�
 | Extensions 有 input、before_agent_start、context/context_with_system、工具拦截及可请求继续的生命周期事件；before_agent_start 支持结构化系统选项。 | 源码已有显式本地 factory/回调桥，接入工具、commands、input/before_agent_start/agent_start/turn_start/agent_end/tool_call/tool_result 与启动/关闭事件。before_agent_start 的可变选项、串行回调、自定义消息及 force 复用原生请求和入账；context 已接入每次请求前的临时投影，自定义 TUI 未接入；不运行完整 Pi 代理或把任意 Pi npm 包当作 DSH 插件。实际接线检查范围见本文核验记录。 |
 | context_with_system 要求首个系统消息位置不变；sections 支持增量更新。 | 宿主系统消息/事件记录负责，before_agent_start 改动进入原生装配；完整 force 使用原生 journal 与请求序列首条归一化。context_with_system 可以修改完整请求；系统 sections 使用固定原厂 helper 折叠，原生日志保留原文。 |
 | 常规压缩保留约 20000 最近 token，预留 16384，支持 summary/update、分支摘要和被切开的回合前缀摘要；文件读/改路径单独跟踪。 | `buildCompactionPrompt()` 提供完整常规 SUMMARIZATION_PROMPT。主集成仅替换原生摘要请求最后用户指令；实际阈值、保留尾部和工具配对由 DSH 管理，不声称沿用 Pi 数值。 |
-| 不完整 length/error 摘要拒绝持久化；compaction 取消或失败不应提交半份 checkpoint。 | 常规压缩依赖原生 DSH 事务；可选离开分支摘要失败、取消或未完整生成时拒绝创建新分支。未移植 Pi JSONL 树存储、扩展自定义压缩或原厂队列恢复。 |
+| 不完整 length/error 摘要拒绝持久化；compaction 取消或失败不应提交半份 checkpoint。 | 常规压缩依赖原生 DSH 事务；可选离开分支摘要失败、取消或未完整生成时拒绝创建新分支。边界 compaction 草稿已接入；未移植 Pi JSONL 树存储、压缩控制回调或原厂队列恢复。 |
 
 以上有源码依据的行为材料完整保留在 `sources/packages/agent/`、`sources/packages/coding-agent/src/core/` 与官方 docs 快照。常规摘要导出逐字提取原始 `SUMMARIZATION_PROMPT`，不混入 UPDATE_SUMMARIZATION_PROMPT 或分支摘要；Pi 摘要专用系统句子保留在 utils.ts 来源，原生 DSH 的摘要请求身份与消息装配仍由宿主负责。
 

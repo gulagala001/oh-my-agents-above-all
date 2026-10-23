@@ -4,7 +4,7 @@ import { currentSystem } from './context.mjs';
 
 export { Type };
 export const callbackContext = new AsyncLocalStorage();
-export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'agent_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown', 'context', 'context_with_system']);
+export const supportedEvents = new Set(['input', 'before_agent_start', 'agent_start', 'turn_start', 'turn_end', 'agent_end', 'agent_before_settle', 'agent_settled', 'message_start', 'message_update', 'message_end', 'tool_execution_start', 'tool_execution_update', 'tool_execution_end', 'tool_call', 'tool_result', 'session_start', 'session_shutdown', 'context', 'context_with_system']);
 
 // Pure helpers from Pi cd32f77 extensions/types.ts and ai/typebox-helpers.ts.
 export const defineTool = tool => tool;

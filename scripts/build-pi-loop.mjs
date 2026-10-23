@@ -18,6 +18,18 @@ export async function buildPiLoop() {
     if (hash(await readFile(root + 'src/presets/pi/' + file.snapshot)) !== file.sha256) throw Error('Pi context source changed: ' + file.snapshot);
   }
   await mkdir(root + 'lib', { recursive: true });
+  const managerPath = 'sources/packages/coding-agent/src/core/session-manager.ts';
+  const messagesPath = 'sources/packages/coding-agent/src/core/messages.ts';
+  for (const snapshot of [managerPath, messagesPath]) {
+    const file = sources.files.find(file => file.snapshot === snapshot);
+    if (!file || hash(await readFile(root + 'src/presets/pi/' + snapshot)) !== file.sha256) throw Error('Pi boundary source changed: ' + snapshot);
+  }
+  const manager = await readFile(root + 'src/presets/pi/' + managerPath, 'utf8');
+  const projection = manager.slice(manager.indexOf('function buildEntryIndex('), manager.indexOf('/** Build the finalized model context'));
+  await build({ stdin: { contents: `import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from './messages.ts';\nexport { convertToLlm } from './messages.ts';\n` + projection,
+    loader: 'ts', resolveDir: root + 'src/presets/pi/sources/packages/coding-agent/src/core' },
+    outfile: root + 'lib/pi-session-projection.mjs', bundle: true, platform: 'node', format: 'esm',
+    banner: { js: '// Derived from the pinned Pi session-manager.ts and messages.ts.\n/*\n' + piLicense.trimEnd() + '\n*/' } });
   await build({ stdin: { contents: `export { getCurrentSystemMessage, collapseSystemMessages } from './src/presets/pi/sources/npm-pi-ai/utils/transcript.js';
     export { getSystemMessageText } from './src/presets/pi/sources/npm-pi-ai/utils/text.js';`, resolveDir: root },
     outfile: root + 'lib/pi-context-helpers.mjs', bundle: true, platform: 'node', format: 'esm',
@@ -43,6 +55,10 @@ export async function buildPiLoop() {
     return text.replace(before, after);
   };
   methods.step = replace(methods.step, 'const request = this.buildRequest(', 'const request = await this.buildRequest(');
+  methods.step = replace(methods.step, 'live.start();', 'live.start();\n await this[piRequestHook].stream?.("start", live, request, signal);');
+  methods.step = replace(methods.step, 'live.push(chunk);', 'live.push(chunk);\n await this[piRequestHook].stream?.("chunk", live, request, signal, chunk);');
+  methods.step = replace(methods.step, 'if (finish.kind === "max-tokens")', 'await this[piRequestHook].messages?.(signal);\n if (finish.kind === "max-tokens")');
+  methods.turn = replace(methods.turn, 'if (!this.inbox.hasPending) return false;', 'await this[piRequestHook].settle?.(signal);\n signal.throwIfAborted();\n if (!this.inbox.hasPending) return false;');
   methods.buildRequest = 'async ' + methods.buildRequest;
   methods.buildRequest = replace(methods.buildRequest, 'const header = canonicalHeader(', 'let header = canonicalHeader(');
   methods.buildRequest = replace(methods.buildRequest, 'deepFreeze(header);\n\t\tconst boundaryMessages = session.deriveMessages();', `let boundaryMessages = session.deriveMessages();
@@ -59,11 +75,11 @@ export async function buildPiLoop() {
     deepFreeze(header); deepFreeze(toolHistory);`);
   methods.buildRequest = replace(methods.buildRequest, 'toolHistory: session.toolHistory(),', 'toolHistory,');
   // Keep the pinned native stream framing, error recovery and tool dispatcher.
-  // Only two methods are installed on an already-owned Pi Agent; no service,
+  // Only three methods are installed on an already-owned Pi Agent; no service,
   // second driver, provider, inbox or journal is instantiated from this code.
   const prefix = source.slice(0, source.indexOf('//#region')) + source.slice(source.indexOf('//#region lib/types/assistant-stream.js'), source.indexOf('var ReactLoopAgent = class'));
   const adapted = prefix + `\nconst piRequestHook = Symbol.for('omaa.pi.request-hook');
-    const methods = { ${methods.step}, ${methods.buildRequest} };
+    const methods = { ${methods.step}, ${methods.buildRequest}, ${methods.turn} };
     export { methods, piRequestHook };`;
   const result = await build({ stdin: { contents: adapted, resolveDir: root, sourcefile: 'pi-native-loop.js' },
     bundle: true, write: false, format: 'esm', platform: 'node', packages: 'external', minifySyntax: true, target: 'node22' });

@@ -30,4 +30,4 @@ Grok 文档转换保留固定官方页码、PPTX 提取和图片压缩行为，P
 
 Grok 调度修改与到期语义来自已保存的 `scheduler/actor.rs` 和 `scheduler/types.rs`。宿主事务薄适配锁定 `@deepseek-ai/dsh-schedule@0.2.1-rc.2` 的实际 npm 模块及方法哈希，登记于既有 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility`。`scripts/build.mjs` 和运行时均校验该边界；升级必须核对原生队列、存储、派发和停止契约，不能把内部 FIFO 当作通用公开 API。
 
-Pi 请求投影复用固定 `@earendil-works/pi-ai@1.1.0` 的 transcript/text 原文；原生请求边界从 `@deepseek-ai/dsh-agent-loop@0.2.1-rc.2` 提取，来源、方法、许可哈希见既有 `src/presets/pi/source.json`。构建与运行时核对固定实现，仅修改 Pi 实例上的等待边界，具体范围见 [Pi 用法](products/pi.md)。
+Pi 草稿预览和上下文删改／压缩复用固定官方 `session-manager.ts`／`messages.ts` 的纯投影与转换函数，构建器核验完整原文件 SHA-256 并保留 MIT 许可。Pi 请求投影复用固定 `@earendil-works/pi-ai@1.1.0` 的 transcript/text 原文；原生请求边界从 `@deepseek-ai/dsh-agent-loop@0.2.1-rc.2` 提取，来源、方法、许可哈希见既有 `src/presets/pi/source.json`。构建与运行时核对固定实现，仅修改 Pi 实例上的等待边界，具体范围见 [Pi 用法](products/pi.md)。

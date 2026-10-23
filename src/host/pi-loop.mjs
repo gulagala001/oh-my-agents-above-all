@@ -19,17 +19,20 @@ export function installPiLoop(agent, hooks) {
   if (native[piRequestHook] || Object.entries(prior).some(([name, fn]) => typeof fn !== 'function'
     || hash(Function.prototype.toString.call(fn)) !== binding.methods[name])) throw Error('Pi native loop boundary is already changed or unsupported');
   const request = async (value, signal) => hooks.request(value, signal);
+  request.stream = hooks.stream;
+  request.messages = hooks.messages;
+  request.settle = hooks.settle;
   const step = async function(decision) {
     const firstSeq = native.session.seq;
     const result = await methods.step.call(native, decision);
-    await hooks.afterStep?.(firstSeq, result, native.phase.abort.signal);
-    return result;
+    return hooks.afterStep ? await hooks.afterStep(firstSeq, result, native.phase.abort.signal) : result;
   };
   native[piRequestHook] = request;
-  native.step = step; native.buildRequest = methods.buildRequest;
+  native.step = step; native.buildRequest = methods.buildRequest; native.turn = methods.turn;
   return () => {
     if (native.step === step) native.step = prior.step;
     if (native.buildRequest === methods.buildRequest) native.buildRequest = prior.buildRequest;
+    if (native.turn === methods.turn) native.turn = prior.turn;
     if (native[piRequestHook] === request) delete native[piRequestHook];
   };
 }

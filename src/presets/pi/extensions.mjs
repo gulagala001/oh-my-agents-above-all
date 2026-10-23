@@ -14,6 +14,7 @@ import { toolNeedsEnhancement } from '../../host/tool-enhancement.mjs';
 import { installPiLoop } from '../../host/pi-loop.mjs';
 import { requestToPi, requestFromPi } from './extensions/context.mjs';
 import { supportedEvents } from './extensions/pi-api.mjs';
+import { boundaryRecord, commitBoundary, materializeBoundaryMessages, projectBoundaryRequest } from './extensions/boundaries.mjs';
 
 export const name = 'omaa-pi-extensions';
 export const inject = ['omaa', 'tools', 'commands', 'fs', 'sandboxPolicy', 'sandbox', 'subprocess'];
@@ -155,7 +156,11 @@ export function apply(ctx) {
       return;
     }
     assertOwner(agent, state, context); assertPolicy(agent, state);
-    if (context.eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted'
+    if (method === 'boundary.preview') {
+      if (!['turn_end', 'agent_before_settle'].includes(context.eventName)) throw Error('Pi boundary preview requires an active boundary callback');
+      return (await boundaryPreview(agent, state, args.entries, context.eventName, signal)).context;
+    }
+    if (state.lifecycleRun?.endReason?.kind === 'aborted'
       && ['exec', 'executeTool', 'sendUserMessage', 'ui.select', 'ui.confirm', 'ui.input'].includes(method)) throw Error('原生活动已取消，结束通知不能继续执行或唤醒任务');
     if (Array.isArray(args)) {
       const fields = { 'ui.notify': ['text', 'type'], 'ui.select': ['title', 'options', 'dialogOptions'], 'ui.confirm': ['title', 'message', 'dialogOptions'], 'ui.input': ['title', 'placeholder', 'dialogOptions'],
@@ -412,6 +417,7 @@ export function apply(ctx) {
     state.descriptors = descriptors; state.events = new Set(descriptors.events);
   }
   function makeState(agent) {
+    materializeBoundaryMessages(nativeSession(agent.session));
     const previous = agent.session.snapshotEvents().findLast(event => event.type === 'user/message' && event.data.source?.pi?.runPrompt)?.data.source.pi.runPrompt;
     const state = { ownerKey: ownerKey(agent), session: nativeSession(agent.session), agent,
       generation: 0, life: new AbortController(), revoked: false,
@@ -453,21 +459,48 @@ export function apply(ctx) {
     if (!state.ownerKey) throw Error('Pi 扩展需要真实原生 Agent scope');
     states.set(state.ownerKey, state); settings.states.set(agent.id, state);
     state.restoreLoop = installPiLoop(agent, {
-      async afterStep() { flushCustom(agent, state); },
+      async settle(signal) {
+        const run = state.lifecycleRun;
+        if (!run || !['turn_end', 'agent_before_settle', 'agent_settled'].some(name => state.events.has(name))
+          || agent.inbox.nextTurn.length || agent.inbox.nextStep.length) return;
+        run.ending = true;
+        await finishLifecycle(agent, state, signal);
+      },
+      messages: signal => emitMessages(agent, state, signal),
+      stream: (kind, live, request, signal, chunk) => streamMessage(agent, state, kind, live, request, signal, chunk),
+      async afterStep(firstSeq, result, signal) {
+        flushCustom(agent, state);
+        await emitMessages(agent, state, signal);
+        if (!state.guest) return result;
+        const events = agent.session.snapshotEvents(firstSeq);
+        const rows = await piHistoryEntries(events, historyOptions(signal));
+        const assistant = rows.findLast(entry => entry.message?.role === 'assistant');
+        if (!assistant) return result;
+        const tools = rows.filter(entry => entry.message?.role === 'toolResult');
+        const continued = await dispatchBoundary(agent, state, 'turn_end', { turnIndex: (state.lifecycleRun?.turnIndex ?? 1) - 1,
+          message: assistant.message, toolResults: tools.map(entry => entry.message), messageEntryId: assistant.id,
+          toolResultEntryIds: tools.map(entry => entry.id), outcome: 'completed' }, signal);
+        return continued ? null : result;
+      },
       async request(request, signal) {
-        if (!state.guest || !state.events.has('context') && !state.events.has('context_with_system')) return;
+        let current = request;
+        if (agent.session.snapshotEvents().some(event => event.type === boundaryRecord)
+          || request.messages.some(message => message.source?.piContinuation)) {
+          current = (await projectBoundaryRequest(request, agent.session.snapshotEvents(), boundaryAdapters(signal))).request;
+        }
+        if (!state.guest || !state.events.has('context') && !state.events.has('context_with_system')) return current === request ? undefined : current;
         assertOwner(agent, state); assertPolicy(agent, state);
         const head = agent.session.seq;
-        const adapted = await requestToPi(request, { piContent, argumentsFor: (name, args) => piArguments({ name, arguments: args }), signal });
+        const adapted = await requestToPi(current, boundaryAdapters(signal));
         const response = await invoke(agent, state, { kind: 'context', messages: adapted.messages }, signal);
         for (const error of response.errors ?? []) settings.notify(agent, 'Pi 扩展 context：' + error.error, 'error');
-        if (isDeepStrictEqual(response.messages, adapted.messages)) return;
-        const projected = await requestFromPi(response.messages, { originals: adapted.originals, parts: adapted.parts, request, admitContent, nativeArguments, signal });
+        if (isDeepStrictEqual(response.messages, adapted.messages)) return current === request ? undefined : current;
+        const projected = await requestFromPi(response.messages, { originals: adapted.originals, parts: adapted.parts, request: current, admitContent, nativeArguments, signal });
         assertOwner(agent, state); assertPolicy(agent, state); signal.throwIfAborted();
         // Inbox writes during a callback are legitimate future input. Context
         // rewrites are request-local; their source surface must remain stable.
         if (agent.session.snapshotEvents(head).some(event => event.surfaceOp)) throw Error('Pi context source changed while its callback was running');
-        return projected;
+        return projected ?? current;
       },
     });
     return state;
@@ -544,19 +577,97 @@ export function apply(ctx) {
     const fused = AbortSignal.any([state.life.signal, ...signal ? [signal] : []]); fused.throwIfAborted();
     state.calls++;
     try {
+      let updates = Promise.resolve();
       const current = await snapshot(agent, state, fused);
       assertOwner(agent, state, capture); fused.throwIfAborted(); assertPolicy(agent, state);
-      const result = await guest.call({ type: 'invoke', ...call, snapshot: current }, { context: { agent, state, exec, eventName: call.eventName, ...capture }, signal: fused });
+      const result = await guest.call({ type: 'invoke', ...call, snapshot: current }, { context: { agent, state, exec, eventName: call.eventName, ...capture }, signal: fused,
+        ...(call.kind === 'tool' && state.events.has('tool_execution_update') ? { onUpdate: partialResult => {
+          updates = updates.then(() => notifyEvent(agent, state, 'tool_execution_update', { toolCallId: exec.callId,
+            toolName: exec.name, args: piArguments(exec), partialResult, ...exec.parent ? { parentToolCallId: exec.parent.callId } : {} }, fused));
+          updates.catch(() => {});
+        } } : {}),
+        ...(!['agent_settled', 'session_shutdown'].includes(call.eventName) ? { onCancel: async () => {
+          const run = state.lifecycleRun;
+          if (!fused.aborted || !run || run.cancelNotified || state.life.signal.aborted || guest.stopped) return;
+          run.endReason = { kind: 'aborted', reason: { kind: signal?.reason?.kind ?? 'user' } };
+          run.cancelNotified = true;
+          const cleanupSignal = AbortSignal.any([state.life.signal, AbortSignal.timeout(1000)]);
+          if (state.assistantStarted && state.partialAssistant) {
+            state.assistantStarted = false;
+            await notifyEvent(agent, state, 'message_end', { message: { ...state.partialAssistant, stopReason: 'aborted' } }, cleanupSignal);
+          }
+          if (!run.ending) {
+            run.endSeq = agent.session.seq;
+            await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, cleanupSignal) }, cleanupSignal);
+          }
+          await notifyEvent(agent, state, 'agent_settled', { aborted: true }, cleanupSignal);
+        } } : {}) });
+      await updates;
       assertOwner(agent, state, capture); fused.throwIfAborted();
       return result;
     }
     finally { state.calls--; }
   }
   async function notifyEvent(agent, state, eventName, event, signal) {
-    if (!state.events.has(eventName)) return;
+    if (!state.events.has(eventName) || state.guest?.stopped) return;
     const response = await invoke(agent, state, { kind: 'event', eventName, event: { type: eventName, ...event },
-      ...(eventName === 'agent_end' && state.lifecycleRun?.endReason?.kind === 'aborted' ? { callbackAbortReason: state.lifecycleRun.endReason.reason } : {}) }, signal);
+      ...(['agent_end', 'agent_settled'].includes(eventName) && state.lifecycleRun?.endReason?.kind === 'aborted' ? { callbackAbortReason: state.lifecycleRun.endReason.reason } : {}) }, signal);
     for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 ' + eventName + '：' + error.error, 'error');
+  }
+  const historyOptions = signal => ({ content: piContent, argumentsFor: (name, args) => piArguments({ name, arguments: args }), signal });
+  const boundaryAdapters = signal => ({ piContent, admitContent, nativeArguments, argumentsFor: (name, args) => piArguments({ name, arguments: args }), signal });
+  async function boundaryPreview(agent, state, drafts, eventName, signal) {
+    assertOwner(agent, state); assertPolicy(agent, state);
+    const request = { messages: agent.session.deriveMessages(), tools: visible(agent, state), toolHistory: agent.session.toolHistory() };
+    const prepared = await projectBoundaryRequest(request, agent.session.snapshotEvents(), boundaryAdapters(signal), drafts);
+    const queued = [...agent.inbox.nextStep, ...agent.inbox.nextTurn];
+    const pendingMessages = queued.length ? (await requestToPi({ messages: queued, tools: [], toolHistory: { tools: [], updates: [] } }, boundaryAdapters(signal))).messages : [];
+    const finalRole = prepared.llmMessages.at(-1)?.role;
+    const canContinue = prepared.llmMessages.some(message => message.role !== 'system') && finalRole !== 'assistant'
+      || (eventName === 'turn_end' || finalRole === 'assistant') && pendingMessages.length > 0;
+    return { ...prepared, context: { contextEntries: prepared.projection.entries, contextMessages: prepared.projection.messages,
+      llmMessages: prepared.llmMessages, pendingMessages, canContinue: Boolean(canContinue) } };
+  }
+  async function dispatchBoundary(agent, state, eventName, event, signal) {
+    if (!state.events.has(eventName)) return false;
+    const initial = await boundaryPreview(agent, state, [], eventName, signal);
+    const response = await invoke(agent, state, { kind: 'event', eventName, event, preview: initial.context }, signal);
+    for (const error of response.errors ?? []) settings.notify(agent, 'Pi 扩展 ' + eventName + '：' + error.error, 'error');
+    if (!response.valid) return false;
+    const head = agent.session.seq;
+    const final = await boundaryPreview(agent, state, response.entries, eventName, signal);
+    signal.throwIfAborted(); assertOwner(agent, state); assertPolicy(agent, state);
+    if (agent.session.seq !== head) throw Error('Pi boundary changed during final admission');
+    commitBoundary(state.session, final.prepared, eventName);
+    if (response.continue && !final.context.canContinue) settings.notify(agent, 'Pi 扩展 ' + eventName + ' 请求继续，但没有可运行上下文', 'error');
+    return Boolean(response.continue && final.context.canContinue);
+  }
+  async function emitMessages(agent, state, signal) {
+    const run = state.lifecycleRun;
+    if (!run || !state.guest) return;
+    const events = agent.session.snapshotEvents(run.messageSeq ?? run.firstSeq);
+    const entries = await piHistoryEntries(events, historyOptions(signal));
+    for (const entry of entries) if (entry.message) {
+      if (entry.message.role !== 'assistant' || !state.assistantStarted) await notifyEvent(agent, state, 'message_start', { message: entry.message }, signal);
+      if (entry.message.role === 'assistant') state.assistantStarted = false;
+      await notifyEvent(agent, state, 'message_end', { message: entry.message }, signal);
+    }
+    run.messageSeq = events.length ? events.at(-1).seq + 1 : run.messageSeq ?? run.firstSeq;
+  }
+  async function streamMessage(agent, state, kind, live, request, signal, chunk) {
+    if (!state.guest || !['message_start', 'message_update', 'message_end'].some(name => state.events.has(name))) return;
+    if (kind === 'start') await emitMessages(agent, state, signal);
+    const message = (await piHistoryEntries([{ type: 'assistant/message', seq: 0, time: Date.now(), data: {
+      message: { content: live.blocks(), source: { provider: request.provider, model: request.model } } } }], historyOptions(signal)))[0].message;
+    state.partialAssistant = message;
+    if (kind === 'start') { state.assistantStarted = true; await notifyEvent(agent, state, 'message_start', { message }, signal); return; }
+    const blockType = ({ text: 'text', reasoning: 'thinking', 'tool-call': 'toolcall' })[chunk.blockType ?? chunk.block?.type];
+    const type = ({ 'text-delta': 'text_delta', 'reasoning-delta': 'thinking_delta', 'tool-call-delta': 'toolcall_delta' })[chunk.type]
+      ?? (blockType && (chunk.type === 'block-start' ? blockType + '_start' : chunk.type === 'block-end' ? blockType + '_end' : undefined));
+    if (type) await notifyEvent(agent, state, 'message_update', { message, assistantMessageEvent: {
+      type, contentIndex: chunk.index, ...(type.endsWith('_delta') ? { delta: chunk.text ?? chunk.argumentsDelta ?? '' } : {}),
+      ...(type === 'text_end' || type === 'thinking_end' ? { content: chunk.block.text } : {}),
+      ...(type === 'toolcall_end' ? { toolCall: message.content.find(part => part.type === 'toolCall' && part.id === chunk.block.id) } : {}), partial: message } }, signal);
   }
   function loadoutInput(agent, state) {
     const registered = ctx.tools.schemas(agent), declared = visible(agent, state);
@@ -621,7 +732,41 @@ export function apply(ctx) {
   async function finishLifecycle(agent, state, signal) {
     const run = state.lifecycleRun;
     if (!run?.ending) return;
-    try { flushCustom(agent, state); run.endSeq = agent.session.snapshotEvents().at(-1)?.seq ?? run.endSeq; await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, signal) }, signal); }
+    try {
+      flushCustom(agent, state);
+      await emitMessages(agent, state, signal);
+      if (state.assistantStarted && state.partialAssistant) {
+        await notifyEvent(agent, state, 'message_end', { message: { ...state.partialAssistant,
+          stopReason: run.endReason?.kind === 'aborted' ? 'aborted' : 'error',
+          ...run.endReason?.error?.message ? { errorMessage: run.endReason.error.message } : {} } }, signal);
+        state.assistantStarted = false;
+      }
+      run.endSeq = agent.session.snapshotEvents().at(-1)?.seq ?? run.endSeq;
+      await notifyEvent(agent, state, 'agent_end', { messages: await runMessages(agent, run, signal) }, signal);
+      const aborted = run.endReason?.kind === 'aborted';
+      if (!aborted && !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length) {
+        const continued = await dispatchBoundary(agent, state, 'agent_before_settle', {
+          outcome: run.endReason?.kind === 'error' ? 'error' : 'completed' }, signal);
+        signal.throwIfAborted();
+        if (continued && !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length) {
+          // Native maintenance parks this wake until the transaction returns.
+          // The empty hidden receipt is removed by the request projection; it
+          // conveys scheduling intent, never fabricated user instructions.
+          agent.followup(createUserMessage({ content: [], source: { kind: 'pi-extension', form: 'context',
+            customType: 'boundary-continuation', display: false, piContinuation: true } }));
+        }
+      }
+      if (aborted || !agent.inbox.nextTurn.length && !agent.inbox.nextStep.length) {
+        await notifyEvent(agent, state, 'agent_settled', { aborted }, signal);
+      }
+    } catch (error) {
+      if (signal.aborted && !state.life.signal.aborted && !run.cancelNotified) {
+        run.endReason = { kind: 'aborted', reason: { kind: 'user' } };
+        const cleanupSignal = AbortSignal.any([state.life.signal, AbortSignal.timeout(5000)]);
+        await notifyEvent(agent, state, 'agent_settled', { aborted: true }, cleanupSignal);
+      }
+      throw error;
+    }
     finally {
       if (state.lifecycleRun === run) {
         state.lifecycleRun = undefined;
@@ -641,6 +786,7 @@ export function apply(ctx) {
     return next();
   });
   const controller = {
+    isEnding: agent => Boolean(stateFor(agent)?.lifecycleRun?.ending),
     inputMetadata: (agent, id) => stateFor(agent)?.inputOrigins.get(id),
     promptTools(agent) {
       const state = stateFor(agent), allowed = new Set(visible(agent, state ?? {}).map(t => t.name));
@@ -779,6 +925,19 @@ export function apply(ctx) {
     const state = exec.agent && stateFor(exec.agent);
     if (state?.active && !state.active.has(exec.name) && !exec.parent) return 'Pi extension disabled this model-facing tool.';
     if (state?.guest && JSON.stringify(currentPolicy(exec.agent)) !== state.policyKey) return 'Pi extension permissions changed; reload under current policy.';
+  });
+  ctx.on('tools/execute', async (exec, next) => {
+    if (!exec.agent || !owns(exec.agent)) return next();
+    const state = stateFor(exec.agent);
+    if (!state?.guest || !state.events.has('tool_execution_start') && !state.events.has('tool_execution_end')) return next();
+    const identity = { toolCallId: exec.callId, toolName: exec.name,
+      ...exec.parent ? { parentToolCallId: exec.parent.callId } : {} };
+    await notifyEvent(exec.agent, state, 'tool_execution_start', { ...identity, args: piArguments(exec) }, exec.signal);
+    const started = performance.now();
+    const result = await next(), durationMs = performance.now() - started;
+    if (state.events.has('tool_execution_end')) await notifyEvent(exec.agent, state, 'tool_execution_end', { ...identity, durationMs, isError: result.isError,
+      result: { content: await piContent(result.content, exec.signal), details: result.meta?.piExtension?.details ?? {} } }, exec.signal);
+    return result;
   });
   ctx.on('tools/pre-execute', async (exec, next) => {
     if (!exec.agent || !owns(exec.agent)) return next();

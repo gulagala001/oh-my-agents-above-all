@@ -211,7 +211,7 @@ export function apply(ctx, config = {}) {
   const claims = new WeakMap(), origins = new WeakMap(), boundaries = new WeakMap(), preparedAssemblies = new WeakSet();
   ctx.on('agent/inbox/inserted', ({ agent, message }) => {
     let entries = origins.get(ownerKey(agent)); if (!entries) origins.set(ownerKey(agent), entries = new Map());
-    if (!entries.has(message.id)) entries.set(message.id, { streaming: agent.status === 'running', streamingBehavior: agent.inbox.nextStep.some(item => item.id === message.id) ? 'steer' : 'followUp' });
+    if (!entries.has(message.id)) entries.set(message.id, { streaming: agent.status === 'running' && !ctx.get('omaaPiExtensions')?.isEnding(agent), streamingBehavior: agent.inbox.nextStep.some(item => item.id === message.id) ? 'steer' : 'followUp' });
   });
   ctx.on('agent/inbox/discarded', ({ agent, message }) => origins.get(ownerKey(agent))?.delete(message.id));
   ctx.on('agent/inbox/claimed', ({ agent, message, turn }) => {
