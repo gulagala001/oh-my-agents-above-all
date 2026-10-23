@@ -13,5 +13,7 @@ export function ComposerChips({ settings, sidebarRight, sessionId, getThemeRunti
       sidebarRight.openTabIn(sessionId, 'omaa-preset');
     }
   };
-  return <span className="omaa-composer-chips"><CheckpointReviewChip {...{ settings, sidebarRight, sessionId }}/><PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>;
+  return <span className="omaa-composer-chips"><CheckpointReviewChip {...{ settings, sidebarRight, sessionId }}/>{session.data.product.id === 'cursor' && <button type="button" className="omaa-checkpoint-review-chip" aria-label="打开 Cursor 代码审阅" onClick={() => {
+    if (settings.getSnapshot().sessionId === sessionId && sidebarRight.mounted.getSnapshot() === sessionId && settings.getSnapshot().data?.product?.id === 'cursor') sidebarRight.openTabIn(sessionId, 'omaa-cursor-review');
+  }}>代码审阅</button>}<PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>;
 }

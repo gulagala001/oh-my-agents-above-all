@@ -4,6 +4,8 @@ import { CheckpointControls } from './checkpoint-controls.jsx';
 import { ComposerChips } from './composer-chips.jsx';
 import reviewChipCss from './checkpoint-review-chip.css';
 import { GitReview } from './git-review.jsx';
+import { CursorReview } from './cursor-review.jsx';
+import { disposeCursorReview } from './cursor-review-state.mjs';
 import { PiBranches } from './pi-branches.jsx';
 import { applyThemes } from './themes/index.jsx';
 import controlsCss from './preset-controls.css';
@@ -22,7 +24,7 @@ export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'co
 
 export function apply(ctx, { enabled, ready }) {
   let settings;
-  ctx.effect(() => { settings = createSessionSettings(ctx, fetch, enabled); return () => settings.dispose(); });
+  ctx.effect(() => { settings = createSessionSettings(ctx, fetch, enabled); return () => { disposeCursorReview(settings); settings.dispose(); }; });
   if (enabled.includes('pi')) { applyPiExtensionNotices(ctx, settings); applyPiExtensionMessages(ctx); }
   const getThemeRuntime = applyThemes(ctx, settings);
   ready({ settings, getThemeRuntime });
@@ -30,7 +32,7 @@ export function apply(ctx, { enabled, ready }) {
   function PanelControls(props) {
     const { tab } = props.useTabInfo();
     const current = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
-    return <div className="omaa-workbench" data-product={current.data?.product?.id}><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/>{current.data?.product?.id === 'zcode' && <div className="omaa-workbench-link"><button type="button" onClick={() => ctx.sidebarRight.openTab('omaa-zcode-workflows')}>查看工作流产物</button><p className="omaa-help">图与阶段、Actor、脚本、运行报告和发布产物。</p></div>}<CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></div>;
+    return <div className="omaa-workbench" data-product={current.data?.product?.id}><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/>{current.data?.product?.id === 'cursor' && <div className="omaa-workbench-link"><button type="button" onClick={() => ctx.sidebarRight.openTabIn(current.sessionId, 'omaa-cursor-review')}>打开代码审阅</button><p className="omaa-help">工作区、分支与回合比较，保存批注并继续修改。</p></div>}{current.data?.product?.id === 'zcode' && <div className="omaa-workbench-link"><button type="button" onClick={() => ctx.sidebarRight.openTab('omaa-zcode-workflows')}>查看工作流产物</button><p className="omaa-help">图与阶段、Actor、脚本、运行报告和发布产物。</p></div>}<CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></div>;
   }
   function WorkflowPanel(props) {
     const { tab } = props.useTabInfo();
@@ -51,6 +53,15 @@ export function apply(ctx, { enabled, ready }) {
   const panelId = 'omaa/omaa-preset';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: panelId, kind: 'omaa-preset', title: () => '预设设置', guide: [] }));
   ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: panelId }, PanelControls));
+  if (enabled.includes('cursor')) {
+    const cursorPanelId = 'omaa/omaa-cursor-review';
+    ctx.effect(() => ctx.sidebarRightTabs.register({ id: cursorPanelId, kind: 'omaa-cursor-review', title: () => 'Cursor 审阅', guide: [] }));
+    function CursorPanel(props) {
+      const { tab } = props.useTabInfo();
+      return <CursorReview settings={settings} sidebarRight={ctx.sidebarRight} visible={tab.visible} navigation={tab.navigation}/>;
+    }
+    ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: cursorPanelId }, CursorPanel));
+  }
   if (!enabled.includes('zcode')) return;
   const workflowPanelId = 'omaa/omaa-zcode-workflows';
   ctx.effect(() => ctx.sidebarRightTabs.register({ id: workflowPanelId, kind: 'omaa-zcode-workflows', title: () => '工作流产物', guide: [] }));

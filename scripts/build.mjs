@@ -4,6 +4,7 @@ import { build, transform } from 'esbuild';
 import ts from 'typescript';
 import { buildPiPromptHelpers } from './build-pi-prompt-helpers.mjs';
 import { buildGrokDocuments } from './build-grok-documents.mjs';
+import { buildCursorDiff } from './build-cursor-diff.mjs';
 
 import { buildZCodeWorkflowCompiler } from './build-zcode-compiler.mjs';
 import { buildZCodeWorldReads } from './build-zcode-world.mjs';
@@ -25,6 +26,7 @@ const manifest = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 // by the base after the user's explicit settings choice.
 await writeFile(root + 'cordis.patch.yml', JSON.stringify([{ insert: [{ id: 'omaa', name: 'oh-my-agents-above-all' }] }], null, 2) + '\n');
 await mkdir(root + 'lib', { recursive: true });
+await buildCursorDiff();
 // Keep ZCode's actual ranking, chunk selection and formatting implementation.
 // Only the native message/part boundary and unused reference-reminder export
 // differ; source stays immutable and the derived runtime is regenerated here.
