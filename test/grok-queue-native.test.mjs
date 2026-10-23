@@ -43,11 +43,18 @@ test('Grok native queue edits, reorders, cold-restores and sends now through the
   list = await rows(); assert.equal(list.length, 3); assert.match(JSON.stringify(list[0].content), /QUEUE_B_UPDATED/);
   await f.rpc('session/rename', { sessionId, title: 'Grok queue flow' });
 
-  const browser = await launchChromium({ headless: true }); t.after(() => browser.close());
-  const page = await browser.newPage(), errors = [];
+  const browser = await launchChromium({ headless: true });
+  const page = await browser.newPage(), errors = []; let completed = false;
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
-  t.after(async () => { if (!page.isClosed()) { t.diagnostic(JSON.stringify(errors)); t.diagnostic((await page.locator('body').innerText()).slice(-2500)); } });
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  t.after(async () => {
+    if (!page.isClosed() && !completed) {
+      t.diagnostic(JSON.stringify(errors)); t.diagnostic((await page.locator('body').innerText()).slice(-3000));
+      if (process.env.OMAA_QUEUE_FAILURE_SCREENSHOT) await page.screenshot({ path: process.env.OMAA_QUEUE_FAILURE_SCREENSHOT });
+    }
+    await browser.close();
+  });
   await page.context().addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
   await page.goto(f.origin);
   const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
@@ -56,7 +63,7 @@ test('Grok native queue edits, reorders, cold-restores and sends now through the
   const dock = page.locator('[data-grok-queue]');
   await dock.waitFor({ timeout: 15000 });
   await dock.locator('button[aria-expanded]').click();
-  await dock.getByRole('button', { name: /编辑.*消息|Edit queued message/ }).first().click();
+  await dock.getByRole('button', { name: /编辑.*消息|Edit queued message/ }).first().click().catch(async error => { throw Error(error.message + '\n' + await page.locator('body').innerText() + '\n' + JSON.stringify(errors)); });
   const editor = dock.locator('textarea,input,[contenteditable=true]').first();
   await editor.fill('QUEUE_B_FROM_UI');
   await dock.getByRole('button', { name: /保存.*消息|Save queued message/ }).click();
@@ -108,5 +115,5 @@ test('Grok native queue edits, reorders, cold-restores and sends now through the
   const resumedEvents = (await f.snapshot(sessionId)).records.map(row => row.event).filter(Boolean);
   assert(resumedEvents.some(event => event.type === 'turn/end' && event.data.reason?.kind === 'aborted'));
   assert.equal(resumedEvents.filter(event => event.type === 'user/message' && JSON.stringify(event.data.content).includes('WAIT_KEEP')).length, 1);
-  assert.deepEqual(errors, []); assert.deepEqual(f.errors, []);
+  assert.deepEqual(errors, []); assert.deepEqual(f.errors, []); completed = true;
 });

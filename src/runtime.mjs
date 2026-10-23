@@ -7,6 +7,7 @@ import { products, productForPreset } from './shared/products.mjs';
 import { createPreferencesStore, validatePreferences, projectMemoryRootSchema } from './host/preferences.mjs';
 import { sendJson, readJson } from './host/http.mjs';
 import { createGitReview } from './git-review.mjs';
+import { createCursorReview } from './presets/cursor/review.mjs';
 import { createSessionTransfer } from './host/session-transfer.mjs';
 import { nativeHostVersion } from './host/compatibility.mjs';
 import { createPiExtensionSettings, piExtensionSessionNames } from './host/pi-extensions.mjs';
@@ -202,6 +203,8 @@ async function mount(ctx) {
     const policy = hub.sandboxPolicy()?.resolve({ session });
     return Boolean(policy && policy.mode !== 'read-only' && ctx.agents.get(session.id)?.status !== 'running' && hub.modeFor(session) === 'default');
   } });
+  const cursorReview = createCursorReview({ directory: join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'cursor-reviews'),
+    hub, gitReview, controller: () => ctx.get('sessionController'), flush: session => ctx.sessions.flush(session) });
   ctx.on('session/event', (session, event) => {
     if (event.type === 'plan/mode' && event.data.active === true && hub.product(session) && preferences(session).mode === 'ask') {
       store.set(session.id, { ...preferences(session), mode: 'default' });
@@ -219,7 +222,7 @@ async function mount(ctx) {
       if (rejected !== undefined) { res.writeHead(rejected); res.end(); return; }
       try {
         const url = new URL(req.url, 'http://localhost');
-        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/pi-branches', '/omaa/api/zcode-workflows', '/omaa/api/zcode-workflow', '/omaa/api/zcode-workflow-source', '/omaa/api/zcode-artifact-data', '/omaa/api/zcode-artifact-aggregate', '/omaa/api/zcode-artifact-content', '/omaa/api/zcode-artifact-preview'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
+        if (!['/omaa/api/pi-extensions', '/omaa/api/pi-extension-notices', '/omaa/api/session', '/omaa/api/session-transfer', '/omaa/api/checkpoints', '/omaa/api/git-review', '/omaa/api/cursor-review', '/omaa/api/pi-branches', '/omaa/api/zcode-workflows', '/omaa/api/zcode-workflow', '/omaa/api/zcode-workflow-source', '/omaa/api/zcode-artifact-data', '/omaa/api/zcode-artifact-aggregate', '/omaa/api/zcode-artifact-content', '/omaa/api/zcode-artifact-preview'].includes(url.pathname)) { sendJson(res, 404, { error: '接口不存在' }); return; }
         if (url.pathname === '/omaa/api/pi-extensions') {
           if (req.method === 'GET') sendJson(res, 200, hub.piExtensions.describe());
           else if (req.method === 'POST') { const data = await readJson(req); sendJson(res, 200, await hub.piExtensions.update(data.files, data.revision)); }
@@ -294,11 +297,21 @@ async function mount(ctx) {
           else sendJson(res, 405, { error: '不支持此方法' });
           return;
         }
+        if (url.pathname === '/omaa/api/cursor-review') {
+          if (req.method === 'GET') {
+            const options = Object.fromEntries(['scope', 'ref', 'path', 'revision', 'kind'].filter(key => url.searchParams.has(key)).map(key => [key, url.searchParams.get(key)]));
+            if (url.searchParams.has('seq')) options.seq = Number(url.searchParams.get('seq'));
+            sendJson(res, 200, await cursorReview.inspect(id, options));
+          } else if (req.method === 'POST') sendJson(res, 200, await cursorReview.update(id, await readJson(req)));
+          else sendJson(res, 405, { error: '不支持此方法' });
+          return;
+        }
         if (url.pathname === '/omaa/api/git-review') {
           const { session } = await hub.inspect(id);
           if (hub.product(session)?.id !== 'codex') throw new Error('Git 范围审阅仅用于 Codex 预设');
           if (req.method === 'GET') {
             const options = Object.fromEntries(['scope', 'ref', 'path', 'revision'].filter(key => url.searchParams.has(key)).map(key => [key, url.searchParams.get(key)]));
+            if (options.scope === 'working') throw Error('此审阅范围仅适用于 Cursor 面板。');
             sendJson(res, 200, await gitReview.inspect(session, options));
           } else if (req.method === 'POST') sendJson(res, 200, await gitReview.change(session, await readJson(req)));
           else sendJson(res, 405, { error: '不支持此方法' });

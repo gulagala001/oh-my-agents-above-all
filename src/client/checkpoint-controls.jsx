@@ -95,6 +95,10 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     </div>}
     {selected?.reviewAvailable && selected.summary.files.length > 0 && <div className="omaa-checkpoint-review">
       <button type="button" disabled={readingBusy} onClick={() => navigate(() => openCheckpointReview(settings, sidebarRight, id, selected))}>审阅本回合 {selected.summary.files.length} 个文件</button>
+      <button type="button" disabled={readingBusy} onClick={() => navigate(() => {
+        assertCheckpointSession(settings, id, sidebarRight, false);
+        sidebarRight.openTabIn(id, 'omaa-cursor-review', { params: { scope: 'turn', seq: selected.seq } });
+      })}>批注本回合</button>
       <p className="omaa-help">比较记录的是该回合修改前后；文件预览显示当前内容。</p>
       <details><summary>选择比较文件</summary>
         {selected.summary.files.map((file, index) => <button className="omaa-review-file" type="button" key={index} disabled={readingBusy} onClick={() => navigate(() => openCheckpointReview(settings, sidebarRight, id, selected, index))}>{file.display || file.path}</button>)}

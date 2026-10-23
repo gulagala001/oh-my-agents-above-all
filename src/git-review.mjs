@@ -4,7 +4,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 
 const MAX_BYTES = 2 * 1024 * 1024, MAX_OUTPUT = 16 * 1024 * 1024, MAX_FILES = 200;
-const scopes = new Set(['unstaged', 'staged', 'commit', 'branch']);
+const scopes = new Set(['unstaged', 'staged', 'commit', 'branch', 'working']);
 const locks = new Map();
 const executionContext = new AsyncLocalStorage();
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -73,6 +73,7 @@ async function resolveScope(bound, scope, ref) {
   if (ref !== undefined && (typeof ref !== 'string' || ref.length > 256 || ref.includes('\0') || ref.startsWith('-'))) fail('INVALID_REF', 'Git 引用无效');
   if (scope === 'unstaged') return { scope, args: ['diff', ...diffFlags] };
   if (scope === 'staged') return { scope, args: ['diff', '--cached', ...diffFlags] };
+  if (scope === 'working') return { scope, args: ['diff', ...diffFlags, 'HEAD'] };
   let selected = ref || 'HEAD';
   if (scope === 'branch' && !ref) {
     selected = await git(bound.repo, ['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD']).then(s => s.trim()).catch(() => 'main');
@@ -121,7 +122,7 @@ async function state(session, scope = 'unstaged', ref, detail) {
       : git(bound.repo, [...selected.args, '--binary', '--', bound.prefix || '.'], { bytes: true }),
     git(bound.repo, ['rev-parse', '--verify', 'HEAD']).then(s => s.trim()).catch(() => 'unborn'),
     dirtyPatch, indexedPatch,
-    scope === 'unstaged' ? git(bound.repo, ['ls-files', '--others', '--exclude-standard', '-z', '--', bound.prefix || '.']) : '',
+    ['unstaged', 'working'].includes(scope) ? git(bound.repo, ['ls-files', '--others', '--exclude-standard', '-z', '--', bound.prefix || '.']) : '',
   ]);
   const files = parseStats(stats, bound), seen = new Set(files.map(f => f.path)), untracked = new Map(), untrackedRevisions = [];
   for (const file of files) {
@@ -151,6 +152,7 @@ function actions(file, scope, writable, bound) {
 function summary(session, value, writable) {
   const last = session.snapshotEvents().findLast(event => event.type === 'workspace/changes');
   return { sessionId: session.id, root: value.bound.root, scope: value.selected.scope, ...(value.selected.ref ? { ref: value.selected.ref } : {}), revision: value.revision,
+    ...(value.selected.commit ? { commit: value.selected.commit } : {}), ...(value.selected.base ? { base: value.selected.base } : {}),
     files: value.files.slice(0, MAX_FILES).map(file => ({ ...file, actions: actions(file, value.selected.scope, writable, value.bound) })), total: value.files.length,
     added: value.files.reduce((n, f) => n + f.added, 0), deleted: value.files.reduce((n, f) => n + f.deleted, 0),
     ...(last ? { lastTurn: { seq: last.seq, turn: last.data.turn } } : {}) };
@@ -174,6 +176,16 @@ export function createGitReview({ writable, execution }) {
     return { ...capabilities, get policy() { return execution(session)?.policy; } };
   };
   return {
+    async references(session) {
+      return executionContext.run(environment(session), async () => {
+        const bound = await binding(session);
+        const [names, current] = await Promise.all([
+          git(bound.repo, ['for-each-ref', '--format=%(refname:short)', '--count=200', 'refs/heads', 'refs/remotes']),
+          git(bound.repo, ['symbolic-ref', '--quiet', '--short', 'HEAD']).then(value => value.trim()).catch(() => ''),
+        ]);
+        return { current, refs: names.split('\n').filter(Boolean).filter(name => !name.endsWith('/HEAD')) };
+      });
+    },
     async inspect(session, options = {}) {
       return executionContext.run(environment(session), async () => {
       const value = await state(session, options.scope, options.ref, options.path), canWrite = writable(session);

@@ -19,3 +19,5 @@
 ZCode 3.15.1 的编译、运行图、profile、记忆和日历代码固定到 `aac4755666d09fdcd70272fcf063c077a639015f`；仍有消费者的 3.14.3 快照继续保留。记忆格式化使用 Marked 16.4.2 的最小词法闭包，显式时区计算使用 Temporal 0.5.1／JSBI 4.3.2。原文、许可证和哈希在 `src/presets/zcode/sources/`，具体归属见 [第三方许可](../THIRD_PARTY_NOTICES.md)。阶段记录、恢复报告和运行输出不作为产品来源清单。
 
 Grok 的浏览器队列复用固定 `@deepseek-ai/dsh-client-ui-conversation@0.2.1-rc.2` 的真实 QueueDock，原始片段及 MIT 许可位于 `src/client/sources/grok-queue/`。`source.json` 记录 npm 工件、完整 bundle 与片段 SHA-256；构建校验原文，适配层仅增加 Grok 队列操作及宿主接线。
+
+Cursor 的差异面板使用 MIT 许可的 `@deepseek-ai/dsh-client-ui-deliverables@0.2.1-rc.2` 实际 `FileDiff` 组件。必要片段与 CSS、许可证、原包文件和片段 SHA-256 保存在 `src/client/sources/dsh-rc2/`；生成脚本仅适配五处行号按钮和样式挂载，保留原生显示与高亮逻辑。这是宿主组件的复用，Cursor 的闭源 UI 不因此被标为已有源码。

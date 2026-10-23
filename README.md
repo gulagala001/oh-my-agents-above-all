@@ -55,7 +55,7 @@ OMAA 为 Codex、Grok Build、Cursor、Pi Coding Agent 和 ZCode 提供独立的
 | --- | --- |
 | **Codex** | 连续代码工作；真实 Git 范围、文件／块操作、行反馈和桌面布局。 |
 | **Grok Build** | 计划与执行、实时 stdout 监控、原生 interval 调度。 |
-| **Cursor** | MDC／项目规则、Ask／Plan、已记录文件变更的检查点与只读审阅。 |
+| **Cursor** | MDC／项目规则、Ask／Plan、文件检查点、多范围审阅、持久行批注与批量反馈续改。 |
 | **Pi** | 精简默认工具、SYSTEM／模板／规则、逐条 steer、原生分支导航和显式本地扩展。 |
 | **ZCode** | 保存并复用工作流、TypeScript Actor、静态执行图、文件／Git／命令 facade 与产物面板。 |
 
@@ -65,7 +65,7 @@ OMAA 为 Codex、Grok Build、Cursor、Pi Coding Agent 和 ZCode 提供独立的
 
 Codex 预设可查看 Unstaged、Staged、Commit、Branch 和 Last turn，按文件或块暂存、取消暂存、撤回，并发送代码行反馈。操作遵守宿主权限，过期比较会被拒绝。
 
-Cursor 检查点针对已记录的文件修改，恢复前核对冲突并保留消息；它不是任意 shell 操作的全工作区快照。Pi 分支使用原生会话树，共享目录，切换分支不会回滚文件。
+Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话回合；行级批注保存在本地，批量反馈后由当前会话继续修改。检查点恢复核对冲突并保留消息，不是任意 shell 操作的全工作区快照。Pi 分支使用原生会话树，共享目录，切换分支不会回滚文件。Cursor 审阅增量尚未包含在已发行的 0.16.5 固定包中。
 
 [工作台操作](docs/frontend-workbench.md) · [五套界面实拍](docs/frontend-gallery.md)
 

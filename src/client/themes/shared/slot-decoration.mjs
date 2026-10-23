@@ -30,7 +30,7 @@ export function decorateSlotComponent(slots, name, accepts, decorate) {
     Probe[refreshEntry] = true;
     publisher.register({ name, key: original.options.key, priority,
       ...(typeof original.options.id === 'string' ? { id: original.options.id } : {}),
-      ...(typeof original.options.select === 'function' ? { select: () => undefined } : {}),
+      ...(typeof original.select === 'function' ? { select: () => null } : {}),
     }, Probe)();
   }
   function release(entry, state) {
