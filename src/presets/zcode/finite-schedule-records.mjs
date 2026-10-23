@@ -9,6 +9,7 @@ const instant = z.string().refine(value => /^\d{4}-/.test(value) && Number.isSaf
   && new Date(Date.parse(value)).toISOString() === value, 'Expected a canonical four-digit UTC instant.');
 const tokenSchema = z.object({
   occurrenceAt: instant, nativeMessageId: id, spliceSeq: integer, frameSha256: hash,
+  marker: z.string().min(1).max(512).optional(), prompt: z.string().min(1).max(16000).optional(),
   state: z.enum(['RESERVED', 'CONFIRMED', 'RELEASED', 'ADMITTED', 'UNKNOWN']),
   dispatchConfirmed: z.boolean(),
   release: z.object({ messageId: id, turn: integer, step: integer, contentSha256: hash }).strict().optional(),
@@ -35,24 +36,26 @@ export const finitePendingKey = marker => 'pending_' + finiteHash(marker);
 // never inferred from maxRuns text or silently adopted by the persistent gate.
 export const finiteScheduleSchema = z.object({
   version: z.literal(1), marker: z.string().min(1).max(512), prompt: z.string().min(1).max(16000),
-  maxRuns: z.number().int().min(2).max(Number.MAX_SAFE_INTEGER), confirmed: integer,
-  status: z.enum(['ACTIVE', 'CLOSED', 'DELETED', 'UNKNOWN']),
+  maxRuns: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER).nullable(), confirmed: integer,
+  retiredMarkers: z.array(z.string().min(1).max(512)).max(128).optional(),
+  status: z.enum(['ACTIVE', 'CLOSED', 'DELETED', 'UNKNOWN', 'UPDATING']),
   expression: z.string().min(1).max(1024), timeZone: z.string().min(1).max(128), initialScheduledAt: instant,
   highWaterAt: instant.optional(), tokens: z.array(tokenSchema).max(FINITE_TOKEN_LIMIT),
   reason: z.string().max(512).optional(),
 }).strict().superRefine((value, context) => {
   const pending = value.tokens.filter(token => !token.dispatchConfirmed).length;
-  if (value.confirmed > value.maxRuns || pending > value.maxRuns - value.confirmed
+  if (pending > Math.max(0, (value.maxRuns ?? Number.MAX_SAFE_INTEGER) - value.confirmed)
     || value.tokens.filter(token => token.dispatchConfirmed).length > value.confirmed)
     context.addIssue({ code: 'custom', message: 'Confirmed dispatches plus unresolved reservations must not exceed maxRuns.' });
   const seen = new Set();
   for (const [index, token] of value.tokens.entries()) {
-    if (seen.has(token.occurrenceAt) || !value.highWaterAt || token.occurrenceAt > value.highWaterAt
+    const key = JSON.stringify([token.marker ?? value.marker, token.occurrenceAt]);
+    if (seen.has(key) || !value.highWaterAt || token.occurrenceAt > value.highWaterAt
       || ['CONFIRMED', 'RELEASED', 'ADMITTED'].includes(token.state) && !token.dispatchConfirmed
       || ['RELEASED', 'ADMITTED'].includes(token.state) && !token.release
       || token.state === 'RESERVED' && token.dispatchConfirmed)
       context.addIssue({ code: 'custom', path: ['tokens', index], message: 'Finite occurrence identity, phase or acceptance evidence is inconsistent.' });
-    seen.add(token.occurrenceAt);
+    seen.add(key);
   }
 });
 

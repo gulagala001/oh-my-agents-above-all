@@ -1,7 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { symbols } from '@deepseek-ai/cordis';
 import { scopeOf } from '@deepseek-ai/dsh-scope';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
-import { createCronScheduleRecord } from '@deepseek-ai/dsh-schedule';
+import { createCronScheduleRecord, parseCronInput } from '@deepseek-ai/dsh-schedule';
 import { acquireZCodeCronStore } from './cron-store.mjs';
 import { cronOwnerKey, finiteHash, finiteScheduleSchema, FINITE_TOKEN_LIMIT } from './finite-schedule-records.mjs';
 
@@ -60,8 +61,12 @@ export function installFiniteScheduleGate(ctx) {
   };
   const pendingFor = (session, marker) => [...pendingRecords.entries()].some(([, value]) =>
     value.sessionId === session.id && value.workspacePath === session.header.cwd && value.marker === marker);
-  const handles = (session, row) => ownerFor(session, row.schedule_id)?.finite.marker === row.reminder_prompt
-    || pendingFor(session, row.reminder_prompt);
+  const handles = (session, row) => {
+    const finite = ownerFor(session, row.schedule_id)?.finite;
+    return finite && (finite.marker === row.reminder_prompt || finite.retiredMarkers?.includes(row.reminder_prompt))
+      || pendingFor(session, row.reminder_prompt);
+  };
+  const matches = (value, token, row) => token.occurrenceAt === row.occurrence_at && (token.marker ?? value.marker) === row.reminder_prompt;
   const write = (owner, update) => owners.update(cronOwnerKey(owner.sessionId, owner.id), current => {
     if (current.id !== owner.id || current.sessionId !== owner.sessionId || current.workspacePath !== owner.workspacePath
       || !current.finite || current.finite.marker !== owner.finite.marker || current.finite.prompt !== owner.finite.prompt)
@@ -126,7 +131,7 @@ export function installFiniteScheduleGate(ctx) {
   async function confirm(session, message, row, suppliedSeq) {
     let owner = ownerFor(session, row.schedule_id);
     if (!owner || owner.finite.marker !== row.reminder_prompt) return;
-    const existing = owner.finite.tokens.find(token => token.occurrenceAt === row.occurrence_at);
+    const existing = owner.finite.tokens.find(token => matches(owner.finite, token, row));
     if (existing) return existing;
     if (owner.deleted || owner.finite.status !== 'ACTIVE' || poisoned.has(owner.id)
       || owner.finite.highWaterAt && row.occurrence_at <= owner.finite.highWaterAt) return;
@@ -138,22 +143,22 @@ export function installFiniteScheduleGate(ctx) {
       if (!proof) throw Error('The exact native finite frame has no actual own inbox splice.');
       await checkRule(session, owner, row);
       const saved = await write(owner, value => {
-        if (value.status !== 'ACTIVE' || value.tokens.some(token => token.occurrenceAt === row.occurrence_at)
+        if (value.status !== 'ACTIVE' || value.tokens.some(token => matches(value, token, row))
           || value.highWaterAt && row.occurrence_at <= value.highWaterAt) return value;
         const unresolved = value.tokens.filter(token => !token.dispatchConfirmed).length;
-        if (unresolved >= value.maxRuns - value.confirmed) return value;
+        if (unresolved >= (value.maxRuns ?? Number.MAX_SAFE_INTEGER) - value.confirmed) return value;
         const tokens = value.tokens.filter(token => token.state !== 'ADMITTED');
         if (tokens.length >= FINITE_TOKEN_LIMIT) throw Error('Finite unresolved input history is full; no input is replayed or evicted.');
-        return { ...value, highWaterAt: row.occurrence_at, tokens: [...tokens, { occurrenceAt: row.occurrence_at,
+        return { ...value, highWaterAt: row.occurrence_at, tokens: [...tokens, { occurrenceAt: row.occurrence_at, marker: value.marker, prompt: value.prompt,
           nativeMessageId: message.id, spliceSeq: proof.seq, frameSha256: finiteHash(message.content),
           state: 'RESERVED', dispatchConfirmed: false }] };
       });
-      const reservation = saved.finite.tokens.find(token => token.occurrenceAt === row.occurrence_at);
+      const reservation = saved.finite.tokens.find(token => matches(saved.finite, token, row));
       if (!reservation || reservation.nativeMessageId !== message.id) return;
       // This ACK is native durable inbox acceptance, not model consumption.
       await flush(session);
       owner = await write(saved, value => {
-        const token = value.tokens.find(item => item.occurrenceAt === row.occurrence_at);
+        const token = value.tokens.find(item => matches(value, item, row));
         if (!token || token.state !== 'RESERVED' || token.nativeMessageId !== message.id) return value;
         const confirmed = value.confirmed + 1;
         return { ...value, confirmed, status: confirmed === value.maxRuns ? 'CLOSED' : value.status,
@@ -167,16 +172,16 @@ export function installFiniteScheduleGate(ctx) {
     const session = agent.session;
     await confirm(session, message, row);
     const owner = ownerFor(session, row.schedule_id), value = owner?.finite;
-    const token = value?.tokens.find(item => item.occurrenceAt === row.occurrence_at);
-    if (!owner || value.marker !== row.reminder_prompt || !token?.dispatchConfirmed || token.state !== 'CONFIRMED'
+    const token = value?.tokens.find(item => matches(value, item, row));
+    if (!owner || !token?.dispatchConfirmed || token.state !== 'CONFIRMED'
       || token.nativeMessageId !== message.id || token.frameSha256 !== finiteHash(message.content)
       || value.status === 'UNKNOWN' || poisoned.has(owner.id) || ctx.get('omaa').product(session)?.id !== 'zcode'
       || !liveOwner(agent) || session.header.origin === 'subagent') return;
-    const input = createUserMessage({ content: [{ type: 'text', text: value.prompt }], source: {
+    const input = createUserMessage({ content: [{ type: 'text', text: token.prompt ?? value.prompt }], source: {
       kind: SOURCE, form: 'logical-prompt', scheduleId: owner.id, occurrenceAt: row.occurrence_at, originalMessageId: message.id } });
     try {
       const saved = await write(owner, current => ({ ...current, tokens: current.tokens.map(item => {
-        if (item.occurrenceAt !== row.occurrence_at || item.state !== 'CONFIRMED' || current.status === 'UNKNOWN') return item;
+        if (!matches(current, item, row) || item.state !== 'CONFIRMED' || current.status === 'UNKNOWN') return item;
         return { ...item, state: 'RELEASED', release: { messageId: input.id, turn, step, contentSha256: finiteHash(input.content) } };
       }) }));
       if (closed || ctx.get('omaa').product(session)?.id !== 'zcode' || !liveOwner(agent))
@@ -189,12 +194,13 @@ export function installFiniteScheduleGate(ctx) {
     const session = agent.session;
     const rows = [...owners.entries()].map(([, owner]) => owner).filter(owner => owner.finite
       && owner.sessionId === session.id && owner.workspacePath === session.header.cwd
-      && owner.finite.tokens.some(token => ['RESERVED', 'RELEASED'].includes(token.state)));
+      && (owner.finite.status === 'UPDATING' || owner.finite.tokens.some(token => ['RESERVED', 'RELEASED'].includes(token.state))));
     if (!rows.length) return;
     let observation;
     try {
       observation = await observe(session);
       const events = observation.events.slice(observation.inheritedEventCount);
+      for (const owner of rows) if (owner.finite.status === 'UPDATING') await fault(owner, Error('Cold definition update lacks its final receipt; no automatic retry.'));
       for (const owner of rows) for (const token of owner.finite.tokens) {
         if (!['RESERVED', 'RELEASED'].includes(token.state)) continue;
         try {
@@ -209,12 +215,12 @@ export function installFiniteScheduleGate(ctx) {
             const message = splice?.data.inserted?.find(input => input.id === token.nativeMessageId);
             if (!message || finiteHash(message.content) !== token.frameSha256
               || !parseFiniteScheduleFrame(message)?.some(row => row.schedule_id === owner.id
-                && row.occurrence_at === token.occurrenceAt && row.reminder_prompt === owner.finite.marker))
+                && row.occurrence_at === token.occurrenceAt && row.reminder_prompt === (token.marker ?? owner.finite.marker)))
               throw Error('A prior reservation has no exact persisted native splice. No input is retried.');
           }
           await flush(session);
           await write(owner, value => {
-            const current = value.tokens.find(item => item.occurrenceAt === token.occurrenceAt);
+            const current = value.tokens.find(item => item.occurrenceAt === token.occurrenceAt && item.nativeMessageId === token.nativeMessageId);
             if (!current || current.state !== token.state || current.nativeMessageId !== token.nativeMessageId) return value;
             const confirmed = value.confirmed + Number(!current.dispatchConfirmed);
             return { ...value, confirmed,
@@ -228,7 +234,98 @@ export function installFiniteScheduleGate(ctx) {
     finally { observation?.[Symbol.dispose](); }
   }
 
-  const gateway = { available: () => !!store && !closed, isPoisoned: id => poisoned.has(id) };
+  async function reconcileInputs(session, id) {
+    const observation = await observe(session);
+    let splices;
+    try { splices = observation.events.slice(observation.inheritedEventCount).filter(event => event.type === 'agent/inbox/spliced'); }
+    finally { observation[Symbol.dispose](); }
+    for (const event of splices) for (const message of event.data.inserted ?? [])
+      for (const row of parseFiniteScheduleFrame(message) ?? []) if (row.schedule_id === id)
+        await confirm(session, message, row, event.seq);
+  }
+  const gateway = {
+    available: () => !!store && !closed, isPoisoned: id => poisoned.has(id),
+    async adopt(scope, args, chains, remember) {
+      return enqueue(scope.sessionId, async () => {
+        scope.check();
+        let owner = ownerFor(scope.agent.session, args.id);
+        if (!owner || owner.deleted || !['ACTIVE', 'CLOSED'].includes(owner.finite.status) || poisoned.has(args.id)
+          || owner.finite.tokens.some(token => !token.dispatchConfirmed)) throw Error('Finite adoption requires a settled owned schedule.');
+        const expectedNative = (await scope.service.catalog()).find(row => row.id === args.id && row.sessionId === scope.sessionId);
+        await reconcileInputs(scope.agent.session, args.id);
+        owner = ownerFor(scope.agent.session, args.id);
+        if (!['ACTIVE', 'CLOSED'].includes(owner.finite.status)) throw Error('Finite dispatch reconciliation is unresolved.');
+        const before = owner.finite;
+        const prepared = await write(owner, value => ({ ...value, status: 'UPDATING', tokens: value.tokens.map(token => ({ ...token,
+          marker: token.marker ?? before.marker, prompt: token.prompt ?? before.prompt })) }));
+        try {
+          const result = await chains.adopt(scope, args, owner, remember, expectedNative);
+          if (!result.ok) await write(prepared, () => before);
+          return result;
+        } catch (error) {
+          if (!chains.owns(args.id)) await write(prepared, () => before);
+          else await fault(prepared, error);
+          throw error;
+        }
+      });
+    },
+    async update(scope, args, remember) {
+      return enqueue(scope.sessionId, async () => {
+        scope.check();
+        let owner = ownerFor(scope.agent.session, args.id);
+        if (!owner || owner.deleted || !['ACTIVE', 'CLOSED'].includes(owner.finite.status) || poisoned.has(args.id))
+          throw Error('Finite schedule is deleted or unresolved; inspect its actual receipts without retry.');
+        const native = (await scope.service.catalog()).find(row => row.id === args.id && row.sessionId === scope.sessionId);
+        await reconcileInputs(scope.agent.session, args.id);
+        owner = ownerFor(scope.agent.session, args.id);
+        if (!['ACTIVE', 'CLOSED'].includes(owner.finite.status)) throw Error('Finite dispatch reconciliation is unresolved.');
+        const before = owner.finite;
+        if (before.tokens.some(token => !token.dispatchConfirmed)) throw Error('Finite dispatch reservation is still unresolved.');
+        const maxRuns = args.recurring === true ? null : args.maxRuns ?? (args.recurring === false ? before.maxRuns ?? 1 : before.maxRuns);
+        const rule = args.cron === undefined ? { expression: before.expression, timeZone: before.timeZone }
+          : parseCronInput({ expression: args.cron, time_zone: args.time_zone });
+        const prompt = args.prompt?.trim() ?? before.prompt;
+        scope.check();
+        if (!native || native.status !== 'active' || native.kind !== 'cron' || native.prompt !== before.marker
+          || native.expression !== before.expression || native.timeZone !== before.timeZone)
+          throw Error('Finite carrier identity or timing changed outside this adapter; no definition was changed.');
+        const changed = prompt !== before.prompt || rule.expression !== before.expression || rule.timeZone !== before.timeZone;
+        if (changed && (before.retiredMarkers?.length ?? 0) >= 127) throw Error('Retained definition history is full; no old queued marker is evicted.');
+        const marker = changed ? '[OMAA ZCODE FINITE CRON ' + randomUUID() + ']' : before.marker;
+        const retiredMarkers = changed ? [...new Set([...(before.retiredMarkers ?? []), before.marker, marker])] : before.retiredMarkers;
+        owner = await write(owner, value => ({ ...value, status: 'UPDATING', retiredMarkers,
+          tokens: value.tokens.map(token => ({ ...token, marker: token.marker ?? before.marker, prompt: token.prompt ?? before.prompt })) }));
+        remember({ operation: 'finite-update', id: args.id, status: 'definition-prepared' });
+        let invoked = false;
+        try {
+          scope.check();
+          const { sessionId: _session, status: _status, lastDelivery: _delivery, ...expected } = native;
+          invoked = true;
+          const result = await scope.service.update({ sessionId: scope.sessionId, id: args.id, expected,
+            title: args.title.trim(), prompt: marker,
+            ...(rule.expression !== before.expression || rule.timeZone !== before.timeZone
+              ? { change: { kind: 'cron', cron: { expression: rule.expression, time_zone: rule.timeZone } } } : {}) }, scope.signal);
+          if (!result.record) {
+            await write(owner, () => before);
+            remember({ operation: 'finite-update', id: args.id, status: 'native-refused', code: result.code });
+            return { ok: false, id: args.id, result };
+          }
+          remember({ operation: 'finite-update', id: args.id, status: 'native-confirmed', ownershipConfirmed: false });
+          if (result.record.kind !== 'cron' || result.record.prompt !== marker || result.record.expression !== rule.expression || result.record.timeZone !== rule.timeZone)
+            throw Error('Finite native replacement differs from its prepared definition.');
+          const saved = await write(owner, value => ({ ...value, marker, prompt, maxRuns,
+            expression: rule.expression, timeZone: rule.timeZone, initialScheduledAt: changed ? result.record.scheduledAt : value.initialScheduledAt,
+            status: maxRuns !== null && value.confirmed >= maxRuns ? 'CLOSED' : 'ACTIVE', reason: undefined }));
+          remember({ operation: 'finite-update', id: args.id, status: 'definition-confirmed', ownershipConfirmed: true });
+          return { ok: true, id: args.id, owner: saved, native: result.record, interrupted: scope.interrupted() };
+        } catch (cause) {
+          if (invoked) await fault(owner, cause); else await write(owner, () => before);
+          throw Object.assign(Error(invoked ? 'Finite update outcome is unresolved; admission is fenced without retry.'
+            : 'Finite update canceled before native mutation.', { cause }), { code: invoked ? 'uncertain_effect' : 'update_cancelled' });
+        }
+      });
+    },
+  };
   function close() {
     if (closing) return closing;
     // Publish the idempotent close promise before aborting: cancellation
@@ -268,7 +365,7 @@ export function installFiniteScheduleGate(ctx) {
         const owner = ownerFor(session, source.scheduleId);
         if (!owner) return;
         try {
-          const token = owner.finite.tokens.find(item => item.occurrenceAt === source.occurrenceAt);
+          const token = owner.finite.tokens.find(item => item.occurrenceAt === source.occurrenceAt && item.nativeMessageId === source.originalMessageId);
           if (!token?.release || token.state !== 'RELEASED' || token.release.messageId !== message.id
             || token.nativeMessageId !== source.originalMessageId || token.release.contentSha256 !== finiteHash(message.content))
             throw Error('The actual logical input differs from its frozen finite release.');

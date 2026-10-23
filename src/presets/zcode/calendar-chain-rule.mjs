@@ -1,9 +1,9 @@
-import { parseCronInput } from '@deepseek-ai/dsh-schedule';
-import { computeScheduleRuleNextRunAt } from '../../../lib/zcode-calendar-rule.mjs';
+import { parseCronInput, createCronScheduleRecord } from '@deepseek-ai/dsh-schedule';
+import { computeScheduleRuleNextRunAt, scheduleRuleDefinition } from '../../../lib/zcode-calendar-rule.mjs';
 import { bindCalendarDate } from '../../../lib/zcode-zoned-calendar-rule.mjs';
 import { calendarDateFor } from './calendar-date.mjs';
 
-export const CHAIN_UNITS = ['hourly', 'daily', 'weekly', 'monthly', 'yearly'];
+export const CHAIN_UNITS = ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'yearly'];
 export function calendarZone(timeZone) {
   const zone = parseCronInput({ expression: '0 0 * * *', time_zone: timeZone }).timeZone;
   if (zone === 'UTC') return { zone, offset: 0 };
@@ -26,6 +26,8 @@ export function createCalendarChainRule(args, anchorAt) {
   return { rule, timeZone: zone, offset: 0, semantics: 'ecmascript-compatible' };
 }
 export function nextCalendarChainAt(definition, from) {
+  if (definition.kind === 'cron') return createCronScheduleRecord('calendar-preview', 'preview',
+    { expression: definition.expression, time_zone: definition.timeZone }, from, 'preview').scheduledAt;
   if (definition.semantics !== undefined && definition.semantics !== 'ecmascript-compatible')
     throw Error('Unknown calendar chain semantics.');
   const zoned = definition.semantics === 'ecmascript-compatible';
@@ -40,4 +42,18 @@ export function nextCalendarChainAt(definition, from) {
   if (!Number.isSafeInteger(value) || value <= from || !/^\d{4}-/.test(new Date(value).toISOString()))
     throw Error('The next calendar occurrence is outside the admitted native instant range.');
   return new Date(value).toISOString();
+}
+
+// Omitted timing preserves the original phase. Equal source rule definitions
+// also preserve it; a real frequency/zone edit anchors at the accepted update.
+export function updatedCalendarDefinition(previous, args, now) {
+  if (args.cron === undefined) return previous;
+  const cron = parseCronInput({ expression: args.cron, time_zone: args.time_zone });
+  const inferred = /^\*\/([1-9]\d*)\s+\*\s+\*\s+\*\s+\*$/.exec(args.cron.trim());
+  const next = args.intervalUnit !== undefined || inferred
+    ? createCalendarChainRule({ ...args, intervalUnit: args.intervalUnit ?? 'minute', interval: args.interval ?? Number(inferred[1]) }, now)
+    : { kind: 'cron', expression: cron.expression, timeZone: cron.timeZone };
+  if (!previous) return next;
+  const identity = value => value.rule ? { ...value, rule: scheduleRuleDefinition(value.rule) } : value;
+  return JSON.stringify(identity(previous)) === JSON.stringify(identity(next)) ? previous : next;
 }

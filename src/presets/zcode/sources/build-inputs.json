@@ -261,6 +261,16 @@
       "bytes": 2929,
       "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/apps/zcode-cli/packages/bootstrap/src/app/workflow-ask-epilogue.ts",
       "license": "Apache-2.0"
+    },
+    {
+      "path": "packages/services/src/session/automationService.ts",
+      "file": "src/presets/zcode/sources/upstream-3.15.1/packages/services/src/session/automationService.ts",
+      "commit": "aac4755666d09fdcd70272fcf063c077a639015f",
+      "gitBlobSha1": "1c98345e87ef6c740a39adab2ea9de418f38d481",
+      "sha256": "fa3d7a91a3d4658f852d4b1cfe69f22dea47f6f3d31cfbdae30f0a234ceb42be",
+      "bytes": 20933,
+      "url": "https://github.com/zai-org/ZCode/blob/aac4755666d09fdcd70272fcf063c077a639015f/packages/services/src/session/automationService.ts",
+      "license": "Apache-2.0"
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { Temporal } from '../../../lib/zcode-temporal.mjs';
 
 const NativeDate = globalThis.Date;
-// Narrow Date binding for the five retained original calendar functions only.
+// Narrow Date binding for the retained original calendar functions only.
 // Normalize overflow using UTC calendar fields, then resolve the wall clock in
 // the explicit zone with the legacy Date gap/fold rule. No global TZ mutation.
 function wallEpoch(zone, year, month, day, hour, minute, second, millisecond) {

@@ -8,6 +8,7 @@ import { calendarChainSchema, calendarOccurrenceSchema, calendarChainKey, CALEND
 const ownerSchema = z.object({ sessionId: z.string(), workspacePath: z.string(), id: z.string(), createdAt: z.number(),
   timing: z.object({ intentSha256: z.string(), nativeSha256: z.string() }).strict().optional(),
   finite: finiteScheduleSchema.optional(),
+  logicalId: z.string().optional(),
   deleted: z.boolean().optional() }).strict();
 const stores = new WeakMap();
 

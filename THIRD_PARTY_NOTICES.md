@@ -1276,7 +1276,7 @@ Their unmodified licenses are retained in `src/presets/zcode/licenses/`.
 installed build inputs by exact bytes/SHA256 separately from retained upstream
 public API source blobs. The static build declares the existing Temporal version
 directly and bundles its public export without installing software. The original
-ZCode five-function calendar closure remains Apache-2.0; host timezone data and
+ZCode calendar and rule-equivalence closure remains Apache-2.0; host timezone data and
 original application runtime equivalence have not been validated.
 
 The ZCode profile MCP adaptation references the unchanged Apache-2.0 3.15.1
@@ -1285,3 +1285,10 @@ under `src/presets/zcode/sources/upstream-3.15.1/`. Their official commit URLs,
 Git blob hashes and SHA-256 values are recorded in `sources/build-inputs.json`
 and checked by the existing build input gate. Native MCP connection ownership,
 scoped tool registration and durable admission are OMAA host adaptation code.
+
+ZCode scheduled-definition updates reference the unchanged Apache-2.0 3.15.1
+`packages/services/src/session/automationService.ts` at commit
+`aac4755666d09fdcd70272fcf063c077a639015f`. Its original bytes, Git blob and SHA-256
+are in `sources/build-inputs.json`; `automationCron.ts` supplies the derived
+calendar operations and rule-equivalence function. Persistent generations,
+finite dispatch receipts and native conditional updates are OMAA adaptations.

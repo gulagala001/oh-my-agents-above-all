@@ -70,3 +70,5 @@ ZCode TypeScript 工作流的纯编译器由固定原文在 build 时生成。�
 OMAA 0.9.0 接入 `amend_workflow`：run 必须属于当前 session；先编译及核对归属／可读缓存，再停止并等待前驱结算，创建带 `resumedFrom`／`supersededBy` 的 successor。原 `ImportedActorState`、`ImportedWorldQueue`、persona/hash 算法从固定原文构建；完整结果存 native immutable attachment，metadata 保存连续 Actor 完成前缀、native canonical event offset、world 准入序号及关闭事实，独立于有界 display。首次 live 分歧通过专用 continuity provider 继承旧 Actor 的精确 completed event prefix；native manager 追加新 descriptor、真实 parent、当前委派权限并负责冷恢复。失败 ask 封住可导入前缀，不阻断脚本 catch 后的后续 live ask。
 
 图 CSS 与消息桥由 `scripts/build-zcode-graph-ui-assets.mjs` 可重复生成：默认 `--check` 只读核对，`--write` 重建，`--output-dir DIR` 可先生成到审阅目录。它固定核对 40 份原源与 commit、37 个 UI 代码依赖、原 Tailwind utility/wf 样式和实际消费 locale 键，明确保留 DSH 颜色/reset/Intl 桥。Tailwind 4.2.2 与 PostCSS 8.5.6 仅为锁定构建依赖，运行包没有这些依赖。主 build 使用相同 check 入口，三份产物已逐字节复现。
+
+ZCode Cron 的定义、累计派发与原生消息收据保存在同一个类型化域。修改沿会话串行队列执行，先接纳已落盘的提醒，再保存待更新状态，最后用完整原生记录比较更新载体。逻辑日历使用稳定 ID 和逐版本 occurrence；规则变更保留旧提示快照及累计次数，未确认状态冷启动后停止继续创建。有限 cron 保留已派发次数并支持降低／提高上限、改为无限循环及向逻辑间隔迁移；旧原生任务转换时核对完整派发历史。定时器、会话恢复、inbox 与模型执行仍全部属于 DSH。日历计算与规则等价比较复用固定原厂源码，Temporal 仅绑定明确时区；生产代码不修改全局时钟或时区。

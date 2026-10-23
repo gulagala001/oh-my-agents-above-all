@@ -3,14 +3,34 @@ import { symbols } from '@deepseek-ai/cordis';
 import { scopeOf } from '@deepseek-ai/dsh-scope';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { acquireZCodeCronStore } from './cron-store.mjs';
-import { finiteHash } from './finite-schedule-records.mjs';
+import { finiteHash, cronOwnerKey } from './finite-schedule-records.mjs';
 import { calendarChainSchema, calendarOccurrenceSchema, calendarChainKey, calendarOccurrenceKey } from './calendar-chain-records.mjs';
-import { createCalendarChainRule, nextCalendarChainAt } from './calendar-chain-rule.mjs';
+import { createCalendarChainRule, nextCalendarChainAt, updatedCalendarDefinition } from './calendar-chain-rule.mjs';
+import { nativeTimingIdentity } from './advanced-schedule.mjs';
 
 const SOURCE = 'omaa-zcode-calendar-chain';
 const original = value => value?.[symbols.original] ?? value;
 const short = error => String(error?.message ?? error).slice(0, 512);
 const render = (id, at, marker) => `[SCHEDULE REMINDER]\nThis is a scheduled message from the user\nschedule_id_json: ${JSON.stringify(id)}\noccurrence_at: ${at}\nreminder_prompt_json: ${JSON.stringify(marker)}`;
+const matchesCarrier = (row, native) => !row.nativeDeleted && row.marker === native.prompt
+  && (!row.nativeId || row.nativeId === native.id)
+  && (row.adoptedTimingSha256 ? row.adoptedTimingSha256 === finiteHash(nativeTimingIdentity(native))
+    : native.kind === 'at' && row.occurrenceAt === native.scheduledAt);
+function nativeDefinition(native) {
+  if (native.kind === 'cron') return { kind: 'cron', expression: native.expression, timeZone: native.timeZone };
+  if (native.kind === 'every') {
+    const interval = native.everySeconds / 60;
+    if (!Number.isInteger(interval) || interval < 1 || interval > 200) throw Error('Native interval has no original minute-carrier representation.');
+    return createCalendarChainRule({ intervalUnit: 'minute', interval, cron: '* * * * *', time_zone: 'UTC' },
+      Date.parse(native.scheduledAt) - interval * 60_000);
+  }
+  if (['daily', 'weekly'].includes(native.kind)) {
+    const [hour, minute] = native.time.split(':').map(Number);
+    return { kind: 'cron', expression: `${minute} ${hour} * * ${native.kind === 'daily' ? '*' : native.weekdays.map(day => day % 7).join(',')}`, timeZone: native.timeZone };
+  }
+  const at = new Date(native.scheduledAt);
+  return { kind: 'cron', expression: `${at.getUTCMinutes()} ${at.getUTCHours()} ${at.getUTCDate()} ${at.getUTCMonth() + 1} *`, timeZone: 'UTC' };
+}
 export function parseCalendarChainFrame(message) {
   if (message?.source?.kind !== 'schedule' || message.content?.length !== 1 || message.content[0].type !== 'text') return;
   const text = message.content[0].text;
@@ -65,7 +85,7 @@ export function installCalendarChainGate(ctx) {
     return result;
   };
   const chain = id => store.calendarChains.get(calendarChainKey(id));
-  const occurrences = value => [...store.calendarOccurrences.entries()].map(([, row]) => row).filter(row => row.chainId === value.id && row.epoch === value.epoch);
+  const occurrences = value => [...store.calendarOccurrences.entries()].map(([, row]) => row).filter(row => row.chainId === value.id);
   const occurrence = value => store.calendarOccurrences.get(calendarOccurrenceKey(value.chainId, value.epoch, value.occurrenceAt));
   const saveOccurrence = (value, update) => store.calendarOccurrences.update(calendarOccurrenceKey(value.chainId, value.epoch, value.occurrenceAt), current => {
     if (current.marker !== value.marker) throw Error('Calendar occurrence identity changed.');
@@ -77,10 +97,11 @@ export function installCalendarChainGate(ctx) {
     return calendarChainSchema.parse(update(current));
   });
   const fence = async (value, error, row) => {
-    poisoned.add(value.id);
+    const obsolete = row && row.epoch !== chain(value.id)?.epoch;
+    if (!obsolete) poisoned.add(value.id);
     if (row) { try { await saveOccurrence(row, current => ({ ...current,
       ...(['PREPARED', 'BOUND', 'RESERVED', 'RELEASED'].includes(current.phase) ? { phase: 'UNKNOWN' } : {}), reason: short(error) })); } catch {} }
-    try { await saveChain(value, current => ({ ...current, status: current.status === 'DELETED' ? 'DELETED' : 'UNKNOWN', reason: short(error) })); } catch {}
+    if (!obsolete) try { await saveChain(value, current => ({ ...current, status: current.status === 'DELETED' ? 'DELETED' : 'UNKNOWN', reason: short(error) })); } catch {}
     try { ctx.logger?.warn('Calendar chain ' + value.id + ' stopped: ' + short(error)); } catch {}
   };
   const check = (agent, value, signal) => {
@@ -183,11 +204,15 @@ export function installCalendarChainGate(ctx) {
       }
     }
     check(agent, value, signal);
+    if (value.maxRuns !== undefined && value.confirmedDispatches >= value.maxRuns) {
+      await saveChain(value, current => ({ ...current, status: 'CLOSED', reason: 'Scheduled dispatch limit reached; history is retained.' }));
+      return;
+    }
     const at = nextCalendarChainAt(value.definition, from);
     if (at === null) { await saveChain(value, current => ({ ...current, status: 'CLOSED', reason: 'Fixed original calendar search horizon exhausted.' })); return; }
     const next = calendarOccurrenceSchema.parse({ version: 1, chainId: value.id, epoch: value.epoch,
       sessionId: value.sessionId, workspacePath: value.workspacePath, occurrenceAt: at,
-      marker: '[OMAA ZCODE CALENDAR ' + randomUUID() + ']', phase: 'PREPARED' });
+      marker: '[OMAA ZCODE CALENDAR ' + randomUUID() + ']', prompt: value.prompt, phase: 'PREPARED' });
     const key = calendarOccurrenceKey(value.id, value.epoch, at);
     if (store.calendarOccurrences.get(key)) throw Error('The next occurrence already has a durable attempt; automatic retry is forbidden.');
     await store.calendarOccurrences.put(key, next);
@@ -208,12 +233,14 @@ export function installCalendarChainGate(ctx) {
     if (!row) return;
     const value = chain(row.chainId);
     if (!value || value.epoch !== row.epoch) return;
+    if (value.status !== 'ACTIVE') return; // Closed/deleted/uncertain carriers stay inert.
     if (row.nativeId && row.nativeId !== frame.id) {
       await fence(value, Error('A duplicate/orphan native id reused an owned marker; it is filtered without releasing a prompt.'), row); return;
     }
     if (row.phase !== 'BOUND') return;
     try {
       const agent = ctx.agents.get(session.id); check(agent, value);
+      if (value.maxRuns !== undefined && value.confirmedDispatches >= value.maxRuns) return;
       if (value.current !== row.occurrenceAt) throw Error('The received native carrier is not the current calendar obligation.');
       const observation = await observe(session); let proof;
       try { proof = observation.events.slice(observation.inheritedEventCount).find(event => event.type === 'agent/inbox/spliced'
@@ -228,7 +255,7 @@ export function installCalendarChainGate(ctx) {
         throw Error('The native calendar carrier identity changed before reservation.');
       row = await saveOccurrence(row, current => {
         if (current.phase !== 'BOUND') throw Error('Calendar occurrence was already reserved.');
-        return { ...current, phase: 'RESERVED', nativeMessageId: message.id, spliceSeq: proof.seq, frameSha256: finiteHash(message.content), observedAt };
+        return { ...current, prompt: current.prompt ?? value.prompt, phase: 'RESERVED', nativeMessageId: message.id, spliceSeq: proof.seq, frameSha256: finiteHash(message.content), observedAt };
       });
       await flush(session);
       const now = Date.now(), missed = Date.parse(row.occurrenceAt) <= observedAt - 5 * 60_000;
@@ -245,8 +272,8 @@ export function installCalendarChainGate(ctx) {
       || !current || !scopeOf(agent.ctx) || scopeOf(current.ctx) !== scopeOf(agent.ctx)
       || original(current.session) !== original(agent.session) || original(ctx.sessions.get(agent.id)) !== original(agent.session)
       || ctx.get('omaa').product(agent.session)?.id !== 'zcode' || agent.session.header.origin === 'subagent') return;
-    const input = createUserMessage({ content: [{ type: 'text', text: value.prompt }], source: {
-      kind: SOURCE, form: 'logical-prompt', chainId: value.id, epoch: value.epoch,
+    const input = createUserMessage({ content: [{ type: 'text', text: row.prompt ?? value.prompt }], source: {
+      kind: SOURCE, form: 'logical-prompt', chainId: value.id, epoch: row.epoch,
       occurrenceAt: row.occurrenceAt, originalMessageId: message.id } });
     try {
       const saved = await saveOccurrence(row, current => {
@@ -274,17 +301,18 @@ export function installCalendarChainGate(ctx) {
             const accepted = events.find(event => event.type === 'user/message' && event.surfaceOp === 'append'
               && event.data.id === row.release.messageId && finiteHash(event.data.content) === row.release.contentSha256
               && event.data.source?.kind === SOURCE && event.data.source.chainId === value.id
-              && event.data.source.epoch === value.epoch && event.data.source.occurrenceAt === row.occurrenceAt
+              && event.data.source.epoch === row.epoch && event.data.source.occurrenceAt === row.occurrenceAt
               && event.data.source.originalMessageId === row.nativeMessageId && position(events, event.seq, row.release));
             if (accepted) {
               await flush(agent.session);
               await saveOccurrence(row, current => current.phase === 'RELEASED' ? { ...current, phase: 'ADMITTED' } : current);
             } else await fence(value, Error('Cold logical release has no exact accepted input; it is retained without replay.'), row);
           }
-          if (['PREPARED', 'RESERVED'].includes(row.phase))
+          if (['PREPARED', 'RESERVED'].includes(row.phase) && row.epoch === value.epoch)
             await fence(value, Error('Cold carrier creation or dispatch reservation is unresolved; no automatic retry or replay.'), row);
         }
         const latest = chain(value.id), current = store.calendarOccurrences.get(calendarOccurrenceKey(value.id, value.epoch, value.current));
+        if (latest.status === 'UPDATING') await fence(value, Error('Cold definition update has no confirmed commit; inspect the retained carrier before another action.'));
         if (['ACTIVE', 'AWAITING_NATIVE'].includes(latest.status) && (!current || current.phase !== 'BOUND'))
           await fence(value, Error('Cold continuation lacks a bound future carrier; automatic re-arming is forbidden.'));
       }
@@ -387,22 +415,166 @@ export function installCalendarChainGate(ctx) {
     for (const item of controllers) if (item.sessionId === agent.id && item.scope === key)
       item.control.abort(Error('Calendar native owner disposed while work was in flight.'));
   }, { global: true }));
+  const updateDefinition = async (scope, id, args, remember, adopting) => {
+        scope.check();
+        let value = chain(id);
+        if (!value || value.sessionId !== scope.sessionId || value.workspacePath !== scope.workspacePath)
+          throw Error('No calendar logical id belongs to this exact session/workspace.');
+        if (['DELETED', 'UNKNOWN', ...(adopting ? [] : ['UPDATING'])].includes(value.status) || poisoned.has(id))
+          throw Error('This calendar series is deleted or unresolved; inspect its receipts without retrying it.');
+        const now = Date.now(), definition = updatedCalendarDefinition(value.definition, args, now);
+        const maxRuns = args.recurring === true || args.intervalUnit !== undefined ? undefined
+          : args.maxRuns ?? (args.recurring === false ? value.maxRuns ?? 1 : value.maxRuns);
+        const title = args.title.trim(), prompt = args.prompt?.trim() ?? value.prompt;
+        const timingChanged = definition !== value.definition;
+        const wasClosed = value.status === 'CLOSED';
+        const budgetChanged = maxRuns !== value.maxRuns;
+        const reached = maxRuns !== undefined && value.confirmedDispatches >= maxRuns;
+        const remainsClosed = reached || wasClosed && !budgetChanged && args.recurring === undefined;
+        // Snapshot prior logical prompts before changing the series definition.
+        // Confirmed old inbox references may still enter a later native step.
+        for (const row of occurrences(value)) if (row.prompt === undefined)
+          await saveOccurrence(row, current => ({ ...current, prompt: value.prompt }));
+        const prior = store.calendarOccurrences.get(calendarOccurrenceKey(id, value.epoch, value.current));
+        const catalog = await scope.service.catalog(); scope.check();
+        const native = prior?.nativeId && catalog.find(row => row.id === prior.nativeId && row.sessionId === value.sessionId);
+        if (native && (adopting ? finiteHash(native) !== finiteHash(adopting.native)
+          : !matchesCarrier(prior, native)))
+          throw Error('The current native carrier was edited elsewhere; no calendar definition was changed.');
+        if (!wasClosed && !native && !prior?.nativeDeleted)
+          throw Error('The current native carrier is missing without a cleanup receipt.');
+        const nextAt = timingChanged || wasClosed || !native || native.status !== 'active'
+          ? nextCalendarChainAt(definition, now) : value.current;
+        if (!remainsClosed && !nextAt) throw Error('The replacement calendar has no next occurrence within its source search horizon.');
+        const metadata = { title, prompt, definition, maxRuns, reason: undefined };
+        if (remainsClosed && (!adopting || native?.status === 'inactive')) {
+          const saved = await saveChain(value, current => ({ ...current, ...metadata, status: 'CLOSED' }));
+          remember({ operation: 'calendar-update', logicalId: id, status: 'logical-definition-confirmed', admissionClosed: true });
+          return { ok: true, automation: gateway.view(saved), interrupted: scope.interrupted() };
+        }
+        // One durable generation per replacement. The stable logical id, counts
+        // and all prior receipts remain. Native update uses complete-record CAS.
+        const epoch = randomUUID();
+        const replacement = calendarChainSchema.parse({ ...value, ...metadata, epoch, current: nextAt, status: 'UPDATING',
+          standingPolicy: calendarStandingPolicy(scope.agent) });
+        const row = calendarOccurrenceSchema.parse({ version: 1, chainId: id, epoch, sessionId: value.sessionId,
+          workspacePath: value.workspacePath, occurrenceAt: nextAt, prompt,
+          marker: '[OMAA ZCODE CALENDAR ' + randomUUID() + ']', phase: 'PREPARED' });
+        await store.calendarOccurrences.put(calendarOccurrenceKey(id, epoch, nextAt), row);
+        let invoked = false, confirmed = false;
+        try {
+          await saveChain(value, () => replacement);
+          remember({ operation: 'calendar-update', logicalId: id, status: 'definition-prepared', epoch });
+          scope.check();
+          let result;
+          invoked = true;
+          if (native?.status === 'active') {
+            const { sessionId: _session, status: _status, lastDelivery: _delivery, ...expected } = native;
+            result = await scope.service.update({ sessionId: value.sessionId, id: native.id, expected,
+              title, prompt: row.marker, change: { kind: 'at', at: nextAt } }, scope.signal);
+            if (!result.record) {
+              await saveChain(replacement, () => value);
+              await saveOccurrence(row, current => ({ ...current, phase: 'SUPERSEDED', reason: result.code }));
+              remember({ operation: 'calendar-update', logicalId: id, status: 'native-refused', code: result.code });
+              return { ok: false, id, result };
+            }
+          } else {
+            result = { record: await scope.service.create(value.sessionId, { title, prompt: row.marker, at: nextAt }, scope.signal) };
+          }
+          confirmed = true;
+          remember({ operation: 'calendar-update', logicalId: id, status: 'native-confirmed', nativeId: result.record.id, ownershipConfirmed: false });
+          if (result.record.kind !== 'at' || result.record.scheduledAt !== nextAt || result.record.prompt !== row.marker)
+            throw Error('Native replacement differs from its prepared calendar definition.');
+          await saveOccurrence(row, current => ({ ...current, nativeId: result.record.id, phase: 'BOUND' }));
+          if (prior?.phase === 'BOUND') await saveOccurrence(prior, current => ({ ...current, phase: 'SUPERSEDED',
+            ...(native?.status === 'active' ? { nativeDeleted: true } : {}) }));
+          approvedGenerations.set(id, generations.get(value.sessionId) ?? 0);
+          const blocked = scope.interrupted() || calendarStandingPolicy(scope.agent) !== replacement.standingPolicy;
+          const saved = await saveChain(replacement, current => ({ ...current, status: blocked ? 'POLICY_BLOCKED' : remainsClosed ? 'CLOSED' : 'ACTIVE',
+            ...(blocked ? { reason: 'Update committed after the calling context changed; explicit reapproval is required.' } : {}) }));
+          remember({ operation: 'calendar-update', logicalId: id, status: 'definition-confirmed', nativeId: result.record.id, ownershipConfirmed: true });
+          return { ok: true, automation: gateway.view(saved), interrupted: scope.interrupted(),
+            response: 'Definition updated under the same logical id. Scheduled dispatch counts and previously queued prompts are preserved.' };
+        } catch (cause) {
+          if (!invoked) {
+            if (chain(id)?.epoch === epoch) await saveChain(replacement, () => value);
+            await saveOccurrence(row, current => ({ ...current, phase: 'SUPERSEDED' }));
+          } else await fence(replacement, cause, occurrence(row));
+          throw Object.assign(Error(confirmed ? 'Native update committed but logical receipt is unresolved; inspect this id without retry.'
+            : invoked ? 'Native update outcome is unknown; future admission is fenced without retry.' : 'Calendar update was canceled before native mutation.', { cause }),
+          { code: invoked ? 'uncertain_effect' : 'update_cancelled' });
+        }
+  };
   const gateway = {
     available: () => !!store && !closed,
+    owns: id => !!store && !!chain(id),
+    async adopt(scope, args, owner, remember, expectedNative) {
+      return enqueue(scope.sessionId, async () => {
+        scope.check();
+        if (chain(owner.id)) throw Error('This schedule already has a logical definition; list its current state.');
+        const native = (await scope.service.catalog()).find(row => row.id === owner.id && row.sessionId === scope.sessionId);
+        if (expectedNative && finiteHash(native) !== finiteHash(expectedNative))
+          throw Error('Native delivery advanced during adoption; no definition was changed.');
+        if (!native) throw Error('The original native reminder is missing; no definition was replaced.');
+        let confirmed = owner.finite?.confirmed;
+        if (confirmed === undefined) {
+          confirmed = 0; let before;
+          do {
+            const history = await scope.service.history({ sessionId: scope.sessionId, id: owner.id, limit: 100, ...(before ? { before } : {}) });
+            scope.check();
+            if (!history.records || history.earlierRecordsUnavailable)
+              throw Error('Retained native delivery history is incomplete; the total run count cannot be migrated safely.');
+            confirmed += history.records.length; before = history.nextBefore;
+          } while (before);
+        }
+        if (['after', 'at'].includes(native.kind) && args.cron === undefined
+          && (args.recurring === true || (args.maxRuns ?? 1) > Math.max(1, confirmed)))
+          throw Error('Resuming a legacy one-shot as a recurring schedule requires an explicit replacement cron and time_zone.');
+        if (owner.finite && (native.kind !== 'cron' || native.prompt !== owner.finite.marker
+          || native.expression !== owner.finite.expression || native.timeZone !== owner.finite.timeZone))
+          throw Error('Finite carrier changed outside its saved definition.');
+        const previous = nativeDefinition(native);
+        const maxRuns = owner.finite ? owner.finite.maxRuns ?? undefined : ['after', 'at'].includes(native.kind) ? 1 : undefined;
+        const value = calendarChainSchema.parse({ version: 1, id: owner.id, epoch: randomUUID(),
+          sessionId: owner.sessionId, workspacePath: owner.workspacePath, createdAt: owner.createdAt,
+          title: native.title, prompt: owner.finite?.prompt ?? native.prompt, definition: previous, maxRuns,
+          standingPolicy: calendarStandingPolicy(scope.agent), derivedCarrierApproval: true, inactiveCleanupApproval: true,
+          status: native.status === 'inactive' ? 'CLOSED' : 'UPDATING', current: native.scheduledAt, confirmedDispatches: confirmed, skippedOccurrences: 0 });
+        const row = calendarOccurrenceSchema.parse({ version: 1, chainId: value.id, epoch: value.epoch,
+          sessionId: value.sessionId, workspacePath: value.workspacePath, occurrenceAt: value.current,
+          marker: native.prompt, prompt: value.prompt, nativeId: native.id,
+          adoptedTimingSha256: finiteHash(nativeTimingIdentity(native)), phase: native.status === 'inactive' ? 'SUPERSEDED' : 'BOUND' });
+        // Validate replacements before persisting any migration intent.
+        updatedCalendarDefinition(previous, args, Date.now()); scope.check();
+        await store.prepareCalendarChain(value);
+        await store.calendarOccurrences.put(calendarOccurrenceKey(value.id, value.epoch, value.current), row);
+        let result;
+        try { result = await updateDefinition(scope, value.id, args, remember, { native }); }
+        catch (error) { await fence(chain(value.id), error); throw error; }
+        if (!result.ok) {
+          await store.calendarChains.delete(calendarChainKey(value.id));
+          return result;
+        }
+        await store.owners.update(cronOwnerKey(scope.sessionId, owner.id), current => ({ ...current, logicalId: owner.id,
+          ...(current.finite ? { finite: { ...current.finite, status: 'DELETED' } } : {}) }));
+        return result;
+      });
+    },
     async create(scope, args, remember) {
       await ready;
       return enqueue(scope.sessionId, async () => {
         scope.check();
-        const createdAt = Date.now(), definition = createCalendarChainRule(args, createdAt), at = nextCalendarChainAt(definition, createdAt);
+        const createdAt = Date.now(), definition = updatedCalendarDefinition(undefined, args, createdAt), at = nextCalendarChainAt(definition, createdAt);
         if (at === null) throw Error('The original calendar search horizon has no future occurrence.');
         const value = calendarChainSchema.parse({ version: 1, id: 'zcode-calendar-' + randomUUID(), epoch: randomUUID(),
           sessionId: scope.sessionId, workspacePath: scope.workspacePath, title: args.title.trim(), prompt: args.prompt.trim(), createdAt,
           definition, standingPolicy: calendarStandingPolicy(scope.agent), derivedCarrierApproval: true, inactiveCleanupApproval: true,
+          ...(args.recurring === false ? { maxRuns: args.maxRuns ?? 1 } : {}),
           status: 'ACTIVE', current: at, confirmedDispatches: 0, skippedOccurrences: 0 });
         approvedGenerations.set(value.id, generations.get(value.sessionId) ?? 0);
         await store.prepareCalendarChain(value);
         const row = calendarOccurrenceSchema.parse({ version: 1, chainId: value.id, epoch: value.epoch, sessionId: value.sessionId,
-          workspacePath: value.workspacePath, occurrenceAt: at, marker: '[OMAA ZCODE CALENDAR ' + randomUUID() + ']', phase: 'PREPARED' });
+          workspacePath: value.workspacePath, occurrenceAt: at, marker: '[OMAA ZCODE CALENDAR ' + randomUUID() + ']', prompt: value.prompt, phase: 'PREPARED' });
         try {
           await store.calendarOccurrences.put(calendarOccurrenceKey(value.id, value.epoch, at), row);
           scope.check();
@@ -414,9 +586,10 @@ export function installCalendarChainGate(ctx) {
     view(value) {
       const rows = occurrences(value), latest = chain(value.id);
       return { id: latest.id, scope: 'owner-session', createdAt: latest.createdAt, status: latest.status, title: latest.title, frozenPrompt: latest.prompt,
-        titleScope: 'logical-schedule-and-future-carriers; existing-native-carrier-titles-are-preserved',
+        titleScope: 'logical-schedule-and-current-and-future-carriers',
         currentOccurrenceAt: latest.current, definition: latest.definition, confirmedDispatches: latest.confirmedDispatches,
-        skippedOccurrences: latest.skippedOccurrences, reason: latest.reason, nativeCarrierIds: rows.filter(row => !row.nativeDeleted).map(row => row.nativeId).filter(Boolean).slice(-16),
+        recurring: latest.maxRuns === undefined, ...(latest.maxRuns === undefined ? {} : { maxRuns: latest.maxRuns }),
+        skippedOccurrences: latest.skippedOccurrences, ...(latest.reason === undefined ? {} : { reason: latest.reason }), nativeCarrierIds: rows.filter(row => !row.nativeDeleted).map(row => row.nativeId).filter(Boolean).slice(-16),
         retainedReceiptCount: rows.length, recentReceipts: rows.slice(-4), omittedReceiptCount: Math.max(0, rows.length - 4),
         retainedNativeCarrierIdCount: rows.filter(row => !row.nativeDeleted && row.nativeId).length,
         semantics: 'stable logical id; native at carriers; durable marker-reference dispatch is not prompt acceptance or model completion; unknown is never retried' };
@@ -427,28 +600,13 @@ export function installCalendarChainGate(ctx) {
       return [...store.calendarChains.entries()].map(([, value]) => value).filter(value => value.sessionId === scope.sessionId
         && value.workspacePath === scope.workspacePath).map(value => {
           const rows = occurrences(value);
-          const actual = catalog.filter(native => native.sessionId === value.sessionId && native.kind === 'at'
-            && rows.some(row => row.marker === native.prompt && row.occurrenceAt === native.scheduledAt && (!row.nativeId || row.nativeId === native.id)));
+          const actual = catalog.filter(native => native.sessionId === value.sessionId && rows.some(row => matchesCarrier(row, native)));
           return { ...gateway.view(value), actualNativeIds: actual.map(row => row.id).slice(-16), actualNativeIdCount: actual.length,
             actualNativeTitles: actual.slice(-16).map(row => ({ id: row.id, title: row.title })) };
         });
     },
-    async rename(scope, id, title, remember) {
-      await ready;
-      return enqueue(scope.sessionId, async () => {
-        scope.check();
-        const value = chain(id);
-        if (!value || value.sessionId !== scope.sessionId || value.workspacePath !== scope.workspacePath)
-          throw Error('No calendar logical id belongs to this exact session/workspace.');
-        if (typeof title !== 'string' || !title.trim() || title.length > 120) throw Error('Invalid calendar title.');
-        remember({ operation: 'calendar-rename', logicalId: id, status: 'unknown', nativeCarriersChanged: false });
-        let saved;
-        try { saved = await saveChain(value, current => ({ ...current, title: title.trim() })); }
-        catch (cause) { throw Object.assign(Error('Logical title persistence has no confirmed receipt; inspect this exact id before another request.', { cause }), { code: 'uncertain_effect' }); }
-        remember({ operation: 'calendar-rename', logicalId: id, status: 'logical-metadata-confirmed', nativeCarriersChanged: false });
-        return { ok: true, automation: gateway.view(saved), interrupted: scope.interrupted(), nativeCarriersChanged: false,
-          response: 'Logical title saved for this series and future carriers. Existing native carrier titles, rule, anchor, prompt, status and dispatch evidence were preserved.' };
-      });
+    async update(scope, id, args, remember) {
+      return enqueue(scope.sessionId, () => updateDefinition(scope, id, args, remember));
     },
     async delete(scope, id, remember) {
       await ready;
@@ -461,8 +619,7 @@ export function installCalendarChainGate(ctx) {
         const catalog = await scope.service.catalog(); scope.check();
         const results = [];
         for (const row of occurrences(value)) {
-          const natives = catalog.filter(native => native.sessionId === value.sessionId && native.kind === 'at'
-            && native.prompt === row.marker && native.scheduledAt === row.occurrenceAt && (!row.nativeId || row.nativeId === native.id));
+          const natives = catalog.filter(native => native.sessionId === value.sessionId && matchesCarrier(row, native));
           for (const native of natives) {
             scope.check(); remember({ operation: 'calendar-delete', logicalId: id, status: 'unknown', nativeId: native.id, admissionClosed: true });
             try {

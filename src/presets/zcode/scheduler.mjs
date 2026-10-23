@@ -32,6 +32,8 @@ function publicNative(value) {
 const receiptRecord = record => Object.fromEntries(['id', 'kind', 'scheduledAt', 'afterSeconds', 'everySeconds']
   .filter(key => record?.[key] !== undefined).map(key => [key, record[key]]));
 const needsCalendarChain = args => {
+  if (args.maxRuns > 1 && args.intervalUnit === undefined
+    && /^\*\/([1-9]\d*)\s+\*\s+\*\s+\*\s+\*$/.test(String(args.cron ?? '').trim())) return true;
   if (!['hourly', 'daily', 'weekly', 'monthly', 'yearly'].includes(args.intervalUnit)) return false;
   if (!text(args.time_zone, 128)) throw Error('Calendar carriers require an explicit time_zone.');
   const zone = parseCronInput({ expression: args.cron, time_zone: args.time_zone }).timeZone;
@@ -53,16 +55,15 @@ function validate(args, action) {
     || args.cursor !== undefined && (typeof args.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/.test(args.cursor))))
     throw Error('Cron list requires limit 1–50 and an actual nextCursor, or no cursor to start again.');
   if (args.maxRuns !== undefined && (!Number.isSafeInteger(args.maxRuns) || args.maxRuns < 1 || args.recurring !== false)) unsupported();
-  if (args.maxRuns > 1 && (action !== 'create' || args.intervalUnit !== undefined || args.delayMinutes != null
-    || args.cron === undefined || /^\*\/([1-9]\d*)\s+\*\s+\*\s+\*\s+\*$/.test(args.cron.trim())))
-    throw Error('Finite dispatch budgets require a new explicit calendar cron, recurring=false and maxRuns>=2. Interval carriers, inferred minute intervals and finite updates are not admitted.');
+  if (action === 'create' && args.maxRuns > 1 && (args.intervalUnit !== undefined || args.delayMinutes != null
+    || args.cron === undefined))
+    throw Error('Finite dispatch budgets require an explicit calendar cron and recurring=false. Explicit interval carriers are indefinite.');
   if ((args.intervalUnit === undefined) !== (args.interval === undefined)) throw Error('intervalUnit and interval must be supplied together.');
   if (args.intervalUnit !== undefined) {
     if (!['minute', 'hourly', 'daily', 'weekly', 'monthly', 'yearly'].includes(args.intervalUnit)) unsupported();
     if (!Number.isInteger(args.interval) || args.interval < 1 || args.interval > 200
       || args.recurring === false || args.maxRuns !== undefined || args.delayMinutes != null || args.cron === undefined)
       throw Error('Interval carriers require interval 1–200, compatibility cron and indefinite recurrence, without delayMinutes/maxRuns. Updates must supply their compatibility cron explicitly.');
-    if (action === 'update' && needsCalendarChain(args)) throw Error('Calendar chains are admitted only as new logical schedules; existing native ids are never migrated.');
   }
   if (args.recurring !== undefined && typeof args.recurring !== 'boolean') throw Error('recurring must be boolean.');
   if (['update', 'delete'].includes(action) && !text(args.id, 256)) throw Error('Use an actual id from cron_create or cron_list.');
@@ -78,7 +79,7 @@ function validate(args, action) {
 }
 export async function apply(ctx) {
   const store = await acquireZCodeCronStore(ctx);
-  const owners = store.owners, lifetime = new AbortController(), pending = new Set(), requests = new Set(), receipts = new Map();
+  const owners = store.owners, lifetime = new AbortController(), pending = new Set(), requests = new Set(), receipts = new Map(), mutations = new Map();
   let closing = false;
   const track = work => { pending.add(work); work.finally(() => pending.delete(work)).catch(() => {}); return work; };
   ctx.effect(() => async () => {
@@ -160,7 +161,7 @@ export async function apply(ctx) {
     const approval = scope.agent.ctx.get('approval');
     if (typeof approval?.request !== 'function') throw Error('Native approval is unavailable; no reminder was changed.');
     const decision = await approval.request({ agent: scope.agent, toolName: exec.name, callId: exec.callId,
-      reason: derived ? 'Create this persistent calendar series: explicitly authorize derived native one-shot carriers and deletion of each verified inactive predecessor under the unchanged session, workspace, default mode and standing permissions. Policy changes stop future arming. Unknown creation/cleanup is never automatically retried. Native marker dispatch is not model task completion.'
+      reason: derived ? 'Change this persistent calendar series: explicitly authorize derived native one-shot carriers and deletion of each verified inactive predecessor under the unchanged session, workspace, default mode and standing permissions. Policy changes stop future arming. Unknown creation/cleanup is never automatically retried. Native marker dispatch is not model task completion.'
         : 'Change this session’s persistent ZCode reminder within existing permissions. Native reminder delivery is not confirmation that its model task completed.', signal: scope.signal });
     if (decision !== 'allowed-once') throw Error('Native Cron approval was not granted: ' + decision);
     scope.check();
@@ -181,25 +182,25 @@ export async function apply(ctx) {
     try {
     if (action !== 'list') await checkAutomationTurn(scope);
     const chains = ctx.get('omaaZCodeCalendarChains');
-    if (action !== 'create' && action !== 'list' && args.id.startsWith('zcode-calendar-')) {
+    if (action !== 'create' && action !== 'list' && (args.id.startsWith('zcode-calendar-') || chains?.owns(args.id))) {
       if (!chains?.available()) throw Error('Persistent calendar chain service is unavailable.');
-      if (action === 'update' && Object.keys(args).some(key => !['id', 'title'].includes(key)))
-        throw Error('Calendar logical schedules currently admit only id/title updates. Rule, anchor and prompt replacements require a separately versioned implementation.');
-      await approve(exec, scope);
-      return action === 'update' ? chains.rename(scope, args.id, args.title.trim(), value => receipts.set(exec.token, value))
+      await approve(exec, scope, action === 'update');
+      return action === 'update' ? chains.update(scope, args.id, args, value => receipts.set(exec.token, value))
         : chains.delete(scope, args.id, value => receipts.set(exec.token, value));
     }
     if (action === 'list') {
       const catalog = await scope.service.catalog(); scope.check();
-      const rows = [...owners.entries()].map(([, value]) => value).filter(row => (!row.deleted || row.finite)
+      const rows = [...owners.entries()].map(([, value]) => value).filter(row => !chains?.owns(row.id) && (!row.deleted || row.finite)
         && row.sessionId === scope.sessionId && row.workspacePath === scope.workspacePath);
       const pending = [...store.pending.entries()].map(([, value]) => value).filter(row => row.sessionId === scope.sessionId && row.workspacePath === scope.workspacePath);
       const entries = pending.map(value => ({ kind: 'pending', id: finitePendingKey(value.marker), createdAt: value.createdAt, read() {
         const matches = catalog.filter(native => native.sessionId === scope.sessionId && native.prompt === value.marker
           && native.kind === 'cron' && native.expression === value.expression && native.timeZone === value.timeZone);
-        return { preparationId: finitePendingKey(value.marker), status: value.status, title: value.title, maxRuns: value.maxRuns, nativeId: value.nativeId,
+        return { preparationId: finitePendingKey(value.marker), status: value.status, title: value.title, maxRuns: value.maxRuns,
+          ...(value.nativeId === undefined ? {} : { nativeId: value.nativeId }),
           actualNativeIds: matches.map(native => native.id),
-          frozenPrompt: value.prompt.length <= 1024 ? value.prompt : { sha256: hashOf(value.prompt), bytes: byteSize(value.prompt), omitted: true }, reason: value.reason,
+          frozenPrompt: value.prompt.length <= 1024 ? value.prompt : { sha256: hashOf(value.prompt), bytes: byteSize(value.prompt), omitted: true },
+          ...(value.reason === undefined ? {} : { reason: value.reason }),
           semantics: 'durable creation preparation, not successful dispatch; inert marker is filtered; never retry automatically' };
       } }));
       if (chains?.available()) {
@@ -227,9 +228,26 @@ export async function apply(ctx) {
       }
       scope.check();
       if (action === 'update') {
-        if (owner.finite && Object.keys(args).some(key => !['id', 'title'].includes(key)))
-          throw Error('Finite reminders currently admit only id/title updates. Prompt, rule and budget replacements require a separately versioned implementation.');
-        if (!native || native.status !== 'active') return { ok: false, id: args.id, code: native ? 'schedule_ended' : 'schedule_not_found' };
+        if (owner.finite) {
+          const gate = ctx.get('omaaZCodeFiniteCron');
+          if (!gate?.available()) throw Error('Persistent finite dispatch gate is unavailable.');
+          await approve(exec, scope, args.intervalUnit !== undefined);
+          if (args.intervalUnit !== undefined) {
+            if (!chains?.available()) throw Error('Persistent logical calendar service is unavailable.');
+            return gate.adopt(scope, args, chains, value => receipts.set(exec.token, value));
+          }
+          const result = await gate.update(scope, args, value => receipts.set(exec.token, value));
+          if (!result.ok) return result;
+          return { ok: true, automation: view(result.owner, { ...result.native, status: 'active' }), interrupted: result.interrupted,
+            response: 'Prompt, calendar rule and total dispatch budget updated. The native id, delivery history and already queued prompts are preserved.' };
+        }
+        if (!native) return { ok: false, id: args.id, code: 'schedule_not_found' };
+        if (native.status === 'inactive' || args.maxRuns !== undefined || needsCalendarChain(args) || args.recurring !== undefined
+          && args.recurring !== ['every', 'daily', 'weekly', 'cron'].includes(native.kind)) {
+          if (!chains?.available()) throw Error('Persistent logical calendar service is unavailable.');
+          await approve(exec, scope, true);
+          return chains.adopt(scope, args, owner, value => receipts.set(exec.token, value));
+        }
         const recurring = ['every', 'daily', 'weekly', 'cron'].includes(native.kind);
         if (args.recurring !== undefined && args.recurring !== recurring && args.cron === undefined)
           throw Error('Changing recurrence requires an explicit replacement cron and time_zone.');
@@ -239,7 +257,7 @@ export async function apply(ctx) {
     if (action === 'create' && needsCalendarChain(args)) {
       if (!chains?.available()) throw Error('Persistent calendar chain service is unavailable; no carrier was created.');
       return { ok: true, automation: await chains.create(scope, args, value => receipts.set(exec.token, value)),
-        response: 'Calendar logical series saved with native one-shot carriers. Its frozen anchor is permanent; unknown outcomes stop future arming without retry. Dispatch counts are not model completion.' };
+        response: 'Calendar logical series saved with native one-shot carriers. Content changes retain its anchor; frequency changes replace its definition; unknown outcomes stop future arming without retry. Dispatch counts are not model completion.' };
     }
     if (action === 'create') {
       // Capture fallback calendar slots and their provenance from one clock
@@ -375,13 +393,16 @@ export async function apply(ctx) {
   };
   const timing = { cron: { type: 'string', description: 'Five-field calendar cron, or validated compatibility cron for an admitted interval carrier. Requires explicit time_zone. recurring=false selects its next occurrence once.' },
     time_zone: { type: 'string', description: 'Explicit user-selected IANA zone or UTC. Never infer it from the server clock.' },
-    recurring: { type: 'boolean' }, maxRuns: { type: 'integer', description: 'With recurring=false: 1 selects a native one-shot; >=2 on NEW explicit calendar cron selects a persistent finite native-inbox dispatch budget. Confirmed marker-reference dispatch is not model prompt acceptance or completion. UNKNOWN is fenced without automatic replay; interval carriers are excluded.' },
-    intervalUnit: { type: 'string', enum: ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'yearly'], description: 'New hourly/daily/weekly/monthly/yearly carriers admit interval 1–200 and an explicit native-validated IANA time_zone. Changing-offset zones use stable logical one-shot chains with the original calendar operations and compatible gap/fold resolution. Existing exact UTC/fixed-offset native mappings remain; other intervals/minute fallbacks use chains. Compatibility slots retain original numeric/fallback parsing; yearly uses first month/day only. Logical schedules admit only title updates; current native carrier titles stay unchanged.' }, interval: { type: 'integer', minimum: 1, maximum: 200 } };
+    recurring: { type: 'boolean', description: 'true clears the finite limit; false uses maxRuns or the retained limit (default 1). Existing scheduled dispatch counts never reset.' },
+    maxRuns: { type: 'integer', minimum: 1, description: 'Total scheduled dispatch limit, only with recurring=false. Updates preserve prior dispatch counts; lowering the limit can complete the schedule, increasing it can resume a completed schedule. A delivery is not model task completion.' },
+    intervalUnit: { type: 'string', enum: ['minute', 'hourly', 'daily', 'weekly', 'monthly', 'yearly'],
+      description: 'Supply with interval and a legal compatibility cron for every N units. Explicit carriers require indefinite recurrence. Calendar rules use the selected IANA zone and original compatible gap/fold behavior; identical definitions preserve their anchor.' },
+    interval: { type: 'integer', minimum: 1, maximum: 200 } };
   for (const action of ['create', 'list', 'update', 'delete']) {
     const mutating = action !== 'list';
     ctx.tools.register({ name: 'cron_' + action, timeoutMs: 30000,
       description: action === 'list' ? 'Page through this adapter’s retained reminders and pending creations for THIS native ZCode session/workspace, including inactive one-shots. Defaults to 10 entries (limit 1–50). Continue with nextCursor; restart if the ID roster changed. Oversized entries return their actual ID, SHA256 and size instead of blocking later entries. count includes all groups; counts gives group totals. Native delivery receipts are not completed model runs.'
-        : 'Native session-owned ZCode Cron adaptation. Use only on the user’s explicit request. Requires native approval and current default mode; forbidden during scheduled turns. delayMinutes creates a one-shot. Calendar cron requires explicit time_zone; recurring=false delivers its next occurrence once. A fixed calendar target missed by less than a minute uses a native one-second grace delay; 1–30 minutes stale is refused. intervalUnit=minute with interval 1–200 uses creation-anchored fixed intervals. On NEW schedules, exact */N * * * * also infers the original minute anchor; recurring=false delays N minutes once. Existing equivalent calendar timing is preserved. The existing UTC/fixed-offset native hourly mapping supports intervals 1,2,3,4,6,8,12,24 with numeric cron minute. New changing-offset-zone interval carriers use compatible calendar chains instead; existing native ids are never migrated. Explicit UTC or native-validated Etc/GMT fixed-offset zones additionally admit daily 1/7, weekly 1, monthly 1/2/3/4/6/12, yearly 1. Numeric compatibility slots and upstream fallbacks are preserved; yearly uses only first month/day. Native calendar recurrence remains indefinite and does not reproduce upstream century-scale search horizons. Carrier updates require explicit compatibility cron. Content-only updates never recompile timing; matching confirmed intent preserves its native anchor. New explicit calendar cron with recurring=false and maxRuns>=2 uses an inert native carrier and persistent finite inbox-dispatch gate. Prompt/rule/budget freeze; title-only updates use the native full-record comparison; UNKNOWN is never retried. Closed carriers remain inert until explicit deletion. Counts prove durable marker-reference dispatch, not logical prompt acceptance or model completion. Other hourly/daily/weekly/monthly/yearly intervals 1–200, hourly minute fallbacks, and all NEW changing-offset-zone interval carriers use a stable logical schedule with derived native one-shot carriers, explicit standing approval and a permanent original calendar anchor. New tagged chains use original local Date operations bound to the selected IANA zone through Temporal compatible gap/fold resolution; host timezone data equivalence is unverified. Existing tagless fixed-offset chains keep their original shifted anchor and UTC algorithm. Inactive predecessors are cleaned only with that approval. Misfires at least five minutes late skip the prompt; UNKNOWN stops without retry. Logical title-only updates preserve existing native carrier titles and apply to future carriers; rule/anchor/prompt replacements remain refused. Delete closes future arming but retains confirmed queued references. Creation-time model pinning is not provided. Updates compare the complete observed native record; deletion is not compare-and-delete. Do not retry unknown outcomes. Native delivery can repeat after a crash and is not model execution completion.',
+        : "Native session-owned ZCode Cron. Use only for explicitly requested scheduled work, in default mode with native approval; mutations are forbidden during scheduled turns. Keep title consistent with the requested schedule. Omit unchanged fields. delayMinutes creates one relative delivery; calendar cron requires an explicit user-selected IANA time_zone. Set intervalUnit and interval together for every N units, 1–200, with a legal compatibility cron; explicit interval carriers are indefinite. Exact */N * * * * infers a creation-anchored minute rule. recurring=false and maxRuns select the TOTAL scheduled dispatch budget, not additional runs; recurring=true clears the limit. Updating title/prompt preserves timing; an equivalent rule preserves its anchor; changing frequency or zone computes the next target from the accepted update. Updates preserve the logical id, cumulative dispatch count, native delivery history and previously queued prompt bodies. Completed finite schedules can resume when their budget increases. Ordinary cron, original interval rules and finite definitions can be replaced through the same id; native carriers are conditionally updated using their complete observed record. Logical calendar chains use the fixed source rules and compatible DST gap/fold resolution; tagless legacy fixed-offset rules retain their old semantics until explicitly replaced. Misfires at least five minutes late skip the logical prompt. Unknown mutation/dispatch outcomes stop future admission without automatic retry. Inspect cron_list for retained facts before further action. Delete closes future admission and retains already confirmed queued references. Native cleanup lacks compare-and-delete. Creation-time model pinning is not provided; future work uses the session model and standing permissions. Dispatch counts and native receipts are not proof that the model completed the task.",
       parameters: { type: 'object', additionalProperties: false, properties: action === 'create'
         ? { title: { type: 'string' }, prompt: { type: 'string' }, delayMinutes: { type: ['integer', 'null'] }, ...timing }
         : action === 'update' ? { id: { type: 'string' }, title: { type: 'string' }, prompt: { type: 'string' }, ...timing }
@@ -395,7 +416,12 @@ export async function apply(ctx) {
       },
       execute(args, exec) {
         if (closing) throw Error('ZCode Cron scope is closed.');
-        return track(execute(action, args, exec));
+        if (!mutating) return track(execute(action, args, exec));
+        const id = exec.agent?.id;
+        const work = (mutations.get(id) ?? Promise.resolve()).catch(() => {}).then(() => execute(action, args, exec));
+        mutations.set(id, work);
+        work.finally(() => { if (mutations.get(id) === work) mutations.delete(id); }).catch(() => {});
+        return track(work);
       },
     });
   }

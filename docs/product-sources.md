@@ -23,3 +23,5 @@ Grok 与 Cursor 的浏览器队列复用固定 `@deepseek-ai/dsh-client-ui-conve
 ZCode 子任务结果协议来自同一 3.15.1 的 `engine/scheduler-submit.ts`、`types.ts`、`errors.ts` 与 `workflow-driver-helpers.ts`／`workflow-ask-epilogue.ts`。原始字节及 Git blob／SHA-256 纳入 `build-inputs.json`；编译构建只提取纯结果裁决、预算、错误和提示函数。原生回合、接纳消息、权限、持久化与取消由 DSH 接线承担。
 
 Cursor 的差异面板使用 MIT 许可的 `@deepseek-ai/dsh-client-ui-deliverables@0.2.1-rc.2` 实际 `FileDiff` 组件。必要片段与 CSS、许可证、原包文件和片段 SHA-256 保存在 `src/client/sources/dsh-rc2/`；生成脚本仅适配五处行号按钮和样式挂载，保留原生显示与高亮逻辑。这是宿主组件的复用，Cursor 的闭源 UI 不因此被标为已有源码。
+
+ZCode 定时定义修改与次数生命周期参照同一固定提交的 `packages/services/src/session/automationService.ts`，原文与哈希纳入 `build-inputs.json`。`build-zcode-calendar.mjs` 从 `automationCron.ts` 提取实际日历计算和 `scheduleRuleDefinition`；完整原生记录比较、版本化提示、累计派发与宿主恢复属于薄适配。

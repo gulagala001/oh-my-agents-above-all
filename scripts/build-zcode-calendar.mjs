@@ -16,7 +16,7 @@ export async function buildZCodeCalendarRule() {
     || row.gitBlobSha1 !== createHash('sha1').update('blob ' + data.length + '\0').update(data).digest('hex')
     || !row.url.includes('/aac4755666d09fdcd70272fcf063c077a639015f/')) throw Error('Fixed calendar source provenance changed.');
   const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const names = ['atTime', 'firstWeekdayOfMonth', 'computeScheduleRuleNextRunAt', 'parseCronFields', 'buildIntervalScheduleRule'];
+  const names = ['atTime', 'firstWeekdayOfMonth', 'computeScheduleRuleNextRunAt', 'parseCronFields', 'buildIntervalScheduleRule', 'scheduleRuleDefinition'];
   const functions = names.map(name => {
     const found = ast.statements.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
     if (found.length !== 1 || !found[0].body) throw Error('Fixed calendar function missing: ' + name);
