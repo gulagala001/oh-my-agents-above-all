@@ -37,4 +37,11 @@ test('editor launch validates local paths and permissions, uses one argv target 
   const denied = createCursorEditor({ platform: 'linux', home: root, env: { PATH: bin, DISPLAY: ':fixture' }, verifyPath: async () => { throw Error('native read denied'); }, run: async () => assert.fail('permission denied must not launch') });
   await assert.rejects(denied.open({ root: workspace, path: name }, signal), /native read denied/);
   assert.equal(launches.length, 1);
+  const app = join(root, 'Applications/Visual Studio Code.app');
+  const cli = join(app, 'Contents/Resources/app/bin/code');
+  await mkdir(join(app, 'Contents/Resources/app/bin'), { recursive: true }); await writeFile(cli, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
+  const mac = createCursorEditor({ platform: 'darwin', home: root, env: {}, verifyPath: async () => {}, run: async (...args) => launches.push(args) });
+  await mac.open({ root: workspace, path: name, anchor: { lines: ['second'], offset: 0 } }, signal);
+  assert.equal(launches[1][0], cli);
+  assert.deepEqual(launches[1][1], ['--goto', join(workspace, name) + ':2:1']);
 });

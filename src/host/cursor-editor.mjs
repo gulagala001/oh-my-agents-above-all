@@ -46,16 +46,15 @@ async function launch(command, args, signal) {
   // GUI applications may keep the launcher alive. Observe early failures,
   // then detach without killing the editor or holding the host connection.
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { shell: false, detached: true, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: false });
-    let timer, settled = false, stderr = '';
+    const child = spawn(command, args, { shell: false, detached: true, stdio: 'ignore', windowsHide: false });
+    let timer, settled = false;
     const finish = error => {
       if (settled) return; settled = true; clearTimeout(timer); signal.removeEventListener('abort', abort);
-      child.stderr?.destroy(); child.unref(); error ? reject(error) : resolve();
+      child.unref(); error ? reject(error) : resolve();
     };
     const abort = () => { child.kill(); finish(signal.reason ?? Error('编辑器请求已取消。')); };
-    child.stderr?.on('data', data => { stderr = (stderr + data).slice(-2000); });
     child.on('error', finish);
-    child.on('exit', (code, killed) => finish(code === 0 ? undefined : Error('编辑器启动失败：' + (stderr.trim() || killed || code))));
+    child.on('exit', (code, killed) => finish(code === 0 ? undefined : Error('编辑器启动失败：' + (killed || code))));
     signal.addEventListener('abort', abort, { once: true });
     timer = setTimeout(() => finish(), 1500);
     if (signal.aborted) abort();
