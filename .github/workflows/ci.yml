@@ -27,6 +27,8 @@ jobs:
           version: '11.28.5'
       - name: Install the exact SDK and frozen dependencies
         run: pnpm install --frozen-lockfile
+      - name: Check Git review scopes and write boundaries
+        run: node --test test/git-review.test.mjs test/git-review-state.test.mjs
       - name: Build the current host target
         run: pnpm build
       - name: Pack and inspect the current host target

@@ -40,6 +40,8 @@ Grok 随包转换引擎通过 `scripts/build-grok-documents.mjs` 构建，包含
 
 Grok 调度事务使用版本锁定的宿主内部 FIFO 薄适配。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、兼容页、架构页与来源页。
 
+Git 审阅的源版本、类型、大小与 revision 规则集中在 `src/git-review.mjs`。修改时运行 `node --test test/git-review.test.mjs test/git-review-state.test.mjs`，这两项文件已接入主线／PR CI；真实宿主 HTTP、原生文件操作和 FileDiff 页面按影响范围验证。保留历史版本与当前工作区隔离、Git 显示配置独立、读取交错检测和写入权限检查。
+
 Codex／Cursor 编辑器定位维护在 `src/host/cursor-editor.mjs`，来源契约分别记录在产品来源清单；实际实现和固定 FileDiff 来源共用。修改编辑器身份、启动参数或行映射时，保留认证、宿主文件映射、单独 argv 和取消边界；运行定点检查，并在隔离编辑器中核对实际文件与光标位置。原生主流程通过显式 `OMAA_TEST_EDITOR_ROOT` 指定自行准备的隔离便携编辑器，并以 `OMAA_TEST_EDITOR_RECEIPT` 接入只观察真实编辑器选择的验收扩展，默认测试不得启动个人编辑器。`OMAA_TEST_REVIEW_PRODUCT=codex` 选择 Codex 的真实定位链路，未设置时继续检查 Cursor；审阅写入与续改在各自原生流程中验证，不能以伪造启动回执代替光标。产品用法与来源原位更新现有产品页、架构页和来源页。
 
 Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。边界投影直接提取固定原厂 `session-manager.ts`／`messages.ts`，在同一构建中核对来源哈希；同一生成器还提取原厂只读树方法及压缩选段、序列化和提示常量。验证应覆盖草稿串行预览、原生继续／停止、树导航后实际请求、压缩与分支冷恢复、默认模型摘要、取消及未改动附件身份；当前路径与原始时间线须在界面明确区分。固定 npm transcript/text 原文保存在 `src/presets/pi/sources/npm-pi-ai/`；宿主依赖原始模块、方法、helper 与许可哈希统一维护在既有 `src/presets/pi/source.json`。构建经 build／CI／prepack 校验来源及唯一适配点，运行时检查实际方法后只安装到 Pi 实例。升级须核对冻结前的异步边界、原生工具／流／重试和取消，并运行受影响的原生主流程；不得修改已冻结的 llm/stream 请求。使用说明、兼容、架构和来源在现有页面原位维护，不新增验收页面。

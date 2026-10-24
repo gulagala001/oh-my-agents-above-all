@@ -13,6 +13,10 @@ export class GitReviewError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 const fail = (code, message) => { throw new GitReviewError(code, message); };
+const decode = bytes => {
+  try { return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); }
+  catch { fail('UNSUPPORTED_ENCODING', '该比较含非 UTF-8 字节，请使用原生文件工具处理；没有改动索引或文件'); }
+};
 
 // Never pass a shell command or a client-supplied patch to Git. Disable external
 // diff/textconv and use an explicit path separator for every file argument.
@@ -21,7 +25,7 @@ async function git(cwd, args, { input, allowDifference = false, bytes = false, m
   if (!executor?.policy || !executor.subprocess || !executor.sandbox) fail('HOST_EXECUTOR_REQUIRED', 'Git 审阅需要原生 subprocess 和 sandbox 服务');
   const signal = AbortSignal.timeout(20000), policy = { ...executor.policy, ...mutation ? {} : { mode: 'read-only' } };
   const program = await executor.subprocess.resolveExecutable('git', undefined, signal);
-  const command = [program, '--literal-pathspecs', '--no-optional-locks', '-c', 'core.quotePath=false', '-c', 'core.pager=cat', '-c', 'core.fsmonitor=false', '-C', cwd, ...args];
+  const command = [program, '--literal-pathspecs', '--no-optional-locks', '-c', 'core.quotePath=false', '-c', 'core.pager=cat', '-c', 'core.fsmonitor=false', '-c', 'diff.suppressBlankEmpty=false', '-C', cwd, ...args];
   const confined = policy.mode === 'danger-full-access' ? { argv: command } : await executor.sandbox.confine(command, policy, signal);
   if (mutation && (executor.policy?.mode !== policy.mode || executor.policy?.workspaceRoot !== policy.workspaceRoot)) fail('READ_ONLY', '宿主权限或会话模式已变化，请刷新后操作');
   const child = executor.subprocess.spawn({ argv: confined.argv, cwd, env: { GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0' }, stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' }, graceMs: 500, signal });
@@ -30,8 +34,7 @@ async function git(cwd, args, { input, allowDifference = false, bytes = false, m
   const [outcome, stdout, stderr] = await Promise.all([child.done, collect(child.stdout, MAX_OUTPUT), collect(child.stderr, 65536)]);
   if (outcome.exitCode !== 0 && !(allowDifference && outcome.exitCode === 1)) fail(signal.aborted ? 'GIT_TIMEOUT' : 'GIT_FAILED', stderr.toString('utf8').slice(-4096).trim() || 'Git 操作失败');
   if (bytes) return stdout;
-  try { return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(stdout); }
-  catch { fail('UNSUPPORTED_ENCODING', '该比较含非 UTF-8 字节，请使用原生文件工具处理；没有改动索引或文件'); }
+  return decode(stdout);
 }
 async function serial(key, run) {
   const previous = locks.get(key) ?? Promise.resolve(); let release;
@@ -67,7 +70,9 @@ async function regular(bound, file, { absent = true } = {}) {
   let text; try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); } catch { return { binary: true, stat }; }
   return bytes.includes(0) ? { binary: true, stat } : { bytes, text, stat };
 }
-const diffFlags = ['--no-ext-diff', '--no-textconv', '--no-renames', '--no-color'];
+// The patch is a machine contract, independent of the user's display settings.
+const diffFlags = ['--no-ext-diff', '--no-textconv', '--no-renames', '--no-color', '--no-relative', '--src-prefix=a/', '--dst-prefix=b/', '--full-index',
+  '--output-indicator-new=+', '--output-indicator-old=-', '--output-indicator-context= '];
 async function resolveScope(bound, scope, ref) {
   if (!scopes.has(scope)) fail('INVALID_SCOPE', 'Git 比较范围无效');
   if (ref !== undefined && (typeof ref !== 'string' || ref.length > 256 || ref.includes('\0') || ref.startsWith('-'))) fail('INVALID_REF', 'Git 引用无效');
@@ -79,19 +84,55 @@ async function resolveScope(bound, scope, ref) {
     selected = await git(bound.repo, ['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD']).then(s => s.trim()).catch(() => 'main');
   }
   const commit = (await git(bound.repo, ['rev-parse', '--verify', '--end-of-options', selected + '^{commit}'])).trim();
-  if (scope === 'commit') return { scope, ref: selected, commit, args: ['show', '--format=', ...diffFlags, commit] };
-  const base = (await git(bound.repo, ['merge-base', commit, 'HEAD'])).trim();
-  return { scope, ref: selected, commit, base, args: ['diff', ...diffFlags, base, 'HEAD'] };
+  if (scope === 'commit') return { scope, ref: selected, commit, args: ['show', '--format=', '--diff-merges=first-parent', ...diffFlags, commit] };
+  const head = (await git(bound.repo, ['rev-parse', '--verify', 'HEAD'])).trim();
+  const base = (await git(bound.repo, ['merge-base', commit, head])).trim();
+  return { scope, ref: selected, commit, base, head, args: ['diff', ...diffFlags, base, head] };
 }
-function parseStats(text, bound) {
-  return text.split('\0').filter(Boolean).map(row => {
+async function parseStats(text, bound) {
+  const rows = text.split('\0'), versions = new Map(), stats = [], objects = new Set();
+  for (let at = 0; at < rows.length; at++) {
+    const row = rows[at];
+    if (!row) continue;
+    if (row.startsWith(':')) {
+      const parents = /^:+/.exec(row)[0].length, fields = row.slice(parents).split(' '), count = parents + 1;
+      if (fields.length !== count * 2 + 1 || !rows[at + 1] || !/^[A-Z]+\d*$/.test(fields.at(-1))) fail('INVALID_DIFF', '无法读取 Git 文件版本');
+      const sides = fields.slice(0, count).map((mode, index) => ({ mode, oid: fields[index + count] }));
+      if (sides.some(side => !/^\d{6}$/.test(side.mode) || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(side.oid))) fail('INVALID_DIFF', 'Git 文件对象无效');
+      const file = rows[++at];
+      versions.set(file, { sides, unmerged: parents > 1 || fields.at(-1) === 'U' || versions.get(file)?.unmerged });
+      // Git can emit only combined raw records for unresolved index entries.
+      // Keep those files visible and read-only even without a text/numstat body.
+      stats.push('0\t0\t' + file);
+      for (const side of sides) if (/^100(?:644|755)$/.test(side.mode) && !/^0+$/.test(side.oid)) objects.add(side.oid);
+    } else stats.push(row);
+  }
+  // Ask Git for the selected blobs' sizes without loading their contents or
+  // borrowing the current worktree file as a substitute for a historical side.
+  const sizes = new Map();
+  if (objects.size) {
+    const result = await git(bound.repo, ['cat-file', '--batch-check=%(objectname) %(objecttype) %(objectsize)'], { input: [...objects].join('\n') + '\n' });
+    for (const row of result.trim().split('\n')) {
+      const match = /^([a-f0-9]{40,64}) blob (\d+)$/.exec(row);
+      if (!match) fail('INVALID_DIFF', '无法读取 Git 文件大小');
+      sizes.set(match[1], Number(match[2]));
+    }
+  }
+  const files = new Map();
+  for (const row of stats) {
     const match = /^(\d+|-)\t(\d+|-)\t([\s\S]+)$/.exec(row);
     if (!match) fail('INVALID_DIFF', '无法读取 Git 文件统计');
     const gitPath = match[3], prefix = bound.prefix && bound.prefix + '/';
-    if (prefix && !gitPath.startsWith(prefix)) return undefined;
+    if (prefix && !gitPath.startsWith(prefix)) continue;
     const file = prefix ? gitPath.slice(prefix.length) : gitPath; filePath(bound, file);
-    return { path: file, display: file, added: match[1] === '-' ? 0 : Number(match[1]), deleted: match[2] === '-' ? 0 : Number(match[2]), ...(match[1] === '-' ? { binary: true } : {}) };
-  }).filter(Boolean);
+    const version = versions.get(gitPath);
+    if (!version) fail('INVALID_DIFF', 'Git 文件统计缺少对应版本');
+    const oversized = version.sides.some(side => sizes.get(side.oid) > MAX_BYTES);
+    const unsafe = version.unmerged || version.sides.some(side => !['000000', '100644', '100755'].includes(side.mode));
+    files.set(file, { path: file, display: file, added: match[1] === '-' ? 0 : Number(match[1]), deleted: match[2] === '-' ? 0 : Number(match[2]),
+      ...(match[1] === '-' ? { binary: true } : {}), ...(oversized ? { oversized: true } : {}), ...(unsafe ? { unsafe: true } : {}) });
+  }
+  return [...files.values()];
 }
 function parsePatch(patch, file) {
   const rows = patch.split('\n'), first = rows.findIndex(row => /^@@ /.test(row));
@@ -112,20 +153,23 @@ function untrackedPatch(file, text, mode, objectId) {
   // Empty files are staged as real empty new files, without an invented hunk.
   return patch;
 }
+async function readComparison(bound, selected) {
+  // Git emits NUL-delimited raw/numstat records, an empty record, then the
+  // patch. Read them together so metadata and content share one observation.
+  const bytes = await git(bound.repo, [...selected.args, '--raw', '--no-abbrev', '--numstat', '-z', '--patch', '--binary', '--', bound.prefix || '.'], { bytes: true });
+  const at = bytes.indexOf(Buffer.from([0, 0]));
+  if (bytes.length && at < 0 && bytes.at(-1) !== 0) fail('INVALID_DIFF', 'Git 比较缺少正文边界');
+  return { stats: decode(at < 0 ? bytes : bytes.subarray(0, at)), revision: digest(bytes) };
+}
 async function state(session, scope = 'unstaged', ref, detail) {
   const bound = await binding(session), selected = await resolveScope(bound, scope, ref);
-  const dirtyPatch = git(bound.repo, ['diff', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true });
-  const indexedPatch = git(bound.repo, ['diff', '--cached', ...diffFlags, '--binary', '--', bound.prefix || '.'], { bytes: true });
-  const [stats, patch, head, dirty, indexed, untrackedText] = await Promise.all([
-    git(bound.repo, [...selected.args, '--numstat', '-z', '--', bound.prefix || '.']),
-    scope === 'unstaged' ? dirtyPatch : scope === 'staged' ? indexedPatch
-      : git(bound.repo, [...selected.args, '--binary', '--', bound.prefix || '.'], { bytes: true }),
-    git(bound.repo, ['rev-parse', '--verify', 'HEAD']).then(s => s.trim()).catch(() => 'unborn'),
-    dirtyPatch, indexedPatch,
-    ['unstaged', 'working'].includes(scope) ? git(bound.repo, ['ls-files', '--others', '--exclude-standard', '-z', '--', bound.prefix || '.']) : '',
+  const fromWorktree = ['unstaged', 'working'].includes(scope);
+  const [snapshot, untrackedText] = await Promise.all([
+    readComparison(bound, selected),
+    fromWorktree ? git(bound.repo, ['ls-files', '--others', '--exclude-standard', '-z', '--', bound.prefix || '.']) : '',
   ]);
-  const files = parseStats(stats, bound), seen = new Set(files.map(f => f.path)), untracked = new Map(), untrackedRevisions = [];
-  for (const file of files) {
+  const files = await parseStats(snapshot.stats, bound), seen = new Set(files.map(f => f.path)), untracked = new Map(), untrackedRevisions = [];
+  if (fromWorktree) for (const file of files) {
     const value = await regular(bound, file.path).catch(error => error.code === 'UNSAFE_PATH' ? { unsafe: true } : Promise.reject(error));
     if (value?.binary) file.binary = true;
     if (value?.oversized) file.oversized = true;
@@ -139,9 +183,10 @@ async function state(session, scope = 'unstaged', ref, detail) {
     if (file === detail) untracked.set(file, value);
     files.push({ path: file, display: file, added: value.text ? value.text.split('\n').length - (value.text.endsWith('\n') ? 1 : 0) : 0, deleted: 0, status: 'untracked', ...(value.binary ? { binary: true } : {}), ...(value.oversized ? { oversized: true } : {}), ...(value.unsafe ? { unsafe: true } : {}) });
   }
-  const revision = digest(JSON.stringify({ root: bound.root, scope, ref: selected.ref, head, patch: digest(patch), dirty: digest(dirty), indexed: digest(indexed), untracked: untrackedRevisions }));
+  const revision = digest(JSON.stringify({ root: bound.root, scope, ref: selected.ref, commit: selected.commit, base: selected.base, head: selected.head,
+    snapshot: snapshot.revision, untracked: untrackedRevisions }));
   files.sort((a, b) => a.display.localeCompare(b.display));
-  return { bound, selected, files, revision, untracked };
+  return { bound, selected, files, revision, untracked, snapshot };
 }
 function actions(file, scope, writable, bound) {
   if (!writable || file.binary || file.oversized || file.unsafe) return [];
@@ -161,9 +206,6 @@ async function comparison(value, file) {
   const selected = value.files.find(f => f.path === file);
   if (!selected) fail('FILE_NOT_LISTED', '该文件不在当前比较范围');
   if (selected.binary || selected.oversized || selected.unsafe) return { diff: { kind: selected.oversized ? 'oversized' : 'binary', path: file, display: file } };
-  const local = await regular(value.bound, file);
-  if (local?.oversized) return { diff: { kind: 'oversized', path: file, display: file } };
-  if (local?.binary) return { diff: { kind: 'binary', path: file, display: file } };
   const observed = value.untracked.get(file), gitPath = filePath(value.bound, file).gitPath;
   const patch = observed ? untrackedPatch(gitPath, observed.text ?? '', observed.stat.mode, (await git(value.bound.repo, ['hash-object', '--stdin'], { input: observed.bytes })).trim()) : await git(value.bound.repo, [...value.selected.args, '--', gitPath]);
   const parsed = parsePatch(patch, file);
@@ -192,6 +234,11 @@ export function createGitReview({ writable, execution }) {
       if (options.revision && options.revision !== value.revision) fail('revision-conflict', '文件或索引已变化，请刷新比较');
       if (!options.path) return summary(session, value, canWrite);
       const result = await comparison(value, options.path), file = value.files.find(f => f.path === options.path), allowed = actions(file, value.selected.scope, canWrite, value.bound);
+      // Git objects are pinned for committed scopes. Index/worktree reads can
+      // change between commands, so never attach an old revision to new lines.
+      if (!['commit', 'branch'].includes(value.selected.scope) && !value.untracked.has(options.path)
+        && (await readComparison(value.bound, value.selected)).revision !== value.snapshot.revision)
+        fail('revision-conflict', '读取期间文件或索引已变化，请刷新比较');
       const hunkActions = {};
       if (result.diff.kind === 'text' && result.diff.before && result.diff.after) result.diff.hunks.forEach((_, index) => { hunkActions[index] = allowed; });
       return { sessionId: session.id, scope: value.selected.scope, revision: value.revision, diff: result.diff, hunkActions };
@@ -207,7 +254,7 @@ export function createGitReview({ writable, execution }) {
         if (value.revision !== request.revision) fail('revision-conflict', '文件或索引已变化，请刷新比较');
         const file = value.files.find(f => f.path === request.path);
         if (!file || !actions(file, value.selected.scope, true, value.bound).includes(request.action)) fail('INVALID_ACTION', '当前文件或宿主工作目录权限不支持该操作');
-        await regular(value.bound, file.path);
+        if (request.action !== 'unstage') await regular(value.bound, file.path);
         const compared = await comparison(value, file.path); let patch = compared.patch;
         if (request.hunk !== undefined) {
           if (!Number.isSafeInteger(request.hunk) || request.hunk < 0 || !compared.diff.before || !compared.diff.after || !compared.rawHunks?.[request.hunk]) fail('INVALID_HUNK', '当前比较块不支持该操作');

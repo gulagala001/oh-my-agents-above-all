@@ -36,6 +36,8 @@ Pi 跨会话分叉服务调用原生 `sessionController.list/inspect/fork`，原
 
 `/omaa/api/git-review` 提供 Codex 四种 Git 比较与明确文件/块操作；实际 native subprocess/sandbox、字面路径、内容 revision 和当前工作模式共同保护写入。`/omaa/api/codex-review` 提供原生回合比较、持久批注、已阅状态、问题检查与编辑器定位。与 Cursor 复用版本化记录及交付实现，但使用独立产品校验和私有存储目录；原生 workspaceChanges 直接提供回合摘要／差异，无需启用其他预设。批注及提交 ID 在原生 prompt 前原子保存；接纳由原生 inbox／user/message 对账，不另建模型执行器。
 
+Git 比较共用一个范围解析与版本读取路径：同一次原生 `--raw --numstat -z --patch` 读取提供对象身份／模式、统计与补丁，`cat-file --batch-check` 读取所选两侧的大小而不加载正文。只有未暂存和全部未提交读取工作区；提交、分支及索引不以当前文件替代所选对象。revision 只绑定所选比较，提交／分支固定到解析后的对象，工作区／索引详情读完只复核同一 Git 比较；未跟踪文件正文直接使用已读字节，避免重扫目录和重读大小。取消暂存仅改索引；工作区写入继续检查普通文件及目录边界。机器差异固定路径前缀、相对路径和行标记，保留 Git attributes 与大小／输出限制。旧比较算法的 revision 会要求刷新，已保存批注内容与格式保持不变。
+
 `/omaa/api/pi-branches` 复用宿主认证，GET 读取当前 Pi 原生分支族、完成点与同会话树，POST 在 revision 核对后调用原生 fork 或执行同会话 navigate/compact；分支面板打开同一宿主会话。摘要 checkbox 默认未选，不会因查看或切换分支自动调用模型。
 
 ZCode profile 使用原生 continuable 子会话保存人格、模型和工具限制。`profile-mcp.mjs` 在原生创建事件中核对父子归属并记录 MCP 准入，冷恢复重新核对相同声明摘要与公共 schema；`host/zcode-mcp-ownership.mjs` 只借用管理员明确组合的 native client，连接、重连和资源释放仍由父实例负责。工具过滤、MCP 指令范围及普通文件工具共同受宿主 guard 约束。未受管实例不通过名字推定归属，凭据不进入子会话记录。
