@@ -31,6 +31,8 @@ jobs:
         run: node --test test/git-review.test.mjs test/git-review-state.test.mjs
       - name: Check update service and current release contracts
         run: node --test test/update-service-lifecycle.test.mjs test/updates.test.mjs test/updates-current-release.test.mjs
+      - name: Check packaged search scopes and provider lifecycle
+        run: node --test test/search-compat.test.mjs test/zcode-session-tool-scope.test.mjs
       - name: Build the current host target
         run: pnpm build
       - name: Pack and inspect the current host target

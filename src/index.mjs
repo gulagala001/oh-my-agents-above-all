@@ -4,12 +4,15 @@ import { createPresetActivation } from './host/preset-activation.mjs';
 import { createUpdates } from './updates.mjs';
 import { nativeHostVersion } from './host/compatibility.mjs';
 import { sendJson, readJson } from './host/http.mjs';
+import { installSearchCompatibility } from './host/search-compat.mjs';
 
 export const name = 'omaa';
 export const inject = ['agentPresets', 'agents', 'sessionProjections'];
 
 export async function apply(ctx) {
-  const activation = createPresetActivation(ctx, join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa'));
+  const directory = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa');
+  installSearchCompatibility(ctx, directory);
+  const activation = createPresetActivation(ctx, directory);
   ctx.provide('omaaActivation', activation);
   const updates = createUpdates({ hostVersion: nativeHostVersion(), getManager: () => ctx.get('pluginManager'),
     getOmdVersion: () => ctx.get('omd')?.omaaInstalledVersion,

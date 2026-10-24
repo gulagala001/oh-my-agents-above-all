@@ -55,8 +55,8 @@ function coordinatorInput(args) {
 }
 
 export function installZCodeNativeSessionTools(ctx) {
-  if (ctx.tools.get('todo_read') || ctx.tools.get('respond_to_coordinator'))
-    throw Error('The ZCode native session tools are already registered in this scope.');
+  // Native register() owns exact-layer duplicate checks. A global or inherited
+  // definition may legitimately be shadowed by this preset's scoped tools.
   ctx.tools.register({
     name: 'todo_read',
     description: 'Read this Agent session’s actual native todo projection. Native todo_write replaces the whole list; turn/start resets it to null, while turn/end keeps it visible. Null means no current native list, not a recovered persistent checklist. Items have content/status and no priority. This reads no other session or archived list.',
