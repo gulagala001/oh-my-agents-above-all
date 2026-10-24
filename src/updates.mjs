@@ -159,7 +159,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
           if (!name.startsWith(`${PACKAGE.omd}-`) || !name.endsWith('.tgz')) return false;
           try { return splitReleaseVersion(name.slice(PACKAGE.omd.length + 1, -4), 'omd').host === hostVersion; } catch { return false; }
         });
-        const official = omd && /^0\.2\.1-rc\.[12]$/.test(hostVersion) && OMD_BRIDGE?.featureVersion;
+        const official = omd && OMD_BRIDGE?.officialHosts?.includes(hostVersion) && OMD_BRIDGE?.featureVersion;
         if (!official && omdNames.length > 1) throw fail('发行有多份兼容 OMD，无法确认配对版本');
         if (omd && !official && omdNames.length !== 1) throw fail('最新发行缺少当前宿主的配对兼容 OMD');
         const compat = official ? await currentOfficialOmd() : omdNames.length ? await readPackage(release, 'omd', omdNames[0].slice(PACKAGE.omd.length + 1, -4)) : null;

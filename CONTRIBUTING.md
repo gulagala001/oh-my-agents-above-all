@@ -47,3 +47,5 @@ Codex／Cursor 编辑器定位维护在 `src/host/cursor-editor.mjs`，来源契
 Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。边界投影直接提取固定原厂 `session-manager.ts`／`messages.ts`，在同一构建中核对来源哈希；同一生成器还提取原厂只读树方法及压缩选段、序列化和提示常量。验证应覆盖草稿串行预览、原生继续／停止、树导航后实际请求、压缩与分支冷恢复、默认模型摘要、取消及未改动附件身份；当前路径与原始时间线须在界面明确区分。固定 npm transcript/text 原文保存在 `src/presets/pi/sources/npm-pi-ai/`；宿主依赖原始模块、方法、helper 与许可哈希统一维护在既有 `src/presets/pi/source.json`。构建经 build／CI／prepack 校验来源及唯一适配点，运行时检查实际方法后只安装到 Pi 实例。升级须核对冻结前的异步边界、原生工具／流／重试和取消，并运行受影响的原生主流程；不得修改已冻结的 llm/stream 请求。使用说明、兼容、架构和来源在现有页面原位维护，不新增验收页面。
 
 DSH 宿主升级须核对 Pi `nativeLoopAdapter` 与 Grok `transactionCompatibility` 的 `reviewedVersions`、完整模块及方法指纹。只有实际 npm 字节相同的宿主才能共用指纹；构建与运行时均执行校验，版本列表不替代真实宿主运行。
+
+发行上传前执行 `node scripts/check-release-assets.mjs --dir <待发目录>`，核对当前包的实际 SHA256、`metadata.json`（schema、包名、完整版本、hostVersion、file／filename、sourceCommit）与 `SHA256SUMS`。OMAA 还需同内容的 `<包名>.tgz.metadata.json` 和 `<包名>.tgz.sha256`；当前发行的 CI 使用同一契约检查，历史附件保留。

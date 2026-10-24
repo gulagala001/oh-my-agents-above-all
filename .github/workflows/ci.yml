@@ -29,6 +29,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Check Git review scopes and write boundaries
         run: node --test test/git-review.test.mjs test/git-review-state.test.mjs
+      - name: Check update service and current release contracts
+        run: node --test test/update-service-lifecycle.test.mjs test/updates.test.mjs test/updates-current-release.test.mjs
       - name: Build the current host target
         run: pnpm build
       - name: Pack and inspect the current host target

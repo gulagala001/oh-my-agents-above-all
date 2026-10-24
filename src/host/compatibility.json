@@ -55,6 +55,7 @@
   ],
   "omdBridge": {
     "featureVersion": "0.100.0",
+    "officialHosts": ["0.2.1-rc.1", "0.2.1-rc.2", "0.2.1-rc.3"],
     "updatePolicy": "patch",
     "interfaces": [
       "installOmaaEnhancement",

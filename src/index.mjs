@@ -15,6 +15,7 @@ export async function apply(ctx) {
     getOmdVersion: () => ctx.get('omd')?.omaaInstalledVersion,
     isRunning: () => [...(ctx.get('omaa')?.piExtensions?.states?.values() ?? [])].some(state => state.busy()) || ctx.agents.list().some(agent => agent.status === 'running' || agent.inbox.nextTurn.length || agent.inbox.nextStep.length)
       || [undefined, ...ctx.agents.list().map(agent => agent.id)].some(owner => ctx.get('jobs')?.list(owner).some(job => ['running', 'stopping'].includes(job.status))) });
+  ctx.provide('omaaUpdates', updates);
   ctx.effect(() => () => updates.close());
   ctx.on('plugin-manager/install-state', progress => updates.progress(progress), { global: true });
   ctx.effect(() => () => activation.close());

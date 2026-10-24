@@ -36,6 +36,7 @@ async function mount(ctx) {
   const presetOf = session => ctx.sessionProjections.stateOf(session, 'agentPreset') ?? session.header.agentPreset;
   const preferences = session => store.get(session.id);
   const hub = {
+    get updates() { return ctx.get('omaaUpdates'); },
     workflowControllers: new Set(),
     workflowFor: agent => agent && [...hub.workflowControllers].find(controller => controller.matches(agent)),
     enhancementScopes: new Set(),
