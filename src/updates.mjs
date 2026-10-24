@@ -73,9 +73,10 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     const baseline = alignedVersion(hostVersion, 'omd', OMD_BRIDGE.featureVersion);
     let version = baseline, release;
     if (OMD_BRIDGE.updatePolicy === 'patch') {
-      const minimum = splitReleaseVersion(baseline, 'omd').feature;
+      const reviewed = [OMD_BRIDGE.featureVersion, ...(OMD_BRIDGE.reviewedFeatures?.[hostVersion] ?? [])]
+        .map(feature => splitReleaseVersion(alignedVersion(hostVersion, 'omd', feature), 'omd').feature);
       // Release order is not version order. Finish a bounded scan before
-      // reporting the newest compatible patch; never infer cross-minor support.
+      // reporting the newest patch from explicitly reviewed feature series.
       for (let page = 1; page <= 5; page++) {
         const rows = await read(`https://api.github.com/repos/${OMD_REPO}/releases?per_page=30&page=${page}`);
         if (!Array.isArray(rows) || rows.length > 30) throw fail('官方 OMD 发行列表无效');
@@ -83,8 +84,8 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
           if (row.draft !== false || !row.published_at) continue;
           let candidate;
           try { candidate = splitReleaseVersion(row.tag_name?.replace(/^v/, ''), 'omd'); } catch { continue; }
-          if (candidate.host !== hostVersion || candidate.feature[0] !== minimum[0]
-            || candidate.feature[1] !== minimum[1] || candidate.feature[2] < minimum[2]) continue;
+          if (candidate.host !== hostVersion || !reviewed.some(minimum => candidate.feature[0] === minimum[0]
+            && candidate.feature[1] === minimum[1] && candidate.feature[2] >= minimum[2])) continue;
           const next = row.tag_name.replace(/^v/, '');
           if (!release || compare(next, version, 'omd') > 0) { version = next; release = row; }
         }
