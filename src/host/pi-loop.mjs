@@ -11,8 +11,9 @@ export function installPiLoop(agent, hooks) {
   const native = agent?.[symbols.original] ?? agent;
   if (!checked) {
     const require = createRequire(import.meta.url);
-    if (hash(readFileSync(require.resolve(binding.package))) !== binding.implementationSha256)
-      throw Error('Pi extension boundaries require the reviewed DSH loop ' + binding.version);
+    const manifest = JSON.parse(readFileSync(require.resolve(binding.package + '/package.json'), 'utf8'));
+    if (!binding.reviewedVersions.includes(manifest.version) || hash(readFileSync(require.resolve(binding.package))) !== binding.implementationSha256)
+      throw Error('Pi extension boundaries require a reviewed DSH loop: ' + binding.reviewedVersions.join(', '));
     checked = true;
   }
   const prior = Object.fromEntries(Object.keys(binding.methods).map(name => [name, native[name]]));

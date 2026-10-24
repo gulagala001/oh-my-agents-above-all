@@ -14,7 +14,7 @@ const binding = JSON.parse(readFileSync(new URL('../presets/grok/source.json', i
 const { implementationSha256 } = binding;
 const methods = Object.fromEntries(Object.keys(binding.methods)
   .map(name => [name, ScheduleService.prototype[name]]));
-let verified = false;
+let verified;
 const hash = value => createHash('sha256').update(value).digest('hex');
 const catalogRow = task => ({ ...task.record, sessionId: task.sessionId, status: task.status,
   ...(task.lastDelivery === undefined ? {} : { lastDelivery: task.lastDelivery }) });
@@ -24,12 +24,12 @@ export function verifyGrokScheduleImplementation() {
   if (!verified) {
     const require = createRequire(import.meta.url);
     const manifest = JSON.parse(readFileSync(require.resolve('@deepseek-ai/dsh-schedule/package.json'), 'utf8'));
-    if (manifest.version !== binding.version || hash(readFileSync(require.resolve('@deepseek-ai/dsh-schedule'))) !== implementationSha256
+    if (!binding.reviewedVersions.includes(manifest.version) || hash(readFileSync(require.resolve('@deepseek-ai/dsh-schedule'))) !== implementationSha256
       || Object.entries(methods).some(([name, method]) => typeof method !== 'function' || hash(Function.prototype.toString.call(method)) !== binding.methods[name]))
-      throw Error('Grok phase-preserving schedule transactions require the reviewed DSH Schedule 0.2.1-rc.2 implementation.');
-    verified = true;
+      throw Error('Grok phase-preserving schedule transactions require a reviewed DSH Schedule implementation: ' + binding.reviewedVersions.join(', '));
+    verified = manifest.version;
   }
-  return { version: '0.2.1-rc.2', implementationSha256 };
+  return { version: verified, implementationSha256 };
 }
 
 export function assertGrokScheduleTransaction(schedule) {

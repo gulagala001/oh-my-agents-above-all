@@ -65,7 +65,7 @@ export async function buildPiLoop() {
     banner: { js: '// Pure functions from the pinned Pi compaction sources.\n/*\n' + piLicense.trimEnd() + '\n*/' } });
   const path = require.resolve(binding.package), source = await readFile(path, 'utf8');
   const manifest = JSON.parse(await readFile(require.resolve(binding.package + '/package.json'), 'utf8'));
-  if (manifest.version !== binding.version || manifest.license !== binding.license || hash(source) !== binding.implementationSha256)
+  if (!binding.reviewedVersions.includes(manifest.version) || manifest.license !== binding.license || hash(source) !== binding.implementationSha256)
     throw Error('Pi native loop source changed; review the request and step seams before rebuilding.');
   const parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
   let klass;
@@ -116,7 +116,7 @@ export async function buildPiLoop() {
   // private pnpm copies never duplicate a service or brand identity.
   let code = result.outputFiles[0].text.replace(/^import "[^"]+";\n/gm, '').replace(/import \{([^}]+)\} from "(@deepseek-ai\/[^"\n]+)";/g,
     (_all, names, specifier) => `const {${names.replace(/\bas\b/g, ':')}} = await import(nativeRequire.resolve(${JSON.stringify(specifier)}));`);
-  code = `// Generated from ${binding.package}@${binding.version}; MIT, Copyright DeepSeek.
+  code = `// Generated from ${binding.package}@${manifest.version}; MIT, Copyright DeepSeek.
 // See source.json nativeLoopAdapter and THIRD_PARTY_NOTICES.md.
 /*
 ${nativeLicense.trimEnd()}
@@ -126,6 +126,6 @@ const nativeRequire = createRequire(import.meta.resolve('@deepseek-ai/dsh-agent-
 ` + code;
   await mkdir(root + 'lib', { recursive: true });
   await writeFile(root + 'lib/pi-native-loop.mjs', code);
-  return { version: binding.version, implementationSha256: binding.implementationSha256 };
+  return { version: manifest.version, implementationSha256: binding.implementationSha256 };
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) console.log(await buildPiLoop());

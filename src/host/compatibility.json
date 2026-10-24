@@ -1,5 +1,5 @@
 {
-  "hostRange": "0.2.1-rc.2",
+  "hostRange": "0.2.1-rc.3",
   "loaderRange": "1.0.6",
   "buildHosts": [
     {
@@ -35,6 +35,16 @@
     {
       "version": "0.2.1-rc.2",
       "commit": "687f282e8625c6b8d11ff58211a90524be2e4317",
+      "loaderVersion": "1.0.6",
+      "groupVersion": "1.0.5",
+      "cordisVersion": "4.0.5",
+      "schemasteryVersion": "3.18.5",
+      "activation": "activation",
+      "workingDirectory": true
+    },
+    {
+      "version": "0.2.1-rc.3",
+      "commit": "1f81c047fc48fa190a683e469daa699857e9afe8",
       "loaderVersion": "1.0.6",
       "groupVersion": "1.0.5",
       "cordisVersion": "4.0.5",

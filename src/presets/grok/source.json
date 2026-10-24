@@ -834,7 +834,11 @@
         "update": "3c104e948abd60844c8cbfd703ddc24f4e5456ffa5bec6b84fe15ea0c57f2b37",
         "delete": "86f10dd843958916cfb163a7afa701b981ac6c93b69c9bdd19c8a06c7022efa3"
       },
-      "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check."
+      "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check.",
+      "reviewedVersions": [
+        "0.2.1-rc.2",
+        "0.2.1-rc.3"
+      ]
     }
   },
   "sourceVersionDefault": "1.0.45",

@@ -854,7 +854,11 @@
       "turn": "3a01a4cf46fce23ed4470c0884bc601d93a17140b6cdff7dbb8b1ca08b44d10e"
     },
     "licenseSnapshot": "../../client/sources/dsh-rc2/LICENSE",
-    "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be"
+    "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be",
+    "reviewedVersions": [
+      "0.2.1-rc.2",
+      "0.2.1-rc.3"
+    ]
   },
   "contextAdapter": {
     "package": "@earendil-works/pi-ai",
