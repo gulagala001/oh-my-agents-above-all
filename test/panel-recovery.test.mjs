@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { chromium } from 'playwright';
 
 test('checkpoint retry and Pi fork recovery preserve the actual native target', { timeout: 30000 }, async t => {
@@ -19,8 +19,9 @@ test('checkpoint retry and Pi fork recovery preserve the actual native target', 
   const browser = await chromium.launch({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
   t.after(() => browser.close());
   const page = await browser.newPage();
-  await mkdir('.cache', { recursive: true });
-  await page.exposeFunction('captureRunningPreview', () => page.locator('.omaa-checkpoints').screenshot({ path: '.cache/cursor-running-review-fixture.png' }));
+  const evidence = process.env.OMAA_UI_EVIDENCE_DIR ?? '.local/frontend-components';
+  await mkdir(evidence, { recursive: true });
+  await page.exposeFunction('captureRunningPreview', () => page.locator('.omaa-checkpoints').screenshot({ path: evidence + '/cursor-running-review-fixture.png' }));
   await page.setContent('<div id="app"></div>');
   await page.addScriptTag({ content: bundle.outputFiles[0].text });
   const result = await page.evaluate(async () => {

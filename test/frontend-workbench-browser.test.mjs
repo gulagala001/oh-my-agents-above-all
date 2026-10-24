@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { chromium } from 'playwright';
 
 const root = new URL('../', import.meta.url).pathname;
-const evidence = resolve('work/rea-upgrade/frontend-015/components');
-const cssFiles = ['preset-controls.css', 'workbench.css'];
+const evidence = resolve(process.env.OMAA_UI_EVIDENCE_DIR ?? '.local/frontend-components');
+const cssFiles = ['ui.css', 'preset-controls.css', 'workbench.css'];
 const graphAliases = JSON.parse(await readFile(new URL('../scripts/zcode-graph-ui-aliases.json', import.meta.url), 'utf8'));
 const alias = Object.fromEntries([
   ['@/ErrorBoundary.js', 'src/client/zcode-artifact-primitives.jsx'],
@@ -123,5 +123,5 @@ test('five product components retain themes, fit narrow workbenches and recover 
   await page.evaluate(() => disposeProduct());
   assert.equal(await page.locator('style[data-omaa-theme-style],style[data-fixture-tokens]').count(), 0);
   assert.deepEqual(errors, []);
-  await writeFile(resolve(evidence, 'verification.json'), JSON.stringify({ verified: true, scope: 'Pure CFT component execution with synthetic API fixtures; this is not native host or hardware acceptance.', browser: chromium.executablePath(), bundleSha256: createHash('sha256').update(bundle.outputFiles[0].text).digest('hex'), checks, errors, disposed: true }, null, 2) + '\n');
+  await writeFile(resolve(evidence, 'verification.json'), JSON.stringify({ verified: true, scope: 'Component behavior with synthetic API and primitive fixtures; actual host controls are covered by settings-ui-native.test.mjs. This is not native host or hardware acceptance.', browser: chromium.executablePath(), bundleSha256: createHash('sha256').update(bundle.outputFiles[0].text).digest('hex'), checks, errors, disposed: true }, null, 2) + '\n');
 });

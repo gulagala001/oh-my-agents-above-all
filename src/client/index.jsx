@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPresetActivationClient } from './preset-activation.mjs';
+import uiCss from './ui.css';
 import { SettingsPage } from './settings-page.jsx';
 import { decorateSlotComponent } from './themes/shared/slot-decoration.mjs';
 
 export const inject = ['slots'];
 
 export function apply(ctx) {
+  ctx.effect(() => {
+    const tag = document.createElement('style'); tag.dataset.omaaUi = ''; tag.textContent = uiCss;
+    document.head.append(tag); return () => tag.remove();
+  });
   const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('omaa-presets') : undefined;
   const activation = createPresetActivationClient(fetch, () => channel?.postMessage('changed'));
   if (channel) channel.onmessage = () => { void activation.refresh(); };

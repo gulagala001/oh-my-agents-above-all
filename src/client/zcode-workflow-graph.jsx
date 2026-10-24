@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { WorkflowTimeline } from '../presets/zcode/sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/WorkflowTimeline.tsx';
 import { buildWorkflowTimeline } from '../presets/zcode/sources/upstream-3.15.1/packages/ui/src/components/workflow-timeline/timeline-model.ts';
@@ -14,7 +15,7 @@ class GraphBoundary extends React.Component {
     if (this.state.error && (previous.graph !== this.props.graph || previous.runId !== this.props.runId)) this.setState({ error: null });
   }
   render() {
-    return this.state.error ? <div role="alert" className="omaa-error"><p>工作流图无法显示：{this.state.error.message || String(this.state.error)}</p><button type="button" onClick={() => this.setState({ error: null })}>重新加载工作流图</button></div> : this.props.children;
+    return this.state.error ? <div role="alert" className="omaa-error"><p>工作流图无法显示：{this.state.error.message || String(this.state.error)}</p><Button type="button" onClick={() => this.setState({ error: null })}>重新加载工作流图</Button></div> : this.props.children;
   }
 }
 

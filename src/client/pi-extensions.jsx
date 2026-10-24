@@ -1,3 +1,4 @@
+import { Button, TextArea } from './ui.jsx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import css from './pi-extensions.css';
 
@@ -67,18 +68,18 @@ export function PiExtensions({ settings, embedded = false } = {}) {
   const busy = state.loading || state.saving;
   return <section className="omaa-pi-extensions" aria-busy={busy || undefined} aria-label="Pi 扩展设置">
     <style>{css}</style>
-    <header>{!embedded && <h2>Pi 本地扩展</h2>}<button type="button" disabled={busy} onClick={() => { void load(); }}>重新读取</button></header>
+    <header>{!embedded && <h2>Pi 本地扩展</h2>}<Button type="button" disabled={busy} onClick={() => { void load(); }}>重新读取</Button></header>
     <p>每行填写一个本地 TS / JS 文件的绝对路径。仅加载你明确保存的扩展，不自动执行项目中发现的文件。</p>
     <p className="omaa-pi-extension-help">应用于 Pi 会话，后续请求加载指定文件；更改或清空列表会释放旧扩展。</p>
     <p className="omaa-pi-extension-help">扩展沿用当前 DSH 文件权限；原生工具调用继续使用宿主批准流程。运行中的 Pi 任务会拒绝切换扩展，请先停止后再保存。</p>
-    <label>指定扩展文件<textarea aria-label="Pi 扩展文件路径" rows={5} spellCheck={false} value={text} disabled={busy || !state.data}
+    <label>指定扩展文件<TextArea aria-label="Pi 扩展文件路径" rows={5} spellCheck={false} value={text} disabled={busy || !state.data}
       placeholder={'/absolute/path/to/extension.ts\n/absolute/path/to/extension.js'} onChange={event => {
         lifetime.current.dirty = true; setText(event.target.value);
         setState(previous => ({ ...previous, message: '' }));
       }}/></label>
     <div className="omaa-pi-extension-actions">
-      <button type="button" disabled={busy || !state.data} onClick={() => { void save(pathsOf(text)); }}>保存并启用指定扩展</button>
-      <button type="button" disabled={busy || !state.data || !state.data.files.length && !text.trim()} onClick={() => { void save([]); }}>清空并停用</button>
+      <Button type="button" disabled={busy || !state.data} onClick={() => { void save(pathsOf(text)); }}>保存并启用指定扩展</Button>
+      <Button type="button" disabled={busy || !state.data || !state.data.files.length && !text.trim()} onClick={() => { void save([]); }}>清空并停用</Button>
     </div>
     {busy && <p role="status">{state.saving ? '正在保存扩展配置…' : '正在读取扩展配置…'}</p>}
     {state.message && <p role="status">{state.message}</p>}

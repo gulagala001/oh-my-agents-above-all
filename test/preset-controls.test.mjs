@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 
 const compiled = await build({ entryPoints: [new URL('../src/client/preset-controls.jsx', import.meta.url).pathname],
   bundle: true, write: false, platform: 'node', format: 'esm', target: 'node22' });

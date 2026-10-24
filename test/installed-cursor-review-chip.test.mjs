@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { chromium } from 'playwright';
 import { installedHost, textReply, toolReply, until } from './fixtures/installed-host.mjs';
 

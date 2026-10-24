@@ -1,3 +1,4 @@
+import { Button, TextArea, Select } from './ui.jsx';
 import React, { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { parseArtifactPresetSpec } from '../../lib/zcode-artifact-ui-spec.mjs';
 import { applyArtifactItems } from '../../lib/zcode-artifact-ui-apply.mjs';
@@ -240,14 +241,14 @@ function ArtifactContent({ settings, sidebarRight, sessionId, runId, artifact, v
       if (active()) setState({ loading: false, error: '' });
     } catch (error) { if (active()) setState({ loading: false, error: error.message }); }
   };
-  return <div className="omaa-zcode-native-preview"><button type="button" disabled={state.loading} onClick={() => { void open(); }}>{state.loading ? '正在打开…' : '打开原生预览'}</button><p className="omaa-zcode-help">预览此发布版本的内容。</p>{state.error && <p role="alert" className="omaa-error">{state.error}</p>}</div>;
+  return <div className="omaa-zcode-native-preview"><Button type="button" disabled={state.loading} onClick={() => { void open(); }}>{state.loading ? '正在打开…' : '打开原生预览'}</Button><p className="omaa-zcode-help">预览此发布版本的内容。</p>{state.error && <p role="alert" className="omaa-error">{state.error}</p>}</div>;
 }
 
 function PageControls({ page, count, total, more, loading, previous, next, label = '报告分页' }) {
   return <nav className="omaa-zcode-pages" aria-label={label}>
-    <button type="button" disabled={loading || page === 1} onClick={previous}>上一页</button>
+    <Button type="button" disabled={loading || page === 1} onClick={previous}>上一页</Button>
     <span>第 {page} 页 · 本页 {count} 条{Number.isSafeInteger(total) ? ` / 共 ${total} 条` : ''}</span>
-    <button type="button" disabled={loading || !more} onClick={next}>下一页</button>
+    <Button type="button" disabled={loading || !more} onClick={next}>下一页</Button>
   </nav>;
 }
 
@@ -263,7 +264,7 @@ function ArtifactDetail({ settings, sidebarRight, sessionId, runId, artifact, it
     {(artifact.description || artifact.spec?.description) && <p className="omaa-zcode-help">{artifact.description || artifact.spec?.description}</p>}
     {preset && pageOnly && <p className="omaa-zcode-help" role="status">图表与统计仅汇总当前页报告。翻页可查看其他报告；完整数据仍保留。</p>}
     {aggregate?.scope === 'full-run' && <p className="omaa-zcode-help" role="status">按全部 {aggregate.totalItems} 条报告汇总；显示有界数据窗口。{Boolean(aggregate.truncatedFields || aggregate.identityDisplaysBounded) && '超长显示字段已缩短，原始报告完整保留。'}</p>}
-    {!preset && versions.length > 1 && <label className="omaa-zcode-version">版本<select aria-label="产物版本" value={selectedVersion} onChange={event => setVersion(event.target.value)}><option value="latest">最新版本 · v{versions[0].version}</option>{versions.map(value => <option key={value.version} value={value.version}>v{value.version}{value.publishedAt ? ` · ${new Date(value.publishedAt).toLocaleString()}` : ''}</option>)}</select></label>}
+    {!preset && versions.length > 1 && <label className="omaa-zcode-version">版本<Select aria-label="产物版本" value={selectedVersion} onChange={event => setVersion(event.target.value)}><option value="latest">最新版本 · v{versions[0].version}</option>{versions.map(value => <option key={value.version} value={value.version}>v{value.version}{value.publishedAt ? ` · ${new Date(value.publishedAt).toLocaleString()}` : ''}</option>)}</Select></label>}
     {version.sourcePath && <p className="omaa-zcode-help omaa-zcode-path" title={version.sourcePath}>{version.sourcePath}</p>}
     {preset ? <PresetDashboard artifact={artifact} items={items} aggregate={aggregate}/> : <ArtifactContent key={`${sessionId}:${runId}:${artifact.id}:${version.version}`} {...{ settings, sidebarRight, sessionId, runId, artifact, version }}/>}
   </article>;
@@ -295,13 +296,13 @@ function LiveHoleRequest({ settings, sessions, sidebarRight, controller, session
     <strong>{hole.name}</strong>{hole.phaseName && <small> · {hole.phaseName}</small>}
     <p className="omaa-zcode-hole-id"><code>{hole.siteId}</code><small> · 第 {hole.ordinal} 次到达</small></p>
     {hole.prompt && <p>{hole.prompt}</p>}
-    {running && <><label>TypeScript 函数体语句<textarea rows={4} maxLength={256 * 1024} placeholder="return value;" value={body}
+    {running && <><label>TypeScript 函数体语句<TextArea rows={4} maxLength={256 * 1024} placeholder="return value;" value={body}
       disabled={!available || action.busy || action.sent} onChange={event => { setBody(event.target.value); setAction({ busy: false, sent: false, error: '' }); }}/></label>
-      <button type="button" disabled={!available || action.busy || action.sent || !body.trim()} onClick={() => { void send(); }}>{action.busy ? '正在发送…' : action.sent ? '请求已接受' : '发送补全请求'}</button>
+      <Button type="button" disabled={!available || action.busy || action.sent || !body.trim()} onClick={() => { void send(); }}>{action.busy ? '正在发送…' : action.sent ? '请求已接受' : '发送补全请求'}</Button>
       <p className="omaa-zcode-help">填写函数体内的语句。请求交给当前会话；实际补全结果由 fill_workflow 返回。</p>
       {!available && !action.sent && <p className="omaa-zcode-help">请在执行模式且当前会话空闲时发送。</p>}
       {action.sent && <p role="status" className="omaa-zcode-help">补全请求已接受，等待工作流工具的实际结果。</p>}
-      {action.sent && <button type="button" disabled={!available || action.busy} onClick={() => setAction({ busy: false, sent: false, error: '' })}>编辑后重新请求</button>}
+      {action.sent && <Button type="button" disabled={!available || action.busy} onClick={() => setAction({ busy: false, sent: false, error: '' })}>编辑后重新请求</Button>}
     </>}
     {action.error && <p role="alert" className="omaa-error">{action.error}</p>}
   </div>;
@@ -336,15 +337,15 @@ function WorkflowRequest({ settings, sessions, sidebarRight, controller, session
     {question && <><strong>{question.actorName || question.actor}</strong><p>{question.question}</p>
       {question.context && <details><summary>提问上下文</summary><pre className="omaa-zcode-text">{question.context}</pre></details>}
       {question.truncated && <p className="omaa-zcode-help">提问显示已缩短；原始事实仍保留。</p>}
-      <label>回答<textarea rows={3} maxLength={256 * 1024} value={answer} disabled={!available || action.busy || action.sent}
+      <label>回答<TextArea rows={3} maxLength={256 * 1024} value={answer} disabled={!available || action.busy || action.sent}
         onChange={event => setAnswer(event.target.value)}/></label></>}
-    <button type="button" disabled={!available || action.busy || action.sent || Boolean(question && !answer)} onClick={() => { void send(); }}>
-      {action.busy ? '正在发送…' : action.sent ? '请求已接受' : question ? '发送回答请求' : '发送续跑请求'}</button>
+    <Button type="button" disabled={!available || action.busy || action.sent || Boolean(question && !answer)} onClick={() => { void send(); }}>
+      {action.busy ? '正在发送…' : action.sent ? '请求已接受' : question ? '发送回答请求' : '发送续跑请求'}</Button>
     <p className="omaa-zcode-help">{question ? '回答交给当前会话调用 resolve_workflow_question；实际结果由工具返回。'
       : '此运行有预先保存的 v3 记录。实际续跑仍须通过源码、模型、目录、回执与外部影响预检。'}</p>
     {!available && <p className="omaa-zcode-help">请在执行模式且当前会话空闲时发送。</p>}
     {action.sent && <><p role="status" className="omaa-zcode-help">请求已接受，等待实际工具结果。</p>
-      <button type="button" disabled={!available || action.busy} onClick={() => setAction({ busy: false, sent: false, error: '' })}>编辑后重新请求</button></>}
+      <Button type="button" disabled={!available || action.busy} onClick={() => setAction({ busy: false, sent: false, error: '' })}>编辑后重新请求</Button></>}
     {action.error && <p role="alert" className="omaa-error">{action.error}</p>}
   </div>;
 }
@@ -376,7 +377,7 @@ function WorkflowSource({ settings, sidebarRight, controller, sessionId, runId, 
     <summary>工作流源码</summary>
     {expanded && <>{state.loading && <p role="status" className="omaa-zcode-help">正在读取归档源码…</p>}
       {state.error && <p role="alert" className="omaa-error">{state.error}</p>}
-      <button type="button" disabled={state.loading} onClick={() => setReload(value => value + 1)}>重新读取源码</button>
+      <Button type="button" disabled={state.loading} onClick={() => setReload(value => value + 1)}>重新读取源码</Button>
       {state.value && <><p className="omaa-zcode-help">源码快照 · 修订 {state.value.revision}</p><p className="omaa-zcode-source-hash">SHA-256 · <code>{state.value.scriptHash}</code></p><pre className="omaa-zcode-text">{state.value.script}</pre></>}
     </>}
   </details>;
@@ -413,12 +414,12 @@ export function ZCodeWorkflows({ settings, sessions, sidebarRight, visible = tru
     buttons[next]?.focus(); buttons[next]?.click();
   };
   return <section className="omaa-zcode-workflows" aria-busy={state.loading || undefined} aria-label="ZCode 工作流产物">
-    <style>{css}</style><header className="omaa-zcode-toolbar"><h3>工作流</h3><button type="button" onClick={() => { void controller.refresh(); }} disabled={state.loading}>刷新</button></header>
+    <style>{css}</style><header className="omaa-zcode-toolbar"><h3>工作流</h3><Button type="button" onClick={() => { void controller.refresh(); }} disabled={state.loading}>刷新</Button></header>
     {state.loading && <p className="omaa-zcode-help" role="status">正在读取工作流…</p>}
     {state.error && <p role="alert" className="omaa-error">{state.error}</p>}
     {!state.runs.length && !state.loading && !state.error && <p className="omaa-zcode-empty">本会话还没有工作流运行。</p>}
-    {state.runs.length > 0 && <label className="omaa-zcode-run-select">运行<select aria-label="工作流运行" value={state.runId} onChange={event => controller.selectRun(event.target.value)}>{state.runs.map(run => <option key={run.runId} value={run.runId}>{run.name || '未命名工作流'} · {statusLabel(run.status)}{run.startedAt ? ` · ${new Date(run.startedAt).toLocaleString()}` : ''}</option>)}</select></label>}
-    {detail && <>{relatedRuns.length > 0 && <nav className="omaa-zcode-run-lineage" aria-label="工作流修订运行">{relatedRuns.map(({ field, label, run }) => <button type="button" key={field} title={run.name || '未命名工作流'} onClick={() => controller.selectRun(run.runId)}>{label}</button>)}</nav>}<div className="omaa-zcode-run-status"><span className="omaa-zcode-status" data-status={detail.status}>{statusLabel(detail.status)}</span>{detail.phase && <span>{typeof detail.phase === 'string' ? detail.phase : detail.phase.name || detail.phase.id || ''}</span>}<small>{detail.artifacts.length} 个产物 · {detail.reportCount ?? detail.reports?.length ?? 0} 条报告</small>{!terminalStatuses.has(detail.status) && <button type="button" disabled={state.stopping || state.stopRequested} onClick={() => { void controller.stop(); }}>{state.stopping ? '正在请求停止…' : state.stopRequested ? '停止已请求' : '停止运行'}</button>}</div>
+    {state.runs.length > 0 && <label className="omaa-zcode-run-select">运行<Select aria-label="工作流运行" value={state.runId} onChange={event => controller.selectRun(event.target.value)}>{state.runs.map(run => <option key={run.runId} value={run.runId}>{run.name || '未命名工作流'} · {statusLabel(run.status)}{run.startedAt ? ` · ${new Date(run.startedAt).toLocaleString()}` : ''}</option>)}</Select></label>}
+    {detail && <>{relatedRuns.length > 0 && <nav className="omaa-zcode-run-lineage" aria-label="工作流修订运行">{relatedRuns.map(({ field, label, run }) => <Button type="button" key={field} title={run.name || '未命名工作流'} onClick={() => controller.selectRun(run.runId)}>{label}</Button>)}</nav>}<div className="omaa-zcode-run-status"><span className="omaa-zcode-status" data-status={detail.status}>{statusLabel(detail.status)}</span>{detail.phase && <span>{typeof detail.phase === 'string' ? detail.phase : detail.phase.name || detail.phase.id || ''}</span>}<small>{detail.artifacts.length} 个产物 · {detail.reportCount ?? detail.reports?.length ?? 0} 条报告</small>{!terminalStatuses.has(detail.status) && <Button type="button" disabled={state.stopping || state.stopRequested} onClick={() => { void controller.stop(); }}>{state.stopping ? '正在请求停止…' : state.stopRequested ? '停止已请求' : '停止运行'}</Button>}</div>
       {detail.error && <p className="omaa-error" role="alert">{typeof detail.error === 'string' ? detail.error : detail.error.message || detail.error.reason || JSON.stringify(detail.error)}</p>}
       {detail.nativeResume?.candidate === true && <WorkflowRequest key={`resume:${current.sessionId}:${state.runId}`}
         {...{ settings, sessions, sidebarRight, controller }} sessionId={current.sessionId} runId={state.runId}/>}
@@ -434,10 +435,10 @@ export function ZCodeWorkflows({ settings, sessions, sidebarRight, visible = tru
           {...{ settings, sessions, sidebarRight, controller, hole }} sessionId={current.sessionId} runId={state.runId} running={detail.status === 'running'}/>)}
         {detail.liveHoles.truncated && <p className="omaa-zcode-help">这里只显示部分留白，其他留白仍然保留。</p>}
       </aside>}
-      <nav className="omaa-zcode-section-nav" aria-label="工作台导航">{detail.displayGraph && <button type="button" onClick={() => navigateRegion(graphRegion)}>图与阶段</button>}<button type="button" onClick={() => navigateRegion(artifactRegion)}>产物 · {artifacts.length}</button><button type="button" onClick={() => navigateRegion(recordsRegion)}>源码与记录</button></nav>
+      <nav className="omaa-zcode-section-nav" aria-label="工作台导航">{detail.displayGraph && <Button type="button" onClick={() => navigateRegion(graphRegion)}>图与阶段</Button>}<Button type="button" onClick={() => navigateRegion(artifactRegion)}>产物 · {artifacts.length}</Button><Button type="button" onClick={() => navigateRegion(recordsRegion)}>源码与记录</Button></nav>
       {detail.displayGraph && <div ref={graphRegion} tabIndex={-1} className="omaa-zcode-region" aria-label="工作流图与阶段"><ZCodeWorkflowGraph graph={detail.displayGraph} run={detail.runtime}
         onOpenActor={onOpenActor} onOpenWorkspace={onOpenWorkspace}/></div>}
-      <div ref={artifactRegion} tabIndex={-1} className="omaa-zcode-region" aria-label="发布产物">{artifacts.length > 0 ? <><nav className="omaa-zcode-artifact-tabs" aria-label="工作流产物" onKeyDown={artifactKeys}>{artifacts.map(value => <button type="button" key={value.id} aria-current={state.artifactId === value.id ? 'page' : undefined} onClick={() => controller.selectArtifact(value.id)}>{value.primary && <span aria-hidden="true">★ </span>}<span>{value.title || value.spec?.title || value.id}</span><small>{value.kind}</small></button>)}</nav>{artifact && <><ArtifactDetail key={`${current.sessionId}:${state.runId}:${artifact.id}`} settings={settings} sidebarRight={sidebarRight} sessionId={current.sessionId} runId={state.runId} artifact={artifact} items={state.items} aggregate={state.aggregate} pageOnly={!state.aggregate && (state.hasMore || state.itemBack.length > 0)}/>{presetKinds.has(artifact.kind) && state.aggregate?.kind !== 'metrics' && <PageControls label={state.itemScope === 'full-run' ? '汇总分页' : '报告分页'} page={itemBack.length + 1} count={state.aggregate ? aggregateCount : state.items.length} total={state.aggregate?.totalRows ?? state.aggregate?.cardCount ?? state.aggregate?.totalPoints ?? artifact.itemCount} more={state.hasMore} loading={state.loading} previous={() => controller.previousItems()} next={() => controller.nextItems()}/>}</>}</> : <p className="omaa-zcode-empty">此运行尚未发布产物。</p>}</div>
+      <div ref={artifactRegion} tabIndex={-1} className="omaa-zcode-region" aria-label="发布产物">{artifacts.length > 0 ? <><nav className="omaa-zcode-artifact-tabs" aria-label="工作流产物" onKeyDown={artifactKeys}>{artifacts.map(value => <Button type="button" key={value.id} aria-current={state.artifactId === value.id ? 'page' : undefined} onClick={() => controller.selectArtifact(value.id)}>{value.primary && <span aria-hidden="true">★ </span>}<span>{value.title || value.spec?.title || value.id}</span><small>{value.kind}</small></Button>)}</nav>{artifact && <><ArtifactDetail key={`${current.sessionId}:${state.runId}:${artifact.id}`} settings={settings} sidebarRight={sidebarRight} sessionId={current.sessionId} runId={state.runId} artifact={artifact} items={state.items} aggregate={state.aggregate} pageOnly={!state.aggregate && (state.hasMore || state.itemBack.length > 0)}/>{presetKinds.has(artifact.kind) && state.aggregate?.kind !== 'metrics' && <PageControls label={state.itemScope === 'full-run' ? '汇总分页' : '报告分页'} page={itemBack.length + 1} count={state.aggregate ? aggregateCount : state.items.length} total={state.aggregate?.totalRows ?? state.aggregate?.cardCount ?? state.aggregate?.totalPoints ?? artifact.itemCount} more={state.hasMore} loading={state.loading} previous={() => controller.previousItems()} next={() => controller.nextItems()}/>}</>}</> : <p className="omaa-zcode-empty">此运行尚未发布产物。</p>}</div>
       <div ref={recordsRegion} tabIndex={-1} className="omaa-zcode-region" aria-label="工作流源码与记录"><WorkflowSource key={`${current.sessionId}:${state.runId}`}
         {...{ settings, sidebarRight, controller }} sessionId={current.sessionId} runId={state.runId} revision={detail.liveHoles?.scriptHash ?? detail.revision}/>
         {(detail.graph || detail.causalityGraph) && <details className="omaa-zcode-graph"><summary>编译图</summary>{detail.graph && <pre className="omaa-zcode-text">{JSON.stringify(detail.graph, null, 2)}</pre>}{detail.causalityGraph && <details><summary>因果图</summary><pre className="omaa-zcode-text">{JSON.stringify(detail.causalityGraph, null, 2)}</pre></details>}</details>}

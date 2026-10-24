@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import { applyPresetQueues } from './preset-queue.jsx';
 import React, { useSyncExternalStore } from 'react';
 import { createSessionSettings, PresetControls } from './preset-controls.jsx';
@@ -34,7 +35,7 @@ export function apply(ctx, { enabled, ready }) {
   function PanelControls(props) {
     const { tab } = props.useTabInfo();
     const current = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
-    return <div className="omaa-workbench" data-product={current.data?.product?.id}><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/>{current.data?.product?.id === 'cursor' && <div className="omaa-workbench-link"><button type="button" onClick={() => ctx.sidebarRight.openTabIn(current.sessionId, 'omaa-cursor-review')}>打开代码审阅</button><p className="omaa-help">工作区、分支与回合比较，保存批注并继续修改。</p></div>}{current.data?.product?.id === 'zcode' && <div className="omaa-workbench-link"><button type="button" onClick={() => ctx.sidebarRight.openTab('omaa-zcode-workflows')}>查看工作流产物</button><p className="omaa-help">图与阶段、Actor、脚本、运行报告和发布产物。</p></div>}<CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></div>;
+    return <div className="omaa-workbench" data-product={current.data?.product?.id}><PresetControls {...{ settings, getThemeRuntime }} visible={tab.visible}/>{current.data?.product?.id === 'cursor' && <div className="omaa-workbench-link"><Button type="button" onClick={() => ctx.sidebarRight.openTabIn(current.sessionId, 'omaa-cursor-review')}>打开代码审阅</Button><p className="omaa-help">工作区、分支与回合比较，保存批注并继续修改。</p></div>}{current.data?.product?.id === 'zcode' && <div className="omaa-workbench-link"><Button type="button" onClick={() => ctx.sidebarRight.openTab('omaa-zcode-workflows')}>查看工作流产物</Button><p className="omaa-help">图与阶段、Actor、脚本、运行报告和发布产物。</p></div>}<CheckpointControls settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><GitReview settings={settings} sidebarRight={ctx.sidebarRight} sessions={ctx.sessions} visible={tab.visible}/><PiBranches settings={settings} uiWorkspace={ctx.uiWorkspace} sessions={ctx.sessions} visible={tab.visible}/></div>;
   }
   function WorkflowPanel(props) {
     const { tab } = props.useTabInfo();

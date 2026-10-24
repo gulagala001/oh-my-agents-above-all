@@ -1,3 +1,4 @@
+import { Button, TextArea, Select, Input, Switch } from './ui.jsx';
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { themePacks } from './themes/packs.mjs';
 import { productForPreset } from '../shared/products.mjs';
@@ -158,17 +159,19 @@ function ZCodeProjectMemoryControls({ settings, state, disabled }) {
     try { await settings.update({ projectMemory: clear ? null : { root: value } }, sessionId); }
     catch (failure) { if (settings.getSnapshot().sessionId === sessionId) setError(failure.message); }
   };
-  return <fieldset disabled={disabled} aria-label="ZCode 项目记忆">
+  return <fieldset className="omaa-form-group" disabled={disabled} aria-label="ZCode 项目记忆">
     <legend>项目记忆</legend>
     <p className="omaa-help">{selected ? '本会话已启用默认 MEMORY.md 索引读取。' : '未启用；不会猜测或创建记忆目录。'}</p>
     <p className="omaa-help">工作区：{state.data?.workspacePath || '当前会话没有工作区，无法启用。'}</p>
     {selected && <p className="omaa-help">已保存目录：{selected.root}<br/>绑定工作区：{selected.workspacePath}</p>}
-    <label className="omaa-setting-row"><span>已有记忆目录</span><input type="text" aria-label="项目记忆目录" maxLength={4096}
+    <label className="omaa-field"><span>已有记忆目录</span><Input type="text" aria-label="项目记忆目录" maxLength={4096}
       value={root} onChange={event => setRoot(event.target.value)}/></label>
     <p className="omaa-help">填写执行环境中已有目录的绝对路径，保存后才生效。此选择仅绑定当前会话工作区，不授予额外文件权限，不创建目录或记忆文件，不自动调用模型抽取。维护仍使用原生 write/edit 工具及其权限与审批；问答和计划模式不自动写记忆。</p>
     {error && <p role="alert" className="omaa-error">{error}</p>}
-    <button type="button" disabled={!state.data?.workspacePath || !root.trim() || root === selected?.root} onClick={() => { void save(false); }}>保存并启用项目记忆</button>
-    <button type="button" disabled={!selected} onClick={() => { void save(true); }}>关闭项目记忆</button>
+    <div className="omaa-actions">
+      <Button type="button" variant="primary" disabled={!state.data?.workspacePath || !root.trim() || root === selected?.root} onClick={() => { void save(false); }}>保存并启用项目记忆</Button>
+      <Button type="button" disabled={!selected} onClick={() => { void save(true); }}>关闭项目记忆</Button>
+    </div>
     {(state.data?.mode !== 'default' || state.data?.pendingMode) && <p className="omaa-help">请先进入空闲的执行模式，再配置项目记忆。</p>}
   </fieldset>;
 }
@@ -195,20 +198,22 @@ function ZCodeOutputStyleControls({ settings, state, disabled }) {
     }
     catch (failure) { if (settings.getSnapshot().sessionId === sessionId) setError(failure.message); }
   };
-  return <fieldset disabled={disabled} aria-label="ZCode 输出风格">
+  return <fieldset className="omaa-form-group" disabled={disabled} aria-label="ZCode 输出风格">
     <legend>输出风格</legend>
     <p className="omaa-help">{selected ? `本会话已选择：${selected.name}` : '未选择输出风格，沿用原有提示。'} 此选择只作用于当前会话。</p>
-    <label className="omaa-setting-row"><span>名称</span><input type="text" aria-label="输出风格名称" maxLength={128}
+    <label className="omaa-field"><span>名称</span><Input type="text" aria-label="输出风格名称" maxLength={128}
       value={draft.name} onChange={event => setDraft({ ...draft, name: event.target.value })}/></label>
-    <label><span>提示内容</span><textarea aria-label="输出风格提示内容" rows={6} maxLength={16384}
+    <label className="omaa-field"><span>提示内容</span><TextArea aria-label="输出风格提示内容" rows={6} maxLength={16384}
       value={draft.prompt} onChange={event => setDraft({ ...draft, prompt: event.target.value })}/></label>
-    <label className="omaa-setting-row"><span>保留编码指令标志</span><select aria-label="保留编码指令标志" value={draft.keep}
+    <label className="omaa-setting-row"><span>保留编码指令标志</span><Select aria-label="保留编码指令标志" value={draft.keep}
       onChange={event => setDraft({ ...draft, keep: event.target.value })}>
-      <option value="unset">未指定</option><option value="true">是</option><option value="false">否</option></select></label>
-    <p className="omaa-help">名称最多 128 字符，提示最多 16384 字符（OMAA 本地限制，按 UTF-16 计数）。可选标志随选择保存；当前公开提示构建器不会据此切换编码指令。</p>
+      <option value="unset">未指定</option><option value="true">是</option><option value="false">否</option></Select></label>
+    <p className="omaa-help">名称最多 128 字符，提示最多 16384 字符。可选标志随选择保存；当前预设暂不根据此值调整编码指令。</p>
     {error && <p role="alert" className="omaa-error">{error}</p>}
-    <button type="button" onClick={() => { void save(false); }}>保存输出风格</button>
-    <button type="button" onClick={() => { void save(true); }}>清除输出风格</button>
+    <div className="omaa-actions">
+      <Button type="button" variant="primary" onClick={() => { void save(false); }}>保存输出风格</Button>
+      <Button type="button" onClick={() => { void save(true); }}>清除输出风格</Button>
+    </div>
   </fieldset>;
 }
 
@@ -231,10 +236,10 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
   const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.running ? 'running' : data?.pendingMode ? 'pending' : 'ready';
   const phaseLabel = { error: '读取失败', saving: '保存中', loading: '读取中', running: '执行中', pending: '待确认' }[phase];
   const compactStatus = phaseLabel || (product ? (data.mode !== 'default' ? modeLabel(data.mode) : activeWorkMode || (data.enhancementActive ? 'OMD' : '')) : '');
-  if (compact) return compactProduct ? <button type="button" className="omaa-preset-chip" aria-label={`${compactProduct.name} 预设设置`}
+  if (compact) return compactProduct ? <Button type="button" variant="ghost" className="omaa-preset-chip" aria-label={`${compactProduct.name} 预设设置`}
     data-state={phase} aria-busy={state.loading || state.saving || undefined}
     title={`${compactProduct.name} · ${phaseLabel || modeLabel(data?.mode)}${state.error ? ' · 点击重新读取' : activeWorkMode ? ' · OMD ' + activeWorkMode : data?.enhancementActive ? ' · OMD 增强' : ''}`}
-    onClick={openPanel}><span className="omaa-preset-chip-name">{compactName}</span>{compactStatus && <small>{compactStatus}</small>}<span className="omaa-preset-chip-chevron" aria-hidden="true">⌄</span></button> : null;
+    onClick={openPanel}><span className="omaa-preset-chip-name">{compactName}</span>{compactStatus && <small>{compactStatus}</small>}<span className="omaa-preset-chip-chevron" aria-hidden="true">⌄</span></Button> : null;
   const disabled = !product || state.loading || state.saving || Boolean(state.error || data?.running);
   const change = patch => { setLocalError(''); void settings.update(patch, state.sessionId).catch(error => {
     if (settings.getSnapshot().sessionId === state.sessionId) setLocalError(error.message);
@@ -253,12 +258,12 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     {(!state.loading && state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{!state.loading && state.error || localError || appearanceState.error}</p>}
     {product && <>
       {product.id === 'pi' ? <div className="omaa-setting-row"><span>工作模式</span><span className="omaa-setting-value">执行（Pi 默认模式）</span></div>
-        : <label className="omaa-setting-row"><span>工作模式</span><select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || data.pendingMode}
-          onChange={event => change({ mode: event.target.value })}>{modes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
+        : <label className="omaa-setting-row"><span>工作模式</span><Select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || data.pendingMode}
+          onChange={event => change({ mode: event.target.value })}>{modes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></label>}
       {data.pendingMode && <p role="status" className="omaa-help">模式切换等待处理，请在宿主提示中继续。</p>}
-      <label className="omaa-setting-row"><span>会话主题</span><select aria-label="会话主题" value={state.pendingPatch?.theme ?? data.theme} disabled={disabled} onChange={event => change({ theme: event.target.value })}>
+      <label className="omaa-setting-row"><span>会话主题</span><Select aria-label="会话主题" value={state.pendingPatch?.theme ?? data.theme} disabled={disabled} onChange={event => change({ theme: event.target.value })}>
         <option value="product">跟随当前预设</option><option value="host">DSH 默认外观</option><option value="omd" disabled={!data.omdAvailable}>OMD 当前外观</option>
-        {themePacks.map(pack => <option key={pack.id} value={pack.id}>{pack.name}</option>)}</select></label>
+        {themePacks.map(pack => <option key={pack.id} value={pack.id}>{pack.name}</option>)}</Select></label>
       {(data.theme === 'cursor-cli' || data.theme === 'product' && product.id === 'cursor') && <p className="omaa-help">参考 Cursor IDE / Agents Window 的 Agent 对话布局；明暗颜色沿用当前 DSH，并非官方固定配色。</p>}
       {product.id === 'zcode' && <ZCodeOutputStyleControls key={state.sessionId} settings={settings} state={state} disabled={disabled}/>}
       {product.id === 'zcode' && <ZCodeProjectMemoryControls key={`memory:${state.sessionId}`} settings={settings} state={state}
@@ -267,21 +272,21 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
         disabled={disabled || data.mode !== 'default' || data.pendingMode || !data.agentProfileDirectoryAvailable}/>}
       {product.id === 'zcode' && <ZCodeAgentMemoryControls key={`agent-memory:${state.sessionId}`} settings={settings} state={state}
         disabled={disabled || data.mode !== 'default' || data.pendingMode || !data.agentMemoryAvailable}/>}
-      <label className="omaa-setting-row"><span>OMD 增强</span><input type="checkbox" role="switch" aria-label="OMD 增强" checked={state.pendingPatch?.enhancement ?? Boolean(data.enhancement)} disabled={disabled || !data.omdAvailable}
-        onChange={event => change({ enhancement: event.target.checked })}/></label>
+      <label className="omaa-setting-row"><span>OMD 增强</span><Switch label="OMD 增强" checked={state.pendingPatch?.enhancement ?? Boolean(data.enhancement)} disabled={disabled || !data.omdAvailable}
+        onChange={enhancement => change({ enhancement })}/></label>
       <p className="omaa-help">{data.omdIncompatible ? '当前 OMD 版本缺少兼容接口，请升级兼容 OMD 或使用独立 DSH profile。' : !data.omdAvailable ? 'OMD 增强暂未就绪。请确认已安装并启用 Oh My DSH，再检查状态。' : data.enhancementActive ? 'OMD 增强已启用。' : 'OMD 增强关闭。'}</p>
-      {!data.omdAvailable && <button type="button" className="omaa-retry" disabled={state.loading || state.saving} onClick={() => { void settings.refresh(); }}>检查增强状态</button>}
+      {!data.omdAvailable && <Button type="button" className="omaa-retry" disabled={state.loading || state.saving} onClick={() => { void settings.refresh(); }}>检查增强状态</Button>}
       <div className="omaa-enhancement-work-mode">
-        <label className="omaa-setting-row"><span>增强工作方式</span><select aria-label="增强工作方式" value={enhancementWorkMode}
+        <label className="omaa-setting-row"><span>增强工作方式</span><Select aria-label="增强工作方式" value={enhancementWorkMode}
           disabled={disabled || !workModeAvailable(data) || data.mode !== 'default' || data.pendingMode}
           onChange={event => change({ enhancementWorkMode: event.target.value })}>
           {enhancementWorkModes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select></label>
-        {enhancementWorkMode === 'ultra' && <label className="omaa-setting-row"><span>Ultra 子模式</span><select aria-label="Ultra 子模式" value={enhancementWorkSubmode}
+        </Select></label>
+        {enhancementWorkMode === 'ultra' && <label className="omaa-setting-row"><span>Ultra 子模式</span><Select aria-label="Ultra 子模式" value={enhancementWorkSubmode}
           disabled={disabled || !workModeAvailable(data) || data.mode !== 'default' || data.pendingMode}
           onChange={event => change({ enhancementWorkMode: 'ultra', enhancementWorkSubmode: event.target.value })}>
           {enhancementWorkSubmodes.filter(([value]) => value !== 'team' || data.enhancementTeamAvailable === true).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-        </select></label>}
+        </Select></label>}
         <p className="omaa-help">Ultra 会同时开启增强。Workflow 使用工作流，自由按任务选择协作方式。Agent Team 由 DSH 原生开关和界面管理，未开启时隐藏此选项。</p>
         {!workModeAvailable(data) ? <p className="omaa-help">当前 OMD 尚未提供兼容的 Ultra 工作方式。</p>
           : data.mode !== 'default' || data.pendingMode ? <p className="omaa-help">进入执行模式后可切换增强工作方式。</p>
@@ -289,8 +294,8 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
           : enhancementWorkMode !== 'off' && <p role="status" className="omaa-help">{activeWorkMode ? `${activeWorkMode} 已启用。` : `${workLabel(enhancementWorkMode, enhancementWorkSubmode)} 已选择，当前尚未启用。`}</p>}
       </div>
     </>}
-    <label className="omaa-setting-row"><span>明暗模式</span><select aria-label="明暗模式" value={runtime.getAppearance()} disabled={appearanceState.appearanceSaving} onChange={appearance}>
-      <option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
-    {state.error && <button type="button" className="omaa-retry" disabled={state.loading || state.saving} onClick={() => { void settings.refresh(); }}>重新读取</button>}
+    <label className="omaa-setting-row"><span>明暗模式</span><Select aria-label="明暗模式" value={runtime.getAppearance()} disabled={appearanceState.appearanceSaving} onChange={appearance}>
+      <option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></Select></label>
+    {state.error && <Button type="button" className="omaa-retry" disabled={state.loading || state.saving} onClick={() => { void settings.refresh(); }}>重新读取</Button>}
   </section>;
 }

@@ -1,0 +1,20 @@
+/* Only OMAA-owned controls; native diff/graph/composer internals keep their CSS. */
+.omaa-button { max-width:100%; min-width:0; height:auto; min-height:28px; padding-block:4px; white-space:normal; overflow-wrap:anywhere; font-family:inherit; flex-shrink:0; }
+.omaa-input { box-sizing:border-box; min-width:0; max-width:100%; width:100%; }
+.omaa-input > input { font-family:inherit; width:100%; }
+.omaa-input:has(input:disabled) { opacity:.55; cursor:not-allowed; }
+.omaa-input > input:disabled { cursor:not-allowed; }
+.omaa-select,.omaa-textarea { box-sizing:border-box; min-width:0; max-width:100%; border:.5px solid var(--dsw-alias-border-l4,var(--dsw-alias-border-l2)); border-radius:var(--dsw-radius-md,8px); background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); font:inherit; font-size:13px; line-height:1.6; }
+.omaa-select { min-height:32px; padding:5px 8px; cursor:pointer; text-overflow:ellipsis; }
+.omaa-textarea { display:block; width:100%; min-height:96px; resize:vertical; padding:8px 10px; }
+.omaa-textarea::placeholder { color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary)); }
+.omaa-select:disabled,.omaa-textarea:disabled { opacity:.55; cursor:not-allowed; }
+:is(.omaa-button,.omaa-select,.omaa-textarea):focus-visible { outline:2px solid var(--dsw-alias-state-business-primary,var(--dsw-alias-brand-primary)); outline-offset:2px; }
+.omaa-field { display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:0; margin:12px 0; }
+.omaa-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; }
+.omaa-form-group { min-inline-size:0; width:100%; box-sizing:border-box; margin:20px 0; padding:12px 14px 14px; border:.5px solid var(--dsw-alias-border-l3,var(--dsw-alias-border-l2)); border-radius:10px; }
+.omaa-form-group > legend { max-width:100%; padding:0 6px; font-size:13px; font-weight:600; }
+.omaa-form-group .omaa-help { margin:4px 0 10px; }
+.omaa-form-group .omaa-actions + .omaa-help { margin-top:10px; }
+.omaa-form-group .omaa-field { font-size:12px; }
+.omaa-form-group .omaa-error { margin:10px 0; }

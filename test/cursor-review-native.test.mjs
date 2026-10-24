@@ -43,7 +43,7 @@ test('Cursor branch and turn review persist comments across a cold host, submit 
   const turn = await api({ scope: 'turn', seq: turns.at(-1).seq }); assert.equal(turn.status, 200, JSON.stringify(turn.value));
   assert(turn.value.files.some(file => file.path === 'review.js'));
   const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, timezoneId: 'UTC' });
   let page, review, opened = false;
   const errors = [];
   const open = async () => {
@@ -53,8 +53,11 @@ test('Cursor branch and turn review persist comments across a cold host, submit 
     await page.goto(f.origin);
     const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
     if (!opened) { await welcome.waitFor({ state: 'visible' }); await welcome.click(); await welcome.waitFor({ state: 'hidden' }); opened = true; }
-    await page.getByText('workspace', { exact: true }).first().waitFor();
-    if (!(await page.getByText('Cursor review delivery', { exact: true }).first().isVisible())) await page.getByText('workspace', { exact: true }).first().click();
+    await page.getByRole('button', { name: '标准模式', exact: true }).waitFor();
+    const workspaceRow = page.locator('[data-row-key^="workspace:"][role="treeitem"]').filter({ has: page.getByText('workspace', { exact: true }) });
+    await workspaceRow.waitFor();
+    if (await workspaceRow.getAttribute('aria-expanded') === 'false') await workspaceRow.getByText('workspace', { exact: true }).click();
+    await until(async () => await workspaceRow.getAttribute('aria-expanded') === 'true');
     await page.getByText('Cursor review delivery', { exact: true }).first().click();
     await page.getByRole('button', { name: '打开 Cursor 代码审阅', exact: true }).click();
     review = page.getByRole('region', { name: 'Cursor 代码审阅', exact: true });

@@ -44,7 +44,7 @@ ZCode profile 使用原生 continuable 子会话保存人格、模型和工具�
 
 ## 外观与增强
 
-五主题通过共享 appearance coordinator 独占前台颜色与布局，释放时恢复此前外观。Cursor 桌面 Agent 布局与 CLI 证据分开；颜色继承当前 DSH 是适配选择。主题、模型、预设和增强开关分别负责自己的状态。
+五主题通过共享 appearance coordinator 独占前台颜色与布局，释放时恢复此前外观。Cursor 桌面 Agent 布局与 CLI 证据分开；颜色继承当前 DSH 是适配选择。主题、模型、预设和增强开关分别负责自己的状态。`src/client/ui.jsx` 只薄封装宿主 Button／Input，并直接使用 Switch／Checkbox；宿主未导出的 select 与 textarea 保留原生表单语义、共用主题 token。`ui.css` 随安装基座挂载，全部预设关闭后的更新页仍具备完整控件样式；卸载时释放。面板样式不覆盖原生 FileDiff 或上游工作流图的基础控件。
 
 草稿进入正式会话时，目标列表明确显示相同预设才会在读取期间保留已确认的主题；目标 API 返回后立即使用目标主题。未挂载会话、普通 DSH、不同或缺失预设及读取失败会释放主题。旧设置不会挂接到新会话，读取期间不可修改会话设置；紧凑入口仅按目标原生预设显示产品名。
 

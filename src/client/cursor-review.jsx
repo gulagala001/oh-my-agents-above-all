@@ -1,5 +1,5 @@
+import { Button, TextArea, Select, Input } from './ui.jsx';
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Button } from '@deepseek-ai/dsh-client-ui-primitives';
 import { FileDiff, ReviewLineContext, diffCss } from '../../lib/cursor-native-diff.mjs';
 import { cursorReviewScopes } from '../shared/cursor-review.mjs';
 import { assertCursorReview, cursorReviewFor, cursorReviewed, submitCursorReview } from './cursor-review-state.mjs';
@@ -103,22 +103,22 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     <header className="omaa-cr-header"><div><h2>代码审阅</h2><small>{state.currentBranch || '当前会话'}</small></div>
       <Button size="sm" variant="ghost" disabled={busy} onClick={() => act(async () => { await saveEditor(); await Promise.all([store.open({ ...state.options, path: diff?.path }), store.metadata(), store.refreshNotes()]); })}>刷新</Button>
     </header>
-    <div className="omaa-cr-scope"><label>比较范围<select aria-label={label + ' 比较范围'} value={scope} disabled={busy} onChange={event => changeScope(event.target.value)}>
+    <div className="omaa-cr-scope"><label>比较范围<Select aria-label={label + ' 比较范围'} value={scope} disabled={busy} onChange={event => changeScope(event.target.value)}>
       {Object.entries(scopes).map(([key, label]) => <option key={key} value={key} disabled={key === 'turn' && !state.turns.length}>{label}</option>)}
-    </select></label>
-    {scope === 'turn' && <label>回合<select aria-label="审阅回合" value={state.options.seq ?? ''} disabled={busy} onChange={event => act(async () => { await saveEditor(); await store.open({ scope, seq: Number(event.target.value) }); })}>
+    </Select></label>
+    {scope === 'turn' && <label>回合<Select aria-label="审阅回合" value={state.options.seq ?? ''} disabled={busy} onChange={event => act(async () => { await saveEditor(); await store.open({ scope, seq: Number(event.target.value) }); })}>
       {state.turns.slice().reverse().map(turn => <option key={turn.seq} value={turn.seq}>回合 {turn.turn} · {turn.files} 个文件</option>)}
-    </select></label>}
+    </Select></label>}
     {['branch', 'commit'].includes(scope) && <form onSubmit={event => { event.preventDefault(); void act(async () => { await saveEditor(); await store.open({ scope, ref: refText || state.options.ref }); }); }}>
-      <label>{scope === 'branch' ? '基准分支' : '提交'}<input aria-label={label + ' 比较引用'} list={'omaa-' + product + '-refs'} placeholder={state.options.ref || (scope === 'branch' ? 'main' : 'HEAD')} value={refText} onChange={event => setRefText(event.target.value)} disabled={busy}/></label>
+      <label>{scope === 'branch' ? '基准分支' : '提交'}<Input aria-label={label + ' 比较引用'} list={'omaa-' + product + '-refs'} placeholder={state.options.ref || (scope === 'branch' ? 'main' : 'HEAD')} value={refText} onChange={event => setRefText(event.target.value)} disabled={busy}/></label>
       <datalist id={'omaa-' + product + '-refs'}>{state.refs.map(ref => <option key={ref} value={ref}/>)}</datalist><Button size="sm" type="submit" disabled={busy}>比较</Button>
     </form>}
     </div>
-    <div className="omaa-cr-scope"><label>本机编辑器<select aria-label={label + ' 本机编辑器'} value={preferredEditor} disabled={busy} onChange={event => chooseEditor(event.target.value)}>
+    <div className="omaa-cr-scope"><label>本机编辑器<Select aria-label={label + ' 本机编辑器'} value={preferredEditor} disabled={busy} onChange={event => chooseEditor(event.target.value)}>
       <option value="">{state.editors.length ? '自动选择' : '未检测到 Cursor / VS Code'}</option>
       {preferredEditor && !state.editors.some(item => item.id === preferredEditor) && <option value={preferredEditor}>所选编辑器暂不可用</option>}
       {state.editors.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-    </select></label></div>
+    </Select></label></div>
     <p className="omaa-cr-hint">{scope === 'working' ? 'HEAD 与当前文件比较，包含暂存、未暂存和未跟踪文件。' : scope === 'branch' ? '基准分支的共同祖先与 HEAD 比较；未提交内容请在工作区范围审阅。' : scope === 'turn' ? '记录的是该回合修改前后的内容；当前文件可能已经变化。' : '比较保留原始版本与行位置；批注不会自动发送。'}</p>
     {summary && <div className="omaa-cr-overview"><span>{summary.total} 个文件 · +{summary.added} −{summary.deleted}</span><span>{summary.files.filter(file => cursorReviewed(notes, summary, file.path)).length} / {summary.files.length} 已阅</span>
       <Button size="sm" variant="ghost" disabled={!canSubmit || !summary.files.length} onClick={() => submit('find-issues', { view: { ...state.options, revision: summary.revision } })}>查找范围问题</Button>
@@ -127,9 +127,9 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     {state.reading && <p role="status" className="omaa-cr-hint">正在读取实际比较…</p>}
     {summary && !summary.files.length && <p className="omaa-cr-empty">此范围没有改动。</p>}
     {summary?.files.length > 0 && <div className="omaa-cr-layout">
-      <nav className="omaa-cr-files" aria-label="审阅文件">{summary.files.map(file => <button type="button" key={file.path} disabled={busy} onClick={() => selectFile(file.path)} aria-current={diff?.path === file.path ? 'true' : undefined} title={file.path}>
+      <nav className="omaa-cr-files" aria-label="审阅文件">{summary.files.map(file => <Button type="button" key={file.path} disabled={busy} onClick={() => selectFile(file.path)} aria-current={diff?.path === file.path ? 'true' : undefined} title={file.path}>
         <span className="omaa-cr-file-name">{cursorReviewed(notes, summary, file.path) ? '✓ ' : ''}{file.path}</span><small>+{file.added} −{file.deleted}</small>
-      </button>)}</nav>
+      </Button>)}</nav>
       <div className="omaa-cr-content">{diff && <>
         <div className="omaa-cr-file-head"><strong title={diff.path}>{diff.path}</strong><div>
           <Button size="sm" variant="ghost" disabled={busy || diff.after === false} onClick={openFile}>当前文件</Button>
@@ -147,13 +147,13 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     </div>}
     {editor && <form className="omaa-cr-editor" onSubmit={event => { event.preventDefault(); void act(saveEditor); }}>
       <label>{coordinate(editor.target)}<small>{cursorReviewScopes[editor.target.scope]}{editor.target.ref ? ` · ${editor.target.ref}` : ''}</small>
-        <textarea autoFocus aria-label={label + ' 行级批注'} value={editor.note} disabled={state.writing || sending} onChange={event => setEditor({ ...editor, note: event.target.value })} placeholder="指出具体问题或需要修改的内容…"/>
+        <TextArea autoFocus aria-label={label + ' 行级批注'} value={editor.note} disabled={state.writing || sending} onChange={event => setEditor({ ...editor, note: event.target.value })} placeholder="指出具体问题或需要修改的内容…"/>
       </label><div><Button size="sm" variant="ghost" disabled={busy} onClick={() => locate(editor.id ? { commentId: editor.id } : { target: editor.target })}>在编辑器定位此行</Button><Button size="sm" type="submit" disabled={busy || !editor.note.trim()}>保存批注</Button>{product === 'codex' && <Button size="sm" disabled={!canSubmit || !editor.note.trim()} onClick={() => submit('submit', {}, true)}>发送此条并继续修改</Button>}<Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditor(null)}>取消编辑</Button></div>
     </form>}
-    <section className="omaa-cr-comments" aria-label={label + ' 批注记录'}><header><h3>批注 <small>{comments.length}</small></h3><select aria-label="批注状态" value={filter} onChange={event => setFilter(event.target.value)}><option value="open">未解决</option><option value="all">全部记录</option><option value="resolved">已解决</option></select></header>
+    <section className="omaa-cr-comments" aria-label={label + ' 批注记录'}><header><h3>批注 <small>{comments.length}</small></h3><Select aria-label="批注状态" value={filter} onChange={event => setFilter(event.target.value)}><option value="open">未解决</option><option value="all">全部记录</option><option value="resolved">已解决</option></Select></header>
       <p className="omaa-cr-hint">批注保存在本机会话中，重开仍可继续；「已发送」表示宿主已接纳，解决状态由你确认。</p>
       {filtered.map(item => <article key={item.id} className="omaa-cr-comment" data-status={item.status}>
-        <header><button type="button" disabled={busy} onClick={() => showComment(item)}>{coordinate(item.target)}</button><small>{statusLabels[item.status]}</small></header>
+        <header><Button type="button" disabled={busy} onClick={() => showComment(item)}>{coordinate(item.target)}</Button><small>{statusLabels[item.status]}</small></header>
         <small>{cursorReviewScopes[item.target.scope]}{item.target.ref ? ` · ${item.target.ref}` : ''}{item.target.revision !== summary?.revision ? ' · 原比较版本' : ''}</small><p>{item.note}</p>
         <div><Button size="sm" variant="ghost" disabled={busy} onClick={() => locate({ commentId: item.id })}>在编辑器定位</Button>{item.status === 'draft' && <Button size="sm" variant="ghost" disabled={busy} onClick={() => showComment(item)}>编辑</Button>}
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => act(() => store.update({ action: item.status === 'resolved' ? 'reopen-comment' : 'resolve-comment', id: item.id }))}>{item.status === 'resolved' ? '重新打开' : '标为解决'}</Button>

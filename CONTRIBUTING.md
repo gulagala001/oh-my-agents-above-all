@@ -30,6 +30,8 @@ CI 冻结安装当前宿主依赖、构建并检查实际包。tag workflow 仅�
 
 ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile、日历和子任务结果协议构建输入，以及定时定义／次数生命周期、MCP 借用／子任务工具限制参照的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`build-zcode-calendar.mjs` 提取原厂日历计算与规则等价函数；宿主接线和持久更新在 calendar-chain／finite-schedule 模块中维护。`build-zcode-compiler.mjs` 还生成纯 ask 协议模块，原生回合与收据适配保持在 `actors.mjs`／`run-cache.mjs` 中。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和交接快照文件。
 
+自有表单控件统一通过 `src/client/ui.jsx` 使用宿主组件，文本域与下拉框沿用原生语义及共享 token；布局样式保持在各自面板，不向上游图或原生比较控件施加通用按钮／输入样式。`test/settings-ui-native.test.mjs` 在隔离 rc.2 宿主验证实际控件、主题、布局与保存；组件行为测试中的基础控件替身不代表原生界面验收。此原生界面检查目前按需执行，尚未接入 CI。
+
 文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。
 
 Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md`、`docs/products/cursor.md` 和 `docs/product-sources.md`。共享接线维护在 `src/host/message-queue.mjs` 与 `src/client/preset-queue.jsx`，不要为各预设另存一份原生 inbox 或组件快照。

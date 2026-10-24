@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import vm from 'node:vm';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { launchChromium } from './fixtures/browser.mjs';
 
 const repo = new URL('../', import.meta.url).pathname;

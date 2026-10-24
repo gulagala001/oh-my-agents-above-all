@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { assertCheckpointSession, openCheckpointReview } from './checkpoint-navigation.mjs';
 
@@ -37,9 +38,9 @@ export function CheckpointReviewChip({ settings, sidebarRight, sessionId }) {
   }, [settings, sidebarRight, id, sessionId, confirmed, reload]);
   if (!confirmed || state.sessionId !== id) return null;
   if (state.loading) return <span className="omaa-checkpoint-chip-status" role="status">读取改动…</span>;
-  if (state.error) return <button type="button" className="omaa-checkpoint-review-chip omaa-checkpoint-chip-retry"
+  if (state.error) return <Button type="button" variant="ghost" className="omaa-checkpoint-review-chip omaa-checkpoint-chip-retry"
     title={state.error} aria-label={`${state.unavailable ? '审阅暂不可用' : '改动读取失败'}：${state.error} 重新读取`}
-    onClick={() => setReload(value => value + 1)}>{state.unavailable ? '审阅暂不可用' : '改动读取失败'} · 重试</button>;
+    onClick={() => setReload(value => value + 1)}>{state.unavailable ? '审阅暂不可用' : '改动读取失败'} · 重试</Button>;
   const checkpoint = state.checkpoint;
   if (!checkpoint) return null;
   const label = `回合 ${checkpoint.turn} 改动 · ${checkpoint.summary.files.length} 个文件`;
@@ -55,6 +56,6 @@ export function CheckpointReviewChip({ settings, sidebarRight, sessionId }) {
       }
     }
   };
-  return <button type="button" className="omaa-checkpoint-review-chip" aria-label={label}
-    title={`${label}；查看该回合记录的原生比较`} onClick={open}>{label}</button>;
+  return <Button type="button" variant="ghost" className="omaa-checkpoint-review-chip" aria-label={label}
+    title={`${label}；查看该回合记录的原生比较`} onClick={open}>{label}</Button>;
 }

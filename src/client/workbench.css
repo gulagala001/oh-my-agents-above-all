@@ -1,19 +1,11 @@
 /* OMAA owns only these panels. Native columns and other plugins keep their
    appearance owner; product fonts and palettes come from the pinned packs. */
 .omaa-workbench { min-width:0; width:100%; container:omaa-workbench / inline-size; color:var(--dsw-alias-label-primary); }
+.omaa-workbench .omaa-cursor-review { width:auto; padding-inline:0; }
 .omaa-workbench .omaa-preset-controls { padding:16px; }
 .omaa-workbench :is(.omaa-checkpoints,.omaa-cursor-review,.omaa-pi-branches,.omaa-workbench-link) { margin:0 16px 16px; }
-.omaa-preset-heading { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
-.omaa-preset-heading h2 { margin:0; flex:1; min-width:0; }
-.omaa-preset-controls header { margin-bottom:14px; }
-.omaa-session-state { flex-shrink:0; font-size:10px; line-height:1.5; padding:2px 6px; border-radius:4px; background:var(--dsw-alias-interactive-bg-hover); color:var(--dsw-alias-label-secondary); }
-.omaa-session-state[data-state="error"],.omaa-preset-chip[data-state="error"] { color:var(--dsw-alias-state-error-primary); }
-.omaa-session-state[data-state="running"],.omaa-preset-chip[data-state="running"] small { color:var(--dsw-alias-brand-primary); }
 .omaa-workbench-link { padding:12px 0; border-top:1px solid var(--dsw-alias-border-l2); }
 .omaa-workbench-link .omaa-help { margin:6px 0 0; }
-:is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows) button { min-height:28px; }
-.omaa-workbench-link button { padding:5px 8px; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-brand-primary); font:inherit; font-size:12px; cursor:pointer; }
-:is(.omaa-workbench,.omaa-settings-page,.omaa-zcode-workflows) :is(button,select,input,textarea):focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
 :is(.omaa-checkpoints,.omaa-cursor-review,.omaa-pi-branches) { min-width:0; overflow-wrap:anywhere; }
 .omaa-checkpoint-file { padding:8px 0; border-bottom:1px solid var(--dsw-alias-border-l2); }
 .omaa-checkpoint-file code { flex-basis:100%; }

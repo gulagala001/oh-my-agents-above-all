@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import React, { useEffect, useRef, useState } from 'react';
 import { WorkflowToolFrame, resultText, argumentReader, argumentText } from './zcode-workflow-tool.jsx';
 
@@ -48,7 +49,7 @@ function RunRow({ run, open, busy }) {
     <strong>{run.label || '未命名工作流'}</strong> <small>{statuses.get(run.status)}</small>
     <div><small>{new Date(run.createdAt).toLocaleString()}</small></div><div><code>{run.runId}</code></div>
     <div><small>修订 {run.revision}{run.artifactCount !== undefined ? ` · ${run.artifactCount} 个产物` : ''}{run.reportCount !== undefined ? ` · ${run.reportCount} 条报告` : ''}</small></div>
-    {open && <button type="button" className="omaa-zcode-tool-artifacts" disabled={busy} onClick={() => { void open(run.runId); }}>查看工作流</button>}
+    {open && <Button type="button" className="omaa-zcode-tool-artifacts" disabled={busy} onClick={() => { void open(run.runId); }}>查看工作流</Button>}
   </div>;
 }
 

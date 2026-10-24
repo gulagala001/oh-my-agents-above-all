@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import React from 'react';
 
 // A chart failure only affects its artifact. Host conversation/settings panes
@@ -10,6 +11,6 @@ export class ScopedErrorBoundary extends React.Component {
   }
   render() {
     if (!this.state.error) return this.props.children;
-    return <div role="alert" className="omaa-error"><p>此图表暂时无法渲染：{this.state.error.message || String(this.state.error)}</p><button type="button" onClick={() => this.setState({ error: null })}>重新加载图表</button></div>;
+    return <div role="alert" className="omaa-error"><p>此图表暂时无法渲染：{this.state.error.message || String(this.state.error)}</p><Button type="button" onClick={() => this.setState({ error: null })}>重新加载图表</Button></div>;
   }
 }

@@ -3,21 +3,29 @@
 .omaa-preset-chip-name { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .omaa-preset-chip small { flex-shrink:0; color:var(--dsw-alias-label-tertiary); font-size:10px; }
 .omaa-preset-chip-chevron { flex-shrink:0; width:9px; text-align:center; }
-.omaa-preset-controls { box-sizing:border-box; width:100%; min-width:0; max-width:700px; margin:0 auto; padding:20px; color:var(--dsw-alias-label-primary); font-family:inherit; font-size:13px; container-type:inline-size; container-name:omaa-settings; overflow-wrap:anywhere; }
+.omaa-preset-controls { box-sizing:border-box; width:100%; min-width:0; max-width:700px; margin:0 auto; padding:20px; color:var(--dsw-alias-label-primary); font-family:inherit; font-size:13px; container-type:inline-size; container-name:omaa-preset-settings; overflow-wrap:anywhere; }
 .omaa-preset-controls h2 { font-size:17px; font-weight:600; margin:0 0 6px; }
-.omaa-preset-controls header { margin-bottom:22px; }
+.omaa-preset-controls header { margin-bottom:14px; }
 .omaa-preset-controls header p,.omaa-help { color:var(--dsw-alias-label-secondary); line-height:1.5; margin:6px 0 14px; font-size:12px; }
-.omaa-setting-row { display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:39px; margin:9px 0; }
-.omaa-setting-row select { box-sizing:border-box; width:60%; min-width:0; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; padding:6px 8px; background:var(--dsw-alias-bg-layer-1); color:var(--dsw-alias-label-primary); font:inherit; }
-.omaa-setting-value { box-sizing:border-box; width:60%; min-width:0; padding:6px 8px; }
-.omaa-setting-row input { accent-color:var(--dsw-alias-brand-primary); }
-.omaa-setting-row :disabled { opacity:.55; cursor:not-allowed; }
+.omaa-preset-heading { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
+.omaa-preset-heading h2 { margin:0; flex:1; min-width:0; }
+.omaa-session-state { flex-shrink:0; font-size:11px; line-height:1.5; padding:2px 6px; border-radius:4px; background:var(--dsw-alias-interactive-bg-hover); color:var(--dsw-alias-label-secondary); }
+.omaa-session-state[data-state="error"],.omaa-preset-chip[data-state="error"] { color:var(--dsw-alias-state-error-primary); }
+.omaa-session-state[data-state="running"],.omaa-preset-chip[data-state="running"] small { color:var(--dsw-alias-brand-primary); }
+.omaa-setting-row { display:flex; align-items:center; justify-content:space-between; gap:16px; min-width:0; min-height:39px; margin:12px 0; }
+.omaa-setting-row > span:first-child { min-width:0; }
+.omaa-setting-row > :is(.omaa-select,.omaa-input,.omaa-setting-value) { width:60%; min-width:0; flex-shrink:0; }
+.omaa-setting-value { box-sizing:border-box; padding:6px 0; }
+.omaa-setting-row > [role="switch"] { flex-shrink:0; }
 .omaa-enhancement-work-mode { margin-top:4px; }.omaa-enhancement-work-mode .omaa-help { margin-bottom:9px; }
-.omaa-error { color:var(--dsw-alias-state-error-primary); font-size:12px; line-height:1.5; }
-.omaa-retry { font:inherit; border:1px solid var(--dsw-alias-border-l2); border-radius:6px; color:var(--dsw-alias-label-primary); background:transparent; padding:5px 9px; cursor:pointer; }
-.omaa-preset-controls :focus-visible,.omaa-preset-chip:focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
+.omaa-error { color:var(--dsw-alias-state-error-primary); font-size:12px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+.omaa-preset-chip:focus-visible { outline:2px solid var(--dsw-alias-brand-primary); outline-offset:2px; }
 /* DSH 0.2.1's native header is a grid; the pinned Codex adapter places the
    same children as one horizontal title bar, above its 58px-inset pane. */
 html[data-omaa-theme="codex-desktop"][data-omd-layout="codex-desktop"] .wSkVaW_header { display:flex; align-items:center; }
-@container omaa-settings (max-width:280px) { .omaa-setting-row:has(select),.omaa-setting-row:has(.omaa-setting-value) { flex-direction:column; align-items:stretch; gap:6px; margin:12px 0; } .omaa-setting-row select,.omaa-setting-value { width:100%; } }
-@media(max-width:420px) { .omaa-preset-controls { padding:15px; } .omaa-setting-row { gap:10px; } }
+@container omaa-preset-settings (max-width:380px) {
+  .omaa-setting-row:has(.omaa-select),.omaa-setting-row:has(.omaa-setting-value) { flex-direction:column; align-items:stretch; gap:6px; }
+  .omaa-setting-row > :is(.omaa-select,.omaa-input,.omaa-setting-value) { width:100%; }
+  .omaa-form-group { padding:10px; }
+}
+@media(max-width:420px) { .omaa-preset-controls { padding:15px; } }

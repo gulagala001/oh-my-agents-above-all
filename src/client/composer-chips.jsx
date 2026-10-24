@@ -1,3 +1,4 @@
+import { Button } from './ui.jsx';
 import React, { useSyncExternalStore } from 'react';
 import { PresetControls } from './preset-controls.jsx';
 import { CheckpointReviewChip } from './checkpoint-review-chip.jsx';
@@ -13,7 +14,7 @@ export function ComposerChips({ settings, sidebarRight, sessionId, getThemeRunti
       sidebarRight.openTabIn(sessionId, 'omaa-preset');
     }
   };
-  return <span className="omaa-composer-chips"><CheckpointReviewChip {...{ settings, sidebarRight, sessionId }}/>{session.data.product.id === 'cursor' && <button type="button" className="omaa-checkpoint-review-chip" aria-label="打开 Cursor 代码审阅" onClick={() => {
+  return <span className="omaa-composer-chips"><CheckpointReviewChip {...{ settings, sidebarRight, sessionId }}/>{session.data.product.id === 'cursor' && <Button type="button" variant="ghost" className="omaa-checkpoint-review-chip" aria-label="打开 Cursor 代码审阅" onClick={() => {
     if (settings.getSnapshot().sessionId === sessionId && sidebarRight.mounted.getSnapshot() === sessionId && settings.getSnapshot().data?.product?.id === 'cursor') sidebarRight.openTabIn(sessionId, 'omaa-cursor-review');
-  }}>代码审阅</button>}<PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>;
+  }}>代码审阅</Button>}<PresetControls {...{ settings, getThemeRuntime, openPanel }} compact/></span>;
 }

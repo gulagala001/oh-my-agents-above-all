@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { launchChromium } from './fixtures/browser.mjs';
 
 test('saved tool cards validate parameters, submit native requests and invalidate callbacks across navigation', { timeout: 45000 }, async t => {

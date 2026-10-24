@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { launchChromium } from './fixtures/browser.mjs';
 
 test('workflow view reads rc.2 raw arguments and live native preparing arguments', { timeout: 30000 }, async t => {

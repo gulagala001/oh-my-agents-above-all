@@ -5,7 +5,7 @@
   --omaa-set-muted:var(--dsw-alias-label-tertiary,GrayText);
   --omaa-set-line:color-mix(in srgb,var(--omaa-set-text) 10%,var(--omaa-set-bg));
   --omaa-set-hover:color-mix(in srgb,var(--omaa-set-text) 5%,var(--omaa-set-bg));
-  display:flex; flex-direction:column; width:100%; height:100%; min-height:0;
+  display:flex; flex-direction:column; width:100%; height:100%; min-height:0; min-width:0;
   box-sizing:border-box; color:var(--omaa-set-text); font:inherit; font-size:13px; line-height:1.6;
   container:omaa-settings / inline-size;
 }
@@ -35,7 +35,7 @@
 .omaa-set-fold > summary > svg { width:16px; height:16px; color:var(--omaa-set-muted); transform:rotate(-90deg); }
 .omaa-set-fold[open] > summary > svg { transform:none; }
 .omaa-set-fold > summary:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:-2px; }
-.omaa-set-fold-body { padding:0 14px 14px; }
+.omaa-set-fold-body { min-width:0; padding:0 14px 14px; }
 .omaa-settings-page .omaa-preset-controls,.omaa-settings-page .omaa-pi-extensions { max-width:none; margin:0; padding:0; }
 .omaa-set-fold .omaa-pi-extensions header { justify-content:flex-end; margin-bottom:10px; }
 @container omaa-settings (max-width:460px) {

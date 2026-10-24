@@ -72,7 +72,7 @@ test('installed saved workflow cards reuse actual project/global definitions thr
   await f.prompt(other.sessionId, 'Keep this separate session for native navigation testing.');
   await f.rpc('session/rename', { sessionId: other.sessionId, title: 'ZCode saved other fixture' });
   const browser = await launchChromium({ headless: true, args: ['--use-mock-keychain', '--password-store=basic'] });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 }, colorScheme: 'light' });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 }, colorScheme: 'light', timezoneId: 'UTC' });
   await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
   const page = await context.newPage(), errors = []; page.setDefaultTimeout(18000); page.on('pageerror', error => errors.push(error.message));
   t.after(async () => { try { if (t.passed === false && !page.isClosed()) { await page.screenshot({ path: join(evidenceDir, 'failure.png') }); t.diagnostic((await page.locator('body').innerText()).slice(-6000)); } } finally { await browser.close(); } });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from 'esbuild';
+import { build } from './fixtures/client-build.mjs';
 import { chromium } from 'playwright';
 
 test('composer preset controls hide child scopes and reject stale session navigation', async t => {
