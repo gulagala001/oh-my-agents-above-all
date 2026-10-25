@@ -23,6 +23,7 @@
     "lib",
     "docs",
     "README.md",
+    "README_EN.md",
     "cordis.patch.yml",
     "THIRD_PARTY_NOTICES.md",
     "LICENSE",
@@ -30,10 +31,7 @@
     "LICENSING.md",
     "assets",
     "scripts/public-files.mjs",
-    "CHANGELOG.md",
-    "README_EN.md",
-    "scripts/check-docs.mjs",
-    "scripts/check-release-assets.mjs"
+    "CHANGELOG.md"
   ],
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
