@@ -18,13 +18,22 @@
       "source": "src/client/skins/adapter.css",
       "path": "adapter.css",
       "sourceSha256": "adcdce3117f043e99035a82a7471e56db8af3d5e02429232fd454bdd375ae5d2",
-      "sha256": "adcdce3117f043e99035a82a7471e56db8af3d5e02429232fd454bdd375ae5d2"
+      "sha256": "13796f7e83bcf9c95f5740f2cbbcc1c5dff01b4b5ad561c828f7110d137f246e",
+      "bytes": 7422,
+      "adaptationSource": {
+        "repository": "https://github.com/gulagala001/oh-my-agents-above-all",
+        "commit": "aec1fafd2c60989ca2c0396d79bb9e5b84357dba",
+        "path": "src/client/themes/shared/adapter.css"
+      },
+      "adaptation": "Original OMD snapshot source hash retained. The existing OMAA adapter adds macOS header drag and user-selection rules and bounds native preset tooltips."
     },
     {
       "source": "src/client/skins/codex-desktop/layout.css",
       "path": "codex-layout.css",
       "sourceSha256": "7f1c2472f4524c5058cb4439ea93fbeb118811761f4657a485ce499a3a15df5f",
-      "sha256": "7f1c2472f4524c5058cb4439ea93fbeb118811761f4657a485ce499a3a15df5f"
+      "sha256": "cbc6848661479d4d34f50adda71e6a8fa67c7b66aad228f232bc6440287ec8af",
+      "bytes": 23151,
+      "adaptation": "Original snapshot source hash retained. The rc.3 header adapter explicitly owns its flex layout, sizes the view row to its content, aligns the nested pinned views and removes only an empty leading slot and reserves native macOS window-control clearance without relying on another theme owner. Existing OMAA styles outside the header are preserved."
     },
     {
       "source": "src/client/skins/codex-desktop/integration.jsx",
@@ -43,14 +52,14 @@
       "source": "vendor/opencu/src/client/slot-decoration.mjs",
       "path": "slot-decoration.mjs",
       "sourceSha256": "0265dd1a39f9ac71aaecbf7262c66bfa511f3dd8278469199727596d50504f2a",
-      "sha256": "81fe4f0630759121f73938b18094c99de8a893f5c8883027f814f019c2128bca",
-      "bytes": 3744,
+      "sha256": "21ed8a36e760647bf4394b7d3427bd9f2513f70bfe204162ca817cc3c9967f38",
+      "bytes": 3930,
       "adaptationSource": {
         "repository": "https://github.com/gulagala001/oh-my-agents-above-all",
-        "commit": "c87de200f011d2293060fb9e5ca1c560cb023ee2",
+        "commit": "83ef6b3b856654a5b6e2e75bddedf705de6f1c87",
         "path": "src/client/themes/shared/slot-decoration.mjs"
       },
-      "adaptation": "The original OpenCU snapshot source hash is retained. The compatibility fix replaces shadow registration with in-place component decoration, preserving the declaring slot entry and metadata, publishing changes through a synchronous non-winning registration/disposal, and restoring inactive wrapper layers on disposal."
+      "adaptation": "The original OpenCU snapshot source hash is retained. The compatibility fix replaces shadow registration with in-place component decoration, preserving the declaring slot entry and metadata, publishing changes through a synchronous non-winning registration/disposal, and restoring inactive wrapper layers on disposal. The recorded hash also includes the existing guard against non-winning slot refresh probes becoming visible entries."
     }
   ],
   "redistributionLicense": "Apache-2.0",
