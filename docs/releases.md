@@ -8,7 +8,8 @@
 
 ### 问题修复
 
-- 更新检查纳入最新审定的同宿主功能系列，避免符合条件的新版本被遗漏；继续保留未审定系列拒绝、固定发行来源校验、校验值核对和禁止降级保护。
+- 更新发现按完整 DSH 宿主版本选择官方最新发行，移除需要逐个登记功能系列的限制；后续功能版与主版本升级无需修改更新器名单。
+- 完整读取双方发行历史的所有分页，修复历史增长后遗漏版本的问题；分页异常或最新同宿主发行缺件时明确报错，避免误报已是最新版。保留固定来源、校验值核对及禁止降级保护。
 
 <a id="en-0174"></a>
 
@@ -16,7 +17,8 @@
 
 ### Bug Fixes
 
-- Update checks include the latest reviewed feature series for the same host, preventing eligible releases from being missed while retaining rejection of unreviewed series, fixed-release provenance and checksum checks, and downgrade protection.
+- Update discovery selects the newest official release for the exact DSH host without a manually maintained feature-series allowlist. Future feature and major versions require no updater list changes.
+- Read every page of both release histories so a growing history cannot hide updates. Repeated pages and missing assets in the newest same-host release produce an explicit error instead of a false up-to-date result. Fixed-source validation, checksum checks, and downgrade protection remain in place.
 
 ## 安装 / Installation
 

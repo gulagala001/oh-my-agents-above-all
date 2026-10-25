@@ -49,3 +49,5 @@ Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。边界
 DSH 宿主升级须核对 Pi `nativeLoopAdapter` 与 Grok `transactionCompatibility` 的 `reviewedVersions`、完整模块及方法指纹。只有实际 npm 字节相同的宿主才能共用指纹；构建与运行时均执行校验，版本列表不替代真实宿主运行。
 
 发行上传前执行 `node scripts/check-release-assets.mjs --dir <待发目录>`，核对当前包的实际 SHA256、`metadata.json`（schema、包名、完整版本、hostVersion、file／filename、sourceCommit）与 `SHA256SUMS`。OMAA 还需同内容的 `<包名>.tgz.metadata.json` 和 `<包名>.tgz.sha256`；当前发行的 CI 使用同一契约检查，历史附件保留。
+
+更新发现以完整宿主版本、官方发行及包元数据为依据，不维护产品功能系列白名单；读取完整分页并保留来源、校验值和禁止降级检查。相关回归见 `test/updates-current-release.test.mjs`。
