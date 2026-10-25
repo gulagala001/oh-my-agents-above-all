@@ -30,10 +30,10 @@
 打开实际使用的 DSH 实例，在 **插件 → ＋ 添加插件** 中粘贴：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.5/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.5.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.6/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.6.tgz
 ```
 
-等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.5/SHA256SUMS).
+等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.6/SHA256SUMS).
 
 ### 2. 先试这一件事
 
@@ -71,7 +71,7 @@ Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话�
 
 ## 兼容与来源边界
 
-OMAA 0.17.5 精确匹配 DSH 0.2.1-rc.3；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
+OMAA 0.17.6 精确匹配 DSH 0.2.1-rc.3；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
 
 Pi 本地扩展默认白名单为空，仅执行用户明确指定的绝对路径；已支持 API 与未支持边界见 [Pi 文档](docs/products/pi.md)。ZCode 工作流沿用 DSH 的模型、隔离执行、权限与原生子会话，不冒称原厂完整 journal/replay。
 
