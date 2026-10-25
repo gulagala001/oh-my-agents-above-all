@@ -64,7 +64,7 @@ test('current host resolves OMD independently of OMAA release attachments', asyn
 test('latest compatible patch uses numeric order and only updates OMD through its native transaction', async t => {
   const { updates, calls, omd } = fixture({ patch: '0.100.7', extras: [
     { version: `${hostVersion}.omd.0.100.6` }, { version: `${hostVersion}.omd.0.100.1` },
-    { version: `${otherHost}.omd.0.100.17` }, { version: `${hostVersion}.omd.0.102.0` },
+    { version: `${otherHost}.omd.0.100.17` }, { version: `${hostVersion}.omd.0.103.0` },
     { version: `${hostVersion}.omd.1.17.0` }, { version: `${hostVersion}.omd.0.17.99` },
     { version: `${hostVersion}.omd.0.100.8`, draft: true },
   ] }); t.after(() => updates.close());
@@ -78,14 +78,14 @@ test('latest compatible patch uses numeric order and only updates OMD through it
   assert.equal(calls[0].options.enabled, false);
 });
 test('reviewed feature series participates in numeric selection without admitting unreviewed series', async t => {
-  const { updates, omd, calls } = fixture({ patch: '0.101.1', currentPatch: '0.100.2', extras: [
-    { version: `${hostVersion}.omd.0.100.99` }, { version: `${hostVersion}.omd.0.102.0` },
+  const { updates, omd, calls } = fixture({ patch: '0.102.0', currentPatch: '0.101.2', extras: [
+    { version: `${hostVersion}.omd.0.101.99` }, { version: `${hostVersion}.omd.0.103.0` },
     { version: `${otherHost}.omd.0.101.9` },
   ] });
   t.after(() => updates.close());
   const result = await updates.omdVersionCheck(true);
   assert.equal(result.error, null);
-  assert.equal(result.latestVersion, `${hostVersion}.omd.0.101.1`);
+  assert.equal(result.latestVersion, `${hostVersion}.omd.0.102.0`);
   await updates.start('omd', result.latestVersion);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, omd.assets[0].browser_download_url);

@@ -13,7 +13,7 @@ https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md
 确认实际使用的是 DSH 桌面版还是 Web 版、完整宿主版本、profile、DSH_HOME 和数据目录。
 使用本页匹配该宿主的固定 GitHub Release 包，通过 DSH 原生插件管理器安装；不要安装同名 npm 包或混用宿主版本。
 先备份现有配置，保留会话、模型配置、第三方插件和数据，不强制中断正在执行的任务。
-DSH 0.2.1-rc.3 使用 OMAA 0.17.3；DSH 0.2.1-rc.1 使用已有 OMAA 0.16.5。
+DSH 0.2.1-rc.3 使用 OMAA 0.17.4；DSH 0.2.1-rc.1 使用已有 OMAA 0.16.5。
 我已有 OMD 时保留它；需要可选增强时按同一宿主的 OMD 安装说明配对。不要为了装插件自行升级或替换宿主。
 完成后只重启实际更新的实例，确认已安装版本和插件入口，告诉我结果。
 ```
@@ -25,10 +25,10 @@ DSH 0.2.1-rc.3 使用 OMAA 0.17.3；DSH 0.2.1-rc.1 使用已有 OMAA 0.16.5。
 2. 根据实际 DSH 完整版本，复制下方对应地址，粘贴进包名／GitHub 仓库／本地路径输入框。
 3. 点击 **安装**。任务结束后重启对应实例，保留原 profile 和数据目录。
 
-**DSH 0.2.1-rc.3 → OMAA 0.17.3：**
+**DSH 0.2.1-rc.3 → OMAA 0.17.4：**
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.3/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.3.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.4/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.4.tgz
 ```
 
 **DSH 0.2.1-rc.1 → OMAA 0.16.5：**
@@ -37,7 +37,7 @@ https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-r
 https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.1.omaa.0.16.5/oh-my-agents-above-all-0.2.1-rc.1.omaa.0.16.5.tgz
 ```
 
-[rc.3 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.3.omaa.0.17.3) · [rc.1 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.5) · [可选 OMD 增强安装](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)
+[rc.3 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.3.omaa.0.17.4) · [rc.1 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.5) · [可选 OMD 增强安装](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)
 
 0.17.0 安装后只加载基座，全部预设默认关闭；在 **设置 → OMAA → 代理预设** 中分别开启 Codex、Grok Build、Cursor、Pi 或 ZCode，开启后再到新会话选择。升级保留已明确保存的预设选择。
 
@@ -51,7 +51,7 @@ https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-r
 使用正在运行实例对应的 DSH 命令、profile 和 DSH_HOME。例如 rc.3 的 web profile：
 
 ```sh
-dsh plugin --profile web add https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.3/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.3.tgz
+dsh plugin --profile web add https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.4/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.4.tgz
 ```
 
 需要校验时，在发行页下载同名 `.sha256` 与 `.metadata.json`。macOS/Linux 可用 `shasum -a 256 -c`，Windows 可用 `Get-FileHash -Algorithm SHA256`。

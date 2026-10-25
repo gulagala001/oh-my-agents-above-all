@@ -55,7 +55,7 @@
   ],
   "omdBridge": {
     "featureVersion": "0.100.0",
-    "reviewedFeatures": { "0.2.1-rc.3": ["0.101.0"] },
+    "reviewedFeatures": { "0.2.1-rc.3": ["0.101.0", "0.102.0"] },
     "officialHosts": ["0.2.1-rc.1", "0.2.1-rc.2", "0.2.1-rc.3"],
     "updatePolicy": "patch",
     "interfaces": [

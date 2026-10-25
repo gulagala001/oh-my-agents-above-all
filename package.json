@@ -1,6 +1,6 @@
 {
   "name": "oh-my-agents-above-all",
-  "version": "0.2.1-rc.3.omaa.0.17.3",
+  "version": "0.2.1-rc.3.omaa.0.17.4",
   "private": true,
   "type": "module",
   "description": "DSH 五产品预设：Codex、Grok Build、Cursor、Pi、ZCode，提供原生会话、代码审阅、文档转换和工作流控制",
