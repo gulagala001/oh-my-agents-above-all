@@ -1,5 +1,5 @@
 {
-  "hostRange": "0.2.1-rc.3",
+  "hostRange": "0.2.1-rc.5",
   "loaderRange": "1.0.6",
   "buildHosts": [
     {
@@ -51,10 +51,25 @@
       "schemasteryVersion": "3.18.5",
       "activation": "activation",
       "workingDirectory": true
+    },
+    {
+      "version": "0.2.1-rc.5",
+      "commit": "b830ec950faba0a46dda564be3e2d854afed94f1",
+      "loaderVersion": "1.0.6",
+      "groupVersion": "1.0.5",
+      "cordisVersion": "4.0.5",
+      "schemasteryVersion": "3.18.5",
+      "activation": "activation",
+      "workingDirectory": true
     }
   ],
   "omdBridge": {
-    "officialHosts": ["0.2.1-rc.1", "0.2.1-rc.2", "0.2.1-rc.3"],
+    "officialHosts": [
+      "0.2.1-rc.1",
+      "0.2.1-rc.2",
+      "0.2.1-rc.3",
+      "0.2.1-rc.5"
+    ],
     "interfaces": [
       "installOmaaEnhancement",
       "omaaWorkflowComposition",

@@ -837,7 +837,8 @@
       "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check.",
       "reviewedVersions": [
         "0.2.1-rc.2",
-        "0.2.1-rc.3"
+        "0.2.1-rc.3",
+        "0.2.1-rc.5"
       ]
     }
   },

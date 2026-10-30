@@ -1,3 +1,4 @@
+import { applySessionTimeZone } from './session-time-zone.mjs';
 import { Button } from './ui.jsx';
 import { applyPresetQueues } from './preset-queue.jsx';
 import React, { useSyncExternalStore } from 'react';
@@ -25,6 +26,7 @@ import workbenchCss from './workbench.css';
 export const inject = ['slots', 'sidebarRight', 'sidebarRightTabs', 'theme', 'configForms', 'sessions', 'uiWorkspace', 'conversation', 'uiConversation'];
 
 export function apply(ctx, { enabled, ready }) {
+  ctx.inject(['remote.session', 'remote.subagents'], scope => applySessionTimeZone(scope));
   let settings;
   ctx.effect(() => { settings = createSessionSettings(ctx, fetch, enabled); return () => { disposeCursorReview(settings); settings.dispose(); }; });
   if (enabled.some(product => ['grok', 'cursor'].includes(product))) applyPresetQueues(ctx, enabled);

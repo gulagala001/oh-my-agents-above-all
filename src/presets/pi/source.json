@@ -857,7 +857,8 @@
     "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be",
     "reviewedVersions": [
       "0.2.1-rc.2",
-      "0.2.1-rc.3"
+      "0.2.1-rc.3",
+      "0.2.1-rc.5"
     ]
   },
   "contextAdapter": {
