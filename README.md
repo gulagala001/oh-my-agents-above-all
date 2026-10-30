@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/gulagala001/oh-my-agents-above-all?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub 累计下载量" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
-  <a href="#readme-install"><img alt="DSH 0.2.1-rc.3" src="https://img.shields.io/badge/DSH-0.2.1--rc.3-0969da?style=flat-square"></a>
+  <a href="#readme-install"><img alt="DSH 0.2.1-rc.5" src="https://img.shields.io/badge/DSH-0.2.1--rc.5-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
 
@@ -21,7 +21,7 @@
 
 ## 快速开始
 
-**适用环境：** DSH **0.2.1-rc.3**, Node.js **22.19+**.
+**适用环境：** DSH **0.2.1-rc.5**, Node.js **22.19+**.
 
 使用 DSH 已配置的模型与凭据。五个预设提供来源提示词、工作流程和主题适配，不附带对应产品的官方账号或专有云端服务。
 
@@ -30,10 +30,10 @@
 打开实际使用的 DSH 实例，在 **插件 → ＋ 添加插件** 中粘贴：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.6/oh-my-agents-above-all-0.2.1-rc.3.omaa.0.17.6.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.5.omaa.0.17.7/oh-my-agents-above-all-0.2.1-rc.5.omaa.0.17.7.tgz
 ```
 
-等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.3.omaa.0.17.6/SHA256SUMS).
+等当前任务结束后，按宿主提示启用或完整重启该实例，沿用原 profile 与数据。其他宿主、升级和卸载见[安装指南](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.5.omaa.0.17.7/SHA256SUMS).
 
 ### 2. 先试这一件事
 
@@ -71,7 +71,7 @@ Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话�
 
 ## 兼容与来源边界
 
-OMAA 0.17.6 精确匹配 DSH 0.2.1-rc.3；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
+OMAA 0.17.7 精确匹配 DSH 0.2.1-rc.5；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
 
 Pi 本地扩展默认白名单为空，仅执行用户明确指定的绝对路径；已支持 API 与未支持边界见 [Pi 文档](docs/products/pi.md)。ZCode 工作流沿用 DSH 的模型、隔离执行、权限与原生子会话，不冒称原厂完整 journal/replay。
 
