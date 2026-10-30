@@ -160,6 +160,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
   await writeFile(join(home, '.credentials.yaml'), JSON.stringify({ version: 1, refs: liveSettings ? { OMAA_LIVE_CONFIGURED_KEY: liveSettings.apiKey } : { OMAA_INSTALL_FIXTURE:'local-dummy-key' } }), { mode: 0o600 });
   const command = async args => {
     if (offlineInstall && args[0] === 'plugin' && args.includes('add')) args = [...args, '--offline', '--ignore-scripts'];
+    else if (safeEnvironment && args[0] === 'plugin' && args.includes('add')) args = [...args, '--ignore-scripts'];
     if (storeDir && args[0] === 'plugin' && (args.includes('add') || args.includes('remove'))) args = [...args, '--store-dir', resolve(storeDir)];
     try { return await runFile(process.execPath, [cli, ...args], { cwd: workspace, env, encoding: 'utf8', timeout: installTimeoutMs, maxBuffer: 16 * 1024 * 1024 }); }
     catch (error) { throw new Error(redact([error.stdout, error.stderr].filter(Boolean).join('\n') || error.message)); }
