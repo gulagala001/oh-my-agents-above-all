@@ -1,3 +1,4 @@
+import { sessionSchedule } from '../../host/native-schedule.mjs';
 import { randomUUID } from 'node:crypto';
 import { symbols } from '@deepseek-ai/cordis';
 import { scopeOf } from '@deepseek-ai/dsh-scope';
@@ -118,7 +119,7 @@ export function installFiniteScheduleGate(ctx) {
     return turn === release.turn && step?.turn === release.turn && step.step === release.step;
   };
   const checkRule = async (session, owner, row) => {
-    const agent = ctx.agents.get(session.id), service = agent?.ctx?.get('schedule') ?? ctx.get('schedule');
+    const agent = ctx.agents.get(session.id), service = sessionSchedule(agent?.ctx?.get('schedule') ?? ctx.get('schedule'));
     if (!service?.catalog) throw Error('Native finite carrier is unavailable.');
     const native = (await service.catalog()).find(value => value.id === owner.id && value.sessionId === session.id);
     const value = owner.finite, at = Date.parse(row.occurrence_at);

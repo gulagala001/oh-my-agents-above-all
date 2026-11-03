@@ -3,6 +3,7 @@
 export const inject = ['webServer', 'connection', 'schedule', 'sessions', 'storageDomain'];
 export async function apply(ctx, config) {
   const { withGrokScheduleTransaction } = await import(config.transactionModule);
+  const { sessionSchedule } = await import(new URL('./native-schedule.mjs', config.transactionModule));
   ctx.effect(() => ctx.webServer.register({ kind: 'exact', path: '/omaa-fixture/grok-transaction', async handler(req, res) {
     const rejection = ctx.connection.requestRejection(req);
     if (rejection !== undefined) { res.writeHead(rejection); res.end(); return; }
@@ -17,13 +18,15 @@ export async function apply(ctx, config) {
         return;
       }
       if (!['conflict', 'cancel'].includes(input.action)) throw Error('Unknown fixture action');
-      const service = ctx.schedule;
+      const native = ctx.schedule, service = sessionSchedule(native);
       const expected = (await service.catalog()).find(row => row.id === input.id && row.sessionId === session.id);
       if (!expected) throw Error('Actual schedule required');
-      const gate = Promise.withResolvers(), queued = service.serialize(() => gate.promise);
+      const gate = Promise.withResolvers(), queued = native.serialize(() => gate.promise);
       const { sessionId: _session, status: _status, lastDelivery: _delivery, ...record } = expected;
       let changed;
-      if (input.action === 'conflict') changed = service.update({ sessionId: session.id, id: input.id, expected: record, prompt: 'EXTERNAL_NATIVE_EDIT' });
+      if (input.action === 'conflict') changed = typeof native.edit === 'function'
+        ? native.edit({ id: input.id, action: 'update', patch: { prompt: 'EXTERNAL_NATIVE_EDIT' } }, session.id)
+        : service.update({ sessionId: session.id, id: input.id, expected: record, prompt: 'EXTERNAL_NATIVE_EDIT' });
       let callbackRan = false;
       const control = new AbortController();
       const transaction = withGrokScheduleTransaction(service, { sessionId: session.id, id: input.id, expected, signal: control.signal }, async current => {

@@ -1,3 +1,4 @@
+import { sessionSchedule } from '../../host/native-schedule.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { symbols } from '@deepseek-ai/cordis';
 import { createUserMessage, boundContextSummary } from '@deepseek-ai/dsh-llm';
@@ -18,7 +19,7 @@ const reason = text => String(text).slice(0, 512);
 const instant = text => typeof text === 'string' && /^\d{4}-/.test(text)
   && Number.isFinite(Date.parse(text)) && new Date(Date.parse(text)).toISOString() === text;
 const markerFor = () => `[OMAA GROK DISPATCH ${randomUUID()}]\nThis is an adapter dispatch reference. It contains no task instructions. If the owning adapter is unavailable, report that scheduled dispatch is unavailable and do not infer a task.`;
-const scheduleIdentity = service => service?.[symbols.original] ?? service;
+const scheduleIdentity = service => sessionSchedule(service);
 const ownKeys = (row, names) => row && typeof row === 'object' && !Array.isArray(row)
   && Object.keys(row).sort().join(',') === [...names].sort().join(',');
 const validRow = row => ownKeys(row, ['schedule_id', 'occurrence_at', 'reminder_prompt'])
@@ -198,7 +199,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
     check(agent, grant.policyKey);
   }
   const nativeSchedule = agent => {
-    const schedule = optional(agent, 'schedule');
+    const schedule = sessionSchedule(optional(agent, 'schedule'));
     if (!schedule || typeof schedule.create !== 'function' || typeof schedule.catalog !== 'function') throw Error('Native schedule management is unavailable.');
     return schedule;
   };

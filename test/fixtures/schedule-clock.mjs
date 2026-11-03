@@ -20,8 +20,14 @@ export async function apply(ctx, config) {
       if (!session || session.header.cwd !== config.workspace || !Number.isSafeInteger(target) || target < Date.now()) throw Error('Clock requires owned session and forward time');
       epoch = target; started = realNow(); writeFileSync(config.clockFile, new Date(epoch).toISOString());
       // A real public mutation wakes the real Schedule drive at the new clock.
-      const tick = await ctx.schedule.create(session.id, { after_seconds: 31536000, title: 'Owned clock wake', prompt: 'Never due during this test' });
-      await ctx.schedule.delete({ sessionId: session.id, id: tick.id });
+      if (typeof ctx.schedule.edit === 'function') {
+        const tick = await ctx.schedule.create({ timing: { kind: 'after', after_seconds: 31536000 }, title: 'Owned clock wake',
+          prompt: 'Never due during this test', target: { kind: 'session', sessionId: session.id } }, session.id);
+        await ctx.schedule.edit({ id: tick.id, action: 'delete' }, session.id);
+      } else {
+        const tick = await ctx.schedule.create(session.id, { after_seconds: 31536000, title: 'Owned clock wake', prompt: 'Never due during this test' });
+        await ctx.schedule.delete({ sessionId: session.id, id: tick.id });
+      }
       res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ now: Date.now() }));
     } catch (error) { res.writeHead(400, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: error.message })); }
   } }));

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { withGrokScheduleTransaction, grokUpdatedTarget } from '../../host/grok-schedule-transaction.mjs';
+import { sessionSchedule } from '../../host/native-schedule.mjs';
 
 export const name = 'omaa-grok-scheduler';
 export const inject = ['tools', 'omaa', 'agents', 'sandboxPolicy', 'schedule'];
@@ -103,6 +104,7 @@ export function apply(ctx) {
   return mountScheduler(ctx);
 }
 function mountScheduler(ctx) {
+  const schedule = sessionSchedule(ctx.schedule);
   const lifetime = new AbortController(), requests = new Set();
   const stop = (request, code, message) => {
     request.interruption ??= { code, message };
@@ -195,7 +197,7 @@ function mountScheduler(ctx) {
     const owned = service ? await service.list(exec) : []; check();
     // list() returns unbound records; catalog() supplies the actual Session
     // binding and status needed for the ownership comparison below.
-    const native = (await ctx.schedule.catalog()).filter(row => row.sessionId === exec.agent.session.id && row.status === 'active'); check();
+    const native = (await schedule.catalog()).filter(row => row.sessionId === exec.agent.session.id && row.status === 'active'); check();
     const merged = new Map(), matching = new Set();
     for (const task of native) {
       const ownership = service?.ownership(exec, task.id, task); check();
@@ -267,7 +269,7 @@ function mountScheduler(ctx) {
             if (!['every', 'after'].includes(current.kind)) throw Error('Interval edits require an interval or delayed task; use native calendar editing for calendar rules.');
             const oldSeconds = current.everySeconds ?? current.afterSeconds;
             const anchor = current.lastDelivery?.deliveredAt ?? new Date(Date.parse(current.scheduledAt) - oldSeconds * 1000).toISOString();
-            const result = await withGrokScheduleTransaction(ctx.schedule, { sessionId, id: current.id,
+            const result = await withGrokScheduleTransaction(schedule, { sessionId, id: current.id,
               expected: { ...expected, sessionId, status: _status, ..._delivery === undefined ? {} : { lastDelivery: _delivery } }, signal, check }, async transaction => {
               const scheduledAt = grokUpdatedTarget(anchor, seconds);
               const record = { ...expected, scheduledAt, ...(args.prompt === undefined ? {} : { prompt: args.prompt }),
@@ -277,7 +279,7 @@ function mountScheduler(ctx) {
             });
             return receipt(writeResult(result.record, result.updated), result.record);
           }
-          const result = await ctx.schedule.update({ sessionId, id: current.id, expected, ...(args.prompt === undefined ? {} : { prompt: args.prompt }) }, signal);
+          const result = await schedule.update({ sessionId, id: current.id, expected, ...(args.prompt === undefined ? {} : { prompt: args.prompt }) }, signal);
           if (!result.record) throw new Error(result.message ?? result.code ?? 'native schedule update failed');
           return receipt(writeResult(result.record, result.updated), result.record);
         }
@@ -288,7 +290,7 @@ function mountScheduler(ctx) {
         const service = requireAdapter();
         return await createFor(sessionId, async () => {
           check();
-          const current = await ctx.schedule.list({ sessionId }); check();
+          const current = await schedule.list({ sessionId }); check();
           if (current.length >= LIST_TASK_LIMIT) throw new Error('Maximum 50 active tasks observed for this session; other native callers retain their own controls.');
           // Preserve the actual accepted execution object. Its opaque token is
           // not recreated or cloned; the adapter separately captures our fused
@@ -357,7 +359,7 @@ function mountScheduler(ctx) {
         const owned = isOwned(current) || service?.ownership(serviceExec, id).owned;
         check();
         const result = owned
-          ? await service.remove(serviceExec, id) : await ctx.schedule.delete({ sessionId, id }, signal);
+          ? await service.remove(serviceExec, id) : await schedule.delete({ sessionId, id }, signal);
         return receipt({ id: result.id, success: result.deleted, message: result.deleted ? `Scheduled task ${id} cancelled.` : `No scheduled task with ID ${id} found. Use scheduler_list to see active tasks.` });
       } finally { close(); }
     },

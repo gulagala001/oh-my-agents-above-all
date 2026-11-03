@@ -1,3 +1,4 @@
+import { sessionSchedule } from '../../host/native-schedule.mjs';
 import { randomUUID } from 'node:crypto';
 import { symbols } from '@deepseek-ai/cordis';
 import { scopeOf } from '@deepseek-ai/dsh-scope';
@@ -147,7 +148,7 @@ export function installCalendarChainGate(ctx) {
     try {
       check(agent, value, joined);
       if (row.phase !== 'PREPARED') throw Error('Only a new durable PREPARED carrier may be sent; unknown attempts are never retried.');
-      const service = agent.ctx.get('schedule');
+      const service = sessionSchedule(agent.ctx.get('schedule'));
       if (!service?.create) throw Error('Native calendar carrier service is unavailable.');
       // The PREPARED receipt already exists. No native call precedes its ACK.
       remember({ operation: 'calendar-create', status: 'unknown', logicalId: value.id, occurrenceAt: row.occurrenceAt });
@@ -183,7 +184,7 @@ export function installCalendarChainGate(ctx) {
     check(agent, value, signal);
     // Native runtime holds its management FIFO through delivery. This call is
     // reached only from fire-and-forget observation work, never a flush guard.
-    const service = agent.ctx.get('schedule'), native = (await service.catalog()).find(item => item.id === previous.nativeId && item.sessionId === value.sessionId);
+    const service = sessionSchedule(agent.ctx.get('schedule')), native = (await service.catalog()).find(item => item.id === previous.nativeId && item.sessionId === value.sessionId);
     check(agent, value, signal);
     if (native?.status === 'active') {
       await saveChain(value, current => ({ ...current, status: 'AWAITING_NATIVE',
@@ -249,7 +250,7 @@ export function installCalendarChainGate(ctx) {
           && finiteHash(input.content) === finiteHash(message.content) && parseCalendarChainFrame(input))); }
       finally { observation[Symbol.dispose](); }
       if (!proof || row.nativeId !== frame.id) throw Error('Calendar input lacks its exact own native inbox splice.');
-      const native = (await agent.ctx.get('schedule').catalog()).find(item => item.id === row.nativeId && item.sessionId === session.id);
+      const native = (await sessionSchedule(agent.ctx.get('schedule')).catalog()).find(item => item.id === row.nativeId && item.sessionId === session.id);
       check(agent, value);
       if (!native || native.kind !== 'at' || native.prompt !== row.marker || native.scheduledAt !== row.occurrenceAt)
         throw Error('The native calendar carrier identity changed before reservation.');

@@ -4,6 +4,7 @@ import { scopeOf } from '@deepseek-ai/dsh-scope';
 import { compileNativeSchedule, nativeTimingChange, scheduleIntent, nativeTimingIdentity, sameNativeCalendar } from './advanced-schedule.mjs';
 import { acquireZCodeCronStore } from './cron-store.mjs';
 import { parseCronInput } from '@deepseek-ai/dsh-schedule';
+import { sessionSchedule } from '../../host/native-schedule.mjs';
 import { finiteScheduleSchema, finiteStatus, finitePendingKey } from './finite-schedule-records.mjs';
 import { cronListPage } from './cron-list-page.mjs';
 
@@ -126,7 +127,7 @@ export async function apply(ctx) {
         throw Error('Cron mutations require unchanged native permissions and default mode, outside a scheduled automation turn.');
     };
     check();
-    const service = agent.ctx.get('schedule');
+    const service = sessionSchedule(agent.ctx.get('schedule'));
     if (!service || !['create', 'catalog', 'update', 'delete'].every(key => typeof service[key] === 'function')) throw Error('Native Schedule service is unavailable; no reminder was changed.');
     const request = { agent, sessionId: agent.id, workspacePath, signal, control, mutating, check, service,
       interrupted() { try { check(); return false; } catch { return true; } } };

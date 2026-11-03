@@ -794,13 +794,14 @@
       "Listings use real catalog session binding/status, retain ordinary reminders, enforce 50 rows/24000 UTF-8 JSON bytes and label separate current reads. Native task controls outside adapter creation remain host-owned."
     ],
     "relatedModulesSha256": {
-      "src/presets/grok/schedule-runtime.mjs": "d79c8e4a905dcc1949c89ac0c48ff9c881cad270751c958222c292c719604d52",
+      "src/presets/grok/schedule-runtime.mjs": "3be49c5b2fad08512ff3465bd6dedda41925eabd6400fde89055aa3814ba7a21",
       "src/presets/grok/schedule-expiry.mjs": "aefb4e9e3470ec0fd3bc792c25db4dbafffa2eff078ffe2f9b8435fc6c7ba491",
       "src/host/grok-schedule-records.mjs": "67cd6deaa245f3760df4d98daaeae99892249af833121d5132c96656a062da4b",
       "src/presets/grok/completion-preview.mjs": "9e4c406f1a7d79afab67b17e46c4369eafe24d9ef6666aa50dcf17530c874f11",
       "src/presets/grok/completion-receipts.mjs": "90bb6cf613edf746df72745645f3fbb28d15ebcada313bfe8e6121637961cf8e",
       "src/preset-agent.mjs": "f009131af1404f0a111c230b6a94b950e3a5445fb7d3ffca420f28c3fbb7dafe",
-      "src/host/grok-schedule-transaction.mjs": "469931f846a838489307826cac09bdf2a486aa6ca56e1c985617a743babecd39"
+      "src/host/grok-schedule-transaction.mjs": "404dd5a84dff79fa9ac27348e7e06f92183e9a78dd33c1c974216cd7835eadfe",
+      "src/host/native-schedule.mjs": "74a83f0d14968ab7da3e1bcb28051c8b0d9d9568092a171ba0027891ed09f6ee"
     },
     "historicalVerificationReferences": [
       "test/grok-scheduler.test.mjs: original interval minimum/invalid/overflow and concurrent50-task cap",

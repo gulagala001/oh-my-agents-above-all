@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { symbols } from '@deepseek-ai/cordis';
 import { ScheduleService, decodeScheduleRecord } from '@deepseek-ai/dsh-schedule';
+import { scheduleOriginal, scheduleRecord, sessionScheduleRow } from './native-schedule.mjs';
 
 // rc.2's public update re-anchors intervals, and delete has no expected-record
 // condition. This narrow, version-pinned seam joins the ORIGINAL FIFO used by
@@ -16,7 +17,7 @@ const methods = Object.fromEntries(Object.keys(binding.methods)
   .map(name => [name, ScheduleService.prototype[name]]));
 let verified;
 const hash = value => createHash('sha256').update(value).digest('hex');
-const catalogRow = task => ({ ...task.record, sessionId: task.sessionId, status: task.status,
+const catalogRow = (task, service) => task.target ? sessionScheduleRow(service.entry(task)) : ({ ...task.record, sessionId: task.sessionId, status: task.status,
   ...(task.lastDelivery === undefined ? {} : { lastDelivery: task.lastDelivery }) });
 export const scheduleConflict = () => Object.assign(Error('Native schedule changed; refresh its current record before retrying.'), { code: 'schedule_conflict' });
 
@@ -33,7 +34,7 @@ export function verifyGrokScheduleImplementation() {
 }
 
 export function assertGrokScheduleTransaction(schedule) {
-  const service = schedule?.[symbols.original] ?? schedule;
+  const service = scheduleOriginal(schedule);
   verifyGrokScheduleImplementation();
   if (!service || Object.getPrototypeOf(service) !== ScheduleService.prototype
     || Object.entries(methods).some(([name, method]) => service[name] !== method)
@@ -52,33 +53,37 @@ export async function withGrokScheduleTransaction(schedule, { sessionId, id, exp
     const guard = () => { signal?.throwIfAborted(); assertGrokScheduleTransaction(schedule); check(); };
     guard();
     const tasks = domain.table('tasks'), current = tasks.get(id);
-    if (!current || current.sessionId !== sessionId) {
+    if (!current || (current.target ? current.target.kind !== 'session' || current.target.sessionId !== sessionId : current.sessionId !== sessionId)) {
       if (expected !== undefined) throw scheduleConflict();
       return work({ current: undefined });
     }
-    if (!isDeepStrictEqual(catalogRow(current), expected)) throw scheduleConflict();
+    if (!isDeepStrictEqual(catalogRow(current, service), expected)) throw scheduleConflict();
     let used = false;
     const beginWrite = () => {
       guard();
       if (used || tasks.get(id) !== current) throw scheduleConflict();
       used = true;
     };
-    const notify = () => { service.emitChanged(); service.runtime.requestDrive(); };
-    return work({ current: structuredClone(catalogRow(current)), check: guard,
+    const notify = (task, action) => { service.emitChanged(); service.runtime.requestDrive(); if (task.target) service.queueNotification(task, sessionId, action); };
+    return work({ current: structuredClone(catalogRow(current, service)), check: guard,
       async replace(record) {
-        const refusal = service.reminderTargetRefusal(sessionId);
-        if (refusal) throw Error(refusal.message ?? refusal.code);
-        const next = decodeScheduleRecord(record);
+        if (current.target) await service.validateTarget(current.target, signal);
+        else {
+          const refusal = service.reminderTargetRefusal(sessionId);
+          if (refusal) throw Error(refusal.message ?? refusal.code);
+        }
+        const next = decodeScheduleRecord(current.target ? scheduleRecord(record) : record);
         if (current.status !== 'active' || next.id !== id) throw scheduleConflict();
         beginWrite();
-        await tasks.put(id, { ...current, record: next });
-        notify();
-        return catalogRow({ ...current, record: next });
+        const updated = { ...current, record: next, ...(current.target ? { updatedAt: new Date().toISOString() } : {}) };
+        await tasks.put(id, updated);
+        notify(updated, 'updated');
+        return catalogRow(updated, service);
       },
       async remove() {
         beginWrite();
         await tasks.delete(id);
-        notify();
+        notify(current, 'deleted');
         return { id, deleted: true };
       },
     });
