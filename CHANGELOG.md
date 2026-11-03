@@ -1,3 +1,19 @@
+## 未发布 · 宿主接口兼容
+
+[中文](#host-compat-zh) | [English](#host-compat-en)
+
+<a id="host-compat-zh"></a>
+
+### 中文
+
+- 集中适配原生计划任务接口，保留会话归属、周期锚点、取消与冷恢复。
+
+<a id="host-compat-en"></a>
+
+### English
+
+- Adapt native scheduled-task APIs while retaining Session ownership, cadence, cancellation and cold recovery.
+
 # OMAA 0.17.7 · DSH 0.2.1-rc.5
 
 [中文](#zh-0177) | [English](#en-0177)
