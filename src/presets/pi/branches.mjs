@@ -79,7 +79,7 @@ function branchMaterial(entries) {
 export function apply(ctx) {
   const directory = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'omaa', 'pi-branch-context');
   const fileFor = id => join(directory, createHash('sha256').update(id).digest('hex') + '.json');
-  const readContext = id => {
+  const readState = id => {
     let value;
     let descriptor, primary, failed = false;
     try {
@@ -95,18 +95,19 @@ export function apply(ctx) {
     } catch (error) { failed = true; primary = error; }
     if (descriptor !== undefined) try { closeSync(descriptor); }
     catch (cleanup) { throw new AggregateError(failed ? [primary, cleanup] : [cleanup], 'Pi 分支上下文读取或关闭失败', failed ? { cause: primary } : {}); }
-    if (failed) { if (primary?.code === 'ENOENT') return ''; throw primary; }
-    if (!value || value.version !== 1 || typeof value.text !== 'string' || value.text.length > 60000) throw new Error('Pi 分支上下文资料无效');
-    return value.text;
+    if (failed) { if (primary?.code === 'ENOENT') return { version: 1, text: '' }; throw primary; }
+    if (!value || value.version !== 1 || typeof value.text !== 'string' || value.text.length > 60000
+      || (value.parentSessionId !== undefined && (typeof value.parentSessionId !== 'string' || !value.parentSessionId || value.parentSessionId.length > 1024 || value.parentSessionId === id))) throw new Error('Pi 分支上下文资料无效');
+    return value;
   };
-  const saveContext = (id, text) => {
-    if (!text) return;
+  const readContext = id => readState(id).text;
+  const saveContext = (id, text, parentSessionId) => {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     const file = fileFor(id), temporary = file + '.' + randomUUID() + '.tmp';
     let created = false, descriptor;
     try {
       descriptor = openSync(temporary, 'wx', 0o600); created = true;
-      try { writeFileSync(descriptor, JSON.stringify({ version: 1, text })); } finally { closeSync(descriptor); descriptor = undefined; }
+      try { writeFileSync(descriptor, JSON.stringify({ version: 1, text, parentSessionId })); } finally { closeSync(descriptor); descriptor = undefined; }
       renameSync(temporary, file);
       created = false; // The confirmed rename consumed the temporary path.
     } finally { if (created) rmSync(temporary, { force: true }); }
@@ -161,7 +162,13 @@ export function apply(ctx) {
       const { observation, value, owner } = await current(id, signal);
       const { items } = await ctx.sessionController.list({}, signal);
       assertOwner(id, owner, signal);
-      const rows = new Map(items.filter(row => row.origin !== 'subagent' && row.cwd === observation.meta.cwd).map(row => [row.sessionId, row]));
+      // Ordinary native forks deliberately have no durable source relationship.
+      // Pi owns its branch tree in the existing bounded context capsule; retain
+      // historical native lineage when no Pi-owned relationship was recorded.
+      const rows = new Map(items.filter(row => row.origin !== 'subagent' && row.cwd === observation.meta.cwd).map(row => {
+        const parentSessionId = readState(row.sessionId).parentSessionId ?? row.parentSessionId;
+        return [row.sessionId, { ...row, ...(parentSessionId ? { parentSessionId } : {}) }];
+      }));
       let root = id; const seen = new Set();
       while (rows.get(root)?.parentSessionId && rows.has(rows.get(root).parentSessionId) && !seen.has(root)) { seen.add(root); root = rows.get(root).parentSessionId; }
       const family = new Set([root]);
@@ -249,8 +256,8 @@ export function apply(ctx) {
         if (latest.value.running || headOf(latest.observation.events) !== request.head) throw conflict();
         const text = [inherited, summary].filter(Boolean).join('\n\n');
         if (text.length > 60000) throw new Error('分支摘要上下文已达上限，请先压缩当前会话或关闭新增摘要');
-        // The native fork owns seed closure, model selection, journal and parent
-        // identity. Only a bounded derived context capsule is stored by OMAA.
+        // The native fork owns seed closure, model selection and journal.
+        // Pi retains its navigation lineage with the bounded context capsule.
         assertOwner(id, owner, signal);
         let fork;
         try { fork = await ctx.sessionController.fork({ sessionId: id, atSeq: boundary }); }
@@ -269,7 +276,7 @@ export function apply(ctx) {
         // after late cancellation; never report that a committed fork vanished.
         try { assertOwner(id, owner, signal); }
         catch { return { ...result, partial: true, interrupted: true, message: '原生分支已创建，随后请求或归属改变；摘要未保存，勿重复创建。' }; }
-        try { saveContext(fork.sessionId, text); }
+        try { saveContext(fork.sessionId, text, id); }
         catch { return { ...result, partial: true, summaryStatus: 'unconfirmed', message: '原生分支已创建，但摘要上下文保存未获确认；勿重复创建。' }; }
         return { ...result, summaryIncluded: Boolean(summary), contextIncluded: Boolean(text) };
       } finally { requests.delete(pending); locks.delete(id); }

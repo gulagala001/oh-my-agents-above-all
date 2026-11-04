@@ -8,6 +8,7 @@
 
 ### 体验优化与问题修复
 
+- 原生普通分叉不再持久化来源关系；Pi 在已有分支资料中保留导航关系，支持附摘要与普通分叉的重启恢复。
 - 冷会话读取改用原生 Session Query，保留精确历史边界与分支继承记录；读取后释放观察句柄，取消与会话不存在的错误保持明确。读取历史不启动 Agent 或改写原始会话。
 - 修复 Pi 分支导航与 ZCode 跨会话资料读取。
 
@@ -22,6 +23,7 @@
 
 ### Improvements and fixes
 
+- Persist Pi navigation lineage in its existing branch capsule now that native ordinary forks omit source relationships, including summary-free forks after restart.
 - Read cold sessions through native Session Query with exact history boundaries and inherited events. Release observation leases after reads, preserve cancellation and not-found errors, and avoid activating Agents or rewriting stored conversations.
 - Fix Pi branch navigation and ZCode cross-session context reads.
 

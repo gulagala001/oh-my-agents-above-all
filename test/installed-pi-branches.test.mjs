@@ -32,8 +32,16 @@ test('Pi branches fork the native completed prefix and retain an explicit branch
   assert.equal(current.model, summary.model); assert(JSON.stringify(current.messages).includes('PI_BRANCH_CAPSULE'));
   assert(JSON.stringify(current.messages).includes('{{PI_LITERAL}}'));
   const branches = (await api(fork.value.sessionId)).value.branches;
-  assert(branches.some(row => row.sessionId === fork.value.sessionId && row.parentSessionId === sessionId && row.current));
+  assert(branches.some(row => row.sessionId === fork.value.sessionId && row.parentSessionId === sessionId && row.current), JSON.stringify({ branches, sessionId, fork: fork.value }));
   assert(branches.some(row => row.sessionId === sessionId));
   assert.equal((await api(sessionId, { head: -1, withSummary: false })).status, 409);
+  const childState = (await api(fork.value.sessionId)).value;
+  const plain = await api(fork.value.sessionId, { head: childState.head, withSummary: false });
+  assert.equal(plain.status, 200, JSON.stringify(plain.value));
+  assert.equal(plain.value.summaryIncluded, false);
+  await f.stop(); await f.boot();
+  const coldFamily = (await api(plain.value.sessionId)).value.branches;
+  assert(coldFamily.some(row => row.sessionId === plain.value.sessionId && row.parentSessionId === fork.value.sessionId && row.current));
+  assert(coldFamily.some(row => row.sessionId === sessionId));
   assert.deepEqual(f.errors, []);
 });
