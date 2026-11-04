@@ -1,3 +1,4 @@
+import { executeNativeTool } from "../../host/native-tool-call.mjs";
 import { currentDirectory } from '../../host/working-directory.mjs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -109,7 +110,7 @@ export function installSavedWorkflowTools(ctx) {
   // sub-dispatch. Omitting parent lets the native workflow tool own its normal
   // durable lifecycle/presentation; rootCallId still correlates the wrapper.
   // Guarded definition publication uses the shared inner native writer.
-  const callNative = (name, args, exec) => ctx.tools.execute({ name, arguments: args, agent: exec.agent, callId: randomUUID(), rootCallId: exec.rootCallId, signal: exec.signal });
+  const callNative = (name, args, exec) => executeNativeTool(ctx, { name, arguments: args, agent: exec.agent, callId: randomUUID(), rootCallId: exec.rootCallId, parent: exec.token, toolSet: exec.toolSet, signal: exec.signal });
   ctx.tools.register({ name: 'list_saved_workflows',
     description: 'List reusable workflow definitions in the current project and ~/.zcode/workflows. Each row gives its name, description, when to use it and declared arguments. Project definitions shadow global definitions with the same name. Check here before writing a workflow from scratch; invalid files are reported so they can be fixed. These are saved definitions, not run history.',
     parameters: { type: 'object', properties: { scope: scopeSchema }, additionalProperties: false }, output: jsonOutput,

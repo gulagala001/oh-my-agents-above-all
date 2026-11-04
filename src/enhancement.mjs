@@ -11,8 +11,7 @@ export function apply(ctx) {
     scope.on('system-prompt/assemble', async (_initial, context, next) => {
       const assembly = await next();
       if (context.agent && scope.omaa.enhancementEnabled(context.agent.session)) return assembly;
-      return { ...assembly, tools: assembly.tools.filter(tool => !isEnhanced(tool.name)),
-        sections: assembly.sections.filter(section => section.name !== 'oh-my-dsh:codegraph') };
+      return { ...assembly, sections: assembly.sections.filter(section => section.name !== 'oh-my-dsh:codegraph') };
     });
     for (const name of await scope.omd.installOmaaEnhancement(scope)) enhanced.add(name);
     const { matches } = await scopeBinding(scope);

@@ -1,3 +1,4 @@
+import { executeNativeTool } from "../../host/native-tool-call.mjs";
 import { randomUUID } from 'node:crypto';
 
 // Only the native write tool publishes definition bytes. This middleware narrows
@@ -38,14 +39,14 @@ export function createSavedWorkflowWrites(ctx, permissions) {
       if (!['createIfAbsent', 'replaceIfVersion'].includes(intent.kind)) throw Error('Unsupported saved workflow write intent.');
       const permission = permissions.enter(exec, callerSignal);
       const callId = randomUUID(), control = new AbortController(), signal = AbortSignal.any([permission.signal, control.signal]);
-      const guard = { agent: exec.agent, parent: exec.token, targetKey: target.targetKey, intent,
+      const guard = { agent: exec.agent, parent: exec.token, toolSet: exec.toolSet, targetKey: target.targetKey, intent,
         signal, control, permission, admitted: false };
       pending.set(callId, guard);
       try {
         // Pin the reviewed physical path rather than re-following a scope alias.
         permission.check();
-        guard.work = ctx.tools.execute({ name: 'write', arguments: { file_path: ctx.fs.processPath(target), content },
-          agent: exec.agent, callId, rootCallId: exec.rootCallId, parent: exec.token, signal });
+        guard.work = executeNativeTool(ctx, { name: 'write', arguments: { file_path: ctx.fs.processPath(target), content },
+          agent: exec.agent, callId, rootCallId: exec.rootCallId, parent: exec.token, toolSet: exec.toolSet, signal });
         const result = await guard.work;
         let interrupted = signal.aborted;
         try { permission.check(); } catch { interrupted = true; }

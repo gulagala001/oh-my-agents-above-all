@@ -799,7 +799,7 @@
       "src/host/grok-schedule-records.mjs": "67cd6deaa245f3760df4d98daaeae99892249af833121d5132c96656a062da4b",
       "src/presets/grok/completion-preview.mjs": "9e4c406f1a7d79afab67b17e46c4369eafe24d9ef6666aa50dcf17530c874f11",
       "src/presets/grok/completion-receipts.mjs": "90bb6cf613edf746df72745645f3fbb28d15ebcada313bfe8e6121637961cf8e",
-      "src/preset-agent.mjs": "f009131af1404f0a111c230b6a94b950e3a5445fb7d3ffca420f28c3fbb7dafe",
+      "src/preset-agent.mjs": "f01d1ee11160e54d659832f41e17ca72b1b9e871aa031a788d8789d1b1c786b4",
       "src/host/grok-schedule-transaction.mjs": "404dd5a84dff79fa9ac27348e7e06f92183e9a78dd33c1c974216cd7835eadfe",
       "src/host/native-schedule.mjs": "74a83f0d14968ab7da3e1bcb28051c8b0d9d9568092a171ba0027891ed09f6ee"
     },
@@ -823,23 +823,23 @@
     },
     "transactionCompatibility": {
       "package": "@deepseek-ai/dsh-schedule",
-      "version": "0.2.1-rc.2",
+      "version": "0.2.2-alpha.3",
       "entry": "lib/index.js",
-      "implementationSha256": "022b9f191b6ca0f4b0f26625afc49f375933068a42712c0a75e94e439d7e6d0e",
-      "boundary": "Internal ScheduleService FIFO and task-domain handle; no service replacement, runtime patch, second timer or external RPC exposure.",
+      "implementationSha256": "f06a57f6fd5d7b0d2666b4d1b1a27d96aa3035a66de40ad2fc9cef3eba580040",
+      "boundary": "Native Schedule FIFO and task-domain handle only for phase-preserving Grok interval changes. Creation, metadata/calendar edits, deletion, listing and history use the public Host API; Session targets retain preset ownership.",
       "methods": {
         "serialize": "362d29c3e09968e85a5f8566cf7cdaa577f678461a505b4006dd64d7b4ced13b",
         "getDomain": "95b84cb951e68c09ccdc29158b0e98542c9327058c6c073eca562498b37b1172",
-        "reminderTargetRefusal": "a3332f81eecff60c5b2508c09d409e52eb845362c9f3f852bb37b1fe117ed669",
         "emitChanged": "a4950eeda82647a365df717e62e4dc4841dfb340730a06736801f61491fe8e43",
-        "update": "3c104e948abd60844c8cbfd703ddc24f4e5456ffa5bec6b84fe15ea0c57f2b37",
-        "delete": "86f10dd843958916cfb163a7afa701b981ac6c93b69c9bdd19c8a06c7022efa3"
+        "edit": "1e3c33310d2da4485acc2212f98be2fd831fac60483171d269fbcffa522fa810",
+        "entry": "aed6864fe04ff3208b67a2e292a7eb878008b0a301df758cb450fc52b41cf370",
+        "validateTarget": "eaeb3ec6cc1a5bfae178e66f26a7581637194d30ac453a19717f2ae225734e07",
+        "queueNotification": "08168dadbbd278bca7b9aa6603d3b090d2bc2510e008edd3ea304019d7a36ed5"
       },
       "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check.",
       "reviewedVersions": [
-        "0.2.1-rc.2",
-        "0.2.1-rc.3",
-        "0.2.1-rc.5"
+        "0.2.2-alpha.3",
+        "0.2.2-rc.1"
       ]
     }
   },

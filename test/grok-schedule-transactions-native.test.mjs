@@ -55,7 +55,7 @@ test('Grok native cadence, expiry, concurrent edits, cancellation and cold recei
     const value = await response.json(); assert.equal(response.status, 200, JSON.stringify(value)); return value;
   };
   const owner = id => post('/omaa-fixture/grok-transaction', { action: 'owner', id });
-  const catalog = async id => (await f.call('schedule/catalog', {})).find(row => row.id === id && row.sessionId === sessionId);
+  const catalog = async id => (await f.call('schedule/catalog', {})).find(row => row.id === id && (row.target?.kind === 'session' ? row.target.sessionId : row.sessionId) === sessionId);
   const advance = at => post('/omaa-fixture/schedule-clock', { at });
   const created = await call('scheduler_create', { interval: '2m', prompt: 'GROK_TRANSACTION_TASK_ORIGINAL' });
   const id = created.id, original = await catalog(id), initialOwner = await owner(id);
@@ -97,7 +97,7 @@ test('Grok native cadence, expiry, concurrent edits, cancellation and cold recei
   assert.equal(conflict.current.prompt, 'EXTERNAL_NATIVE_EDIT');
   const canceled = await post('/omaa-fixture/grok-transaction', { action: 'cancel', id: race.id });
   assert.equal(canceled.callbackRan, false); assert.match(canceled.result.error, /cancellation/);
-  await f.call('schedule/delete', { request: { sessionId, id: race.id } });
+  await f.call('schedule/edit', { request: { id: race.id, action: 'delete' } });
 
   const expiring = await call('scheduler_create', { interval: '8d', prompt: 'GROK_TRANSACTION_MUST_EXPIRE' });
   const expiryBefore = await owner(expiring.id);

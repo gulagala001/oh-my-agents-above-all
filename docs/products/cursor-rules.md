@@ -14,7 +14,7 @@ const { automatic, available } = await loadCursorRules({
 
 automatic 元素 `{name,content,reason}` 的 reason 为 alwaysApply/glob/requested；available 只含 Agent Requested 的 `{name,description}`，不会暴露尚未选择的规则正文。嵌套名称为相对 `.cursor/rules` 的路径去掉 `.mdc`；明确请求接受 name、filename、`@name`，basename 只有唯一时可用。旧 `.cursorrules` 按纯文本总是应用。
 
-frontmatter 使用 js-yaml 的 JSON_SCHEMA；支持 boolean、quoted/plain descriptions、多行 description、globs 字符串/数组。多个 glob 按逗号分隔，同时保留 `{a,b}` 和字符类内的逗号；匹配采用 Node >=22.19 `path.matchesGlob`。兼容 Cursor 常见未加引号的 `**/*.ts` glob；不执行 YAML tag、命令或规则正文中的 `@file` 引用。
+frontmatter 使用 js-yaml 的 JSON_SCHEMA；支持 boolean、quoted/plain descriptions、多行 description、globs 字符串/数组。多个 glob 按逗号分隔，同时保留 `{a,b}` 和字符类内的逗号；匹配采用 Node >=24.9.0 `path.matchesGlob`。兼容 Cursor 常见未加引号的 `**/*.ts` glob；不执行 YAML tag、命令或规则正文中的 `@file` 引用。
 
 插件在实际 `system-prompt/assemble` middleware 重新读取文件并准备该 agent 的 WeakMap 缓存，然后原位替换本次 assembly 中 `omaa:cursor-rules` 的 text；保留其它 section 与 `interpolate:false`，规则里的 `{{...}}` 仍是字面内容。DSH 顺序是 inbox claimed → assemble → pre-step，section.text 又在 middleware 之前求值；因此不能仅靠 pre-step 或缓存更新，首请求 always/manual 以及 read 后紧接的请求都直接使用本次返回的规则文本。`agent/inbox/claimed` 只记录真实用户提名，供同一次 assemble 消费；不新增 user 消息注入层、不改已有工具 schema。规则编辑、删除在下一次请求装配时反映。
 

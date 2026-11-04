@@ -25,7 +25,6 @@ const composition = product => [
       row('workflow-ptc', '@deepseek-ai/dsh-workflow-ptc'),
       row('tool-workflow', '@deepseek-ai/dsh-tool-workflow'),
       row('tool-subagent-control', '@deepseek-ai/dsh-tool-subagent-control'),
-      row('tool-subagent-list-agents', '@deepseek-ai/dsh-tool-subagent-control/list-agents'),
       row('tool-subagent', '@deepseek-ai/dsh-tool-subagent', { provider: 'spawn', toolName: 'subagent', modelSelectionSettings: true,
         ...nativeActivations ? {} : { backgroundMode: 'continuable' } }),
     ], { group: true, isolate: { workflowEngine: true } }),

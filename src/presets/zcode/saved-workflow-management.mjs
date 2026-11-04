@@ -1,3 +1,4 @@
+import { executeNativeTool } from "../../host/native-tool-call.mjs";
 import { createHash, randomUUID } from 'node:crypto';
 import { currentDirectory } from '../../host/working-directory.mjs';
 import { isValidSavedWorkflowName } from '../../../lib/zcode-saved-contract.mjs';
@@ -195,16 +196,16 @@ export function installSavedWorkflowManagementTools(ctx, { storeFor, jsonOutput,
         if (ctx.tools.get(shell.name, exec.agent) !== shell.definition) return output(copied ? 'partial' : 'refused', 'native-shell-definition-changed');
         const operationId = randomUUID(), control = new AbortController(), signal = AbortSignal.any([exec.signal, control.signal]);
         shellCallId = randomUUID();
-        const guard = { agent: exec.agent, parent: exec.token, signal, control, permission, shell, refusedBeforeDispatch: false };
+        const guard = { agent: exec.agent, parent: exec.token, toolSet: exec.toolSet, signal, control, permission, shell, refusedBeforeDispatch: false };
         pending.set(shellCallId, guard);
         let receipt;
         try {
           phase = 'unlink'; shellDispatched = true;
           const command = unlinkCommand(shell.name, sourcePath, destinationPath, saved.sourceSha256, operationId, action);
-          guard.work = ctx.tools.execute({ name: shell.name, arguments: { command,
+          guard.work = executeNativeTool(ctx, { name: shell.name, arguments: { command,
             description: action === 'move' ? 'Remove verified global workflow after guarded project copy' : 'Delete explicitly selected workflow after source digest verification',
             timeoutMs: 10000, ...(shell.definition.parameters.properties.run_in_background ? { run_in_background: false } : {}) },
-            agent: exec.agent, callId: shellCallId, rootCallId: exec.rootCallId, parent: exec.token, signal });
+            agent: exec.agent, callId: shellCallId, rootCallId: exec.rootCallId, parent: exec.token, toolSet: exec.toolSet, signal });
           const result = await guard.work;
           receipt = guard.refusedBeforeDispatch ? { state: 'refused', reason: 'native-shell-guard-refused' } : shellReceipt(result, operationId, action);
           if (receipt.jobId) {

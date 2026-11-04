@@ -54,13 +54,14 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
     const payload = markerRequest(f, marker, from); assert(payload, product.id + ' never reached loopback model');
     const tools = toolsOf(payload);
     const complete = expectedPrompt(f, product.id, tools);
+    if (!modelText(payload).includes(complete) && process.env.OMAA_TEST_PROMPT_DIFF) { await mkdir(process.env.OMAA_TEST_PROMPT_DIFF, { recursive: true }); await writeFile(join(process.env.OMAA_TEST_PROMPT_DIFF, product.id+'-actual.txt'), modelText(payload)); await writeFile(join(process.env.OMAA_TEST_PROMPT_DIFF, product.id+'-expected.txt'), complete); }
     assert(modelText(payload).includes(complete), product.id + ' complete adapted source prompt missing from actual provider payload');
     for (const name of ['read', 'write', 'edit', process.platform === 'win32' ? 'pwsh' : 'bash']) assert(tools.has(name), product.id + ': missing ' + name + '; provider tools: ' + [...tools].join(', '));
     if (product.id === 'pi') {
       assert.deepEqual([...tools].sort(), ['read', 'write', 'edit', 'read_image', 'skill', process.platform === 'win32' ? 'pwsh' : 'bash',
         ...toolsOf(stockBefore).has('working_directory') ? ['working_directory'] : []].sort(), 'Pi keeps its core tools and the same host image, skill and directory capabilities');
       assert.equal((await f.api(created.sessionId, { mode: 'plan' })).status, 400);
-    } else for (const name of ['todo_write', 'ask_user_question', 'enter_plan_mode', 'exit_plan_mode']) assert(tools.has(name), product.id + ': ' + name);
+    } else for (const name of ['todo_write', 'ask_user_question', 'enter_plan_mode']) assert(tools.has(name), product.id + ': ' + name);
   }
   const pi = sessions.pi;
   let phase = 0;
@@ -91,6 +92,7 @@ test('packed presets run on original DSH, preserve native tool/session lifecycle
       return textReply('Guard inspected.');
     });
     const blocked = await f.prompt(grok, mode.toUpperCase() + '_GUARD');
+    assert.equal(toolsOf(markerRequest(f, mode.toUpperCase() + '_GUARD')).has('exit_plan_mode'), mode === 'plan', 'Native plan-exit admission follows the current session mode');
     await assert.rejects(readFile(join(f.workspace, mode + '-blocked.txt')), { code: 'ENOENT' });
     await assert.rejects(readFile(join(f.workspace, mode + '-command-blocked.txt')), { code: 'ENOENT' });
     assert.match(JSON.stringify(blocked.records), /permits reading|switch to default/);

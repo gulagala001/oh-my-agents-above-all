@@ -189,7 +189,9 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
       name: new URL('./session-sandbox-policy.mjs', import.meta.url).href,
       config: { workspace, policyModule } }] }], null, 2) + '\n');
   };
+  let installationReady = false;
   const install = async () => {
+    installationReady = true;
     if (sourceLinked) {
       const profile = join(home, 'profiles', 'omaa-fixture');
       const manifestPath = join(profile, 'package.json');
@@ -208,7 +210,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
       manifest.dsh.profile.bundles.push('oh-my-agents-above-all');
       await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
       await configureSessionPolicy();
-      return { mode: artifact ? 'frozen-package-cache-linked' : 'source-linked', path: pluginRoot, installedPackage: false };
+      return { ...artifact, mode: artifact ? 'frozen-package-cache-linked' : 'source-linked', path: pluginRoot, installedPackage: false };
     }
     if (artifact) { const installed = await installArtifact(artifact); await configureSessionPolicy(); return installed; }
     const npm = npmCommand(['pack', '--json', '--ignore-scripts', '--pack-destination', root], { env });
@@ -219,7 +221,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
   };
   const call = async (method, args) => {
     const response = await fetch(origin + '/api/' + method, { method: 'POST', headers: { 'content-type': 'application/json', cookie }, body: JSON.stringify({ type: 'client-request', rpcId: crypto.randomUUID(), method, payload: { args } }) });
-    const value = await response.json();
+    const value = await response.json().catch(error => { throw Error('HTTP '+response.status+' '+response.url+'\n'+redact(log.slice(-6000)), { cause: error }); });
     if (!value.result?.ok) throw new Error(redact(JSON.stringify(value)) + '\n' + redact(log.slice(-4000)));
     return value.result.value;
   };
@@ -238,13 +240,13 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
   };
   const api = async (sessionId, patch) => {
     const response = await fetch(origin + '/omaa/api/session?session=' + encodeURIComponent(sessionId), { headers: { cookie, 'content-type': 'application/json' }, ...(patch === undefined ? {} : { method: 'POST', body: JSON.stringify(patch) }) });
-    return { status: response.status, value: await response.json() };
+    return { status: response.status, value: await response.json().catch(error => { throw Error('HTTP '+response.status+' '+response.url+'\n'+redact(log.slice(-6000)), { cause: error }); }) };
   };
   const policy = async (sessionId, change = false, mode = sessionSandboxMode) => {
     const response = await fetch(origin + '/omaa-fixture/session-policy?' + new URLSearchParams({ session: sessionId }), {
       headers: { cookie, 'content-type': 'application/json' },
       ...(change ? { method: 'POST', body: JSON.stringify({ sessionId, mode }) } : {}) });
-    const value = await response.json();
+    const value = await response.json().catch(error => { throw Error('HTTP '+response.status+' '+response.url+'\n'+redact(log.slice(-6000)), { cause: error }); });
     if (!response.ok) throw Error('Fixture session policy refused: ' + JSON.stringify(value));
     if (change) sessionPolicies.push(value);
     return value;
@@ -252,7 +254,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
   const presets = async patch => {
     const response = await fetch(origin + '/omaa-base/api/presets', { headers: { cookie, 'content-type': 'application/json' },
       ...(patch === undefined ? {} : { method: 'POST', body: JSON.stringify(patch) }) });
-    return { status: response.status, value: await response.json() };
+    return { status: response.status, value: await response.json().catch(error => { throw Error('HTTP '+response.status+' '+response.url+'\n'+redact(log.slice(-6000)), { cause: error }); }) };
   };
   let initializedPresets = false;
   const boot = async () => {
@@ -271,7 +273,8 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
     await until(async () => (await call('llm/listProviders', {})).some(value => value.id === (liveSettings ? liveProviderId : 'fixture')));
     // Feature fixtures explicitly opt in. Default-install coverage passes [];
     // subsequent boots always preserve the actual saved activation choices.
-    if (!initializedPresets && enabledPresets.length && (!artifact || artifact.files.some(row => row.path === 'src/host/preset-activation.mjs'))) {
+    if (installationReady && !initializedPresets && enabledPresets.length && (!artifact || artifact.files.some(row => row.path === 'src/host/preset-activation.mjs'))) {
+      await until(async () => (await fetch(origin + '/omaa-base/api/presets', { headers: { cookie } })).status !== 404);
       const state = await presets();
       const selected = await presets({ enabled: enabledPresets, revision: state.value.revision });
       if (selected.status !== 200) throw Error('Fixture preset activation failed: ' + JSON.stringify(selected.value) + '\n' + redact(log.slice(-6000)));

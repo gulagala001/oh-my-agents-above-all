@@ -84,7 +84,7 @@ test('Pi edits each real request before freeze, keeps history, tools, image pair
   await until(async () => (await f.snapshot(sessionId)).records.some(row => row.event?.type === 'turn/end' && row.event.data.reason?.kind === 'aborted'));
   assert.equal(f.requests.length, cancelFrom, 'cancel during context must prevent provider dispatch');
   const orphanFrom = f.requests.length;
-  await assert.rejects(f.prompt(sessionId, 'ORPHAN'), /tool call\/result batch|omitted a tool result/);
+  await assert.rejects(f.prompt(sessionId, 'ORPHAN'), /tool call\/result batch|omitted a tool result|cannot resolve a historical tool declaration/);
   assert.equal(f.requests.length, orphanFrom, 'a broken tool pair must fail before dispatch');
   const evidence = { at: new Date().toISOString(), host: f.evidence.version, providerRequests: f.requests.length, externalModels: 0,
     checks: ['per-request callback order', 'actual system and section rewrite', 'actual tool declaration filtering', 'native tool result pairing and real image attachment',

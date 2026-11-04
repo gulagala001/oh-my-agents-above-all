@@ -1,3 +1,4 @@
+import { presentationTools } from '../../host/prompt-provider.mjs';
 import { omdIdentityPrompt } from '../../host/identity.mjs';
 import { currentDirectory } from '../../host/working-directory.mjs';
 import path from 'node:path';
@@ -330,7 +331,7 @@ export function apply(ctx, config = {}) {
     preparedAssemblies.delete(ownerKey(context.agent));
     operation.check();
     const catalog = catalogs.get(ownerKey(context.agent));
-    const assembly = await next(), tools = ctx.tools?.schemas(context.agent) ?? assembly.tools;
+    const assembly = await next(), tools = [...presentationTools(ctx, context)].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
     operation.check();
     if (catalogs.get(ownerKey(context.agent)) !== catalog) throw Error('Pi assembled resource catalog was superseded.');
     const frame = resources.frame(context.agent, assembly, tools);

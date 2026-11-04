@@ -1,3 +1,4 @@
+import { executeNativeTool } from "../../host/native-tool-call.mjs";
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createUserMessage, boundContextSummary } from '@deepseek-ai/dsh-llm';
 import { readFileSync } from 'node:fs';
@@ -265,8 +266,8 @@ export function apply(ctx) {
           signal.throwIfAborted();
           if (closed) throw new Error('monitor scope is closed');
           const call = { name: shell, callId: exec.callId + ':monitor-command', rootCallId: exec.rootCallId ?? exec.callId,
-            arguments: { description: args.description, command: args.command, run_in_background: true }, agent: exec.agent, signal, parent: exec.token };
-          const result = await ctx.omaaGrokMonitorShell.run(call, () => starting.run(state, () => ctx.tools.execute(call)));
+            arguments: { description: args.description, command: args.command, run_in_background: true }, agent: exec.agent, signal, parent: exec.token, toolSet: exec.toolSet };
+          const result = await ctx.omaaGrokMonitorShell.run(call, () => starting.run(state, () => executeNativeTool(ctx, call)));
           // A return is usable only after an authoritative owner/kind/label
           // lookup. Never derive an id or kill a job from an unknown receipt.
           if (result.value?.kind === 'background' && typeof result.value.jobId === 'string') {

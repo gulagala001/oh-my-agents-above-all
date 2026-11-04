@@ -1,3 +1,5 @@
+import { setPresentedExecutor, presentationTools } from './host/prompt-provider.mjs';
+import { NativeToolExecutor } from '@deepseek-ai/dsh-tool-executor-native';
 import { applySharedIdentity, omdIdentityPrompt } from './host/identity.mjs';
 import { actorPersona, actorToolFilter } from './host/subagents.mjs';
 import { currentDirectory } from './host/working-directory.mjs';
@@ -22,7 +24,6 @@ export function apply(ctx, config) {
   if (!build) throw new Error('Unknown OMAA product: ' + config.product);
   const projectMemory = config.product === 'zcode' ? createProjectMemoryAssembler(ctx) : undefined;
   const projectSkills = config.product === 'zcode' ? createProjectSkillsInstaller(ctx) : undefined;
-  ctx.tools.presentAs('native');
   const needsEnhancement = (name, agent) => toolNeedsEnhancement(ctx, config.product, name, agent);
   const modeFor = agent => agent ? ctx.omaa.modeFor(agent.session, agent) : 'default';
   const actorDescriptor = agent => {
@@ -31,8 +32,8 @@ export function apply(ctx, config) {
     const descriptor = events.find(event => event.type === 'subagent/descriptor')?.data;
     return descriptor && { ...descriptor, persona: actorPersona(events) };
   };
-  const activeTools = agent => {
-    const names = ctx.tools.schemas(agent).map(tool => tool.name);
+  const activeTools = (agent, toolSet) => {
+    const names = ctx.tools.schemas(agent, toolSet).map(tool => tool.name);
     const enabled = agent && ctx.omaa.enhancementEnabled(agent.session);
     const filter = agent?.session.header.origin === 'subagent'
       ? actorToolFilter(agent.session.snapshotEvents(agent.session.inheritedEventCount)) : undefined;
@@ -40,11 +41,15 @@ export function apply(ctx, config) {
       && (!filter || !filter.deny?.includes(name) && (!filter.allow || filter.allow.includes(name)))
       && (config.product !== 'zcode' || name !== 'respond_to_coordinator' || isCoordinatorChild(ctx, agent))));
   };
+  setPresentedExecutor(ctx, new NativeToolExecutor(ctx), (model, _definitions, context) => {
+    const visible = activeTools(context.agent ?? context.scope, context.toolSet);
+    return { ...model, schemas: model.schemas.filter(tool => visible.has(tool.name)) };
+  });
   ctx.systemPrompt.section({ name: 'harness:identity', order: -1000, text: '', interpolate: false });
   ctx.systemPrompt.section({ name: 'deployment:persona-prefix', order: 0, interpolate: false,
-    text: ({ agent }) => {
+    text: ({ agent, toolSet }) => {
       const child = agent?.session.header.origin === 'subagent';
-      const text = build({ tools: activeTools(agent), cwd: agent ? currentDirectory(ctx, agent.session) : process.cwd(), platform: process.platform, mode: modeFor(agent), child, workflowActor: isZCodeWorkflowActor(actorDescriptor(agent)), workSubmode: agent ? ctx.omaa.enhancementWorkSubmodeFor(agent.session, agent) : 'free', workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined,
+      const text = build({ tools: activeTools(agent, toolSet), cwd: agent ? currentDirectory(ctx, agent.session) : process.cwd(), platform: process.platform, mode: modeFor(agent), child, workflowActor: isZCodeWorkflowActor(actorDescriptor(agent)), workSubmode: agent ? ctx.omaa.enhancementWorkSubmodeFor(agent.session, agent) : 'free', workMode: agent ? ctx.omaa.enhancementWorkModeFor(agent.session, agent) : 'off', customTools: agent && config.product === 'pi' ? ctx.get('omaaPiExtensions')?.promptTools(agent) : undefined,
         ...(agent && config.product === 'zcode' ? { outputStyle: ctx.omaa.preferences(agent.session).outputStyle } : {}) });
       return applySharedIdentity(text, config.product, omdIdentityPrompt(ctx, agent?.session), { child });
     } });
@@ -72,8 +77,8 @@ export function apply(ctx, config) {
     const assembly = await next();
     if (!context.agent) return assembly;
     if (context.agent.session.header.origin === 'subagent' && config.product !== 'zcode') return assembly;
-    const visible = activeTools(context.agent);
-    const current = { ...assembly, tools: assembly.tools.filter(tool => visible.has(tool.name)),
+    const visible = activeTools(context.agent, context.toolSet);
+    const current = { ...assembly, tools: presentationTools(ctx, context).filter(tool => visible.has(tool.name)),
       sections: typeof ctx.get('dshPersona')?.promptFor === 'function' ? [...assembly.sections, { name: 'dsh-persona:applied', text: '', interpolate: false }] : assembly.sections };
     const descriptor = actorDescriptor(context.agent);
     if (isZCodeWorkflowActor(descriptor) && typeof descriptor.persona === 'string') {
@@ -81,7 +86,7 @@ export function apply(ctx, config) {
       // section name. Add the script-reader contract without changing its
       // durable descriptor or interpolating author text on cold activation.
       return { ...current, sections: current.sections.map(section => section.name === 'deployment:persona-prefix' && section.text === descriptor.persona
-        ? { ...section, interpolate: false, text: buildWorkflowActorPrompt({ tools: activeTools(context.agent),
+        ? { ...section, interpolate: false, text: buildWorkflowActorPrompt({ tools: activeTools(context.agent, context.toolSet),
           cwd: currentDirectory(ctx, context.agent.session), platform: process.platform, mode: modeFor(context.agent), persona: descriptor.persona,
           outputStyle: ctx.omaa.preferences(context.agent.session).outputStyle }) }
         : section) };

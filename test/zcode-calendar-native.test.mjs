@@ -110,7 +110,7 @@ test('native finite calendar edits keep counts and history, migrate to interval,
   const once = await call('cron_create', { title: 'Legacy one-shot', prompt: 'Original one-shot body', delayMinutes: 1 });
   const onceId = once.automation.id;
   await advance('2027-11-07T06:31:05.000Z');
-  await until(async () => (await f.call('schedule/catalog', {})).find(row => row.id === onceId)?.status === 'inactive'); await settled();
+  await until(async () => ['inactive', 'ended'].includes((await f.call('schedule/catalog', {})).find(row => row.id === onceId)?.status)); await settled();
   const renamed = await call('cron_update', { id: onceId, title: 'Completed one-shot renamed', prompt: 'Revised future instruction' });
   assert.equal(renamed.automation.status, 'CLOSED'); assert.equal(renamed.automation.confirmedDispatches, 1);
   const restored = await call('cron_update', { id: onceId, title: 'Now daily', cron: '0 9 * * *', time_zone: 'America/New_York', recurring: true });

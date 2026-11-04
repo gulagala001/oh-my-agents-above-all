@@ -1,3 +1,4 @@
+import { executeNativeTool } from "../../host/native-tool-call.mjs";
 import { appendPluginRecord } from '@deepseek-ai/dsh-session';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 import { randomUUID } from 'node:crypto';
@@ -88,8 +89,8 @@ export function apply(ctx) {
       throw Error('Pi 扩展的原生会话或加载实例已失效');
   };
   const owns = agent => ctx.omaa.product(agent.session)?.id === 'pi' && agent.session.header.origin !== 'subagent';
-  const visible = (agent, state) => {
-    const tools = ctx.tools.schemas(agent).filter(tool => !toolNeedsEnhancement(ctx, 'pi', tool.name, agent) || ctx.omaa.enhancementEnabled(agent.session));
+  const visible = (agent, state, toolSet) => {
+    const tools = ctx.tools.schemas(agent, toolSet).filter(tool => !toolNeedsEnhancement(ctx, 'pi', tool.name, agent) || ctx.omaa.enhancementEnabled(agent.session));
     if (!state.active) return tools;
     const known = new Map(tools.map(tool => [tool.name, tool]));
     return [...state.active].flatMap(name => known.has(name) ? [known.get(name)] : []);
@@ -247,8 +248,8 @@ export function apply(ctx) {
       const definition = state.descriptors?.tools.find(tool => tool.name === args.name);
       if (definition?.exposure === 'model-only' || state.active && !state.active.has(args.name)
         || !ctx.tools.get(args.name, agent)) throw Error('Pi executeTool 仅可调用当前已启用的直接工具');
-      const result = await ctx.tools.execute({ name: args.name, arguments: nativeArguments(args.name, args.args), agent,
-        callId: exec.callId + '/' + (++state.nestedCalls), rootCallId: exec.rootCallId ?? exec.callId, parent: exec.token, signal });
+      const result = await executeNativeTool(ctx, { name: args.name, arguments: nativeArguments(args.name, args.args), agent,
+        callId: exec.callId + '/' + (++state.nestedCalls), rootCallId: exec.rootCallId ?? exec.callId, parent: exec.token, toolSet: exec.toolSet, signal });
       signal.throwIfAborted(); assertOwner(agent, state, context); assertPolicy(agent, state);
       for (const extra of result.additionalContexts ?? []) exec.deferContext(extra);
       if (result.concludesTurn) exec.concludeTurn();
@@ -491,10 +492,17 @@ export function apply(ctx) {
         return continued ? null : result;
       },
       async request(request, signal) {
-        let current = request;
+        // Alpha text waterfalls no longer own declarations. Commit Pi's
+        // selected catalog at its existing replayable request-header boundary,
+        // intersecting the native step admission before retaining descriptions.
+        const admitted = new Map(request.tools.map(tool => [tool.name, tool]));
+        let current = state.preparedTools ? { ...request, tools: state.preparedTools.flatMap(tool => {
+          const native = admitted.get(tool.name);
+          return native ? [{ ...native, description: tool.description }] : [];
+        }) } : request;
         if (agent.session.snapshotEvents().some(event => event.type === boundaryRecord || event.type === treeRecord)
           || request.messages.some(message => message.source?.piContinuation)) {
-          current = (await projectBoundaryRequest(request, agent.session.snapshotEvents(), boundaryAdapters(signal))).request;
+          current = (await projectBoundaryRequest(current, agent.session.snapshotEvents(), boundaryAdapters(signal))).request;
         }
         if (!state.guest || !state.events.has('context') && !state.events.has('context_with_system')) return current === request ? undefined : current;
         assertOwner(agent, state); assertPolicy(agent, state);
@@ -677,8 +685,8 @@ export function apply(ctx) {
       ...(type === 'text_end' || type === 'thinking_end' ? { content: chunk.block.text } : {}),
       ...(type === 'toolcall_end' ? { toolCall: message.content.find(part => part.type === 'toolCall' && part.id === chunk.block.id) } : {}), partial: message } }, signal);
   }
-  function loadoutInput(agent, state) {
-    const registered = ctx.tools.schemas(agent), declared = visible(agent, state);
+  function loadoutInput(agent, state, toolSet) {
+    const registered = ctx.tools.schemas(agent), declared = visible(agent, state, toolSet);
     const definitions = new Map((state.descriptors?.tools ?? []).map(tool => [tool.name, tool]));
     const guidelines = promptOptions({ customTools: [...definitions.values()] }).toolGuidelines;
     const describe = tools => tools.map(tool => ({ ...tool, label: definitions.get(tool.name)?.label ?? tool.name }));
@@ -691,18 +699,18 @@ export function apply(ctx) {
       }])) },
       hooks: declared.map(tool => definitions.get(tool.name)).filter(tool => tool?.prepareLoadout).map(tool => tool.callbackId) });
   }
-  async function prepareLoadout(agent, state, signal) {
+  async function prepareLoadout(agent, state, signal, toolSet) {
     assertOwner(agent, state); signal?.throwIfAborted();
     if (state.guest) assertPolicy(agent, state);
-    const input = loadoutInput(agent, state);
-    if (!input.hooks.length) return visible(agent, state);
+    const input = loadoutInput(agent, state, toolSet);
+    if (!input.hooks.length) return visible(agent, state, toolSet);
     // Upstream prepares again even for an unchanged catalog: closures may have
     // changed since the preceding request. Never cache callback results.
     const response = await invoke(agent, state, { kind: 'loadout', ...input }, signal);
     assertPolicy(agent, state);
     // Callback-owned registration/API work drains before its result. Refuse
     // stale presentation instead of admitting a different tool set underneath.
-    if (!isDeepStrictEqual(loadoutInput(agent, state), input)) throw Error('Pi prepareLoadout 期间工具目录发生变化，请重新组装请求');
+    if (!isDeepStrictEqual(loadoutInput(agent, state, toolSet), input)) throw Error('Pi prepareLoadout 期间工具目录发生变化，请重新组装请求');
     for (const error of response?.errors ?? []) settings.notify(agent, 'Pi 扩展 prepare_loadout ' + error.toolName + '：' + error.error, 'error');
     if (!response || !response.descriptions || typeof response.descriptions !== 'object' || Array.isArray(response.descriptions)
       || Object.values(response.descriptions).some(value => typeof value !== 'string')
@@ -711,7 +719,7 @@ export function apply(ctx) {
     // hide the full declaration history while keeping tools active/callable.
     // Never silently interpret hiddenDeclarations as disabling execution.
     if (response.hiddenDeclarations.length) throw Error('Pi hiddenDeclarations 需要可重放的完整工具声明投影；当前公开接口尚未提供');
-    return visible(agent, state).map(tool => Object.hasOwn(response.descriptions, tool.name)
+    return visible(agent, state, toolSet).map(tool => Object.hasOwn(response.descriptions, tool.name)
       ? { ...tool, description: response.descriptions[tool.name] } : tool);
   }
   async function runMessages(agent, run, signal) {
@@ -854,14 +862,14 @@ export function apply(ctx) {
     if (context.signal && state.lifecycleRun) state.lifecycleRun.activitySignal = context.signal;
     const resources = ctx.get('omaaPiResources');
     const boundary = await resources.prepare(context.agent, context.signal, () => {
-      state.prompt = promptFrameText(resources.frame(context.agent, _initial, visible(context.agent, state)));
+      state.prompt = promptFrameText(resources.frame(context.agent, _initial, visible(context.agent, state, context.toolSet)));
     });
     // An end callback may keep a continuation prompt while maintenance parks
     // a newly typed human input. Its explicit new-run origin releases that
     // override before the next before_agent_start, even with other queued work.
     if (boundary.startsRun) clearRunPrompt(state);
     const assembly = await next();
-    let frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+    let frame = resources.frame(context.agent, assembly, visible(context.agent, state, context.toolSet));
     state.prompt = promptFrameText(frame);
     if (!state.runStarted && boundary.users.length) {
       state.runStarted = true;
@@ -889,7 +897,7 @@ export function apply(ctx) {
         }
       }
     }
-    frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+    frame = resources.frame(context.agent, assembly, visible(context.agent, state, context.toolSet));
     if (state.runOptions) state.runOptions = { ...state.runOptions, selectedTools: frame.options.selectedTools,
       toolSnippets: applyCatalogEdits(frame.options.toolSnippets, state.runCatalogEdits?.snippets),
       toolGuidelines: applyCatalogEdits(frame.options.toolGuidelines, state.runCatalogEdits?.guidelines) };
@@ -898,7 +906,7 @@ export function apply(ctx) {
       await beginTurn(context.agent, state, state.nativeTurn, state.nativeNextStep, context.signal);
       // Startup callbacks can change the active registry before the first
       // request: rebuild from the host's current schemas and catalog.
-      frame = resources.frame(context.agent, assembly, visible(context.agent, state));
+      frame = resources.frame(context.agent, assembly, visible(context.agent, state, context.toolSet));
       if (state.runOptions) state.runOptions = { ...state.runOptions, selectedTools: frame.options.selectedTools,
         toolSnippets: applyCatalogEdits(frame.options.toolSnippets, state.runCatalogEdits?.snippets),
         toolGuidelines: applyCatalogEdits(frame.options.toolGuidelines, state.runCatalogEdits?.guidelines) };
@@ -912,8 +920,8 @@ export function apply(ctx) {
       ? { ...message, source: { ...message.source, pi: { ...message.source.pi, runPrompt: { force } } } } : message);
     state.pendingForce = force;
     state.prompt = sections.map(section => section.text).filter(Boolean).join('\n\n');
-    const tools = await prepareLoadout(context.agent, state, context.signal);
-    return { ...assembly, tools, sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
+    state.preparedTools = await prepareLoadout(context.agent, state, context.signal, context.toolSet);
+    return { ...assembly, sections: sections.map((section, order) => ({ ...section, order, interpolate: false })) };
   }, { prepend: true });
   ctx.on('agent/status', ({ agent, status }) => {
     const state = stateFor(agent);
