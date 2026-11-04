@@ -1,8 +1,9 @@
+import { readNativeSession } from '../../host/session-read.mjs';
 import { BlockAssembler } from '@deepseek-ai/dsh-llm';
 import { buildSessionContextMaterial, formatLocalSessionNotFound, outputCharBudgetFromMaxTokens, formatReadSessionContextModelContent } from '../../../lib/zcode-session-material.mjs';
 
 export const name = 'omaa-zcode-session-context';
-export const inject = ['tools', 'sessionController', 'llm'];
+export const inject = ['tools', 'sessionController', 'sessionQuery', 'llm'];
 const plainText = content => (content ?? []).filter(part => part.type === 'text').map(part => part.text).join('\n');
 function nativeMessages(events) {
   const calls = new Map(events.filter(event => event.type === 'tool/call').map(event => [event.data.callId, event.data]));
@@ -64,7 +65,7 @@ export function apply(ctx) {
       if (!referencedByUser(exec.agent, args.sessionId)) throw new Error('The user must reference the target session id before reading its context.');
       const parsed = { ...args, strategy: args.strategy ?? 'relevant' }, signal = AbortSignal.any([exec.signal, AbortSignal.timeout(300000)]);
       let observed;
-      try { observed = await ctx.sessionController.inspect(args.sessionId, signal); }
+      try { observed = await readNativeSession(ctx, args.sessionId, signal); }
       catch (error) { exec.signal.throwIfAborted(); if (error.code === 'session/not-found' || error.code === 'SESSION_QUERY_SESSION_NOT_FOUND' || error.constructor?.name === 'ApiSessionNotFound') return formatLocalSessionNotFound(parsed); throw error; }
       const session = { id: observed.meta.id, title: observed.meta.title ?? observed.meta.id, directory: observed.meta.cwd };
       const material = buildSessionContextMaterial({ messages: nativeMessages(observed.events), query: parsed.query, session, strategy: parsed.strategy, outputCharBudget: outputCharBudgetFromMaxTokens(parsed.maxTokens) });

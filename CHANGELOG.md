@@ -1,3 +1,49 @@
+# Oh My Agents Above All 0.17.9 · DSH 0.2.2-rc.1
+
+[中文](#zh-0-2-2-rc-1-omaa-0-17-9) · [English](#en-0-2-2-rc-1-omaa-0-17-9)
+
+<a id="zh-0-2-2-rc-1-omaa-0-17-9"></a>
+
+## 中文
+
+### 体验优化与问题修复
+
+- 冷会话读取改用原生 Session Query，保留精确历史边界与分支继承记录；读取后释放观察句柄，取消与会话不存在的错误保持明确。读取历史不启动 Agent 或改写原始会话。
+- 修复 Pi 分支导航与 ZCode 跨会话资料读取。
+
+### 其他变更
+
+- 精确适配 DSH **0.2.2-rc.1**、Cordis **4.1.0** 与 Schemastery **3.19.0**，使用对应 SDK 与冻结依赖；Node.js 最低版本为 **24.9.0**。
+- 保留已有配置、会话与插件数据；原宿主的历史固定发行继续保留。
+
+<a id="en-0-2-2-rc-1-omaa-0-17-9"></a>
+
+## English
+
+### Improvements and fixes
+
+- Read cold sessions through native Session Query with exact history boundaries and inherited events. Release observation leases after reads, preserve cancellation and not-found errors, and avoid activating Agents or rewriting stored conversations.
+- Fix Pi branch navigation and ZCode cross-session context reads.
+
+### Other changes
+
+- Target exactly DSH **0.2.2-rc.1**, Cordis **4.1.0** and Schemastery **3.19.0**, with matching SDK packages and frozen dependencies; require Node.js **24.9.0** or later.
+- Preserve settings, conversations and plugin data. Historical releases remain available for their original hosts.
+
+## 安装 / Installation
+
+| DSH | 固定安装包 / Fixed package | 校验 / Checksums |
+| --- | --- | --- |
+| 0.2.2-rc.1 | [Oh My Agents Above All 0.17.9](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.9/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.9.tgz) | [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.9/SHA256SUMS) |
+
+在 **插件 → 添加插件** 使用匹配的固定包。保留原 profile、配置与数据，安装后按宿主提示重载。
+
+Use the matching fixed package in **Plugins → Add plugin**. Retain your profile, settings and data, then reload when requested.
+
+[安装指南 / Installation guide](https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md)
+
+---
+
 # Oh My Agents Above All 0.17.8 · DSH 0.2.2-rc.1
 
 [中文](#zh-0-2-2-rc-1-omaa-0-17-8) · [English](#en-0-2-2-rc-1-omaa-0-17-8)

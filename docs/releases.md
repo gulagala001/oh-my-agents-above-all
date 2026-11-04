@@ -1,5 +1,9 @@
 # OMAA 0.17.7 · DSH 0.2.1-rc.5
 
+## Oh My Agents Above All 0.17.9 · DSH 0.2.2-rc.1
+
+[发行说明与固定安装包 / Release and fixed packages](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.2-rc.1.omaa.0.17.9)
+
 ## Oh My Agents Above All 0.17.8 · DSH 0.2.2-rc.1
 
 [发行说明与固定安装包 / Release and fixed packages](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.2-rc.1.omaa.0.17.8)

@@ -30,10 +30,10 @@ Uses your existing DSH models and credentials. Presets adapt source prompts, wor
 Open **Plugins → Add plugin** in the DSH instance you use, then paste:
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.8/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.8.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.9/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.9.tgz
 ```
 
-Wait for active tasks to finish, then follow the host’s activation/restart prompt. Keep your existing profile and data. See the [installation guide](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.8/SHA256SUMS).
+Wait for active tasks to finish, then follow the host’s activation/restart prompt. Keep your existing profile and data. See the [installation guide](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.9/SHA256SUMS).
 
 ### 2. Try this first
 
@@ -71,7 +71,7 @@ Cursor's code review panel covers the working tree, index, commits, branches and
 
 ## Compatibility and source boundaries
 
-OMAA 0.17.8 targets DSH 0.2.2-rc.1 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
+OMAA 0.17.9 targets DSH 0.2.2-rc.1 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
 
 Pi’s local extension allowlist starts empty and accepts explicitly selected absolute paths. See [Pi documentation](docs/products/pi.md) for supported APIs. ZCode workflows use DSH models, isolated execution, permissions and native child conversations; they do not claim the original product’s complete journal/replay implementation.
 

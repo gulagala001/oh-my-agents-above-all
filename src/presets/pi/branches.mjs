@@ -1,3 +1,4 @@
+import { readNativeSession } from '../../host/session-read.mjs';
 import { readFileSync, writeFileSync, mkdirSync, renameSync, rmSync, openSync, closeSync, fstatSync, readSync, constants } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
@@ -9,7 +10,7 @@ import { symbols } from '@deepseek-ai/cordis';
 import { readPiHistory } from './history.mjs';
 
 export const name = 'omaa-pi-branches';
-export const inject = ['omaa', 'sessionController', 'systemPrompt', 'llm'];
+export const inject = ['omaa', 'sessionController', 'sessionQuery', 'systemPrompt', 'llm'];
 const source = readFileSync(new URL('./sources/packages/coding-agent/src/core/compaction/branch-summarization.ts', import.meta.url), 'utf8');
 const utils = readFileSync(new URL('./sources/packages/coding-agent/src/core/compaction/utils.ts', import.meta.url), 'utf8');
 const constant = (text, key) => {
@@ -146,7 +147,7 @@ export function apply(ctx) {
   }, { global: true });
   async function current(id, signal) {
     signal.throwIfAborted();
-    const owner = identity(id), observation = await ctx.sessionController.inspect(id, signal);
+    const owner = identity(id), observation = await readNativeSession(ctx, id, signal);
     assertOwner(id, owner, signal);
     const selected = observation.events.findLast(event => event.type === 'agent-preset/selected')?.data.agentPreset
       ?? observation.meta.agentPreset;

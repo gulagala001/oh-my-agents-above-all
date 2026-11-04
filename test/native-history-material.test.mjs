@@ -1,9 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
-import { join } from 'node:path';
-import { apply as applyBranches } from '../src/presets/pi/branches.mjs';
 import { apply as applySessionContext } from '../src/presets/zcode/session-context.mjs';
 
 const text = value => ({ type: 'text', text: value });
@@ -25,41 +21,12 @@ const agent = { session: { id: 'current', requestHeader: () => ({ config: { prov
 async function* reply(value) { yield { type: 'text-delta', index: 0, text: value }; }
 const requestText = request => request.messages.flatMap(message => message.content.map(part => part.text ?? '')).join('\n');
 
-// Invoke the production services, so assertions cover the actual material passed
-// to the native assembler/model and the persisted Pi file lists.
-test('Pi branch summary reads rc.2 messages and JSON tool arguments', async t => {
-  const root = await mkdtemp(new URL('../.local-history-', import.meta.url).pathname);
-  const previousHome = process.env.DSH_HOME; process.env.DSH_HOME = root;
-  t.after(async () => { if (previousHome === undefined) delete process.env.DSH_HOME; else process.env.DSH_HOME = previousHome; await rm(root, { recursive: true, force: true }); });
-  let request, forked = false;
-  const ctx = {
-    omaa: { inspect: async () => ({ agent, value: { product: { id: 'pi' }, running: false } }) },
-    systemPrompt: { variable() {}, context() {} },
-    sessionController: { inspect: async () => ({ events }), fork: async input => { assert.equal(input.atSeq, 0); forked = true; return { sessionId: 'child' }; } },
-    llm: { stream: options => { request = options; return reply('CAPSULE'); } }, effect: effect => effect(),
-  };
-  applyBranches(ctx);
-  const result = await ctx.omaa.piBranches.fork('current', { head: 9, atSeq: 0, withSummary: true });
-  const material = requestText(request);
-  assert.match(material, /ASSISTANT_ONLY_DECISION: preserve BOM/);
-  assert.match(material, /USER_ONLY_REQUIREMENT/);
-  assert.match(material, /TOOL_ONLY_FINDING/);
-  assert.doesNotMatch(material, /HIDDEN_REASONING_MUST_NOT_APPEAR/);
-  assert.match(material, /read\(file_path="src\/read-only.csv"\)/);
-  assert.match(material, /edit\(\{malformed-args\)/);
-  assert.match(material, /read\(null\)/);
-  assert.match(material, /read\(\["array-argument"\]\)/);
-  assert.equal(forked, true); assert.equal(result.summaryIncluded, true);
-  const capsule = JSON.parse(await readFile(join(root, 'omaa/pi-branch-context', createHash('sha256').update('child').digest('hex') + '.json'), 'utf8')).text;
-  assert.match(capsule, /<read-files>\nsrc\/read-only.csv\n<\/read-files>/);
-  assert.match(capsule, /<modified-files>\nsrc\/changed.csv\n<\/modified-files>/);
-});
-
-test('ZCode context retains rc.2 assistant-only text in model extraction and fallback', async () => {
+// Pi summary/fork/restart is covered against the installed native host in installed-pi-branches.test.mjs.
+test('ZCode context retains native assistant-only text in model extraction and fallback', async () => {
   let tool, request, fail = false;
   applySessionContext({
     tools: { register: value => { tool = value; } },
-    sessionController: { inspect: async () => ({ meta: { id: 'target-session', title: 'Prior session', cwd: '/fixture' }, events }) },
+    sessionQuery: { observeSession: async () => ({ header: { id: 'target-session', title: 'Prior session', cwd: '/fixture' }, events, inheritedEventCount: 0, [Symbol.dispose]() {} }) },
     llm: { stream: options => { request = options; if (fail) throw new Error('fixture unavailable'); return reply('MODEL_CONTEXT'); } },
   });
   const args = { sessionId: 'target-session', query: 'preserve BOM', strategy: 'handoff' };
