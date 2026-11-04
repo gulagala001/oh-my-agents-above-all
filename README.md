@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/gulagala001/oh-my-agents-above-all?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub 累计下载量" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
-  <a href="#readme-install"><img alt="DSH 0.2.1-rc.5" src="https://img.shields.io/badge/DSH-0.2.2--rc.1-0969da?style=flat-square"></a>
+  <a href="#readme-install"><img alt="DSH 0.2.2-rc.1" src="https://img.shields.io/badge/DSH-0.2.2--rc.1-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
 
@@ -71,7 +71,7 @@ Cursor 的「代码审阅」覆盖工作区、暂存、提交、分支与会话�
 
 ## 兼容与来源边界
 
-OMAA 0.17.7 精确匹配 DSH 0.2.2-rc.1；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
+OMAA 0.17.8 精确匹配 DSH 0.2.2-rc.1；rc.1 继续使用已有 0.16.5 固定包。两种宿主不能混用安装包。预设不是对应官方产品的完整运行层，不包含其专有云代理、官方账号或全部私有 API。
 
 Pi 本地扩展默认白名单为空，仅执行用户明确指定的绝对路径；已支持 API 与未支持边界见 [Pi 文档](docs/products/pi.md)。ZCode 工作流沿用 DSH 的模型、隔离执行、权限与原生子会话，不冒称原厂完整 journal/replay。
 

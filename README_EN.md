@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/gulagala001/oh-my-agents-above-all?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases"><img alt="GitHub total downloads" src="https://img.shields.io/github/downloads/gulagala001/oh-my-agents-above-all/total?style=flat-square&amp;label=GitHub%20downloads&amp;color=0969da"></a>
-  <a href="#readme-install"><img alt="DSH 0.2.1-rc.5" src="https://img.shields.io/badge/DSH-0.2.2--rc.1-0969da?style=flat-square"></a>
+  <a href="#readme-install"><img alt="DSH 0.2.2-rc.1" src="https://img.shields.io/badge/DSH-0.2.2--rc.1-0969da?style=flat-square"></a>
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
 
@@ -71,7 +71,7 @@ Cursor's code review panel covers the working tree, index, commits, branches and
 
 ## Compatibility and source boundaries
 
-OMAA 0.17.7 targets DSH 0.2.2-rc.1 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
+OMAA 0.17.8 targets DSH 0.2.2-rc.1 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
 
 Pi’s local extension allowlist starts empty and accepts explicitly selected absolute paths. See [Pi documentation](docs/products/pi.md) for supported APIs. ZCode workflows use DSH models, isolated execution, permissions and native child conversations; they do not claim the original product’s complete journal/replay implementation.
 
