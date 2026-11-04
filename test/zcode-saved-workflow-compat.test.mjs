@@ -13,7 +13,7 @@ const hostRequire = createRequire(await realpath(join(repo, 'node_modules/@deeps
 const keys = ['create_workflow', 'amend_workflow', 'save_workflow', 'list_saved_workflows', 'read_saved_workflow', 'run_saved_workflow'];
 
 test('six ZCode views are public low-priority fallbacks and preserve foreign registrations in either load order', async () => {
-  const source = await readFile(join(repo, 'src/client/index.jsx'), 'utf8'), priorities = new Map();
+  const source = await readFile(join(repo, 'src/client/runtime.jsx'), 'utf8'), priorities = new Map();
   for (const match of source.matchAll(/for \(const key of \[([^\]]+)\]\) ctx\.slots\.inject\('tool.call.toolview', \(\) => ctx\.slots\.register\(\{ name: 'tool.call.toolview', key, priority: (\d+)/g)) {
     for (const key of match[1].matchAll(/'([^']+)'/g)) priorities.set(key[1], Number(match[2]));
   }
@@ -42,7 +42,7 @@ test('real native foreign results remain read-only when incompatible, then norma
   const { Context } = await import(pathToFileURL(hostRequire.resolve('@deepseek-ai/cordis')));
   const { default: SystemPrompt } = await import(pathToFileURL(hostRequire.resolve('@deepseek-ai/dsh-system-prompt')));
   const { default: Tools } = await import(pathToFileURL(hostRequire.resolve('@deepseek-ai/dsh-tools')));
-  const ctx = new Context(); await ctx.plugin(SystemPrompt, {}); await ctx.plugin(Tools, { mode: 'native' }); t.after(() => ctx.fiber.dispose());
+  const ctx = new Context(); await ctx.plugin(SystemPrompt, {}); await ctx.plugin(Tools); await ctx.plugin(await import(hostRequire.resolve('@deepseek-ai/dsh-tool-executor-native'))); t.after(() => ctx.fiber.dispose());
   const read = { name: 'reuse', scope: 'project', path: '/project/reuse.dwf.ts', description: 'Actual definition', facade: 'zcode', script: 'return args;', source: 'saved source', bodyLineOffset: 0, args: { value: { type: 'number', default: 0 } } };
   const corrupt = [
     ['list_saved_workflows', { workflows: [null] }],
@@ -64,7 +64,7 @@ test('real native foreign results remain read-only when incompatible, then norma
   const canonical = async (name, value) => {
     const off = ctx.tools.register({ name, description: 'Independent foreign canonical result', parameters: { type: 'object', properties: {}, additionalProperties: false },
       output: { schema: { type: 'object' }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] }, execute: () => value });
-    try { const block = await ctx.tools.execute({ name, arguments: {}, callId: crypto.randomUUID(), signal: new AbortController().signal }); assert.equal(block.isError, false); return block; } finally { off(); }
+    try { const batch = await ctx.tools.execute({ calls: [{ type: 'tool-call', name, arguments: '{}', id: crypto.randomUUID() }], signal: new AbortController().signal }); const block = batch.results[0].result; assert.equal(block.isError, false); return block; } finally { off(); }
   };
   const bundle = await build({ stdin: { contents: `export { ZCodeSavedWorkflowTool } from './src/client/zcode-saved-workflow-tool.jsx';export { ZCodeWorkflowTool } from './src/client/zcode-workflow-tool.jsx';export {default as React} from 'react';export {createRoot} from 'react-dom/client';export {flushSync} from 'react-dom';`, resolveDir: repo }, bundle: true, write: false, platform: 'browser', format: 'iife', globalName: 'compatFixture', target: 'es2022',
     plugins: [{ name: 'css-text', setup(builder) { builder.onLoad({ filter: /\.css$/ }, async args => ({ contents: `export default ${JSON.stringify(await readFile(args.path, 'utf8'))}`, loader: 'js' })); } }],

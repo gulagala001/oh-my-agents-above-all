@@ -40,7 +40,8 @@ test('native scoped and inherited grep/glob use the repaired executable without 
     } };
   } };
   ctx.provide('subprocess', service);
-  await ctx.plugin(ToolRuntime, { mode: 'native' });
+  await ctx.plugin(ToolRuntime);
+  await ctx.plugin(await import(native.resolve('@deepseek-ai/dsh-tool-executor-native')));
   const parent = { session: { id: 'parent' } };
   parent.ctx = createScope(ctx, parent).ctx;
   await parent.ctx.inject(['tools', 'subprocess', 'systemPrompt', 'workingDirectory'], scope => {
@@ -54,7 +55,8 @@ test('native scoped and inherited grep/glob use the repaired executable without 
   assert.equal(ctx.tools.get('grep'), undefined);
   assert.ok(ctx.tools.get('grep', parent)); assert.ok(ctx.tools.get('grep', child));
   for (const agent of [parent, child]) for (const [name, args] of [['grep', { pattern: 'needle' }], ['glob', { pattern: '*.txt' }]]) {
-    const result = await ctx.tools.execute({ agent, name, arguments: args, callId: name + agent.session.id, signal: new AbortController().signal });
+    const batch = await ctx.tools.execute({ agent, calls: [{ type: 'tool-call', name, arguments: JSON.stringify(args), id: name + agent.session.id }], signal: new AbortController().signal });
+    const result = batch.results[0].result;
     assert.equal(result.isError, false, JSON.stringify(result));
     assert.equal(spawns.at(-1).argv[0], copy.executable);
     assert.equal(spawns.at(-1).argv[1], '--no-config');
@@ -62,7 +64,8 @@ test('native scoped and inherited grep/glob use the repaired executable without 
   // A scoped third-party replacement retains its definition and result.
   await child.ctx.inject(['tools'], scope => scope.tools.register({ name: 'grep', description: 'custom',
     parameters: { type: 'object', properties: {} }, output: { schema: { type: 'string' }, render: () => [] }, execute: () => 'custom' }));
-  const result = await ctx.tools.execute({ agent: child, name: 'grep', arguments: {}, callId: 'custom', signal: new AbortController().signal });
+  const batch = await ctx.tools.execute({ agent: child, calls: [{ type: 'tool-call', name: 'grep', arguments: '{}', id: 'custom' }], signal: new AbortController().signal });
+  const result = batch.results[0].result;
   assert.equal(result.value, 'custom'); assert.equal(spawns.length, 4);
 });
 

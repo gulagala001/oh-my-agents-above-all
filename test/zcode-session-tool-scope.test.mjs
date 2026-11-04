@@ -11,7 +11,7 @@ const { installZCodeNativeSessionTools } = await import(process.env.ZCODE_SESSIO
 test('ZCode session tools coexist with global and ancestor names and retire only their own registrations', async t => {
   const ctx = new Context(); t.after(() => ctx.fiber.dispose());
   ctx.provide('systemPrompt', { tools() {} });
-  await ctx.plugin(ToolRuntime, { mode: 'native' });
+  await ctx.plugin(ToolRuntime);
   const names = ['todo_read', 'respond_to_coordinator'];
   const globals = names.map(name => ({ name, description: 'third party ' + name,
     parameters: { type: 'object', properties: {} }, output: { schema: { type: 'string' }, render: () => [] }, execute: () => 'third party' }));
