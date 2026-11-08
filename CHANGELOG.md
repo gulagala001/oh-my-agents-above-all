@@ -1,3 +1,39 @@
+# Oh My Agents Above All 0.17.10 · DSH 0.2.2-rc.1
+
+[中文](#zh-01710) · [English](#en-01710)
+
+<a id="zh-01710"></a>
+
+## 中文
+
+### 问题修复
+
+- 修复工作流后端切换失败后一直停留在切换中、失去可用执行入口的问题。
+- 保留未完成的后端清理责任，失败时显示明确原因；可在会话设置中重试工作流，恢复后只保留一个执行入口。
+
+<a id="en-01710"></a>
+
+## English
+
+### Bug Fixes
+
+- Fix workflow backend replacement remaining stuck in a changing state after a failed mount or fallback.
+- Retain incomplete backend cleanup, report failures explicitly, and provide Retry workflow in conversation settings. Successful recovery leaves exactly one execution entry.
+
+## 安装 / Installation
+
+精确宿主为 **DSH 0.2.2-rc.1**，Node.js **24.9.0+**。在 **插件 → 添加插件** 使用固定包，保留现有 profile、配置与会话，按宿主提示完整重启。
+
+Targets exactly **DSH 0.2.2-rc.1**, with Node.js **24.9.0+**. Add the fixed package in **Plugins → Add plugin**, retain the existing profile, settings and conversations, and fully restart when requested.
+
+| DSH | 固定安装包 / Fixed package | SHA256SUMS |
+| --- | --- | --- |
+| 0.2.2-rc.1 | [Oh My Agents Above All 0.17.10](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz) | [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/SHA256SUMS) |
+
+[安装指南 / Installation guide](https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md)
+
+---
+
 # Oh My Agents Above All 0.17.9 · DSH 0.2.2-rc.1
 
 [中文](#zh-0-2-2-rc-1-omaa-0-17-9) · [English](#en-0-2-2-rc-1-omaa-0-17-9)

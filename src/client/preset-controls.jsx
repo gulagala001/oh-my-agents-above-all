@@ -257,6 +257,8 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     {state.saving && <p role="status" className="omaa-help">正在保存会话设置…</p>}
     {(!state.loading && state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{!state.loading && state.error || localError || appearanceState.error}</p>}
     {product && <>
+      {data.workflowStatus === 'failed' && <p role="alert" className="omaa-error">工作流暂不可用：{data.workflowError}
+        <Button type="button" disabled={disabled} onClick={() => change({ retryWorkflow: true })}>重试工作流</Button></p>}
       {product.id === 'pi' ? <div className="omaa-setting-row"><span>工作模式</span><span className="omaa-setting-value">执行（Pi 默认模式）</span></div>
         : <label className="omaa-setting-row"><span>工作模式</span><Select aria-label="工作模式" value={state.pendingPatch?.mode ?? data.mode} disabled={disabled || data.pendingMode}
           onChange={event => change({ mode: event.target.value })}>{modes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></label>}

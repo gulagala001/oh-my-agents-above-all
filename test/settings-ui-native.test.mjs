@@ -60,8 +60,8 @@ test('OMAA details use host controls, fit both settings and sidebars, and retain
     await panel.getByLabel('会话主题', { exact: true }).selectOption('host');
     await page.waitForFunction(() => !document.documentElement.hasAttribute('data-omaa-theme'));
   }
-  await page.getByText('更多', { exact: true }).click();
-  await page.getByText('设置', { exact: true }).click();
+  await page.getByRole('button', { name: '账号菜单', exact: true }).click();
+  await page.getByRole('menuitem', { name: '设置', exact: true }).click();
   await page.getByText('OMAA', { exact: true }).click();
   const settings = page.locator('.omaa-settings-page');
   await settings.getByText('当前会话', { exact: true }).click();

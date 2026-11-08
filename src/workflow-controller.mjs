@@ -17,14 +17,30 @@ export async function apply(ctx, config) {
   const { scope: revision, matches: owned } = await scopeBinding(ctx);
   let branch, bridge = ctx.get('omd'), active = true, pending = false, draining;
   let replacing, failedTarget;
-  const controller = { matches: owned, mode: 'native' };
+  const retiring = new Set();
+  const retire = async owner => {
+    if (!owner) return;
+    retiring.add(owner);
+    await owner.dispose(); retiring.delete(owner);
+  };
+  const controller = { matches: owned, mode: 'native', error: null,
+    async retry() {
+      if (!active) throw Error('工作流组件已停止');
+      await draining;
+      failedTarget = undefined;
+      await schedule();
+      if (controller.mode === 'failed') throw Error(controller.error);
+    } };
   const hub = ctx.omaa;
   ctx.effect(() => {
     hub.workflowControllers.add(controller);
     return async () => {
       active = false;
+      controller.mode = 'closed';
       hub.workflowControllers.delete(controller);
-      await branch?.owner.dispose();
+      const results = await Promise.allSettled([...new Set([branch?.owner, ...retiring].filter(Boolean))].map(retire));
+      const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
+      if (errors.length) throw new AggregateError(errors, 'Workflow backend cleanup failed');
     };
   });
   const liveAgents = () => ctx.agents.list().filter(owned);
@@ -34,7 +50,7 @@ export async function apply(ctx, config) {
       || failedTarget?.bridge === bridge && failedTarget?.provider === provider) return { mode: 'native' };
     return { mode: 'omd', bridge, provider };
   };
-  const same = (a, b) => a.mode === b.mode && a.bridge === b.bridge && a.provider === b.provider;
+  const same = (a, b) => a?.mode === b.mode && a?.bridge === b.bridge && a?.provider === b.provider;
   const busyJobs = () => liveAgents().some(agent => ctx.get('jobs')?.list(agent.id).some(job => job.kind === 'workflow' && ['running', 'stopping'].includes(job.status)));
 
   async function mount(wanted) {
@@ -49,13 +65,14 @@ export async function apply(ctx, config) {
     } });
     try {
       await owner;
+      if (!active) throw Error('工作流组件已停止');
       const engine = owner.ctx.get('workflowEngine');
       const schemas = ctx.tools.schemas(revision).filter(tool => tool.name === 'workflow');
       if (!engine || schemas.length !== 1 || wanted.mode === 'omd' && !schemas[0].parameters?.properties?.resumeFromRunId) {
         throw new Error('Workflow branch did not become available');
       }
       return { ...wanted, owner, engine };
-    } catch (error) { await owner.dispose(); throw error; }
+    } catch (error) { await retire(owner); throw error; }
   }
 
   async function waitJobs() {
@@ -88,20 +105,22 @@ export async function apply(ctx, config) {
       }
       try {
         controller.mode = 'changing';
+        controller.error = null;
         while (active) {
-          await branch.owner.dispose();
+          for (const owner of [...retiring]) await retire(owner);
+          await retire(branch?.owner); branch = undefined;
           if (!active) return;
           const latest = target();
           try { branch = await mount(latest); }
           catch (error) {
-            if (latest.mode !== 'omd') throw error;
+            if (!active || latest.mode !== 'omd' || retiring.size) throw error;
             failedTarget = latest;
             ctx.logger.warn('OMD workflow unavailable; retaining native OMAA workflow: %s', error);
             branch = await mount({ mode: 'native' });
           }
           // A provider may disappear while imports/apply are awaiting. Keep
           // the same reservations until the installed branch is still current.
-          if (same(branch, target())) { controller.mode = branch.mode; break; }
+          if (active && same(branch, target())) { controller.mode = branch.mode; break; }
         }
       } finally {
         replacing.resolve(); replacing = undefined;
@@ -113,14 +132,18 @@ export async function apply(ctx, config) {
 
   function schedule() {
     pending = true;
-    if (draining || !active) return;
+    if (draining || !active) return draining;
     draining = (async () => {
       while (active && pending) {
         pending = false;
         const wanted = target();
-        if (!same(branch, wanted)) await replace(wanted);
+        if (controller.mode === 'failed' || !same(branch, wanted)) await replace(wanted);
       }
-    })().catch(error => ctx.logger.error(error)).finally(() => { draining = undefined; if (pending && active) schedule(); });
+    })().catch(error => {
+      if (active) { controller.mode = 'failed'; controller.error = error.message; }
+      ctx.logger.error(error);
+    }).finally(() => { draining = undefined; if (pending && active) schedule(); });
+    return draining;
   }
 
   branch = await mount({ mode: 'native' });
@@ -136,6 +159,7 @@ export async function apply(ctx, config) {
     return () => { if (bridge === current) { bridge = undefined; failedTarget = undefined; schedule(); } };
   });
   for (const event of ['subagent/provider-added', 'subagent/provider-removed']) ctx.on(event, () => { failedTarget = undefined; schedule(); }, { global: true });
+  ctx.on('app-boot/config-reload', () => { if (controller.mode === 'failed') schedule(); }, { global: true });
   schedule();
   await draining;
 }

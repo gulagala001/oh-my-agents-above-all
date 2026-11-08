@@ -95,6 +95,7 @@ async function mount(ctx) {
         enhancementWorkSubmode: workView?.submode ?? 'free', enhancementWorkSavedSubmode: workView?.savedSubmode ?? workView?.submode ?? 'free',
         enhancementWorkModeCurrent: currentWorkMode, enhancementWorkSubmodeCurrent: workView?.currentSubmode ?? workControl?.submode?.(session, agent) ?? workView?.submode ?? 'free',
         enhancementWorkModePending: Boolean(enhancementActive && workView?.pending),
+        workflowStatus: hub.workflowFor(agent)?.mode ?? null, workflowError: hub.workflowFor(agent)?.error ?? null,
         enhancementTeamAvailable: workView?.teamAvailable === true, enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: currentWorkMode !== 'off' } };
     },
     async update(sessionId, patch) {
@@ -103,6 +104,13 @@ async function mount(ctx) {
       if (!product) throw new Error('请选择 OMAA 预设会话');
       if (agent?.status === 'running' || hub.piExtensions?.states.get(session.id)?.sessionOperation) throw new Error('请先停止当前任务，再修改预设设置');
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('无效的预设设置');
+      if (Object.hasOwn(patch, 'retryWorkflow')) {
+        if (patch.retryWorkflow !== true || Object.keys(patch).length !== 1) throw Error('请单独重试工作流组件');
+        const workflow = hub.workflowFor(agent);
+        if (!workflow) throw Error('工作流组件尚未加载');
+        await workflow.retry();
+        return (await hub.inspect(sessionId)).value;
+      }
       if (Object.hasOwn(patch, 'outputStyle') && product.id !== 'zcode') throw new Error('输出风格仅适用于 ZCode 预设');
       const directoryKeys = ['projectMemory', 'agentProfileDirectory', 'agentMemory'].filter(key => Object.hasOwn(patch, key));
       if (directoryKeys.length) {

@@ -37,7 +37,7 @@ async function withController(kind, check) {
       const revision = {}, preset = scopes.createScope(host, revision);
       const agentScope = scopes.createScope(host, {}, { parent: revision });
       await preset.ctx.fiber.await(); await agentScope.ctx.fiber.await();
-      let provider, definitions = [], queued = false, busy = false;
+      let provider, definitions = [], queued = false, busy = false, failNative = false;
       const observations = [], hub = { workflowControllers: new Set() };
       const nativeEntered = Promise.withResolvers(), nativeGate = Promise.withResolvers();
       const oldDisposeEntered = Promise.withResolvers(), oldDisposeGate = Promise.withResolvers();
@@ -61,6 +61,7 @@ async function withController(kind, check) {
       const makeEngine = version => ({ async apply(ctx) {
         nativeEntered.resolve();
         if (version === 'native' && kind === 'initial-failure') throw Error('fixture-native-failure');
+        if (version === 'native' && failNative) throw Error('fixture-native-recovery-failure');
         ctx.provide('workflowEngine', { version });
         if (version === 'native' && kind === 'initial-dispose') await nativeGate.promise;
       } });
@@ -91,7 +92,7 @@ async function withController(kind, check) {
       await check({ root, hub, entry: tree.store.controller, nativeEntered, nativeGate,
         oldDisposeEntered, oldDisposeGate, enhancedEntered, enhancedGate, observations,
         schemas: () => definitions, queue: () => { queued = true; },
-        setProvider: value => { provider = value; }, bridge });
+        setProvider: value => { provider = value; }, failNative: value => { failNative = value; }, bridge });
     } });
   } finally { await root.fiber.dispose(); }
 }
@@ -132,6 +133,23 @@ test('async old-owner teardown installs the latest provider before releasing inp
     await until(() => f.observations.length === 1);
     assert.deepEqual(f.observations, [['v2']]); assert.equal([...f.hub.workflowControllers][0].mode, 'omd');
     assert.equal(f.schemas().length, 1);
+  });
+});
+test('failed native recovery leaves a retryable failure instead of an abandoned changing state', async () => {
+  await withController('native-recovery-failure', async f => {
+    await f.entry.fiber.await(); f.setProvider({ name: 'omd-workflow' });
+    const remove = f.root.provide('omd', f.bridge('v1')); f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
+    const current = [...f.hub.workflowControllers][0];
+    await until(() => current.mode === 'omd');
+    f.failNative(true); f.setProvider(undefined); await remove();
+    f.root.emit('subagent/provider-removed', 'omd-workflow');
+    await until(() => current.mode === 'failed');
+    assert.match(current.error, /fixture-native-recovery-failure/);
+    assert.equal(f.schemas().length, 0);
+    f.failNative(false);
+    await current.retry();
+    await until(() => current.mode === 'native');
+    assert.equal(current.error, null); assert.equal(f.schemas().length, 1);
   });
 });
 test('failed enhancement keeps its outer preset fiber available', async () => {
