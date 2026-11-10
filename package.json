@@ -3,7 +3,7 @@
   "version": "0.2.2-rc.1.omaa.0.17.10",
   "private": true,
   "type": "module",
-  "description": "DSH 五产品预设：Codex、Grok Build、Cursor、Pi、ZCode，提供原生会话、代码审阅、文档转换和工作流控制",
+  "description": "在 DSH 里用上 Codex、Grok Build、Cursor、Pi 和 ZCode 的工作方式，模型还是你自己的。",
   "engines": {
     "node": ">=24.9.0",
     "dsh": "0.2.2-rc.1"

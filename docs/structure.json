@@ -3,7 +3,7 @@
   "published": "0.2.2-rc.1.omaa.0.17.10",
   "repository": {
     "slug": "gulagala001/oh-my-agents-above-all",
-    "description": "Codex, Grok Build, Cursor, Pi and ZCode presets with native conversations, code review, document conversion and workflow controls.",
+    "description": "在 DSH 里用上 Codex、Grok Build、Cursor、Pi 和 ZCode 的工作方式，模型还是你自己的。 Codex, Grok Build, Cursor, Pi and ZCode presets for DeepSeek Harness, running on your own models.",
     "homepage": "",
     "topics": [
       "deepseek-harness",
