@@ -1,5 +1,22 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "published": "0.2.2-rc.1.omaa.0.17.10",
+  "repository": {
+    "slug": "gulagala001/oh-my-agents-above-all",
+    "description": "Codex, Grok Build, Cursor, Pi and ZCode presets with native conversations, code review, document conversion and workflow controls.",
+    "homepage": "",
+    "topics": [
+      "deepseek-harness",
+      "deepseek-harness-plugin",
+      "dsh-plugin",
+      "dsh-bundle"
+    ]
+  },
+  "names": [
+    "Oh My Agents Above All",
+    "OMAA"
+  ],
+  "maxPages": 23,
   "documents": [
     {
       "path": "CHANGELOG.md",
@@ -19,12 +36,14 @@
     {
       "path": "README.md",
       "role": "home",
-      "language": "zh"
+      "language": "zh",
+      "translation": "README_EN.md"
     },
     {
       "path": "README_EN.md",
       "role": "home",
-      "language": "zh"
+      "language": "en",
+      "translation": "README.md"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -43,7 +62,7 @@
     },
     {
       "path": "docs/compatibility.md",
-      "role": "guide",
+      "role": "redirect",
       "language": "zh"
     },
     {
@@ -52,13 +71,8 @@
       "language": "zh"
     },
     {
-      "path": "docs/documentation.md",
-      "role": "development",
-      "language": "bilingual"
-    },
-    {
       "path": "docs/frontend-gallery.md",
-      "role": "guide",
+      "role": "redirect",
       "language": "zh"
     },
     {
@@ -69,12 +83,14 @@
     {
       "path": "docs/install.md",
       "role": "guide",
-      "language": "zh"
+      "language": "zh",
+      "translation": "docs/install_EN.md"
     },
     {
-      "path": "docs/omd-enhancement-boundary.md",
+      "path": "docs/install_EN.md",
       "role": "guide",
-      "language": "zh"
+      "language": "en",
+      "translation": "docs/install.md"
     },
     {
       "path": "docs/pi-theme.md",
@@ -87,44 +103,34 @@
       "language": "zh"
     },
     {
-      "path": "docs/products/checkpoints.md",
-      "role": "guide",
-      "language": "zh"
-    },
-    {
       "path": "docs/products/codex.md",
-      "role": "guide",
-      "language": "zh"
-    },
-    {
-      "path": "docs/products/cursor-rules.md",
-      "role": "guide",
+      "role": "development",
       "language": "zh"
     },
     {
       "path": "docs/products/cursor.md",
-      "role": "guide",
+      "role": "development",
       "language": "zh"
     },
     {
       "path": "docs/products/grok.md",
-      "role": "guide",
+      "role": "development",
       "language": "zh"
     },
     {
       "path": "docs/products/pi.md",
-      "role": "guide",
+      "role": "development",
+      "language": "zh"
+    },
+    {
+      "path": "docs/products/pi-extensions.md",
+      "role": "development",
       "language": "zh"
     },
     {
       "path": "docs/products/zcode.md",
-      "role": "guide",
+      "role": "development",
       "language": "zh"
-    },
-    {
-      "path": "docs/releases.md",
-      "role": "release",
-      "language": "bilingual"
     },
     {
       "path": "docs/theme-sources.md",

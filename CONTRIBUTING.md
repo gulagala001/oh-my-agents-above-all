@@ -12,39 +12,39 @@ pnpm build
 npm pack
 ```
 
-主分支精确绑定 DSH `0.2.2-rc.1` SDK；rc.1 的 0.16.5 固定 tag 保存对应源码、组件、生成配置与依赖锁；0.17.0 新能力只发行 rc.2，不能仅修改版本声明生成 rc.1 包。切换宿主必须使用完整独立构建，不能仅更改包名或放宽 peer。按实际改动选择必要的定点检查，避免无关矩阵。
+主分支精确绑定 DSH `0.2.2-rc.1` SDK。旧 DSH 版本使用各自的固定 tag，里面保存对应的源码、组件、生成配置和依赖锁；不能只改版本声明来生成旧版本的包。切换宿主必须使用完整独立构建，不能仅更改包名或放宽 peer。按实际改动选择必要的定点检查，避免无关矩阵。
 
 ## 发行
 
-包、tag 与宿主使用完整版本，如 `v0.2.1-rc.2.omaa.0.15.4`。每个 tag 对应一个宿主的 `.tgz`、SHA-256 与公开元数据，下载入口固定到该 tag。可选 OMD 直接从其同宿主发行页获取。
+包、tag 与宿主使用完整版本，如 `v0.2.2-rc.1.omaa.0.17.10`。每个 tag 对应一个宿主的 `.tgz`、SHA-256 与公开元数据，下载入口固定到该 tag。可选 OMD 直接从其同宿主发行页获取。
 
-`node scripts/public-files.mjs` 检查 Git 清单，`npm pack` 的 prepack 和 CI 检查实际包清单。归档可另用 `node scripts/public-files.mjs --archive /absolute/path/package.tgz` 检查。安装包仅包含产品源码、生成模块、必要文档、许可及来源；本地计划、真实会话、验收流水、凭据和缓存不公开。
+`node scripts/public-files.mjs` 检查 Git 清单，`npm pack` 的 prepack 和 CI 检查实际包清单。归档可另用 `node scripts/public-files.mjs --archive /absolute/path/package.tgz` 检查。安装包仅包含产品源码、生成模块、必要文档、许可及来源；本地计划、真实会话、检查记录、凭据和缓存不公开。
 
 CI 冻结安装当前宿主依赖、构建并检查实际包。tag workflow 仅核对公开清单与版本；附件通过固定发行流程上传，避免旧宿主矩阵重新生成另一套包。
 
-历史 OMD overlay 和 integrated-baseline 的来源核对器保留在 [compat/omd](compat/omd/README.md)，不用于当前 rc.1/rc.2 的主项目独立 OMD 构建。
+历史 OMD overlay 和 integrated-baseline 的来源核对器保留在 [compat/omd](compat/omd/README.md)，不用于当前构建。
 
 ## 材料与隐私
 
 原创贡献采用 Apache-2.0。保留第三方许可、署名、固定来源与适配说明；Cursor 样本权利边界见 [许可范围](LICENSING.md)。测试保留维护所需的合成 fixture，使用隔离临时目录，不提交真实会话或账号数据。
 
-ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile、日历和子任务结果协议构建输入，以及定时定义／次数生命周期、MCP 借用／子任务工具限制参照的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`build-zcode-calendar.mjs` 提取原厂日历计算与规则等价函数；宿主接线和持久更新在 calendar-chain／finite-schedule 模块中维护。`build-zcode-compiler.mjs` 还生成纯 ask 协议模块，原生回合与收据适配保持在 `actors.mjs`／`run-cache.mjs` 中。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和交接快照文件。
+ZCode 的构建输入保存在 `src/presets/zcode/sources/`：`source.json` 记录产品来源，`build-inputs.json` 记录记忆、profile、日历和子任务结果协议构建输入，以及定时定义／次数生命周期、MCP 借用／子任务工具限制参照的原文和哈希，`temporal.json` 固定 Temporal／JSBI 构建字节。更新源码时同步清单与许可，构建会校验实际输入。`build-zcode-calendar.mjs` 提取原厂日历计算与规则等价函数；宿主接线和持久更新在 calendar-chain／finite-schedule 模块中维护。`build-zcode-compiler.mjs` 还生成纯 ask 协议模块，原生回合与收据适配保持在 `actors.mjs`／`run-cache.mjs` 中。`upstream/` 与 `upstream-3.15.1/` 分别保留仍有消费者的固定版本；不要将临时研究副本放入这些目录。恢复报告、测试流水与历史备份只留本地；公开文件门禁同时禁止 `docs/recovery/` 和本地快照文件。
 
-自有表单控件统一通过 `src/client/ui.jsx` 使用宿主组件，文本域与下拉框沿用原生语义及共享 token；布局样式保持在各自面板，不向上游图或原生比较控件施加通用按钮／输入样式。`test/settings-ui-native.test.mjs` 在隔离 rc.2 宿主验证实际控件、主题、布局与保存；组件行为测试中的基础控件替身不代表原生界面验收。此原生界面检查目前按需执行，尚未接入 CI。
+自有表单控件统一通过 `src/client/ui.jsx` 使用宿主组件，文本域与下拉框沿用原生语义及共享 token；布局样式保持在各自面板，不向上游图或原生比较控件施加通用按钮／输入样式。`test/settings-ui-native.test.mjs` 在隔离的 DSH 里检查实际控件、主题、布局与保存；组件行为测试用的是基础控件替身，原生界面以这项检查为准。此原生界面检查目前按需执行，尚未接入 CI。
 
-文档结构、语言对应和页面变更流程见[文档维护规范](docs/documentation.md)，检查命令：`npm run docs:check`。
+公开页面登记在 `docs/structure.json`，提交前运行 `npm run docs:check`。发版只写 CHANGELOG，Release 正文用 `node scripts/check-docs.mjs --release-notes <版本>` 生成。
 
-Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 `docs/products/grok.md`、`docs/products/cursor.md` 和 `docs/product-sources.md`。共享接线维护在 `src/host/message-queue.mjs` 与 `src/client/preset-queue.jsx`，不要为各预设另存一份原生 inbox 或组件快照。
+Grok／Cursor 队列共用的真实宿主组件与许可保存在 `src/client/sources/grok-queue/`。更新时同步 `source.json` 的 npm 版本、原包及片段哈希；只在 `scripts/build-grok-queue.mjs` 维护必要适配。构建检查输入哈希和每个替换点，CI／prepack 已运行该构建；产品用法与来源分别原位维护于 [`docs/products/grok.md`](docs/products/grok.md)、[`docs/products/cursor.md`](docs/products/cursor.md) 和 `docs/product-sources.md`。共享接线维护在 `src/host/message-queue.mjs` 与 `src/client/preset-queue.jsx`，不要为各预设另存一份原生 inbox 或组件快照。
 
 Grok 随包转换引擎通过 `scripts/build-grok-documents.mjs` 构建，包含 `build-grok-codecs.mjs`。更新引擎必须同步精确开发依赖、锁文件、`src/presets/grok/codec-sources.json` 和其中指向的原始许可；输入哈希、版本、唯一 WASM 内存及最大页数在构建时核验。产品用法、来源与接线说明分别维护在现有 Grok 产品页、来源页和架构页。引擎仅在构建时打包，转换器运行时不得下载程序或绕过原生文件权限。
 
-Grok 调度事务使用版本锁定的宿主内部 FIFO 薄适配。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、兼容页、架构页与来源页。
+Grok 调度事务使用版本锁定的宿主内部 FIFO 适配层。固定模块及方法哈希只在 `src/presets/grok/source.json` 的 `schedulerAdapter.transactionCompatibility` 维护；`scripts/build.mjs` 与运行时消费同一来源记录。改变宿主版本或实现时须检查原生串行队列、域写入、取消、派发和卸载契约，并运行对应的原生调度主流程。产品用法、兼容边界和内部接线分别原位维护在现有 Grok 产品页、使用指南、架构页与来源页。
 
 Git 审阅的源版本、类型、大小与 revision 规则集中在 `src/git-review.mjs`。修改时运行 `node --test test/git-review.test.mjs test/git-review-state.test.mjs`，这两项文件已接入主线／PR CI；真实宿主 HTTP、原生文件操作和 FileDiff 页面按影响范围验证。保留历史版本与当前工作区隔离、Git 显示配置独立、读取交错检测和写入权限检查。
 
-Codex／Cursor 编辑器定位维护在 `src/host/cursor-editor.mjs`，来源契约分别记录在产品来源清单；实际实现和固定 FileDiff 来源共用。修改编辑器身份、启动参数或行映射时，保留认证、宿主文件映射、单独 argv 和取消边界；运行定点检查，并在隔离编辑器中核对实际文件与光标位置。原生主流程通过显式 `OMAA_TEST_EDITOR_ROOT` 指定自行准备的隔离便携编辑器，并以 `OMAA_TEST_EDITOR_RECEIPT` 接入只观察真实编辑器选择的验收扩展，默认测试不得启动个人编辑器。`OMAA_TEST_REVIEW_PRODUCT=codex` 选择 Codex 的真实定位链路，未设置时继续检查 Cursor；审阅写入与续改在各自原生流程中验证，不能以伪造启动回执代替光标。产品用法与来源原位更新现有产品页、架构页和来源页。
+Codex／Cursor 编辑器定位维护在 `src/host/cursor-editor.mjs`，来源契约分别记录在产品来源清单；实际实现和固定 FileDiff 来源共用。修改编辑器身份、启动参数或行映射时，保留认证、宿主文件映射、单独 argv 和取消边界；运行定点检查，并在隔离编辑器中核对实际文件与光标位置。原生主流程通过显式 `OMAA_TEST_EDITOR_ROOT` 指定自行准备的隔离便携编辑器，并以 `OMAA_TEST_EDITOR_RECEIPT` 接入只观察实际编辑器选择的检查扩展，默认测试不得启动个人编辑器。`OMAA_TEST_REVIEW_PRODUCT=codex` 选择 Codex 的真实定位链路，未设置时继续检查 Cursor；审阅写入与续改在各自原生流程中验证，不能以伪造启动回执代替光标。产品用法与来源原位更新现有产品页、架构页和来源页。
 
-Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。边界投影直接提取固定原厂 `session-manager.ts`／`messages.ts`，在同一构建中核对来源哈希；同一生成器还提取原厂只读树方法及压缩选段、序列化和提示常量。验证应覆盖草稿串行预览、原生继续／停止、树导航后实际请求、压缩与分支冷恢复、默认模型摘要、取消及未改动附件身份；当前路径与原始时间线须在界面明确区分。固定 npm transcript/text 原文保存在 `src/presets/pi/sources/npm-pi-ai/`；宿主依赖原始模块、方法、helper 与许可哈希统一维护在既有 `src/presets/pi/source.json`。构建经 build／CI／prepack 校验来源及唯一适配点，运行时检查实际方法后只安装到 Pi 实例。升级须核对冻结前的异步边界、原生工具／流／重试和取消，并运行受影响的原生主流程；不得修改已冻结的 llm/stream 请求。使用说明、兼容、架构和来源在现有页面原位维护，不新增验收页面。
+Pi 上下文与原生请求边界由 `scripts/build-pi-loop.mjs` 构建。边界投影直接提取固定原厂 `session-manager.ts`／`messages.ts`，在同一构建中核对来源哈希；同一生成器还提取原厂只读树方法及压缩选段、序列化和提示常量。验证应覆盖草稿串行预览、原生继续／停止、树导航后实际请求、压缩与分支冷恢复、默认模型摘要、取消及未改动附件身份；当前路径与原始时间线须在界面明确区分。固定 npm transcript/text 原文保存在 `src/presets/pi/sources/npm-pi-ai/`；宿主依赖原始模块、方法、helper 与许可哈希统一维护在既有 `src/presets/pi/source.json`。构建经 build／CI／prepack 校验来源及唯一适配点，运行时检查实际方法后只安装到 Pi 实例。升级须核对冻结前的异步边界、原生工具／流／重试和取消，并运行受影响的原生主流程；不得修改已冻结的 llm/stream 请求。使用说明、架构和来源在现有页面原位维护。
 
 DSH 宿主升级须核对 Pi `nativeLoopAdapter` 与 Grok `transactionCompatibility` 的 `reviewedVersions`、完整模块及方法指纹。只有实际 npm 字节相同的宿主才能共用指纹；构建与运行时均执行校验，版本列表不替代真实宿主运行。
 

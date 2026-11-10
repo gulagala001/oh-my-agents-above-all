@@ -2,7 +2,7 @@
 
 <h1 align="center">Oh My Agents Above All</h1>
 
-<p align="center"><strong>Five distinct agent workflows inside DSH.</strong><br>DeepSeek Harness plugin</p>
+<p align="center"><strong>Work the way Codex, Grok Build, Cursor, Pi and ZCode do, inside DSH and with your own model.</strong><br>A DeepSeek Harness plugin</p>
 
 <p align="center"><a href="README.md">简体中文</a> · <strong>English</strong></p>
 
@@ -13,108 +13,84 @@
   <a href="https://github.com/gulagala001/oh-my-agents-above-all/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/gulagala001/oh-my-agents-above-all?style=flat-square&amp;color=0969da"></a>
 </p>
 
-<p align="center"><a href="#readme-install"><strong>Get started</strong></a> · <a href="docs/frontend-workbench.md">Docs</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/issues">Report an issue</a></p>
+<p align="center"><a href="#readme-install"><strong>Get started</strong></a> · <a href="docs/frontend-workbench.md">Guide (Chinese)</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/issues">Feedback</a></p>
 
-<p align="center"><a href="docs/images/frontend-015/codex-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/frontend-015/codex-dark.png"><img src="docs/images/frontend-015/codex-light.png" alt="Codex 预设在 DSH 中的实际界面 / Codex preset in DSH" width="880"></picture></a></p>
+<p align="center"><a href="docs/images/frontend-015/codex-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/frontend-015/codex-dark.png"><img src="docs/images/frontend-015/codex-light.png" alt="Codex preset in DSH" width="880"></picture></a></p>
 
 <a name="readme-install"></a>
 
 ## Quick start
 
-**Required environment：** DSH **0.2.2-rc.1**, Node.js **24.9.0+**.
-
-Uses your existing DSH models and credentials. Presets adapt source prompts, workflows and themes; they do not provide the original products’ accounts or proprietary cloud services.
+**Requires:** DSH **0.2.2-rc.1** and Node.js **24.9.0+**. OMAA uses the models and keys already configured in DSH.
 
 ### 1. Install
 
-Open **Plugins → Add plugin** in the DSH instance you use, then paste:
+In DSH, open **Plugins → Add plugin** and paste:
 
 ```text
 https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz
 ```
 
-Wait for active tasks to finish, then follow the host’s activation/restart prompt. Keep your existing profile and data. See the [installation guide](docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/SHA256SUMS).
+When your current task finishes, fully restart DSH when prompted. Your settings and conversations stay as they were. For command-line installs, upgrades and removal, see the [installation guide](docs/install_EN.md). Checksums: [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/SHA256SUMS).
 
-### 2. Try this first
+### 2. Turn on a preset
 
-All presets start disabled. Open **Settings → OMAA** and enable only the presets you want, then select one when creating a conversation. The host default remains unchanged; with every preset off, conversations, tools and appearance retain their native behavior.
-
-Create a conversation, select **Codex · OMAA** or another preset, and ask:
+All presets start off, so DSH looks exactly the same after installing. Open **Settings → OMAA**, turn on the presets you want, then create a session, pick **Codex · OMAA** or another preset and enter:
 
 ```text
-Read this project’s README and directory structure without modifying files. List what needs checking before development.
+Read this project's README and directory structure without changing anything, and list what I should confirm before starting development.
 ```
 
-**Success looks like：** The conversation uses the selected preset and theme, returning actual project information through DSH tools.
+The session switches to that preset's way of working and theme, and reads the actual project with DSH tools.
 
-## Five workflows, one DSH environment
+## Five presets
 
-OMAA provides independent source prompts, workflows and light/dark themes for Codex, Grok Build, Cursor, Pi Coding Agent and ZCode. DSH supplies the model, native tool loop, conversations and permissions. The five original clients are not required.
+Models, tools, sessions and permissions all stay with DSH. A preset changes how the AI works, the workbench and the look, so you do not need the five official clients.
 
-| Preset | Focus and capabilities |
+| Preset | Good for |
 | --- | --- |
-| **Codex** | Sustained code work, actual Git ranges, file/hunk operations, durable comments, editor navigation and review follow-through. |
-| **Grok Build** | Planning and execution, live stdout monitoring and native interval scheduling. |
-| **Cursor** | MDC/project rules, Ask/Plan, file checkpoints, multi-scope review, persistent line comments, exact local-editor navigation and batch feedback to continue editing. |
-| **Pi** | Minimal default tools, SYSTEM/templates/rules, sequential steering, native branch navigation, extension drafts, settlement continuation and message events. |
-| **ZCode** | Saved workflows, TypeScript Actors, static execution graphs, file/Git/command facades and artifact panels. |
+| **Codex** | Continuous coding: review Git changes, stage or revert by file or hunk, line comments, jump to your local editor, send batched feedback for the AI to keep working |
+| **Grok Build** | Plan, then execute: live command output, scheduled tasks, a message queue you can reorder and interject into |
+| **Cursor** | Work by project rules: reads `.cursor/rules`, Ask and Plan modes, code review, restore files from checkpoints |
+| **Pi** | Lean and controllable: few tools, step-by-step steering, switchable session branches, your own local extensions |
+| **ZCode** | Reusable workflows: start one from the conversation, inspect its graph and outputs, save it and run it again by name |
 
-Themes can follow the preset, use another preset’s theme or return to native DSH. Light/dark preference follows the host. Each preset retains its own behavior; see the [product documentation](docs/products/) for details.
+Each session's theme can follow the preset, use another preset's theme or keep the default DSH look; light and dark follow DSH. Details are in the [guide](docs/frontend-workbench.md) (Chinese).
 
-## Review changes and keep working
+## Scope
 
-The Codex preset exposes Unstaged, Staged, Commit, Branch and Last turn comparisons. Stage, unstage or revert files/hunks, save comments across restarts, open exact lines in a local editor, and send one or multiple comments for follow-up edits. Reviewed, submitted and resolved states remain distinct. Host permissions apply and stale comparisons are rejected.
-
-Cursor's code review panel covers the working tree, index, commits, branches and recorded turns. Line comments retain context for exact navigation in Cursor or VS Code, persist locally and can be submitted together for the same conversation to continue editing. Checkpoints check conflicts before restoring and retain messages; they are not whole-workspace snapshots of arbitrary shell actions. Pi branches use the native conversation tree and share the directory; switching branches does not roll back files.
-
-[Workbench usage](docs/frontend-workbench.md) · [Actual preset screenshots](docs/frontend-gallery.md)
-
-## Compatibility and source boundaries
-
-OMAA 0.17.10 targets DSH 0.2.2-rc.1 exactly; rc.1 continues to use the existing fixed 0.16.5 release. Do not mix the packages. Presets are not the complete original product runtimes and do not include proprietary cloud agents, official accounts or every private API.
-
-Pi’s local extension allowlist starts empty and accepts explicitly selected absolute paths. See [Pi documentation](docs/products/pi.md) for supported APIs. ZCode workflows use DSH models, isolated execution, permissions and native child conversations; they do not claim the original product’s complete journal/replay implementation.
+- You never use or sign in to the official accounts or cloud services of these five products.
+- Cursor checkpoints cover files the AI changed with its write and edit tools, not files changed by terminal commands.
+- Pi branches share one working directory, so switching branches does not roll back files.
+- Pi local extensions are all off by default; only files you add in Settings ever run.
 
 ## FAQ
 
 <details>
-<summary>Why did the model stay the same after changing presets?</summary>
+<summary>I switched presets but the model stayed the same?</summary>
 
-A preset changes the workflow and appearance. DSH’s model picker controls the actual model. Select one with the required tool and input capabilities.
-
-</details>
-
-<details>
-<summary>Can I use the original products’ accounts or cloud features?</summary>
-
-OMAA uses DSH models and credentials; it does not log into or proxy the five official clients. Consult each preset’s documentation for available features.
+Presets change the way of working and the theme. Change the model in DSH's model picker; one that supports tool calls works best.
 
 </details>
 
 <details>
-<summary>Will updating or uninstalling delete conversations?</summary>
+<summary>Can I use the original products' accounts or cloud features?</summary>
 
-Retain the profile and data directory when updating. Uninstalling does not actively delete DSH conversations or workspace files. Preferences, checkpoints and the Pi extension allowlist remain under `DSH_HOME/omaa`. [Installation and maintenance](docs/install.md)
+No. OMAA uses DSH's models and keys and never signs in to or proxies the five official clients. What each preset can do is in the [guide](docs/frontend-workbench.md).
 
 </details>
 
-## Contributing and licensing
+<details>
+<summary>Does upgrading or uninstalling delete conversations?</summary>
 
-[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [Source materials](docs/product-sources.md)
+No. Upgrading keeps your profile and data. Uninstalling never deletes DSH conversations or workspace files; preferences, checkpoints and the Pi extension allowlist live in `DSH_HOME/omaa` and stay. See the [installation guide](docs/install_EN.md).
 
-Original code uses [Apache-2.0](LICENSE). Third-party code and materials retain their own terms and attribution, including the limitations around Cursor samples. See [LICENSING.md](LICENSING.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+</details>
 
-## Documentation and support
+## Development and license
 
-| I want to | Where to go |
-| --- | --- |
-| Install, update or remove | [Installation guide](docs/install.md) |
-| Learn the features and limits | [Documentation](docs/frontend-workbench.md) |
-| Read release changes | [Releases](https://github.com/gulagala001/oh-my-agents-above-all/releases) |
-| Report a problem | [Issues](https://github.com/gulagala001/oh-my-agents-above-all/issues) |
+[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [Sources](docs/product-sources.md)
 
-For a bug report, include the full DSH and plugin versions, the entry point, minimal reproduction steps, and expected versus actual behavior. Remove private data before sharing logs or screenshots.
+Original code is licensed under [Apache-2.0](LICENSE). Third-party code and materials keep their own licenses and attribution; pay particular attention to the terms for the Cursor samples. See [LICENSING.md](LICENSING.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-<p align="center"><a href="#readme-top">Back to top</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/releases">Versions and downloads</a> · <a href="https://github.com/gulagala001/oh-my-agents-above-all/issues">Feedback</a></p>
-
-[Documentation structure and contributing](docs/documentation.md)
+When reporting a problem, include your DSH and plugin versions, the preset, the steps, and what you expected versus what happened. Remove personal data from logs and screenshots first: [Issues](https://github.com/gulagala001/oh-my-agents-above-all/issues).

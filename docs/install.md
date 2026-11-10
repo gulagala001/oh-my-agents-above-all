@@ -1,69 +1,59 @@
-# 安装、更新与卸载
+# 安装 OMAA
 
-OMAA 使用 DSH 已配置的模型、工具、权限与会话，无需登录五个产品的官方客户端。OMAA **0.17.0** 精确匹配 DSH **0.2.2-rc.1**；rc.1 继续使用已有 OMAA **0.16.5**。独立使用 OMAA 不需要 OMD；可选增强配对同宿主 OMD **0.100.0**。[功能边界](compatibility.md) · [更新记录](../CHANGELOG.md)
+[English](install_EN.md) · [返回首页](../README.md)
 
-<a id="ai"></a>
-## 方法一：复制给 AI 安装
+需要 DSH **0.2.2-rc.1** 和 Node.js **24.9.0+**。
 
-把下面整段复制给能操作你电脑或服务器的 AI：
+## 在 DSH 里安装
 
-```text
-请帮我安装或更新 OMAA（Oh My Agents Above All）。先读取
-https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md
-确认实际使用的是 DSH 桌面版还是 Web 版、完整宿主版本、profile、DSH_HOME 和数据目录。
-使用本页匹配该宿主的固定 GitHub Release 包，通过 DSH 原生插件管理器安装；不要安装同名 npm 包或混用宿主版本。
-先备份现有配置，保留会话、模型配置、第三方插件和数据，不强制中断正在执行的任务。
-DSH 0.2.2-rc.1 使用 OMAA 0.17.10；DSH 0.2.1-rc.1 使用已有 OMAA 0.16.5。
-我已有 OMD 时保留它；需要可选增强时按同一宿主的 OMD 安装说明配对。不要为了装插件自行升级或替换宿主。
-完成后只重启实际更新的实例，确认已安装版本和插件入口，告诉我结果。
-```
-
-<a id="gui"></a>
-## 方法二：在“添加插件”中安装
-
-1. 打开 DSH 左侧 **插件**，点击右上角 **＋ 添加插件**。
-2. 根据实际 DSH 完整版本，复制下方对应地址，粘贴进包名／GitHub 仓库／本地路径输入框。
-3. 点击 **安装**。任务结束后重启对应实例，保留原 profile 和数据目录。
-
-**DSH 0.2.2-rc.1 → OMAA 0.17.10：**
+打开 **插件 → ＋ 添加插件**，粘贴：
 
 ```text
 https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz
 ```
 
-**DSH 0.2.1-rc.1 → OMAA 0.16.5：**
+等手头的任务跑完，按提示启用或重启 DSH。校验文件：[SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/SHA256SUMS)。
+
+## 用命令行安装
+
+用同一个 DSH 自带的命令行，把 `web` 换成你的 profile（桌面版是 `desktop`）：
+
+```bash
+dsh plugin --profile web add "https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz"
+```
+
+不需要 OMD 也能单独用；同时装了 OMD 的话，请选同一个 DSH 版本的 [OMD](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)。其他 DSH 版本请到 [Releases](https://github.com/gulagala001/oh-my-agents-above-all/releases) 找对应的包，版本不一致的包不要混装。
+
+## 开启和关闭预设
+
+装好后预设全部关闭。到 **设置 → OMAA** 开启想用的预设，选择保存在 `DSH_HOME/omaa/presets.json`，重启后沿用。
+
+关闭预设时会话、检查点和个人设置都保留；这个预设还有任务在跑或排队时不能关，等任务结束再试。关掉后，用这个预设的旧会话要重新开启它才能继续。如果你把某个预设设成了 DSH 的默认预设，先在 **Agent 预设** 里换一个默认，再关闭它。
+
+## 复制给 AI
+
+也可以把下面这段发给 DSH 里的 AI，让它帮你装：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.1-rc.1.omaa.0.16.5/oh-my-agents-above-all-0.2.1-rc.1.omaa.0.16.5.tgz
+请把 OMAA 安装到我现在用的 DSH profile：
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz
+先确认 DSH 是 0.2.2-rc.1、Node.js 是 24.9.0 以上。
+保留原来的配置、会话、模型设置和其他插件，不要升级 DSH；需要重启时先确认没有任务在跑。
+装好后确认 设置 → OMAA 能打开。
 ```
 
-[rc.3 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.2-rc.1.omaa.0.17.10) · [rc.1 发行与校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/tag/v0.2.1-rc.1.omaa.0.16.5) · [可选 OMD 增强安装](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)
+## 升级和回退
 
-0.17.0 安装后只加载基座，全部预设默认关闭；在 **设置 → OMAA → 代理预设** 中分别开启 Codex、Grok Build、Cursor、Pi 或 ZCode，开启后再到新会话选择。升级保留已明确保存的预设选择。
+先备份 profile 和 `DSH_HOME/omaa`，再用新版安装包覆盖安装，DSH 本身不用动。升级失败时原有数据不受影响，把第一条报错发到 [Issues](https://github.com/gulagala001/oh-my-agents-above-all/issues)。
 
-开关保存在当前 `DSH_HOME/omaa/presets.json`，重启沿用明确保存的选择。开启预设不会改变 DSH 默认预设。关闭时保留会话、检查点、记忆和个人设置；有运行中或排队的相关任务时拒绝关闭，等待任务结束后可重试。关闭后的旧预设会话需重新开启对应预设才能继续执行，历史仍由宿主保留。若该预设已被手动设为 DSH 默认，先在「Agent 预设」选择其他默认值，再关闭。
-
-更新沿用同一安装入口；不要根据 GitHub latest 混用不同宿主包。
-
-<details>
-<summary>可选：Web／CLI 安装</summary>
-
-使用正在运行实例对应的 DSH 命令、profile 和 DSH_HOME。例如 rc.3 的 web profile：
-
-```sh
-dsh plugin --profile web add https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.1.omaa.0.17.10/oh-my-agents-above-all-0.2.2-rc.1.omaa.0.17.10.tgz
-```
-
-需要校验时，在发行页下载同名 `.sha256` 与 `.metadata.json`。macOS/Linux 可用 `shasum -a 256 -c`，Windows 可用 `Get-FileHash -Algorithm SHA256`。
-
-</details>
+想回到旧版，就装回之前的安装包。回退只换代码，新版写入的数据不会自动撤销。
 
 ## 卸载
 
-Desktop 在原生插件管理器移除；Web/CLI 使用安装时的 profile：
+在插件页移除，或运行：
 
-```sh
+```bash
 dsh plugin --profile web remove oh-my-agents-above-all
 ```
 
-卸载不会删除 DSH 会话和工作区。插件偏好、文本检查点、Pi 派生分支上下文及保存的扩展白名单位于 `DSH_HOME/omaa`，不会自动清空；原生会话 journal 由宿主管理。
+然后重启 DSH。偏好、文件检查点、Pi 分支上下文和扩展白名单在 `DSH_HOME/omaa` 里，会留着，不需要可以手动删除。DSH 会话和工作区文件不受影响。

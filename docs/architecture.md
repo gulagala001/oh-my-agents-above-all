@@ -18,7 +18,7 @@ Pi 自定义条目与尚未投递的消息使用原生 `appendPluginRecord` 的 
 
 Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯投影函数由固定 `session-manager.ts`／`messages.ts` 构建为 `lib/pi-session-projection.mjs`。后续 Pi 请求和预览应用该记录，可见消息原生副本仅为带条目 ID 的展示回执。新生命周期在原生 turn 结束／下一次调度判定之间等待，继续使用同一 inbox；续跑的空隐藏调度回执不进入模型。取消撤销未提交批次，并在有界通知后关闭 guest。此持久投影属于 Pi 请求边界，未改写共享原生日志解释器；Pi 同会话树通过 plugin:omaa/pi-tree 原子保存叶子、摘要与标签；压缩从同一有效路径准备材料并沿用 boundary 事务。原始表面与用量不复制，前端树面板展示活动路径。
 
-除 Pi 使用原厂分支投影和扩展控制的独立压缩策略外，可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor-rules.md)。
+除 Pi 使用原厂分支投影和扩展控制的独立压缩策略外，可靠的产品摘要指令仅替换 DSH 原生 `purpose: compaction` 请求的最后一条摘要指令。压缩引擎、模型请求、事务、工具配对和日志仍属于 DSH；没有可靠摘要原文的产品沿用宿主默认指令。Cursor 的 MDC 附加与按需规则工具见 [规则契约](products/cursor.md#cursor-项目规则)。
 
 ## 状态与恢复
 
@@ -26,7 +26,7 @@ Pi 边界草稿使用单个 `plugin:omaa/pi-boundary` 记录保存，原厂纯�
 
 消息、工具、计划模式和执行恢复使用 DSH 日志。宿主当前拒绝未知自定义 journal 事件，主题、基础增强和执行/Ask 偏好由 `src/host/preferences.mjs` 在 `DSH_HOME/omaa/preferences/` 按会话原子保存，文件名使用会话 ID 的 hash；多个 profile 不互相覆盖其它会话的记录。高级工作方式复用 OMD 的模式持久化，不另存一份 OMAA 高级状态或执行历史。
 
-Cursor 文件检查点补充保存受支持文件工具调用前后的实际字节与边界信息，位于 `DSH_HOME/omaa/checkpoints`。查看复用原生变更信息，恢复要求会话空闲并核对文件/目录身份、当前内容及冲突，保留消息；shell 任意副作用不视为可恢复快照。限制见 [检查点契约](products/checkpoints.md)。
+Cursor 文件检查点补充保存受支持文件工具调用前后的实际字节与边界信息，位于 `DSH_HOME/omaa/checkpoints`。查看复用原生变更信息，恢复要求会话空闲并核对文件/目录身份、当前内容及冲突，保留消息；shell 任意副作用不视为可恢复快照。限制见 [检查点契约](products/cursor.md#cursor-文件-checkpoints)。
 
 Pi 跨会话分叉服务调用原生 `sessionController.list/inspect/fork`，原生 parent 关系和不同 sessionId 构成界面树；可选位置限定为已完成回合，空闲及 journal head 检查保护分叉。所有分支共享目录，切换不回滚文件。`withSummary` 默认关闭；开启后用当前会话模型/API及完整 Pi 分支摘要指令总结所选位置之后的后缀，隐藏 reasoning 不入材料，工具结果限 2000 字符、尾部材料预算 100000 字符。不完整摘要拒绝创建分支。有界 60000 字符的继承/新增摘要 capsule 位于 `DSH_HOME/omaa/pi-branch-context`，通过原生 `systemPrompt.context` 入账并可冷读取；源 journal 保留，没有第二执行日志。同会话树另用原生插件记录保存导航，不写原厂 JSONL 文件。具体差异见 [Pi 契约](products/pi.md)。
 
@@ -54,7 +54,7 @@ ZCode profile 使用原生 continuable 子会话保存人格、模型和工具�
 
 `/omaa/api/session` 的 `enhancementWorkMode` 接受 `off | ultra`，`enhancementWorkSubmode` 接受 `workflow | team | free`。开启 Ultra 需要兼容增强、可用的工作方式接口与空闲执行模式；关闭增强同时关闭高级方式。Ask／Plan 不启动 Ultra；模式与 provider、model 继续沿用宿主会话。运行时行为和使用条件见[兼容说明](compatibility.md)。
 
-composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 profile；不承诺无重载热换 engine。接线状态见 [增强边界](omd-enhancement-boundary.md) 和 [产品边界](compatibility.md)。
+composition 在 profile 加载时选择。OMD 动态安装或卸载后须重载 profile；不承诺无重载热换 engine。版本与兼容见[使用指南](frontend-workbench.md#版本与兼容)。
 
 ## 分宿主构建
 
@@ -86,3 +86,11 @@ Grok 文档工具先通过原生 fs 解析、授权与限量读取，再将字�
 Codex／Cursor 审阅分别使用认证 `/omaa/api/codex-review`、`/omaa/api/cursor-review`。`kind=editors` 只列固定编辑器身份，`action=open-editor` 校验真实比较或已保存批注及当前工作目录，经原生 composed filesystem 验证本机路径后，匹配唯一行上下文并以独立 argv 交给已检测的程序。新批注的可选 `anchor` 与原记录原子保存，旧记录可在原比较仍在时补取；不会修改原批注位置。该操作不启动模型、不更改运行模式，连接断开与插件卸载取消尚未发出的请求。
 
 两种审阅面板共同消费固定 FileDiff，生成器仅增加行号批注与块标题操作插槽。Codex 的文件／块动作仍交给 `/omaa/api/git-review`，读取中的操作、无权限动作和过期 revision 均拒绝；保存和回合收尾交错时延后刷新，避免把未完成的写入误报为读取失败。
+
+## 各预设的来源与适配
+
+- [Codex](products/codex.md)
+- [Grok Build](products/grok.md)
+- [Cursor](products/cursor.md)（含项目规则与文件检查点）
+- [Pi Coding Agent](products/pi.md)、[Pi 本地扩展](products/pi-extensions.md)
+- [ZCode](products/zcode.md)

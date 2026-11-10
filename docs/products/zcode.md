@@ -4,7 +4,7 @@
 
 ## 固定来源与完整装配
 
-官方来源为 [zai-org/ZCode](https://github.com/zai-org/ZCode)，Apache-2.0。当前工作流编译器、运行图、记忆与 profile 解析固定到 3.15.1／`aac4755666d09fdcd70272fcf063c077a639015f`；仍使用的早期提示与 UI 辅助源码保留在 3.14.3／`29628c9acdb81b703bbd4080c207a0e7ce5e276e` 快照中。具体入口、原文、逐文件哈希、许可证及适配说明见 `src/presets/zcode/sources/source.json` 与 `build-inputs.json`。宿主 SDK 精确绑定 DSH `0.2.1-rc.2`。
+官方来源为 [zai-org/ZCode](https://github.com/zai-org/ZCode)，Apache-2.0。当前工作流编译器、运行图、记忆与 profile 解析固定到 3.15.1／`aac4755666d09fdcd70272fcf063c077a639015f`；仍使用的早期提示与 UI 辅助源码保留在 3.14.3／`29628c9acdb81b703bbd4080c207a0e7ce5e276e` 快照中。具体入口、原文、逐文件哈希、许可证及适配说明见 `src/presets/zcode/sources/source.json` 与 `build-inputs.json`。宿主 SDK 精确绑定当前 DSH 版本。
 
 真正入口是 [context/builder.ts](https://github.com/zai-org/ZCode/blob/29628c9acdb81b703bbd4080c207a0e7ce5e276e/apps/zcode-cli/packages/core/src/context/builder.ts)，不是单独的身份句。默认交互主代理依次构造：CLI prefix、identity、desktop（仅 zcode_desktop surface）、dynamic behavior、session guidance、memory/environment/output style/context management/git；技能、用户与项目资料、日期另作 meta-user attachment。工具说明经模型请求的 tools 字段提供，不镜像到 system。
 
@@ -39,13 +39,13 @@ ZCode 的显式 workflow 已接入实际 DSH `workflow-ptc` 和原生子代理/�
 
 `agent(name, persona?)` 返回一个角色 Actor，`await actor.ask<T>(instructions)` 使用原厂合成的结果 schema；同一 Actor 的提问串行排队并复用同一个原生 continuable 子会话，不为每次提问另开上下文。类型化结果必须通过实际 `submit_result` 校验，并等原生工具成功结果、外层调用成功及关联回合完成后提交；无类型参数或 T=string 时返回完成后的助手文字。角色原文保存于宿主会话中的插件记录，历史 descriptor 仍可读取，字面模板字符在子会话冷恢复后仍保留。脚本正常返回后，未完成提问被取消并等待原生资源收束；普通提问失败可以 catch 后继续。后台工作使用实际 native job，父会话切到 Ask/Plan、变更权限或停止作业时取消并 drain 对应子会话。
 
-支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。0.7 接入文件／Git／world，0.8 接入产物；0.9.0 接入下述运行图和 successor-run Amend。自动专家/planner/critic、原厂审批、完整模型网络状态与运行日志重放仍有差异。
+支持 `phase`、`log`、`report`、`args`，返回原厂静态 graph/causality 数据；报告保留原版 256 项及每项 32 KiB 上限。已接入文件／Git／world、产物，以及下述运行图和 successor-run Amend。自动专家/planner/critic、原厂审批、完整模型网络状态与运行日志重放仍有差异。
 
 类型化子任务采用固定 3.15.1 的结果归一化与修复规则：原值不符合 schema 且是字符串时仅解码一次 JSON；前三次无效提交允许修复，第四次以 `ValidationFailed` 结束该 ask。模型结束回合但未交结果时，在同一子会话中补问一次，再次漏交返回 `ResultNotSubmitted`。脚本可以 catch 这两类失败并继续其他工作；预算按 ask 重置，补交不重新占用并发名额，也不重置提问预算。同一 Actor 的并发 ask 按 FIFO 处理并保留此前工具结果，独立 Actor 的任务上下文互不混入。
 
 入口仍为加载 `zcode-workflows` 后调用 `create_workflow`／`run_saved_workflow`，工作流卡片和右侧运行面板显示实际修复、补交及回合／工具进度。已完成的补交交换保存原始接纳消息、补交消息与两个原生回合边界；`resume_workflow` 冷恢复不重跑已确认的读文件、修复或补交，`amend_workflow` 后续任务继承完整的已完成前缀。停止补交中的后台作业会中断并收束真实子会话；只有完整核验、仍允许导入的已取消交换能作为修订上下文，结果不明时拒绝自动重跑。
 
-### OMAA 0.7.0 的 world facade
+### world 接口
 
 TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep(pattern, glob?)`，以及 `git.changedFiles(base?)`、`git.diff(base?, path?)`、`git.status()`、`git.log(count?)`、`world.run(cmd, args?, opts?)`。`world.run` 的 cmd 必须是原厂编译器可收集的字面命令；动态命令在编译时诊断，执行时再次核对已声明集合。args 是字符串数组，opts 可指定正整数 `timeoutMs`。命令直接按 argv 执行；非零退出返回 `{exitCode, stdout, stderr}`，超时、驱动失败和超限才抛出错误，脚本可 catch 其 `code`。
 
@@ -59,14 +59,13 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 `read_session_context` 读取用户明确引用的原生 session id，使用公开 `sessionController.inspect`，支持冷历史且不激活/修改原会话。原厂相关度评分、中文 query 拆词、tail/chunk 选择、上下文格式及预算函数来自固定完整 `session-context/read-session-context.ts`，在 build 时仅替换 native message/part 边界并编译，不概括重写算法。读取只收集可见用户/助手文本与实际工具结果，忽略系统注入和思维块；历史内容作为背景材料。默认使用当前已配置 DSH 模型做有界提取，大历史按原策略选择最多五块后合成；提取不可用返回有界原文，标明 fallback。原厂 lite 模型路线改为现有 DSH route，原生日志查询和历史层不替换。
 
-## 桌面交互依据与验证范围
+## 桌面交互来源
 
-官方 desktop context 明确本地 URL、绝对文件链接及 inline code comment 指令。保存的 UI 来源还包括 plan-guidance renderer、edit diff renderer、ToolSummaryRow、create-workflow renderer 和 WorkflowPermissionBlock，可分别回查计划展示、文件差异、工具折叠/状态和 workflow 审批。它们是固定官方源码证据，**来源本身不是截图/点击验收**；预设主题已有独立来源，新增产物界面的实际 Web 验证见下节。
+官方 desktop context 明确本地 URL、绝对文件链接及 inline code comment 指令。保存的 UI 来源还包括 plan-guidance renderer、edit diff renderer、ToolSummaryRow、create-workflow renderer 和 WorkflowPermissionBlock，可分别回查计划展示、文件差异、工具折叠/状态和 workflow 审批。它们是固定的官方源码，预设主题另有独立来源。
 
 工具与模式的行为以实际宿主为准；完整原厂客户端、云服务、账户体系和内部执行引擎不作为此预设的运行依赖。
 
-
-## OMAA 0.8.0 的工作流产物
+## 工作流产物
 
 来源仍固定在 ZCode `29628c9`：新增 17 份原始 bytes 快照，包含发布、spec/primary 校验、UI preset 与图表依据。`scripts/build-zcode-artifacts.mjs` 派生七个纯模块，保留原厂 validator、JSON probe、parse/fold/palette 算法；宿主存储、授权和界面接线另作适配，不导入原厂 engine 或第二种 journal。
 
@@ -76,13 +75,13 @@ TypeScript 路径支持 `files.glob(pattern)`、`files.read(path)`、`files.grep
 
 原生 Domain `omaa_zcode_workflows` 仅保存小 summary。完整 metadata、成功版本与报告使用 DSH 原生 content-addressed 文件附件 refs，不建立自己的 blob 存储，不改 native journal 格式。读取按当前 session、run、version 授权，跨 session 请求拒绝；整个宿主冷启动后只读查找仍能取回原快照，不激活原会话、不追加 native 事件。文件通过 `fileHostPath` 指向不可变快照，沿用原生 Text/Markdown/文档预览。
 
-独立“工作流产物”右栏可从工具结果“查看产物”进入，按 run 导航并请求真实 native Stop。可见时读取采用单飞、pending 重读及过期响应过滤。Chart 保留完整原厂 ChartView，使用固定 Recharts 3.8.0，以 lazy 和局部错误边界加载；Table/Metrics/Board 使用原 parse/fold/palette 并适配 DSH CSS。0.8.0 的 graph 只展示真实静态 graph/causality JSON；0.9.0 新增下述原版运行投影与 Amend，仍不提供原厂 engine journal/replay。
+独立“工作流产物”右栏可从工具结果“查看产物”进入，按 run 导航并请求真实 native Stop。可见时读取采用单飞、pending 重读及过期响应过滤。Chart 保留完整原厂 ChartView，使用固定 Recharts 3.8.0，以 lazy 和局部错误边界加载；Table/Metrics/Board 使用原 parse/fold/palette 并适配 DSH CSS。graph 展示静态 graph/causality JSON，运行投影与 Amend 见下文；不提供原厂 engine journal/replay。
 
-### OMAA 0.9.0 的原版运行投影与时间线
+### 原版运行投影与时间线
 
 当前 Timeline 与 WorkflowRunPhaseList 使用固定 3.15.1 的真实组件、样式与中英 locale。`scripts/build-zcode-run-projection.mjs` 校验固定来源并派生运行投影；可见图、Actor 进度、日志与状态来自实际宿主执行记录。
 
-### OMAA 0.9.0 的修订与完成前缀缓存
+### 修订与完成前缀缓存
 
 `amend_workflow` 的 `run_id` 必须属于当前 session。`script` 与 `path` 二选一，均省略则读取归档正文；省略 name、args、max_concurrency 沿用原值。先编译及核对归属／可读缓存，成功后才停止前驱、等待原生任务收束并创建 successor。旧、新运行分别保存 `supersededBy`、`resumedFrom`，右栏提供前次／后续入口。同 run 仅 `run_id + max_concurrency` retune：限制 live ask，同时保留 Actor FIFO；降低上限不取消已有任务。
 
@@ -104,7 +103,7 @@ world 按 `{op,args}` 与准入出现顺序复用；cached world.run 不再执�
 
 填写界面拒绝非有限数字和超出安全范围的显式整数；校验后的 number／json 字面材料保留在用户请求中，包括 `-0` 和科学计数写法，string／boolean 正常编码。默认值继续省略并交给当前后端定义处理，不扩展任意精度计算契约。六个 ZCode 工具结果卡采用宿主公共槽位的低优先级注册，默认优先级的同名第三方结果卡保持优先；不兼容的结果结构只显示原始文本，不提供读取、运行或产物跳转按钮。
 
-每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。文件/Git/world.run facade 在 OMAA 0.7.0 接入；0.8.0 已接入产物；0.9.0 已接入上述 Amend；完整 journal/replay 和独立保存管理页面仍有差异，不靠文件扩展名宣称等价。
+每文件最多 256 KiB，每目录及目录表最多 256 条，列表累计读取最多 1 MiB。超过限制明确报告，不把静默截断当完整目录。定义档和原生运行记录是不同资料。完整 journal/replay 和独立的保存管理页面尚未提供。
 
 `test/installed-saved-workflows.test.mjs` 已在隔离原版 DSH 的实际工具循环中核对保存门、native write、冷启动列举、坏文件诊断、参数默认／错误、native workflow lifecycle 及 Ask 拒写；没有扩五预设长任务矩阵，也不据此推定真实模型工程质量。
 

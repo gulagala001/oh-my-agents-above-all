@@ -60,4 +60,4 @@ CLI 观测只说明前景/背景与 ANSI 色位依赖终端上下文，不能解
 node --test test/cursor-theme-evidence.test.mjs
 ```
 
-历史 probe 仅采集未登录首屏，不是 OMAA 的执行器或主题安装步骤；config/data 和凭据不进入发行资产。桌面布局的验收使用 OMAA 在实际 DSH 会话中的截图与点击结果。
+历史 probe 仅采集未登录首屏，不是 OMAA 的执行器或主题安装步骤；config/data 和凭据不进入发行资产。桌面布局以 OMAA 在实际 DSH 会话中的截图和点击结果为准。
