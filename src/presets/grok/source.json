@@ -794,7 +794,7 @@
       "Listings use real catalog session binding/status, retain ordinary reminders, enforce 50 rows/24000 UTF-8 JSON bytes and label separate current reads. Native task controls outside adapter creation remain host-owned."
     ],
     "relatedModulesSha256": {
-      "src/presets/grok/schedule-runtime.mjs": "3be49c5b2fad08512ff3465bd6dedda41925eabd6400fde89055aa3814ba7a21",
+      "src/presets/grok/schedule-runtime.mjs": "6a7790b07504920ab5bb5e0c9fc82859e17f427dc2054a69124921d00879ae4b",
       "src/presets/grok/schedule-expiry.mjs": "aefb4e9e3470ec0fd3bc792c25db4dbafffa2eff078ffe2f9b8435fc6c7ba491",
       "src/host/grok-schedule-records.mjs": "67cd6deaa245f3760df4d98daaeae99892249af833121d5132c96656a062da4b",
       "src/presets/grok/completion-preview.mjs": "9e4c406f1a7d79afab67b17e46c4369eafe24d9ef6666aa50dcf17530c874f11",

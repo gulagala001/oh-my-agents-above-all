@@ -56,12 +56,18 @@ function checkedToolFilter(filter) {
 // through the same literal prompt hook on the first request and cold resume.
 export async function startActivation(ctx, spec) {
   const originalRequest = spec.request;
-  const agentOptions = originalRequest && ctx.get('omaaOutputLimits')?.inheritOptions(originalRequest.parent, originalRequest.agentOptions);
+  const agentOptions = originalRequest && ctx.get?.('omaaOutputLimits')?.inheritOptions(originalRequest.parent, originalRequest.agentOptions);
   if (agentOptions !== undefined && agentOptions !== originalRequest.agentOptions) spec = { ...spec, request: { ...originalRequest, agentOptions } };
   if (typeof ctx.subagents.startActivation === 'function') {
     const { persona, toolFilter, ...request } = spec.request;
+    const start = childId => {
+      const { request: _request, ...activation } = spec;
+      const options = childId === undefined ? activation : { ...activation, childId };
+      return ctx.subagents.startActivation(typeof ctx.subagents.namesOf === 'function'
+        ? { ...request, ...options } : { ...options, request });
+    };
     const restriction = toolFilter === undefined ? undefined : checkedToolFilter(toolFilter);
-    if (persona === undefined && restriction === undefined) return ctx.subagents.startActivation({ ...spec, request });
+    if (persona === undefined && restriction === undefined) return start(spec.childId);
     if (typeof sessionSdk.appendPluginRecord !== 'function') throw new Error('The host cannot persist an Actor persona.');
     const childId = spec.childId ?? randomUUID();
     const remove = ctx.on('agent/created', ({ agent }) => {
@@ -72,12 +78,19 @@ export async function startActivation(ctx, spec) {
         });
       }
     }, { global: true, prepend: true });
-    try { return await ctx.subagents.startActivation({ ...spec, childId, request }); }
+    try { return await start(childId); }
     finally { remove(); }
   }
   const { delivery: _delivery, request: original, ...continuable } = spec;
   const { cwd: _cwd, ...request } = original;
   return ctx.subagents.startContinuable({ ...continuable, request });
 }
-export const drainChildren = (ctx, parent, ids) => typeof ctx.subagents.drainChildren === 'function'
-  ? ctx.subagents.drainChildren(parent, ids) : ctx.subagents.drainContinuableChildren(parent, ids);
+export async function drainChildren(ctx, parent, ids, activations = []) {
+  if (typeof ctx.subagents.drainChildren === 'function') return ctx.subagents.drainChildren(parent, ids);
+  if (typeof ctx.subagents.drainContinuableChildren === 'function') return ctx.subagents.drainContinuableChildren(parent, ids);
+  // On rc.2 drainDescendants closes the entire parent tree. Each Actor keeps
+  // its own activation handle, including after result settlement.
+  const results = await Promise.allSettled(activations.map(activation => activation.dispose()));
+  const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
+  if (errors.length) throw new AggregateError(errors, 'Native child cleanup failed.');
+}

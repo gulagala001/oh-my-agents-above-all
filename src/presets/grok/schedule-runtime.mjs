@@ -19,6 +19,11 @@ const reason = text => String(text).slice(0, 512);
 const instant = text => typeof text === 'string' && /^\d{4}-/.test(text)
   && Number.isFinite(Date.parse(text)) && new Date(Date.parse(text)).toISOString() === text;
 const markerFor = () => `[OMAA GROK DISPATCH ${randomUUID()}]\nThis is an adapter dispatch reference. It contains no task instructions. If the owning adapter is unavailable, report that scheduled dispatch is unavailable and do not infer a task.`;
+const relayReference = (owner, occurrenceAt) => continuationReference(owner) + '\nScheduled occurrence: ' + occurrenceAt;
+function isScheduleRelay(input, parentId, reference) {
+  return input.source.kind === 'agent-message' && input.source.form === 'relay' && input.source.senderSessionId === parentId
+    && input.content.length === 2 && input.content[1].type === 'text' && input.content[1].text === reference;
+}
 const scheduleIdentity = service => sessionSchedule(service);
 const ownKeys = (row, names) => row && typeof row === 'object' && !Array.isArray(row)
   && Object.keys(row).sort().join(',') === [...names].sort().join(',');
@@ -424,7 +429,8 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
             for (const message of messages) if (message.id === anchor.acceptedMessageId) {
               if (!anchor.inputSha256 || contentHash(message.content) !== anchor.inputSha256) throw Error('Stored original inbox input does not match actual acceptance.');
               if (anchor.executionMode === 'continuation' && (message.source.kind !== 'omaa-grok-schedule'
-                || message.content.length !== 1 || message.content[0].type !== 'text' || message.content[0].text !== continuationReference(owner)))
+                || message.content.length !== 1 || message.content[0].type !== 'text' || message.content[0].text !== continuationReference(owner))
+                && !isScheduleRelay(message, owner.sessionId, relayReference(owner, anchor.occurrenceAt)))
                 throw Error('Stored continuation inbox input is not the original inert reference.');
               inserted++;
             }
@@ -486,6 +492,9 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
     catch { signal.throwIfAborted(); return { executionMode: 'fresh-fallback', iteration: 1, chainReason: 'previous-transcript-unverified' }; }
     if (chain.iterations >= FRESH_CHAIN_EVERY) return { executionMode: 'fresh', iteration: 1, chainReason: 'ten-iteration-rollover', priorSummary: anchor.summary };
     try {
+      if (typeof subagents.namesOf === 'function' && typeof subagents.sendMessage === 'function') {
+        return { executionMode: 'continuation', iteration: chain.iterations + 1, chainReason: 'completed-chain', childId: chain.childId, prefixProof, relay: true };
+      }
       hostSeam ??= await import('@deepseek-ai/dsh-subagent/internal');
       if (typeof hostSeam.queueHostSubagentPrompt !== 'function' || typeof subagents[hostSeam.deliverSubagentPrompt] !== 'function'
         || typeof subagents.drainChildren !== 'function') throw Error('Native host continuation seam is unavailable.');
@@ -500,7 +509,13 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
         if (pending.endInfo || children.get(pending.childId) !== pending || runEpochs.get(pending.childId) !== pending.runInfo?.runId
           || ctx.agents.get(pending.childId) !== pending.runAgent || ctx.agents.get(pending.scope.agent.id) !== pending.scope.agent
           || pending.runAgent?.session.header.parentSession !== pending.scope.agent.id || !pending.protectable) return Promise.resolve();
-        const result = subagents.drainChildren(pending.scope.agent, [pending.childId]);
+        let result;
+        if (pending.relayText) {
+          subagents.interrupt(pending.childId, { kind: 'ancestor', agent: pending.scope.agent });
+          result = pending.ended.promise;
+        } else {
+          result = subagents.drainChildren(pending.scope.agent, [pending.childId]);
+        }
         const hold = Promise.resolve(result).finally(() => { if (draining.get(pending.childId) === hold) draining.delete(pending.childId); });
         draining.set(pending.childId, hold); return hold;
       } };
@@ -564,7 +579,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
     const pending = children.get(info.id);
     if (!pending || !pending.runInfo || pending.runInfo.runId !== info.runId) return;
     if (runEpochs.get(info.id) === info.runId) runEpochs.delete(info.id);
-    pending.endInfo = { ...info }; endChild(pending);
+    pending.endInfo = { ...info }; pending.ended?.resolve(); endChild(pending);
   }, { global: true });
   on('session/event', (session, event) => {
     completions.observe(session, event);
@@ -699,9 +714,15 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
         let activation, messageId;
         if (choice.executionMode === 'continuation') {
           if (ctx.agents.get(childId) || draining.has(childId)) throw Error('Another activation won the continuation admission race.');
-          messageId = await hostSeam.queueHostSubagentPrompt(subagents, agent, childId, [{ type: 'text', text: continuationReference(owner) }],
-            { kind: 'omaa-grok-schedule', form: 'notice', summary: boundContextSummary('Scheduled Grok iteration reference'),
-              taskId: owner.id, occurrenceAt: occurrenceAt, originalMessageId: origin.message.id, originalSource: origin.message.source }, scope.signal);
+          const notice = { kind: 'omaa-grok-schedule', form: 'notice', summary: boundContextSummary('Scheduled Grok iteration reference'),
+            taskId: owner.id, occurrenceAt, originalMessageId: origin.message.id, originalSource: origin.message.source };
+          if (choice.relay) {
+            pending.ended = Promise.withResolvers();
+            pending.relayText = relayReference(owner, occurrenceAt);
+            pending.notice = notice;
+            messageId = await subagents.sendMessage(agent, childId, [{ type: 'text', text: pending.relayText }], { signal: scope.signal });
+          } else messageId = await hostSeam.queueHostSubagentPrompt(subagents, agent, childId, [{ type: 'text', text: continuationReference(owner) }],
+            notice, scope.signal);
         } else {
           pending.callerDelivery = typeof subagents.startActivation === 'function';
           activation = await startActivation({ subagents, get: name => optional(agent, name) }, {
@@ -798,8 +819,8 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
     if (decision.kind !== 'enter') return decision;
     const child = children.get(agent.id);
     if (child?.executionMode === 'continuation') {
-      const ownReference = input => input.source.kind === 'omaa-grok-schedule' && input.source.taskId === child.id
-        && input.source.occurrenceAt === child.occurrenceAt;
+      const ownReference = input => child.relayText ? isScheduleRelay(input, child.scope.agent.id, child.relayText)
+        : input.source.kind === 'omaa-grok-schedule' && input.source.taskId === child.id && input.source.occurrenceAt === child.occurrenceAt;
       if (decision.messages.some(ownReference)) {
         // Native queue failure waits for child cancellation/drain before it
         // rejects. Observe the real pre-step signal so that cleanup can finish
@@ -808,7 +829,7 @@ export function createGrokScheduleRuntime(ctx, hub, records) {
         const messages = decision.messages.flatMap(input => !ownReference(input) ? [input]
           : admitted && !closed && child.protectable && child.accepted && input.id === child.messageId
             && ctx.agents.get(agent.id) === child.runAgent && runEpochs.get(agent.id) === child.runInfo.runId && !child.scope.signal.aborted
-            ? [{ ...input, content: child.promptContent }] : []);
+            ? [{ ...input, content: child.promptContent, ...(child.notice ? {source: child.notice} : {}) }] : child.relayText && input.id !== child.messageId ? [input] : []);
         return { ...decision, messages: messages.some(input => input.source.kind !== 'runtime-context') ? messages : [] };
       }
     }

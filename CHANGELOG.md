@@ -9,7 +9,8 @@
 ### 问题修复
 
 - 预设启动失败后再编辑设置会保留其他预设。Cursor 审阅批注可以按实际投递结果重试，ZCode 工作流提问后可继续。
-- Pi 能恢复上下文超限，空闲压缩和导航可以完成；回合开始时注册的工具可在本回合调用。
+- Pi 能恢复上下文超限，空闲压缩和导航可以完成，回合开始时注册的工具可立即调用。
+- ZCode 子代理可在取消后释放。Grok 周期任务能继续使用上一次的子会话，并核对每次投递的回执。
 
 <a id="en-01711"></a>
 
@@ -19,6 +20,7 @@
 
 - Keep other presets when settings change after a failed start. Cursor review comments can be retried according to delivery, and ZCode workflows resume after asking their parent a question.
 - Pi recognizes context overflow and completes idle navigation and compaction. Tools registered at turn start are available in that turn.
+- Release ZCode child agents after cancellation. Grok recurring tasks can resume the previous child session and verify delivery for each occurrence.
 
 ## 安装 / Installation
 

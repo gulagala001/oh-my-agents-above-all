@@ -1,3 +1,4 @@
+import { sessionScheduleRow } from '../src/host/native-schedule.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
@@ -116,7 +117,7 @@ test('Grok native schedule receipts bind real immediate and timed children, cold
   });
   await mkdir(evidenceRoot, { recursive: true });
   const saveProgress = phase => writeFile(join(evidenceRoot, 'schedule-progress.json'), JSON.stringify({ phase, evidence, childInputs: children }, null, 2) + '\n');
-  const catalog = async () => (await f.call('schedule/catalog', {})).filter(row => row.sessionId === sessionId);
+  const catalog = async () => (await f.call('schedule/catalog', {})).map(sessionScheduleRow).filter(row => row.sessionId === sessionId);
   const list = async () => {
     const result = await call('scheduler_list', {});
     if (result.isError) {
@@ -235,7 +236,7 @@ test('Grok native origin and external edit checks preserve ordinary reminder aut
   });
   const created = await call('scheduler_create', { interval: '1h', prompt: 'Owned task body' });
   assert.equal(created.isError, false, created.text); const id = created.value.id;
-  const catalog = async () => (await f.call('schedule/catalog', {})).filter(row => row.sessionId === sessionId);
+  const catalog = async () => (await f.call('schedule/catalog', {})).map(sessionScheduleRow).filter(row => row.sessionId === sessionId);
   const original = (await catalog()).find(row => row.id === id);
   const frame = '[SCHEDULE REMINDER]\nThis is a scheduled message from the user\nschedule_id_json: ' + JSON.stringify(id)
     + '\noccurrence_at: ' + original.scheduledAt + '\nreminder_prompt_json: ' + JSON.stringify(original.prompt);

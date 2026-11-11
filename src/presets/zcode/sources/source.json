@@ -5406,7 +5406,7 @@
       "src/presets/zcode/holes-contract.mjs": "3dc3074414d337e8ed2056e611afb27d7865fe6c155150c9a2976640b10165c7",
       "src/presets/zcode/typed-compiler.mjs": "92d1e26d0a99f62ec8c5a04e85377946852f6bb54219f3ce96cfe766a6f70623",
       "src/presets/zcode/typed-workflow.mjs": "33a52c31d8ab73a0d8130267ee43e8f2e9c37d63e017fc0b2ee95624d99c1985",
-      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a",
+      "src/presets/zcode/actors.mjs": "c5efec050bd27843b377eb4ba6d2d9ca961468400b3283348a4b8a773c745c4d",
       "src/presets/zcode/world.mjs": "45dc333b4698de243953a2e571f568a64b9da5d3600e66faea8bcefa87b6c458",
       "src/presets/zcode/artifacts.mjs": "b46522ec56394a93a7cf1bf02a3882a696ef49592d809eaa77c1c79299ca4f9e",
       "src/presets/zcode/workflow.mjs": "8dcdd35d70b8b29312d4eec8692f3b2894d7955d0301f9a6559f2302e65c0ae0"
@@ -5419,7 +5419,7 @@
       "src/presets/zcode/continuity.mjs": "ce188c5074dde41b57c64bc465bfb244e697429c429f4babbfd38dd3ad81a747",
       "src/presets/zcode/continuation-records.mjs": "9e2538fbb86ea363ac4a8bdf3f8542d5b4470c6b8a073ccf5d646843c34eb4e9",
       "src/presets/zcode/run-cache.mjs": "0e64d5a57459512b1cd37b50a06e93e71ae33cf34876c34076c4f2c21a208f79",
-      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a"
+      "src/presets/zcode/actors.mjs": "c5efec050bd27843b377eb4ba6d2d9ca961468400b3283348a4b8a773c745c4d"
     }
   },
   "nativeReplay": {
@@ -5440,7 +5440,7 @@
     "hashes": {
       "src/presets/zcode/replay-journal.mjs": "23a87fe93fbf480dd4dfad9abc759308aec096f453ee2de95ce0976d149a7ef2",
       "src/presets/zcode/typed-workflow.mjs": "33a52c31d8ab73a0d8130267ee43e8f2e9c37d63e017fc0b2ee95624d99c1985",
-      "src/presets/zcode/actors.mjs": "2d4a14e3bd34808618174bbb06558afe37d8effb7cf9b22ef6d386dfc1f18f4a",
+      "src/presets/zcode/actors.mjs": "c5efec050bd27843b377eb4ba6d2d9ca961468400b3283348a4b8a773c745c4d",
       "src/presets/zcode/run-cache.mjs": "0e64d5a57459512b1cd37b50a06e93e71ae33cf34876c34076c4f2c21a208f79",
       "src/presets/zcode/artifacts.mjs": "b46522ec56394a93a7cf1bf02a3882a696ef49592d809eaa77c1c79299ca4f9e",
       "src/presets/zcode/holes.mjs": "6d2d530b918f77e6b94e4dae2f4a5e5da56a2a64a57441c7dc3dd64c2c1821f7",

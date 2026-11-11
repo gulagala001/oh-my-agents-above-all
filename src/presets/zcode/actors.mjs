@@ -398,7 +398,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
                 ...(agentOptions === undefined ? {} : { agentOptions }) }, signal });
               // Retain acceptance before detach: even a local provider cleanup
               // failure cannot erase an already returned native receipt.
-              actor.created = true; pending.accepted = true; pending.messageId = receipt.messageId;
+              actor.activation = receipt; actor.created = true; pending.accepted = true; pending.messageId = receipt.messageId;
               // The a2 result settles after native teardown. Propagate its
               // infrastructure rejection without leaving the ask hung.
               receipt.result?.catch(error => pending.result.reject(error));
@@ -505,7 +505,7 @@ export function createActors({ ctx, parent, sites, askSpecs, signal, progress, r
         actor.pending?.result.reject(Error('Workflow closed.'));
       }
       await Promise.allSettled([...actors.values()].map(a => a.tail));
-      const drained = await attempt(() => drainChildren(ctx, parent, [...children.keys()]));
+      const drained = await attempt(() => drainChildren(ctx, parent, [...children.keys()], [...children.values()].map(actor => actor.activation).filter(Boolean)));
       // Releasing local hooks must not depend on native drain or persistence
       // succeeding. A failed drain never earns a durable successful marker.
       if (drained && persistDrain) await attempt(() => cache?.actorsDrained());

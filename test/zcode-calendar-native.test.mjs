@@ -1,3 +1,4 @@
+import { sessionScheduleRow } from '../src/host/native-schedule.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -132,7 +133,7 @@ test('an ordinary native minute schedule adopts a finite definition and delivers
   const completed = await call('cron_update', { id, title: 'One actual dispatch completed' });
   assert.equal(completed.automation.status, 'CLOSED'); assert.equal(completed.automation.confirmedDispatches, 1);
   assert.deepEqual(delivered, ['CALENDAR_TASK_REAL_CLOCK']);
-  assert.equal((await f.call('schedule/catalog', {})).filter(row => row.sessionId === sessionId && row.status === 'active').length, 0);
+  assert.equal((await f.call('schedule/catalog', {})).map(sessionScheduleRow).filter(row => row.sessionId === sessionId && row.status === 'active').length, 0);
   await call('cron_delete', { id }); assert.deepEqual(f.errors, []);
   if (process.env.OMAA_CALENDAR_EVIDENCE) {
     const path = process.env.OMAA_CALENDAR_EVIDENCE, evidence = JSON.parse(await readFile(path, 'utf8'));
