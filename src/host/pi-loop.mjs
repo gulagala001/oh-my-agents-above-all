@@ -25,7 +25,10 @@ export function installPiLoop(agent, hooks) {
   request.settle = hooks.settle;
   const step = async function(decision) {
     const firstSeq = native.session.seq;
-    const result = await methods.step.call(native, decision);
+    const refreshed = await hooks.refreshTools?.(decision, native.phase.abort.signal);
+    let result;
+    try { result = await methods.step.call(native, refreshed ?? decision); }
+    finally { refreshed?.toolSet.dispose(); }
     return hooks.afterStep ? await hooks.afterStep(firstSeq, result, native.phase.abort.signal) : result;
   };
   native[piRequestHook] = request;

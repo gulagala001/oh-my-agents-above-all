@@ -96,6 +96,7 @@ export async function installedHost(t, { enabledPresets = ['codex', 'grok', 'cur
       await cp(source, join(home, 'cache/pnpm/v11', name), { recursive: true, force: false, errorOnExist: true });
   }
   const env = fixtureEnvironment(home, safeEnvironment);
+  env.GIT_CEILING_DIRECTORIES = root; // The synthetic workspace may itself be inside a checkout.
   if (offlineInstall) Object.assign(env, { npm_config_offline: 'true', COREPACK_ENABLE_NETWORK: '0' });
   // Legacy false options no longer opt into the personal HOME/Pi directory.
   // They remain recorded so old callers are reviewable without losing APIs.

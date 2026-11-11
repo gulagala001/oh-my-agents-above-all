@@ -21,7 +21,7 @@ export function Updates({ embedded = false } = {}) {
       if (!active.current) return;
       setData(value);
       clearTimeout(timer.current);
-      if (['checking', 'installing', 'applying'].includes(value.phase)) timer.current = setTimeout(() => void load(), 1500);
+      if (['checking', 'decision', 'installing', 'applying'].includes(value.phase)) timer.current = setTimeout(() => void load(), 1500);
     } catch (failure) {
       if (active.current && !lifetime.current.signal.aborted) setError(failure.message);
     } finally { requestBusy.current = false; if (active.current) setPending(false); }
@@ -31,10 +31,10 @@ export function Updates({ embedded = false } = {}) {
     void load();
     return () => { active.current = false; lifetime.current.abort(); clearTimeout(timer.current); };
   }, []);
-  const busy = pending || ['checking', 'installing', 'applying'].includes(data?.phase);
+  const busy = pending || ['checking', 'decision', 'installing', 'applying'].includes(data?.phase);
   const action = (target, version) => void load({ action: 'install', target, version });
   const restart = data?.restartRequired || data?.phase === 'restart-required';
-  const hint = data?.phase === 'installing' || data?.phase === 'applying' ? '正在通过原生插件管理安装配对更新…'
+  const hint = data?.phase === 'decision' ? '正在等待你确认预检结果…' : data?.phase === 'cancelled' ? '更新已取消' : data?.phase === 'installing' || data?.phase === 'applying' ? '正在通过原生插件管理安装配对更新…'
     : data?.phase === 'checking' ? '正在确认已发布的配对附件…'
       : restart ? '已安装的包需要重启当前 DSH 后生效；正在运行的版本不会热替换。'
         : data?.blockedReason || (data?.updateAvailable || data?.omdUpdateAvailable ? '更新当前宿主的配对附件，保留模型、API 和 profile；完成后重启 DSH。' : data?.checkedAt ? '已是当前 DSH 对应的最新发行。' : '检查公开 GitHub 发行，不会自动安装。');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, writeFile, access } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile, access, mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { installedHost, until, textReply, toolReply } from './fixtures/installed-host.mjs';
 
 const texts = request => request.messages.filter(message => message.role === 'user').map(message => typeof message.content === 'string'
@@ -90,7 +90,30 @@ test('Pi lifecycle callbacks await native activity, isolate fresh prompts, prese
   const canceled=(await rows()).findLast(row=>row.type==='end');assert.equal(canceled.aborted,true);
   assert(!f.requests.slice(from).some(request=>texts(request).includes('FORBIDDEN_AFTER_CANCEL')));
   const status=await configure();assert.equal(status.value.states.find(row=>row.sessionId===sessionId).status,'ready');
-  await writeFile(process.env.OMAA_PI_LIFECYCLE_EVIDENCE ?? '.cache/pi-lifecycle-native-evidence.json',JSON.stringify({at:new Date().toISOString(),host:f.evidence.version,artifactSha256:f.evidence.artifact?.sha256,rows:await rows(),
+  const evidencePath = process.env.OMAA_PI_LIFECYCLE_EVIDENCE ?? '.cache/pi-lifecycle-native-evidence.json';
+  await mkdir(dirname(evidencePath), { recursive: true });
+  await writeFile(evidencePath,JSON.stringify({at:new Date().toISOString(),host:f.evidence.version,artifactSha256:f.evidence.artifact?.sha256,rows:await rows(),
     requests:f.requests.filter(request=>request.tools?.length).map(request=>({system:system(request),user: texts(request).slice(-120),tools:request.tools.map(tool=>tool.function.name)})),
     checked:['awaited lifecycle order/turn indices','first-request startup tool registry','fresh human vs end-only prompt lifetime','full >2 MiB multilingual guest frame','cancel notification retains aborted signal and cannot resume']},null,2)+'\n');
+});
+
+test('an idle agent_end extension can enter compact under its existing maintenance owner', {timeout:60000}, async t=>{
+  const f=await installedHost(t,{safeEnvironment:true,sourceLinked:true,enabledPresets:['pi']});
+  const extension=join(f.workspace,'end-compact.ts'), trace=join(f.workspace,'compact-result.json');
+  await writeFile(extension,`import {writeFile} from 'node:fs/promises';
+    export default function(pi) {
+      pi.on('session_before_compact', () => ({cancel:true}));
+      pi.on('agent_end', async (_,ctx) => {
+        await ctx.compact({onComplete:() => writeFile(${JSON.stringify(trace)},JSON.stringify({complete:true})),
+          onError:e=>writeFile(${JSON.stringify(trace)},JSON.stringify({error:e.message}))});
+      });
+    }`);
+  await f.install();await f.boot();
+  const headers={cookie:f.cookie,'content-type':'application/json'}, url=f.origin+'/omaa/api/pi-extensions';
+  const config=await fetch(url,{headers}).then(r=>r.json());
+  assert.equal((await fetch(url,{method:'POST',headers,body:JSON.stringify({revision:config.revision,files:[extension]})})).status,200);
+  const {sessionId}=await f.create('omaa-pi');
+  await f.send(sessionId,'Check the end callback.');
+  const result=await until(async()=>{try{return JSON.parse(await readFile(trace,'utf8'));}catch{}});
+  assert.ok(result.complete || /扩展取消/.test(result.error),JSON.stringify(result));
 });

@@ -130,7 +130,7 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
         if (request.action === 'save-comment') {
           const note = cursorCommentNote(request.note), existing = request.id && state.comments.find(item => item.id === request.id);
           if (request.id && !existing) throw conflict();
-          if (existing && existing.status !== 'draft') throw Error('已发送的批注保留为历史；请添加新的修改意见。');
+          if (existing && (existing.status !== 'draft' || existing.submittedAt || existing.requestId)) throw Error('已发送的批注保留为历史；请添加新的修改意见。');
           if (!existing && state.comments.length >= cursorCommentLimits.history) throw Error('已保存 200 条批注，请删除不再需要的已解决记录。');
           const anchor = existing ? { target: existing.target, context: existing.context, ...(existing.anchor ? { anchor: existing.anchor } : {}) } : await verifiedTarget(owned, request.target);
           const comment = { ...existing, ...anchor, id: existing?.id ?? randomUUID(), version: (existing?.version ?? 0) + 1, note,
@@ -143,7 +143,7 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
           const existing = state.comments.find(item => item.id === request.id);
           if (!existing) throw conflict();
           const comments = request.action === 'delete-comment' ? state.comments.filter(item => item.id !== existing.id)
-            : state.comments.map(item => item.id !== existing.id ? item : { ...item, status: request.action === 'resolve-comment' ? 'resolved' : 'draft', version: item.version + 1, updatedAt: time });
+            : state.comments.map(item => item.id !== existing.id ? item : { ...item, status: request.action === 'resolve-comment' ? 'resolved' : item.requestId || item.submittedAt ? 'submitted' : 'draft', version: item.version + 1, updatedAt: time });
           if (comments.some(item => item.status === 'draft')) cursorFeedbackText(comments.filter(item => item.status === 'draft'));
           return save(id, { ...state, comments });
         }
@@ -158,10 +158,11 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
         const kind = request.action === 'submit' ? 'feedback' : 'issues';
         if (state.delivery && state.delivery.kind !== kind) throw Error('请先确认上一批反馈的提交状态。');
         idle(owned, kind === 'feedback' ? 'default' : 'ask');
+        const freshDelivery = !state.delivery;
         if (!state.delivery) {
           const selection = request.commentIds;
           if (selection !== undefined && (!Array.isArray(selection) || !selection.length || selection.length > cursorCommentLimits.drafts || new Set(selection).size !== selection.length || selection.some(id => typeof id !== 'string'))) throw Error('请选择有效的待发送批注。');
-          const items = state.comments.filter(item => item.status === 'draft' && (!selection || selection.includes(item.id)));
+          const items = state.comments.filter(item => item.status === 'draft' && !item.requestId && !item.submittedAt && (!selection || selection.includes(item.id)));
           if (selection && items.length !== selection.length) throw conflict();
           let text;
           if (kind === 'feedback') text = cursorFeedbackText(items);
@@ -178,8 +179,17 @@ export function createCursorReview({ directory, hub, gitReview, controller, flus
         // Persist the native admission identity before crossing the host boundary.
         // A lost HTTP acknowledgement is reconciled from the real inbox/journal;
         // refresh never starts work, and an explicit retry reuses the same id.
-        owned = await owner(id); idle(owned, kind === 'feedback' ? 'default' : 'ask');
-        const result = await controller().prompt({ sessionId: id, requestId: state.delivery.requestId, mode: 'queue', content: [{ type: 'text', text: state.delivery.text }] }, new AbortController().signal);
+        let host;
+        try {
+          owned = await owner(id); idle(owned, kind === 'feedback' ? 'default' : 'ask');
+          host = controller();
+          if (!host?.prompt) throw Error('宿主审阅接口尚未就绪');
+        } catch (error) {
+          if (freshDelivery) await save(id, { ...state, delivery: null });
+          throw error;
+        }
+        const result = await host.prompt({ sessionId: id, requestId: state.delivery.requestId, mode: 'queue', content: [{ type: 'text', text: state.delivery.text }] }, new AbortController().signal);
+        if (freshDelivery && result?.accepted === false && !admitted(owned.agent, owned.session, state.delivery.requestId)) await save(id, { ...state, delivery: null });
         if (result?.accepted !== true) throw Error('宿主未接受本次审阅请求，批注已保留。');
         return reconcile(id, state, owned);
       });

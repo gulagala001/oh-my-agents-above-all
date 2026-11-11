@@ -96,6 +96,8 @@ test('public prerelease pair uses native transactions, guards host/draft/pair, a
   }
   const partial = fixture({ partialFailure: true }); t.after(() => partial.service.close());
   await partial.service.start('omaa', versions.omaa);
+  await partial.service.start('omaa', versions.omaa);
+  assert.deepEqual(partial.calls.map(row => row.product), ['omd','omaa']);
   const failed = await partial.service.status();
   assert.equal(failed.phase, 'failed'); assert.equal(failed.restartRequired, true);
   assert.deepEqual(failed.installed, [{ product: 'omd', version: versions.omd }]);

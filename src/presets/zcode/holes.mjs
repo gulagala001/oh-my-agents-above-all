@@ -25,7 +25,7 @@ function factsFor(record, prepared, verifySource = true) {
 // every native consumer. It runs only after the durable source/facts commit,
 // and before any waiting evaluator can see the new body. prepare must run the
 // existing whole-script compiler, including schema and authoring validation.
-export function createLiveWorkflowHoles({ store, parent, runId, signal, prepared, prepare, check = () => signal.throwIfAborted(), swapPrepared, journal }) {
+export function createLiveWorkflowHoles({ store, parent, runId, signal, prepared, prepare, check = () => signal.throwIfAborted(), swapPrepared, journal, onOpen }) {
   if (!prepared?.ok || !(prepared.sitePhases instanceof Map) || !Array.isArray(prepared.phaseNames) || !Array.isArray(prepared.holes)
     || typeof prepare !== 'function' || typeof swapPrepared !== 'function')
     throw Error('Native live holes require a compiled workflow, compiler and synchronous table installer.');
@@ -86,7 +86,7 @@ export function createLiveWorkflowHoles({ store, parent, runId, signal, prepared
         ...(prompt === undefined ? {} : { prompt: entry.prompt }) });
     });
     const work = (async () => {
-      try { await entry.announced; factsPublished = true; return await result.promise; }
+      try { await entry.announced; factsPublished = true; if (!remembered.has(siteId)) onOpen?.(entry); return await result.promise; }
       catch (error) {
         result.reject(error);
         const remaining = (parked.get(siteId) ?? []).filter(value => value !== entry);

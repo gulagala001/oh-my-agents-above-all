@@ -55,25 +55,26 @@ export function createPresetActivation(ctx, directory) {
   async function unmount(id) {
     const value = mounts.get(id);
     if (!value) return;
-    for (const dispose of value.unregister) await dispose();
+    value.retiring = true;
+    while (value.unregister.length) { await value.unregister.at(-1)(); value.unregister.pop(); }
     await value.support.dispose();
     mounts.delete(id);
   }
   async function reconcile(enabled) {
     const next = new Set(enabled);
     selected = next;
-    for (const id of [...mounts.keys()]) if (!next.has(id)) await unmount(id);
+    for (const [id, mount] of mounts) if (mount.retiring || !next.has(id)) await unmount(id);
     for (const id of enabled) if (!mounts.has(id)) await mount(id);
     if (!mounts.size && runtime) { await runtime.dispose(); runtime = undefined; }
   }
   const api = {
     available: id => selected.has(id) && !closed,
-    enabled: id => selected.has(id) && !changing.has(id) && !closed,
+    enabled: id => mounts.has(id) && !mounts.get(id).retiring && selected.has(id) && !changing.has(id) && !closed,
     assertSession(session) {
       const product = productOf(session);
       if (product && !api.enabled(product.id)) throw Error(`请先在设置 → OMAA 中启用 ${product.name}。会话历史与设置已保留。`);
     },
-    inspect: () => ({ ...saved, enabled: [...selected], products,
+    inspect: () => ({ ...saved, mounted: [...mounts.keys()].filter(id => api.enabled(id)), products,
       error: error || (productForPreset(ctx.agentPresets.defaultId) && !selected.has(productForPreset(ctx.agentPresets.defaultId).id)
         ? 'DSH 当前默认预设尚未开启，请在此开启，或到「Agent 预设」更改默认。' : '') }),
     async start() {
@@ -93,7 +94,7 @@ export function createPresetActivation(ctx, directory) {
           || JSON.stringify(disk.enabled) !== JSON.stringify(saved.enabled))
           throw Object.assign(Error('预设设置已变化，请重新读取后操作。'), { code: 'revision-conflict' });
         if (saved.revision === Number.MAX_SAFE_INTEGER) throw Error('预设设置修订号已达上限。');
-        const previous = [...selected], removed = new Set(previous.filter(id => !enabled.includes(id)));
+        const previous = [...saved.enabled], removed = new Set(previous.filter(id => !enabled.includes(id)));
         if (removed.has(productForPreset(ctx.agentPresets.defaultId)?.id))
           throw Error('此预设是 DSH 当前默认预设，请先到「Agent 预设」选择其他默认预设，再关闭。');
         if (busy(removed)) throw Error('相关预设仍有运行中或排队的任务，请停止并等待任务结束后再关闭。');
@@ -114,7 +115,8 @@ export function createPresetActivation(ctx, directory) {
           saved = next; error = '';
         } catch (failure) {
           try { await reconcile(previous); }
-          catch (rollback) { error = '恢复预设状态失败：' + rollback.message; throw new AggregateError([failure, rollback], error); }
+          catch (rollback) { error = failure.message + '；恢复预设状态失败：' + rollback.message; throw new AggregateError([failure, rollback], error); }
+          error = '预设切换失败，已恢复原设置：' + failure.message;
           throw failure;
         } finally { changing = new Set(); }
         return api.inspect();

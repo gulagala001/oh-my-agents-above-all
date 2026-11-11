@@ -2,6 +2,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createPresetActivation } from './host/preset-activation.mjs';
 import { createUpdates } from './updates.mjs';
+import { beforeToolResolution } from './host/prompt-provider.mjs';
 import { nativeHostVersion } from './host/compatibility.mjs';
 import { sendJson, readJson } from './host/http.mjs';
 import { installSearchCompatibility } from './host/search-compat.mjs';
@@ -22,6 +23,11 @@ export async function apply(ctx) {
   ctx.effect(() => () => updates.close());
   ctx.on('plugin-manager/install-state', progress => updates.progress(progress), { global: true });
   ctx.effect(() => () => activation.close());
+  ctx.inject(['tools'], scope => {
+    beforeToolResolution(scope, agent => {
+      if (agent?.session) activation.assertSession(agent.session);
+    });
+  });
   ctx.on('agent/request', ({ agent }, next) => {
     activation.assertSession(agent.session);
     return next();

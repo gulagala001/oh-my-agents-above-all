@@ -154,3 +154,22 @@ export default function(pi){
   if (process.env.OMAA_PI_TREE_EVIDENCE) await writeFile(process.env.OMAA_PI_TREE_EVIDENCE, JSON.stringify({ requests: f.requests.length, externalModels: 0, host: f.evidence.version,
     checks: ['same-session tree', 'cancelled navigation', 'extension summary', 'sibling branch request isolation', 'extension command navigation', 'custom compaction', 'cold branch recovery', 'restore pre-compaction branch', 'default native summary', 'raw journal preserved', 'default branch summary', 'invalid compaction rejected', 'cancellation without mutation', 'project auto-compaction settings', 'actual threshold compaction', 'native browser tree navigation', 'edited history resubmission', 'browser compact action', 'provider overflow actual retry'], events: await rows() }, null, 2));
 });
+
+test('standalone Pi recovers confirmed invalid-request overflow once and rejects ordinary invalid requests', {timeout:60000}, async t=>{
+  const f=await installedHost(t,{safeEnvironment:true,sourceLinked:true,enabledPresets:['pi']});
+  await f.install();await f.boot();
+  const {sessionId}=await f.create('omaa-pi');
+  f.replyWith(()=>textReply('Prior material for the following turn.'));
+  await f.prompt(sessionId,'First material');await f.prompt(sessionId,'Additional material');
+  let calls=0;
+  f.replyWith(r=>{
+    if(!r.tools?.length)return textReply('Preserved branch summary.');
+    if(++calls===1)return {httpStatus:400,body:{error:{type:'invalid_request_error',message:"The input is longer than the model's context length"}}};
+    return textReply('Recovered.');
+  });
+  await f.prompt(sessionId,'Confirmed overflow');
+  assert.equal(calls,2);
+  let invalid=0;
+  f.replyWith(r=>!r.tools?.length?textReply('Title'):(invalid++,{httpStatus:400,body:{error:{type:'invalid_request_error',message:'Invalid parameter foo'}}}));
+  await assert.rejects(f.prompt(sessionId,'Invalid parameter'));assert.equal(invalid,1);
+});

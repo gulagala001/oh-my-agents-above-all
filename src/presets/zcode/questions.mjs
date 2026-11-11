@@ -139,14 +139,14 @@ export function createWorkflowQuestions({ store, parent, runId, signal, notify, 
       const toolAbort = () => withdraw(entry, toolSignal.reason);
       toolSignal?.addEventListener('abort', toolAbort, { once: true });
       entry.cleanup = () => toolSignal?.removeEventListener('abort', toolAbort);
-      const admission = store.mutate(sessionId, runId, record => {
+      const admission = Promise.resolve().then(() => store.mutate(sessionId, runId, record => {
         if (!active(entry) || record.status !== 'running' || record.supersededBy !== undefined) throw canceled(entry.controller.signal.reason);
         const entries = rows(record);
         if (entries.some(row => row.qid === fact.qid)) throw Error('Duplicate native workflow question identity.');
         entries.push(structuredClone(fact));
         if (!foldNativeRunFact(record, runId, 'escalation-raised', { ...publicFact(fact), actor: fact.actorRef }))
           throw Error('The native run did not accept its actual escalation observation.');
-      }, { signal: AbortSignal.any([signal, entry.controller.signal]) });
+      }, { signal: AbortSignal.any([signal, entry.controller.signal]) }));
       entry.operation = track(admission);
       try {
         await admission;
@@ -154,6 +154,17 @@ export function createWorkflowQuestions({ store, parent, runId, signal, notify, 
         if (active(entry)) await notify?.({ type: 'escalation-raised', runId, ...publicFact(fact), actor: fact.actorRef });
         return await answer;
       } catch (error) {
+        let confirmedAbsent = false;
+        if (!entry.admitted) {
+          try {
+            const record = await store.record(sessionId, runId);
+            owner(record);
+            if (!readWorkflowQuestionFacts(record).some(row => row.qid === fact.qid)) {
+              taskState.count--; confirmedAbsent = true; cleanup(entry);
+            }
+          } catch { /* Unknown admission retains its reservation. */ }
+        }
+        if (confirmedAbsent) throw error;
         if (!signal.aborted && !toolSignal?.aborted && !entry.controller.signal.aborted) report(error);
         withdraw(entry, error); throw error;
       }

@@ -128,3 +128,16 @@ test('question budget belongs to each ask; cancellation withdraws pending questi
   const facts = readWorkflowQuestionFacts(f.record);
   assert.deepEqual(facts.map(row => row.status), ['answered', 'answered', 'answered', 'withdrawn']);
 });
+
+test('failed question commits return the ask reservation without widening its budget', async () => {
+  const f = questionFixture(), task = {};
+  f.fail = true;
+  for (let i = 0; i < 4; i++) await assert.rejects(f.ask(task), /commit failure/);
+  assert.deepEqual(readWorkflowQuestionFacts(f.record), []);
+  f.fail = false;
+  for (let i = 0; i < 3; i++) {
+    const work = f.ask(task), {qid} = await admitted(f);
+    await f.registry.resolve({sessionId:'mock-parent',questionId:qid,answer:'confirmed'}); await work;
+  }
+  assert.equal((await f.ask(task)).reason, 'budget_exhausted'); await f.registry.close();
+});

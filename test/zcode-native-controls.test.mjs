@@ -75,11 +75,11 @@ test('real parked questions enforce ownership, commit answers, cancel native chi
       : toolReply('escalate', { question: 'Choose the exact fixture answer', context: 'Owned synthetic native question' });
   });
   const script = "interface Answer {value:string} const worker=agent('Question'); return await worker.ask<Answer>('QUESTION_TASK');";
-  const start = async () => {
-    const response = await call('create_workflow', { script }); assert.equal(response.isError, false, response.text); assert.equal(response.value.ok, true, response.text);
+  const start = async (foreground = false) => {
+    const response = await call('create_workflow', { script, run_in_background: !foreground }); assert.equal(response.isError, false, response.text); assert.equal(response.value.ok, true, response.text);
     return response.value.runId;
   };
-  const runId = await start();
+  const runId = await start(true);
   const waiting = await until(async () => { const value = await detail(runId); return value.pendingQuestions?.length === 1 && value; });
   const qid = waiting.pendingQuestions[0].qid;
   const foreign = await f.call('session/create', { request: { cwd: f.workspace, agentPreset: 'omaa-zcode' } });
@@ -116,7 +116,7 @@ test('real parked questions enforce ownership, commit answers, cancel native chi
 
 test('live hole rejects invalid fills, commits lexical source before release and cold-restores the actual result', { timeout: 60000, skip: !authorizedSessionPolicy }, async t => {
   const { f, sessionId, call, detail } = await fixture(t, () => textReply('No child expected'));
-  const response = await call('create_workflow', { script: "const base=40; return await hole<number>('compute','Return base plus two');" });
+  const response = await call('create_workflow', { run_in_background:false, script: "const base=40; return await hole<number>('compute','Return base plus two');" });
   assert.equal(response.isError, false, response.text); assert.equal(response.value.ok, true, response.text);
   const runId = response.value.runId;
   const parked = await until(async () => { const value = await detail(runId); return value.liveHoles?.open.length === 1 && value; });

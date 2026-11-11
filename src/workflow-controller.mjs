@@ -114,7 +114,7 @@ export async function apply(ctx, config) {
           try { branch = await mount(latest); }
           catch (error) {
             if (!active || latest.mode !== 'omd' || retiring.size) throw error;
-            failedTarget = latest;
+            failedTarget = latest; controller.error = error.message;
             ctx.logger.warn('OMD workflow unavailable; retaining native OMAA workflow: %s', error);
             branch = await mount({ mode: 'native' });
           }
@@ -159,7 +159,7 @@ export async function apply(ctx, config) {
     return () => { if (bridge === current) { bridge = undefined; failedTarget = undefined; schedule(); } };
   });
   for (const event of ['subagent/provider-added', 'subagent/provider-removed']) ctx.on(event, () => { failedTarget = undefined; schedule(); }, { global: true });
-  ctx.on('app-boot/config-reload', () => { if (controller.mode === 'failed') schedule(); }, { global: true });
+  ctx.on('app-boot/config-reload', () => { if (failedTarget || controller.mode === 'failed') { failedTarget = undefined; schedule(); } }, { global: true });
   schedule();
   await draining;
 }

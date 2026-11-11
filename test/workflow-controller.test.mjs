@@ -177,3 +177,14 @@ test('enhancement readiness cannot be registered after its owner is disposed', a
     assert.equal(hub.enhancementScopes.size, 0); assert.equal(outer.state, 2);
   } finally { gate.resolve(); await root.fiber.dispose(); }
 });
+
+test('config reload revisits a failed composition on the same bridge and provider',async()=>{
+  await withController('config-reload',async f=>{
+    await f.entry.fiber.await();f.setProvider({name:'omd-workflow'});
+    let fixed=false;const bridge={omaaWorkflowComposition:()=>fixed?f.bridge('v1').omaaWorkflowComposition():[{name:'tool-v1'}]};
+    f.root.provide('omd',bridge);f.root.emit('subagent/provider-added',{name:'omd-workflow'});
+    const current=[...f.hub.workflowControllers][0];await until(()=>current.mode==='native'&&current.error);
+    fixed=true;f.root.emit('app-boot/config-reload');await until(()=>current.mode==='omd');
+    assert.equal(current.error,null);assert.equal(f.schemas().length,1);
+  });
+});

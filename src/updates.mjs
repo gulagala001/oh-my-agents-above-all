@@ -167,9 +167,11 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     return checking;
   }
   async function status() {
-    const view = snapshot();
+    const before = state, view = snapshot();
     try {
       const { omaa, omd } = await inventory();
+      if (state === before && !job && state.installed.length && omaa?.version === currentVersion &&
+          (!omd || omd.version === currentOmdVersion)) state = { ...state, phase:'idle', installed:[], error:'' };
       let reason = '';
       if (!omaa?.installed || omaa.readOnlyReason) reason = '此 OMAA 安装由宿主管理，请通过原安装方式更新';
       else if (omaa.version !== currentVersion || (omd && omd.version !== currentOmdVersion)) reason = '安装版本已改变，请先重启当前 DSH';
@@ -189,6 +191,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     const requestId = randomUUID();
     state = { ...state, phase: 'installing', requestId, installing: product };
     const result = await manager.installBundle(candidate.url, { enabled: previous.enabled, requestId });
+    if (result.application === 'cancelled') throw Object.assign(fail(result.error?.diagnostic || '更新已取消'), { cancelled: true });
     if (!['applied', 'restart-required'].includes(result.application) || result.bundle !== PACKAGE[product]) throw fail(result.pendingBuilds?.length ? '安装脚本需要授权，请在原生插件页面处理' : result.packageResult?.output?.slice(-1000) || result.error?.message || '原生插件安装未成功');
     const installed = (await manager.listBundles()).find(row => row.name === PACKAGE[product]);
     if (!installed?.installed || installed.version !== candidate.version) throw fail('原生安装结果与目标版本不一致，请到插件页面检查');
@@ -198,6 +201,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
     if (!['omaa', 'omd'].includes(target)) throw fail('更新目标无效');
     splitReleaseVersion(version, target);
     if (closed || job) throw fail('更新已停止或正在进行');
+    if (state.installed.length) return Promise.resolve(snapshot());
     state = { phase: 'checking', target, targetVersion: version, error: '', installed: [] };
     job = (async () => {
       await check(true);
@@ -216,7 +220,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
       if (omd && selected.omd && compare(selected.omd.version, omd.version, 'omd') > 0) await installOne('omd', selected.omd, omd, manager);
       if (compare(selected.omaa.version, currentVersion, 'omaa') > 0) await installOne('omaa', selected.omaa, omaa, manager);
       state = { ...state, phase: 'restart-required', requestId: null };
-    })().catch(error => { state = { ...state, phase: 'failed', error: error.message, requestId: null }; }).finally(() => { job = null; });
+    })().catch(error => { state = { ...state, phase: error.cancelled ? 'cancelled' : 'failed', error: error.message, requestId: null }; }).finally(() => { job = null; });
     return job;
   }
   function omdVersionSnapshot() {
@@ -233,7 +237,7 @@ export function createUpdates({ currentVersion = RUNNING_VERSION, hostVersion = 
   }
   const omdUpdateSnapshot = () => ({ ...state, targetVersion: state.installed.find(row => row.product === 'omd')?.version ?? pair?.omd?.version ?? currentOmdVersion });
   return { check, status, snapshot, start,
-    progress({ requestId, phase }) { if (job && requestId === state.requestId && ['installing', 'applying'].includes(phase)) state = { ...state, phase }; },
+    progress({ requestId, phase }) { if (job && requestId === state.requestId && ['decision', 'installing', 'applying'].includes(phase)) state = { ...state, phase }; },
     omdVersionSnapshot, async omdVersionCheck(force) { await check(force); return omdVersionSnapshot(); }, omdUpdateSnapshot,
     async omdUpdateStatus() { const view = await status(); return { ...omdUpdateSnapshot(), available: view.available && view.omdUpdateAvailable, blockedReason: view.blockedReason || view.error, installed: view.installed }; },
     close() { closed = true; shutdown.abort(); if (state.requestId) void getManager?.()?.cancelInstall(state.requestId).catch(() => {}); },

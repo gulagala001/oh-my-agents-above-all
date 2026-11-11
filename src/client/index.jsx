@@ -16,7 +16,8 @@ export function apply(ctx) {
   if (channel) channel.onmessage = () => { void activation.refresh(); };
   let closed = false, signature = '', runtime, tail = Promise.resolve();
   const sync = () => {
-    const enabled = activation.getSnapshot().data?.enabled ?? [];
+    const data = activation.getSnapshot().data;
+    const enabled = data?.mounted ?? data?.enabled ?? [];
     const next = JSON.stringify(enabled);
     if (next === signature) return;
     signature = next;

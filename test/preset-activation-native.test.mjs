@@ -83,7 +83,7 @@ test('settings switches enable and release the real preset UI without changing t
   const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
   await welcome.click(); await welcome.waitFor({ state: 'hidden' });
   try {
-    await page.getByText('更多', { exact: true }).click();
+    await page.getByRole('button', { name: '账号菜单', exact: true }).click();
     await page.getByText('设置', { exact: true }).click({ timeout: 10000 });
     await page.getByText('OMAA', { exact: true }).click();
     await page.getByRole('heading', { name: '代理预设' }).waitFor();
@@ -109,7 +109,7 @@ test('settings switches enable and release the real preset UI without changing t
     await page.getByText('workspace', { exact: true }).first().click();
     await page.getByText('Opt-in UI fixture', { exact: true }).first().click({ timeout: 10000 });
     await until(() => page.evaluate(() => Boolean(document.documentElement.dataset.omaaTheme)));
-    await page.getByText('更多', { exact: true }).click();
+    await page.getByRole('button', { name: '账号菜单', exact: true }).click();
     await page.getByText('设置', { exact: true }).click({ timeout: 10000 });
     await page.getByText('OMAA', { exact: true }).click();
     await page.getByRole('switch', { name: '启用 Codex', exact: true }).click();
@@ -121,4 +121,26 @@ test('settings switches enable and release the real preset UI without changing t
     throw Error(error.message + '\n' + JSON.stringify({ errors, body: (await page.locator('body').innerText()).slice(-6000),
       buttons: await page.getByRole('button').allTextContents() }));
   }
+});
+
+test('saved choices survive startup and rollback failures; session admission follows mounts', async t => {
+  const {createPresetActivation}=await import('../src/host/preset-activation.mjs');
+  const {mkdtemp,writeFile,rm}=await import('node:fs/promises'), {tmpdir}=await import('node:os');
+  const dir=await mkdtemp(join(tmpdir(),'preset-rollback-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+  const file=join(dir,'presets.json');await writeFile(file,JSON.stringify({enabled:['codex','pi'],revision:4}));
+  const broken=new Set(['pi']);
+  const ctx={agents:{list:()=>[]},get:()=>undefined,sessionProjections:{stateOf:()=>undefined},fiber:{assertActive(){}},logger:{warn(){}},
+    plugin(){return Object.assign(Promise.resolve(),{dispose:async()=>{}});},
+    agentPresets:{resolve:async()=>({}),register:async def=>{if(broken.has(def.id.slice(5)))throw Error('mount '+def.id);return ()=>{};}}};
+  const activation=createPresetActivation(ctx,dir); t.after(()=>activation.close());
+  await activation.start();assert.deepEqual(activation.inspect().enabled,['codex','pi']);assert.match(activation.inspect().error,/pi/);
+  assert.equal(activation.enabled('pi'),false);
+  broken.clear();await activation.update({revision:4,enabled:[...activation.inspect().enabled,'cursor']});
+  assert.equal(activation.enabled('pi'),true);assert.equal(activation.enabled('codex'),true);
+  broken.add('grok');broken.add('pi');
+  await assert.rejects(activation.update({revision:5,enabled:['codex','grok','cursor']}),/恢复/);
+  assert.equal(activation.inspect().enabled.includes('pi'),true);assert.equal(activation.inspect().mounted.includes('pi'),false);
+  assert.throws(()=>activation.assertSession({header:{agentPreset:'omaa-pi'}}),/启用/);
+  broken.clear();await activation.update({revision:5,enabled:activation.inspect().enabled});
+  activation.assertSession({header:{agentPreset:'omaa-pi'}});assert.equal(activation.inspect().error,'');
 });

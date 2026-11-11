@@ -18,10 +18,13 @@ export async function requestToPi(request, { piContent, argumentsFor, signal }) 
       const additions = updates.get(native.id) ?? request.tools;
       message = { role: 'system', content: text(native.content), timestamp: 0,
         ...(firstSystem ? { toolsAdded: copy(request.toolHistory?.tools ?? request.tools) } : {}) };
-      const added = native.content.filter(p => p.type === 'tool-addition').map(part => additions.find(tool => tool.name === part.toolName));
+      // New request series reset toolHistory. Developer messages from older
+      // series may stay on the surface, but their deltas no longer apply.
+      const blocks = request.toolHistory && !updates.has(native.id) ? [] : native.content;
+      const added = blocks.filter(p => p.type === 'tool-addition').map(part => additions.find(tool => tool.name === part.toolName));
       if (added.some(tool => !tool)) throw Error('Pi context cannot resolve a historical tool declaration');
       if (added.length) message.toolsAdded = [...message.toolsAdded ?? [], ...copy(added)];
-      const removed = native.content.filter(p => p.type === 'tool-removal').map(part => ({ name: part.toolName }));
+      const removed = blocks.filter(p => p.type === 'tool-removal').map(part => ({ name: part.toolName }));
       if (removed.length) message.toolsRemoved = removed;
       firstSystem = false;
     } else {

@@ -177,7 +177,9 @@ export function createPiSessionControl(ctx, { ensure, history, preview, notify, 
     return next();
   });
   ctx.on('agent/request-error', async ({ agent, failure, signal }, next) => {
-    if (ctx.omaa.product(agent.session)?.id !== 'pi' || failure.code !== CONTEXT_WINDOW_EXCEEDED_CODE || overflow.has(agent) || signal.aborted) return next();
+    const exceeded = failure.code === CONTEXT_WINDOW_EXCEEDED_CODE || failure.code === 'INVALID_REQUEST'
+      && failure.message?.includes("The input is longer than the model's context length");
+    if (ctx.omaa.product(agent.session)?.id !== 'pi' || !exceeded || overflow.has(agent) || signal.aborted) return next();
     overflow.add(agent);
     try { if (await compact(agent, { reason: 'overflow' }, signal, true)) return { kind: 'retry' }; }
     catch (error) { signal.throwIfAborted(); ctx.logger.warn('Pi overflow compaction: ' + error.message); }

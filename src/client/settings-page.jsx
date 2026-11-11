@@ -41,7 +41,7 @@ export function SettingsPage({ activation }) {
           const pending = state.pending?.id === product.id;
           return <div className="omaa-set-row" key={product.id}>
             <div className="omaa-set-line">
-              <div className="omaa-set-copy"><strong>{product.name}</strong><small>{hints[product.id]}</small></div>
+              <div className="omaa-set-copy"><strong>{product.name}</strong><small>{enabled.includes(product.id) && state.data?.mounted && !state.data.mounted.includes(product.id) ? "已选择，尚未挂载" : hints[product.id]}</small></div>
               <div className="omaa-set-control"><Switch label={`启用 ${product.name}`} disabled={disabled}
                 checked={pending ? state.pending.enabled : enabled.includes(product.id)}
                 onChange={value => { void activation.select(product.id, value); }}/></div>

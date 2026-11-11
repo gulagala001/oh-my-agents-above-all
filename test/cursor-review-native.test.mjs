@@ -50,14 +50,17 @@ test('Cursor branch and turn review persist comments across a cold host, submit 
     await context.addCookies(f.cookie.split('; ').map(value => { const at = value.indexOf('='); return { name: value.slice(0, at), value: value.slice(at + 1), url: f.origin }; }));
     page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(message.text()); });
-    await page.goto(f.origin);
+    await page.goto(f.loginUrl);
     const welcome = page.getByRole('button', { name: /^(Continue|继续)$/, exact: true });
     if (!opened) { await welcome.waitFor({ state: 'visible' }); await welcome.click(); await welcome.waitFor({ state: 'hidden' }); opened = true; }
     await page.getByRole('button', { name: '标准模式', exact: true }).waitFor();
     const workspaceRow = page.locator('[data-row-key^="workspace:"][role="treeitem"]').filter({ has: page.getByText('workspace', { exact: true }) });
     await workspaceRow.waitFor();
-    if (await workspaceRow.getAttribute('aria-expanded') === 'false') await workspaceRow.getByText('workspace', { exact: true }).click();
-    await until(async () => await workspaceRow.getAttribute('aria-expanded') === 'true');
+    await until(async () => {
+      const expanded = await workspaceRow.getAttribute('aria-expanded');
+      if (expanded === 'false') await workspaceRow.getByText('workspace', { exact: true }).click();
+      return expanded === 'true';
+    });
     await page.getByText('Cursor review delivery', { exact: true }).first().click();
     await page.getByRole('button', { name: '打开 Cursor 代码审阅', exact: true }).click();
     review = page.getByRole('region', { name: 'Cursor 代码审阅', exact: true });
@@ -137,4 +140,29 @@ test('Cursor branch and turn review persist comments across a cold host, submit 
   await writeFile(join(evidence, 'result.json'), JSON.stringify({ host: f.evidence.version, source: 'local source-linked rc.2', nativeFlow: true,
     scopes: ['working', 'branch', 'turn'], coldComments: cold.comments.length, oneNativeBatch: sent.length, actualFilesChanged: ['review.js', 'helper.js'],
     askWriteDenied: true, staleWriteDenied: true, frontendErrors: errors, externalModels: false }, null, 2) + '\n');
+});
+
+test('only provably unsent feedback unlocks drafts; accepted comments retain delivery identity',async t=>{
+  const {createCursorReview}=await import('../src/presets/cursor/review.mjs');
+  const {createHash}=await import('node:crypto'),{tmpdir}=await import('node:os'),{mkdtemp,rm}=await import('node:fs/promises');
+  const directory=await mkdtemp(join(tmpdir(),'cursor-receipts-'));t.after(()=>rm(directory,{recursive:true,force:true}));
+  const id='fixture', agent={status:'idle',inbox:{nextStep:[],nextTurn:[]}}, session={snapshotEvents:()=>[]};
+  let inspections=0,rejectAt=2,unknown=false,sends=0;
+  const review=createCursorReview({directory,hub:{inspect:async()=>({agent,session,value:{mode:++inspections===rejectAt?'ask':'default'}}),product:()=>({id:'cursor'})},
+    flush:async()=>{},controller:()=>({prompt:async input=>{sends++;if(unknown)throw Error('unknown');agent.inbox.nextTurn.push({source:{kind:'user',rpcId:input.requestId}});return {accepted:true};}})});
+  const target={scope:'working',root:'/synthetic',revision:'a',path:'a.js',side:'new',line:1};
+  await writeFile(join(directory,createHash('sha256').update(id).digest('hex')+'.json'),JSON.stringify({version:1,revision:0,reviewed:[],
+    comments:[{id:'one',version:1,status:'draft',note:'original',context:'line',target}]}));
+  const read=()=>review.inspect(id,{kind:'notes'});
+  await assert.rejects(review.update(id,{revision:0,action:'submit'}),/执行模式/);
+  assert.equal((await read()).delivery,null);assert.equal(sends,0);
+  const patch=await review.update(id,{revision:(await read()).revision,action:'save-comment',id:'one',note:'edited'});
+  unknown=true;await assert.rejects(review.update(id,{revision:patch.revision,action:'submit'}),/unknown/);
+  const pending=await read();assert.ok(pending.delivery);assert.equal(sends,1);
+  await assert.rejects(review.update(id,{revision:pending.revision,action:'delete-comment',id:'one'}),/尚未确认/);
+  unknown=false;const accepted=await review.update(id,{revision:pending.revision,action:'submit'});
+  const resolved=await review.update(id,{revision:accepted.revision,action:'resolve-comment',id:'one'});
+  const reopened=await review.update(id,{revision:resolved.revision,action:'reopen-comment',id:'one'});
+  assert.equal(reopened.comments[0].status,'submitted');assert.equal(reopened.comments[0].requestId,pending.delivery.requestId);
+  await assert.rejects(review.update(id,{revision:reopened.revision,action:'save-comment',id:'one',note:'new'}),/保留为历史/);
 });

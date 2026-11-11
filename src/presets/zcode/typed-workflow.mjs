@@ -217,7 +217,11 @@ export function apply(ctx) {
       if (ctx.agents.get(parent.id) !== parent || ctx.omaa.modeFor(parent.session) !== 'default'
         || JSON.stringify(ctx.sandboxPolicy.resolve({ session: parent.session })) !== policyKey) { control.abort(Error('The native parent, working mode or workflow permission changed.')); signal.throwIfAborted(); }
     };
-    const progress = event => job?.append(JSON.stringify(event) + '\n');
+    const waiting = Promise.withResolvers();
+    const progress = event => {
+      if (event.type === 'escalation-raised') waiting.resolve(event);
+      job?.append(JSON.stringify(event) + '\n');
+    };
     const runProgress = createRunProgress({ store: ctx.omaa.workflowArtifacts, parent, runId, signal, stopReason: () => record.stopReason });
     const cache = createRunCache({ store: ctx.omaa.workflowArtifacts, parent, runId, imported: options.imported, replay: options.replay });
     const directories = options.directories ? Promise.resolve(options.directories) : executionDirectories(ctx, parent, signal, policy.workspaceRoot);
@@ -409,7 +413,7 @@ export function apply(ctx) {
           subagentModel: options.subagentModel, replay: options.replay, questions });
         world = createWorldReads({ ctx, parent, prepared, signal, check, actor: exec, directories });
         artifacts = createArtifacts({ ctx, parent, prepared, runId, store: ctx.omaa.workflowArtifacts, signal, check, fatal, actor: exec, directories, journal: () => journal });
-        holes = createLiveWorkflowHoles({ store: ctx.omaa.workflowArtifacts, parent, runId, signal, prepared,
+        holes = createLiveWorkflowHoles({ store: ctx.omaa.workflowArtifacts, parent, runId, signal, prepared, onOpen: entry => waiting.resolve({ type:'hole-waiting', siteId:entry.siteId }),
           prepare: prepareTypedWorkflow, check, journal: () => journal, swapPrepared(next) {
             actors.updatePrepared(next); world.updatePrepared(next); artifacts.updatePrepared(next);
             prepared = next;
@@ -495,7 +499,7 @@ export function apply(ctx) {
     })();
     record.result = result;
     ctx.omaa.workflowArtifacts.trackRun(runId, result, () => control.abort(Error('Workflow storage scope disposed.')));
-    return { runId, result, ready: ready.promise, cancel: reason => {
+    return { runId, result, ready: ready.promise, waiting: waiting.promise, attachJob: owner => { job = owner; }, cancel: reason => {
       if (reason?.kind === 'user') record.stopReason = 'user';
       control.abort(reason instanceof Error ? reason : Object.assign(Error(typeof reason === 'string' ? reason : 'Workflow canceled.'),
         { nativeReason: reason }));
@@ -507,12 +511,15 @@ export function apply(ctx) {
     const continuation = info.imported ? { eligiblePartialActors: [...info.imported.actors.values()].filter(value => value.inFlight).length, omittedPartialActors: info.imported.partialOmissions?.length ?? 0 } : undefined;
     const continuityMeta = { ...(continuation ? { continuation } : {}),
       ...(info.subagentModel === undefined ? {} : { subagentModel: info.subagentModel.canonical }) };
+    const jobHandle = run => ({ cancel: run.cancel, done: run.result.then(outcome => ({
+      status: outcome.error ? outcome.error.kind === 'abort' ? 'killed' : 'failed' : 'completed',
+      ...(outcome.error ? { detail: outcome.error.message } : {}), result: JSON.stringify(outcome)
+    }), error => ({ status:'failed', detail:error.message })) });
     if (background) {
       let run;
       const jobId = ctx.jobs.start({ kind: 'workflow', label: info.name, owner: exec.agent.id, run(job) {
         run = start(exec.agent, prepared, info, job, exec);
-        return { cancel: run.cancel, done: run.result.then(outcome => ({ status: outcome.error ? outcome.error.kind === 'abort' ? 'killed' : 'failed' : 'completed',
-          ...(outcome.error ? { detail: outcome.error.message } : {}), result: JSON.stringify(outcome) }), error => ({ status: 'failed', detail: error.message })) };
+        return jobHandle(run);
       } });
       try { await run.ready; }
       catch { const outcome = await run.result; return { ok: false, ...outcome, jobId, ...graph }; }
@@ -527,7 +534,17 @@ export function apply(ctx) {
       // Release a revision reservation only after begin/reopen and successor
       // linkage commit. Foreground live holes remain usable after admission.
       await run.ready.then(() => onReady?.(), () => {});
-      const outcome = await run.result; return { ok: !outcome.error, ...outcome, ...graph, ...continuityMeta };
+      const settled = await Promise.race([run.result.then(outcome => ({ outcome })), run.waiting.then(event => ({ event }))]);
+      if (settled.outcome) return { ok: !settled.outcome.error, ...settled.outcome, ...graph, ...continuityMeta };
+      exec.signal.throwIfAborted();
+      try {
+        const jobId = ctx.jobs.start({kind:'workflow', label:info.name, owner:exec.agent.id, run(job) {
+          run.attachJob(job); return jobHandle(run);
+        }});
+        await ctx.omaa.workflowArtifacts.mutate(exec.agent.id, run.runId, record => { record.jobId = jobId; });
+        return { ok:true, status:'backgrounded', jobId, runId:run.runId, ...graph, ...continuityMeta,
+          waiting:settled.event, response:'The same workflow is waiting for parent input. Answer the question or fill the indicated hole to continue.' };
+      } catch (error) { run.cancel(error); await run.result; throw error; }
     }
     finally { exec.signal.removeEventListener('abort', abort); }
   }
