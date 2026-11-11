@@ -1,3 +1,37 @@
+# Oh My Agents Above All 0.17.11 · DSH 0.2.2-rc.2
+
+[中文](#zh-01711) · [English](#en-01711)
+
+<a id="zh-01711"></a>
+
+## 中文
+
+### 问题修复
+
+- 预设启动失败后再编辑设置会保留其他预设。Cursor 审阅批注可以按实际投递结果重试，ZCode 工作流提问后可继续。
+- Pi 能恢复上下文超限，空闲压缩和导航可以完成；回合开始时注册的工具可在本回合调用。
+
+<a id="en-01711"></a>
+
+## English
+
+### Bug fixes
+
+- Keep other presets when settings change after a failed start. Cursor review comments can be retried according to delivery, and ZCode workflows resume after asking their parent a question.
+- Pi recognizes context overflow and completes idle navigation and compaction. Tools registered at turn start are available in that turn.
+
+## 安装 / Installation
+
+适用于 DSH **0.2.2-rc.2**、Node.js **24.9.0+**。在插件页添加下列安装包，等当前任务结束后按提示重启。
+
+Requires DSH **0.2.2-rc.2** and Node.js **24.9.0+**. Add the package from the Plugins page, finish active tasks and restart when prompted.
+
+| DSH | 固定安装包 / Fixed package | SHA256SUMS |
+| --- | --- | --- |
+| 0.2.2-rc.2 | [Oh My Agents Above All 0.17.11](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.11/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.11.tgz) | [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.11/SHA256SUMS) |
+
+---
+
 # Oh My Agents Above All 0.17.10 · DSH 0.2.2-rc.1
 
 [中文](#zh-01710) · [English](#en-01710)

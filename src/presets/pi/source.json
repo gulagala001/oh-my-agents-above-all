@@ -844,20 +844,19 @@
   },
   "nativeLoopAdapter": {
     "package": "@deepseek-ai/dsh-agent-loop",
-    "version": "0.2.2-rc.1",
-    "url": "https://registry.npmjs.org/@deepseek-ai/dsh-agent-loop/-/dsh-agent-loop-0.2.2-rc.1.tgz",
+    "version": "0.2.2-rc.2",
+    "url": "https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.2/packages/core/agent-loop",
     "license": "MIT",
-    "implementationSha256": "a6fa8e0c7c90191caf5f4a3bb5c624a86e9845cf3c79d020b71420d0e20ae4c1",
+    "implementationSha256": "f09f60814d4e96a880f41b9fc3832f33c56a28f954f48810d8439ce83ad6ffa8",
     "methods": {
-      "step": "3897f0b4f560d26ba21f640e29d1d549cf7094877d9c411178146b33d2e242b7",
+      "step": "dba57c14397d89bdf3c7b78fad8635ea23f425731aab01a0d285ccac47090b8e",
       "buildRequest": "7833829fbcb6fbcfef27c2d771e3adbdcdecf89a3ef7837f71185fad08128f42",
       "turn": "ca425adc44e08f942153dea2df45ad7372f7f1c2ecd24ea2624dd34626eba839"
     },
     "licenseSnapshot": "../../client/sources/dsh-rc2/LICENSE",
     "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be",
     "reviewedVersions": [
-      "0.2.2-alpha.3",
-      "0.2.2-rc.1"
+      "0.2.2-rc.2"
     ]
   },
   "contextAdapter": {
