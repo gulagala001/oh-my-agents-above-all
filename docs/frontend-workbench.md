@@ -71,7 +71,7 @@ Pi 会话可以从任意已完成的回合分出新分支，在分支树里切�
 
 ## 版本与兼容
 
-当前版本 OMAA 0.17.11 对应 DSH `0.2.2-rc.2`。其他 DSH 版本请到 [Releases](https://github.com/gulagala001/oh-my-agents-above-all/releases) 找对应的包，版本不一致的包不要混装。升级 DSH 前，先看新版本有没有对应的 OMAA。
+当前版本 OMAA 0.17.12 对应 DSH `0.2.2-rc.2`。其他 DSH 版本请到 [Releases](https://github.com/gulagala001/oh-my-agents-above-all/releases) 找对应的包，版本不一致的包不要混装。升级 DSH 前，先看新版本有没有对应的 OMAA。
 
 同时装了 OMD 时，OMAA 的更新检查会找与当前 DSH 版本匹配的最新发行，安装前核对校验值，不会降级。电脑操作（Computer Use）由 OMD 或 OpenCU 提供，权限和平台支持见它们的说明。中途装上或卸掉 OMD 后，需要重新加载 profile。
 

@@ -1,3 +1,31 @@
+# Oh My Agents Above All 0.17.12 · DSH 0.2.2-rc.2
+
+[中文](#zh-01712) · [English](#en-01712)
+
+<a id="zh-01712"></a>
+
+## 中文
+
+### 问题修复
+
+- 切换预设时，侧栏、设置和输入框会显示该预设选择的外观。
+
+<a id="en-01712"></a>
+
+## English
+
+### Bug fixes
+
+- Show the selected preset’s sidebar, settings and composer appearance when switching presets.
+
+## 安装 / Installation
+
+DSH **0.2.2-rc.2** · Node.js **24.9.0+**
+
+[固定安装包 / Install package](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.12.tgz) · [安装指南 / Installation guide](https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/SHA256SUMS)
+
+---
+
 # Oh My Agents Above All 0.17.11 · DSH 0.2.2-rc.2
 
 [中文](#zh-01711) · [English](#en-01711)
@@ -22,15 +50,7 @@
 - Pi recognizes context overflow and completes idle navigation and compaction. Tools registered at turn start are available in that turn.
 - Release ZCode child agents after cancellation. Grok recurring tasks can resume the previous child session and verify delivery for each occurrence.
 
-## 安装 / Installation
-
-适用于 DSH **0.2.2-rc.2**、Node.js **24.9.0+**。在插件页添加下列安装包，等当前任务结束后按提示重启。
-
-Requires DSH **0.2.2-rc.2** and Node.js **24.9.0+**. Add the package from the Plugins page, finish active tasks and restart when prompted.
-
-| DSH | 固定安装包 / Fixed package | SHA256SUMS |
-| --- | --- | --- |
-| 0.2.2-rc.2 | [Oh My Agents Above All 0.17.11](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.11/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.11.tgz) | [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.11/SHA256SUMS) |
+已撤回。 / Withdrawn.
 
 ---
 

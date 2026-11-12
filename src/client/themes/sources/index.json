@@ -17,8 +17,8 @@
     },
     {
       "path": "codex-desktop.provenance.json",
-      "bytes": 1092,
-      "sha256": "06e44a712f44a135737a9f922b745f314cd3de882ce49f53d0823e3ef449848a",
+      "bytes": 1062,
+      "sha256": "824f80ecd8be805aab3d26734b0837d5deba71452ce863d77a5adcaeb3368e73",
       "updateReason": "Index refreshed for the redistributionLicense and authorization fields added in OMAA commit 2adf328bb4de45d43b0c3238a34c354e5590a565. The original OMD asset, source metadata and historical license record are unchanged."
     },
     {

@@ -1,3 +1,4 @@
+import { setHostStyle } from './themes/shared/host-styles.mjs';
 import { applySessionTimeZone } from './session-time-zone.mjs';
 import { Button } from './ui.jsx';
 import { applyPresetQueues } from './preset-queue.jsx';
@@ -51,7 +52,7 @@ export function apply(ctx, { enabled, ready }) {
   }
   const Chip = props => <ComposerChips {...{ settings, getThemeRuntime }} sidebarRight={ctx.sidebarRight} sessionId={props.sessionId}/>
   ctx.effect(() => {
-    const tag = document.createElement('style'); tag.dataset.omaaControls = ''; tag.textContent = controlsCss + '\n' + updatesCss + '\n' + reviewChipCss + '\n' + workbenchCss;
+    const tag = document.createElement('style'); tag.dataset.omaaControls = ''; setHostStyle(tag, controlsCss + '\n' + updatesCss + '\n' + reviewChipCss + '\n' + workbenchCss);
     document.head.append(tag); return () => tag.remove();
   });
   ctx.slots.inject('conversation.input.right', () => ctx.slots.register({ name: 'conversation.input.right', id: 'omaa-preset-chip', order: 75 }, Chip));

@@ -1,3 +1,4 @@
+import { setHostStyle } from './shared/host-styles.mjs';
 import { themePacks, productThemes } from './packs.mjs';
 import { validateSkin, compileSkinCss } from './shared/format.mjs';
 import { hostTokens, tokenCss } from './shared/mapping.mjs';
@@ -37,8 +38,8 @@ export function createThemeRuntime(ctx, settings, adapterCss, layouts = {}, resp
       root.dataset.omdColors = ''; root.dataset.appearance = ctx.theme.getTheme().active.colorScheme;
       if (item.skin.layout) root.dataset.omdLayout = item.skin.layout; else delete root.dataset.omdLayout;
       const style = surface.createElement('style'); style.dataset.omaaThemeStyle = item.skin.id;
-      style.textContent = tokenCss(item.skin) + '\n' + adapterCss + '\n' + responsiveCss + '\n' + item.css
-        + (item.skin.layout ? '\n' + (layouts[item.skin.layout] || '') : '');
+      setHostStyle(style, tokenCss(item.skin) + '\n' + adapterCss + '\n' + responsiveCss + '\n' + item.css
+        + (item.skin.layout ? '\n' + (layouts[item.skin.layout] || '') : ''));
       surface.head.append(style);
       // Writing inherited aliases back to --dsw-* would create a CSS cycle.
       const disposeTokens = item.skin.inheritsHost ? undefined : ctx.theme.overrideTokens('omaa/theme', hostTokens(item.skin));
