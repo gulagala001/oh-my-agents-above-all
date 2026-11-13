@@ -1,5 +1,5 @@
 {
-  "hostRange": "0.2.2-rc.2",
+  "hostRange": "0.2.2-rc.3",
   "loaderRange": "1.1.0",
   "buildHosts": [
     {
@@ -134,6 +134,27 @@
         "@deepseek-ai/cordis-plugin-logger-console": "1.1.0",
         "@deepseek-ai/cordis-plugin-timer": "1.2.0"
       }
+    },
+    {
+      "version": "0.2.2-rc.3",
+      "commit": "38a6a5c965aa99ab525161efb7cc5cf1fe62fced",
+      "loaderVersion": "1.1.0",
+      "groupVersion": "1.1.0",
+      "cordisVersion": "4.1.0",
+      "schemasteryVersion": "3.19.0",
+      "activation": "activation",
+      "workingDirectory": true,
+      "framework": {
+        "@deepseek-ai/cordis": "4.1.0",
+        "@deepseek-ai/schemastery": "3.19.0",
+        "@deepseek-ai/cosmokit": "1.9.0",
+        "@deepseek-ai/cordis-plugin-group": "1.1.0",
+        "@deepseek-ai/cordis-plugin-hmr": "1.1.0",
+        "@deepseek-ai/cordis-plugin-include": "1.1.0",
+        "@deepseek-ai/cordis-plugin-loader": "1.1.0",
+        "@deepseek-ai/cordis-plugin-logger-console": "1.1.0",
+        "@deepseek-ai/cordis-plugin-timer": "1.2.0"
+      }
     }
   ],
   "omdBridge": {
@@ -145,7 +166,7 @@
       "0.2.2-alpha.2",
       "0.2.2-alpha.3",
       "0.2.2-rc.1",
-      "0.2.2-rc.2"
+      "0.2.2-rc.3"
     ],
     "interfaces": [
       "installOmaaEnhancement",

@@ -2,24 +2,24 @@
 
 [English](install_EN.md) · [返回首页](../README.md)
 
-需要 DSH **0.2.2-rc.2** 和 Node.js **24.9.0+**。
+需要 DSH **0.2.2-rc.3** 和 Node.js **24.9.0+**。
 
 ## 在 DSH 里安装
 
 打开 **插件 → ＋ 添加插件**，粘贴：
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.12.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.13.tgz
 ```
 
-等手头的任务跑完，按提示启用或重启 DSH。校验文件：[SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/SHA256SUMS)。
+等手头的任务跑完，按提示启用或重启 DSH。校验文件：[SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/SHA256SUMS)。
 
 ## 用命令行安装
 
 用同一个 DSH 自带的命令行，把 `web` 换成你的 profile（桌面版是 `desktop`）：
 
 ```bash
-dsh plugin --profile web add "https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.12.tgz"
+dsh plugin --profile web add "https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.13.tgz"
 ```
 
 不需要 OMD 也能单独用；同时装了 OMD 的话，请选同一个 DSH 版本的 [OMD](https://github.com/gulagala001/oh-my-dsh/blob/main/docs/install.md)。其他 DSH 版本请到 [Releases](https://github.com/gulagala001/oh-my-agents-above-all/releases) 找对应的包，版本不一致的包不要混装。
@@ -36,8 +36,8 @@ dsh plugin --profile web add "https://github.com/gulagala001/oh-my-agents-above-
 
 ```text
 请把 OMAA 安装到我现在用的 DSH profile：
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.2.omaa.0.17.12/oh-my-agents-above-all-0.2.2-rc.2.omaa.0.17.12.tgz
-先确认 DSH 是 0.2.2-rc.2、Node.js 是 24.9.0 以上。
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.13.tgz
+先确认 DSH 是 0.2.2-rc.3、Node.js 是 24.9.0 以上。
 保留原来的配置、会话、模型设置和其他插件，不要升级 DSH；需要重启时先确认没有任务在跑。
 装好后确认 设置 → OMAA 能打开。
 ```

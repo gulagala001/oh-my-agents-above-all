@@ -823,7 +823,7 @@
     },
     "transactionCompatibility": {
       "package": "@deepseek-ai/dsh-schedule",
-      "version": "0.2.2-rc.2",
+      "version": "0.2.2-rc.3",
       "entry": "lib/index.js",
       "implementationSha256": "f06a57f6fd5d7b0d2666b4d1b1a27d96aa3035a66de40ad2fc9cef3eba580040",
       "boundary": "Native Schedule FIFO and task-domain handle only for phase-preserving Grok interval changes. Creation, metadata/calendar edits, deletion, listing and history use the public Host API; Session targets retain preset ownership.",
@@ -838,7 +838,7 @@
       },
       "onMismatch": "Refuse extended mutations without changing the native service. A host upgrade requires renewed contract review and a native execution check.",
       "reviewedVersions": [
-        "0.2.2-rc.2"
+        "0.2.2-rc.3"
       ]
     }
   },

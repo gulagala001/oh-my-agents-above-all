@@ -844,8 +844,8 @@
   },
   "nativeLoopAdapter": {
     "package": "@deepseek-ai/dsh-agent-loop",
-    "version": "0.2.2-rc.2",
-    "url": "https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.2/packages/core/agent-loop",
+    "version": "0.2.2-rc.3",
+    "url": "https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.3/packages/core/agent-loop",
     "license": "MIT",
     "implementationSha256": "f09f60814d4e96a880f41b9fc3832f33c56a28f954f48810d8439ce83ad6ffa8",
     "methods": {
@@ -856,7 +856,7 @@
     "licenseSnapshot": "../../client/sources/dsh-rc2/LICENSE",
     "licenseSha256": "ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be",
     "reviewedVersions": [
-      "0.2.2-rc.2"
+      "0.2.2-rc.3"
     ]
   },
   "contextAdapter": {
