@@ -28,10 +28,10 @@
 In DSH, open **Plugins → Add plugin** and paste:
 
 ```text
-https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.13.tgz
+https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.14/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.14.tgz
 ```
 
-When your current task finishes, fully restart DSH when prompted. Your settings and conversations stay as they were. For command-line installs, upgrades and removal, see the [installation guide](docs/install_EN.md). Checksums: [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.13/SHA256SUMS).
+When your current task finishes, fully restart DSH when prompted. Your settings and conversations stay as they were. For command-line installs, upgrades and removal, see the [installation guide](docs/install_EN.md). Checksums: [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.14/SHA256SUMS).
 
 ### 2. Turn on a preset
 
