@@ -22,7 +22,7 @@ const artifactOrder = artifacts => [...artifacts].sort((a, b) => Number(Boolean(
 // Native run storage is authoritative. Reads are singleflight, with one pending reread;
 // changing selection invalidates responses even if a transport ignores abort.
 export function createZCodeWorkflowsController(settings, sidebarRight, request = fetch) {
-  let state = emptyState(), disposed = false, visible = false, generation = 0, controller, flight, pending = false, timer, requestedSelection = '';
+  let state = emptyState(), disposed = false, visible = false, generation = 0, stopOwner, controller, flight, pending = false, timer, requestedSelection = '';
   const listeners = new Set();
   const mountedId = () => sidebarRight?.mounted?.getSnapshot ? sidebarRight.mounted.getSnapshot() : settings.getSnapshot().sessionId;
   const currentId = () => {
@@ -58,14 +58,18 @@ export function createZCodeWorkflowsController(settings, sidebarRight, request =
         }
         const runId = runs.some(run => run.runId === state.runId) ? state.runId : runs[0]?.runId || '';
         requestedSelection = '';
-        if (runId !== state.runId) emit({ runs, runId, detail: null, artifactId: '', ...itemPageState(), ...reportPageState() });
-        else emit({ runs });
+        if (runId !== state.runId) {
+          stopOwner = undefined;
+          emit({ runs, runId, detail: null, artifactId: '', ...itemPageState(), ...reportPageState(), stopping: false, stopRequested: false });
+        } else emit({ runs });
         if (!runId) return;
         const detail = await read('zcode-workflow', { session: id, run: runId, after: state.reportAfter, limit: 200 }, signal);
         if (!valid(id, ticket) || state.runId !== runId) return;
         const artifacts = artifactOrder(Array.isArray(detail.artifacts) ? detail.artifacts : []);
         const artifactId = artifacts.some(artifact => artifact.id === state.artifactId) ? state.artifactId : artifacts[0]?.id || '';
-        const settled = terminalStatuses.has(detail.status) ? { stopping: false, stopRequested: false } : {};
+        const terminal = terminalStatuses.has(detail.status);
+        if (terminal) stopOwner = undefined;
+        const settled = terminal ? { stopping: false, stopRequested: false } : {};
         if (artifactId !== state.artifactId) emit({ detail, artifactId, ...itemPageState(), ...settled });
         else emit({ detail, ...settled });
         const artifact = artifacts.find(value => value.id === artifactId);
@@ -108,7 +112,7 @@ export function createZCodeWorkflowsController(settings, sidebarRight, request =
   const sync = () => {
     const id = currentId(), running = Boolean(settings.getSnapshot().data?.running);
     if (id !== state.sessionId) {
-      ++generation; controller?.abort(); stopTimer(); pending = false; requestedSelection = '';
+      ++generation; stopOwner = undefined; controller?.abort(); stopTimer(); pending = false; requestedSelection = '';
       emit({ ...emptyState(), sessionId: id });
       if (visible && id) void refresh();
     } else if (visible && id && wasRunning !== running) void refresh();
@@ -138,7 +142,7 @@ export function createZCodeWorkflowsController(settings, sidebarRight, request =
       if (!currentId() || typeof runId !== 'string' || !runId || (!requested && !state.runs.some(run => run.runId === runId))) return;
       requestedSelection = requested ? runId : '';
       if (state.runId === runId && state.detail) return;
-      ++generation; controller?.abort();
+      ++generation; stopOwner = undefined; controller?.abort();
       emit({ runId, detail: null, artifactId: '', ...itemPageState(), ...reportPageState(), error: '', loading: false, stopping: false, stopRequested: false });
       void refresh();
     },
@@ -181,7 +185,8 @@ export function createZCodeWorkflowsController(settings, sidebarRight, request =
     async stop() {
       const id = currentId(), runId = state.runId;
       if (!id || !state.detail || terminalStatuses.has(state.detail.status) || state.stopping || state.stopRequested) return;
-      const stillSelected = () => !disposed && currentId() === id && state.runId === runId;
+      const owner = stopOwner = {};
+      const stillSelected = () => stopOwner === owner && !disposed && currentId() === id && state.runId === runId;
       emit({ stopping: true, error: '' });
       try {
         const response = await request(endpoint('zcode-workflow', { session: id, run: runId }), { credentials: 'same-origin', method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });

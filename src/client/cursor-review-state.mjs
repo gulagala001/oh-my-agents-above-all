@@ -10,7 +10,7 @@ const initial = (id, product) => ({ sessionId: id, options: { scope: product ===
 const instances = new WeakMap();
 
 export function createCursorReviewState(settings, request = fetch, product = 'cursor') {
-  let state = initial(settings.getSnapshot().sessionId, product), generation = 0, reader, notesReader, editorRequest, disposed = false, pendingOpen = false;
+  let state = initial(settings.getSnapshot().sessionId, product), generation = 0, metadataTicket = 0, reader, notesReader, editorRequest, disposed = false, pendingOpen;
   const listeners = new Set();
   const emit = patch => { state = { ...state, ...patch }; for (const listener of listeners) listener(); };
   const owns = (id, ticket) => !disposed && generation === ticket && settings.getSnapshot().sessionId === id && settings.getSnapshot().data?.product?.id === product;
@@ -32,12 +32,12 @@ export function createCursorReviewState(settings, request = fetch, product = 'cu
       if (!signal.aborted && owns(id, ticket)) emit({ notes, notesLoading: false });
     } catch (error) { if (!signal.aborted && owns(id, ticket)) emit({ notesLoading: false, error: error.message, errorCode: error.code || '' }); }
   }
-  async function open(input = state.options) {
+  async function open(input = { ...state.options, path: state.detail?.diff?.path }) {
     const id = state.sessionId, ticket = generation; assertCursorReview(settings, id, product);
-    if (state.writing) { pendingOpen = true; return; }
-    pendingOpen = false;
-    reader?.abort(); reader = new AbortController(); const signal = reader.signal;
     const options = cursorReviewOptions(input);
+    if (state.writing) { pendingOpen = options; return; }
+    pendingOpen = undefined;
+    reader?.abort(); reader = new AbortController(); const signal = reader.signal;
     const requestedPath = options.path; delete options.path; delete options.revision;
     emit({ options, reading: true, summary: null, detail: null, error: '', errorCode: '' });
     try {
@@ -61,9 +61,9 @@ export function createCursorReviewState(settings, request = fetch, product = 'cu
     } catch (error) { if (!signal.aborted && owns(id, ticket)) emit({ reading: false, error: error.message, errorCode: error.code || '', ...(error.code === 'revision-conflict' ? { summary: null } : {}) }); }
   }
   async function metadata() {
-    const id = state.sessionId, ticket = generation; assertCursorReview(settings, id, product);
+    const id = state.sessionId, ticket = generation, requestTicket = ++metadataTicket; assertCursorReview(settings, id, product);
     const results = await Promise.allSettled([api(id, { kind: 'references' }), api(id, { kind: 'turns' }), api(id, { kind: 'editors' })]);
-    if (!owns(id, ticket)) return;
+    if (!owns(id, ticket) || requestTicket !== metadataTicket) return;
     emit({ editors: results[2].status === 'fulfilled' ? results[2].value.editors : [], refs: results[0].status === 'fulfilled' ? results[0].value.refs : [],
       currentBranch: results[0].status === 'fulfilled' ? results[0].value.current : '',
       turns: results[1].status === 'fulfilled' ? results[1].value.turns : [] });
@@ -88,10 +88,14 @@ export function createCursorReviewState(settings, request = fetch, product = 'cu
     emit({ writing: true, error: '', errorCode: '' });
     try {
       const notes = await api(id, {}, { ...patch, revision: state.notes.revision });
-      if (owns(id, ticket)) { emit({ notes, writing: false }); if (pendingOpen) await open(); }
+      if (owns(id, ticket)) { emit({ notes, writing: false }); if (pendingOpen) await open(pendingOpen); }
       return notes;
     } catch (error) {
-      if (owns(id, ticket)) { emit({ writing: false, error: error.message, errorCode: error.code || '' }); await refreshNotes(); }
+      if (owns(id, ticket)) {
+        emit({ writing: false });
+        if (pendingOpen) await open(pendingOpen);
+        if (owns(id, ticket)) { emit({ error: error.message, errorCode: error.code || '' }); await refreshNotes(); }
+      }
       throw error;
     }
   }
@@ -106,17 +110,21 @@ export function createCursorReviewState(settings, request = fetch, product = 'cu
     try {
       const result = await api(id, {}, { scope: summary.scope, ...(summary.ref ? { ref: summary.ref } : {}), revision: summary.revision, path, action,
         ...(hunk === undefined ? {} : { hunk }) }, undefined, 'git-review');
-      if (owns(id, ticket)) { emit({ summary: result.summary, detail: null, writing: false }); await open({ ...state.options, path }); }
+      if (owns(id, ticket)) { emit({ summary: result.summary, detail: null, writing: false }); await open(pendingOpen ?? { ...state.options, path }); }
       return result;
     } catch (error) {
-      if (owns(id, ticket)) emit({ writing: false, error: error.message, errorCode: error.code || '', ...(error.code === 'revision-conflict' ? { summary: null, detail: null } : {}) });
+      if (owns(id, ticket)) {
+        emit({ writing: false, ...(error.code === 'revision-conflict' ? { summary: null, detail: null } : {}) });
+        if (pendingOpen) await open(pendingOpen);
+        if (owns(id, ticket)) emit({ error: error.message, errorCode: error.code || '' });
+      }
       throw error;
     }
   }
   const off = settings.subscribe(() => {
     const current = settings.getSnapshot();
     if (current.sessionId === state.sessionId && (current.data?.product?.id === product || current.loading)) return;
-    ++generation; pendingOpen = false; reader?.abort(); notesReader?.abort(); editorRequest?.abort(); emit(initial(current.sessionId, product));
+    ++generation; pendingOpen = undefined; reader?.abort(); notesReader?.abort(); editorRequest?.abort(); emit(initial(current.sessionId, product));
   });
   return { getSnapshot: () => state, subscribe: callback => { listeners.add(callback); return () => listeners.delete(callback); },
     product, open, select, metadata, refreshNotes, update, openEditor, mutate,

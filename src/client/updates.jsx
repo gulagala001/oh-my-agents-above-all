@@ -32,6 +32,7 @@ export function Updates({ embedded = false } = {}) {
     return () => { active.current = false; lifetime.current.abort(); clearTimeout(timer.current); };
   }, []);
   const busy = pending || ['checking', 'decision', 'installing', 'applying'].includes(data?.phase);
+  const checking = pending || (!error && busy);
   const action = (target, version) => void load({ action: 'install', target, version });
   const restart = data?.restartRequired || data?.phase === 'restart-required';
   const hint = data?.phase === 'decision' ? '正在等待你确认预检结果…' : data?.phase === 'cancelled' ? '更新已取消' : data?.phase === 'installing' || data?.phase === 'applying' ? '正在通过原生插件管理安装配对更新…'
@@ -47,7 +48,7 @@ export function Updates({ embedded = false } = {}) {
     {data?.installed?.length > 0 && <p className="omaa-help">已安装：{data.installed.map(row => row.version).join('、')}</p>}
     {(error || data?.error) && <p className="omaa-error" role="alert">{error || data.error}</p>}
     <div className="omaa-update-actions">
-      <Button type="button" className="omaa-retry" disabled={busy} onClick={() => void load(true)}>{busy ? '处理中…' : '检查更新'}</Button>
+      <Button type="button" className="omaa-retry" disabled={checking} onClick={() => void load(error ? false : true)}>{checking ? '处理中…' : error ? '重新读取状态' : '检查更新'}</Button>
       {data?.updateAvailable && <Button type="button" className="omaa-retry" disabled={busy || !data.available || restart} onClick={() => action('omaa', data.latestVersion)}>更新 OMAA{data.omdUpdateAvailable ? ' 与兼容 OMD' : ''}</Button>}
       {!data?.updateAvailable && data?.omdUpdateAvailable && <Button type="button" className="omaa-retry" disabled={busy || !data.available || restart} onClick={() => action('omd', data.latestOmdVersion)}>更新兼容 OMD</Button>}
       <a href={data?.releaseNotesUrl || 'https://github.com/gulagala001/oh-my-agents-above-all/releases'} target="_blank" rel="noopener noreferrer">发行说明 ↗</a>
