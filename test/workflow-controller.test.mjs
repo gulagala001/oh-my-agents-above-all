@@ -89,7 +89,7 @@ async function withController(kind, check) {
         { name: 'engine-' + version }, { name: 'tool-' + version },
         ...kind === 'provider-removed' ? [{ name: 'stage' }] : [],
       ] });
-      await check({ root, hub, entry: tree.store.controller, nativeEntered, nativeGate,
+      await check({ root, hub, member, entry: tree.store.controller, nativeEntered, nativeGate,
         oldDisposeEntered, oldDisposeGate, enhancedEntered, enhancedGate, observations,
         schemas: () => definitions, queue: () => { queued = true; },
         setProvider: value => { provider = value; }, failNative: value => { failNative = value; }, bridge });
@@ -186,5 +186,20 @@ test('config reload revisits a failed composition on the same bridge and provide
     const current=[...f.hub.workflowControllers][0];await until(()=>current.mode==='native'&&current.error);
     fixed=true;f.root.emit('app-boot/config-reload');await until(()=>current.mode==='omd');
     assert.equal(current.error,null);assert.equal(f.schemas().length,1);
+  });
+});
+
+test('deferring a busy upgrade retains native ownership; retry waits for idle and installs once', async () => {
+  await withController('defer-upgrade', async f => {
+    await f.entry.fiber.await();
+    const idle = Promise.withResolvers(); f.member.status = 'running'; f.member.whenIdle = () => idle.promise;
+    f.setProvider({ name: 'omd-workflow' }); f.root.provide('omd', f.bridge('v1'));
+    f.root.emit('subagent/provider-added', { name: 'omd-workflow' });
+    const [current] = f.hub.workflowControllers;
+    await until(() => current.transition?.canDefer);
+    assert.equal(current.transition.agents, 1); current.defer();
+    await tick(); assert.equal(current.transition.deferred, true); assert.deepEqual(f.schemas().map(row => row.version), ['native']);
+    f.member.status = 'idle'; idle.resolve(); await current.retry();
+    assert.equal(current.transition, null); assert.deepEqual(f.schemas().map(row => row.version), ['v1']);
   });
 });

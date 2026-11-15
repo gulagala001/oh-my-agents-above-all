@@ -101,7 +101,7 @@ export function createSessionSettings(ctx, request = fetch, enabled) {
       if (!state.data?.product) throw new Error('请选择 OMAA 预设会话。');
       if (state.saving) throw new Error('正在保存会话设置，请稍候。');
       if (state.loading || state.error) throw new Error('请先重新读取会话设置，再修改。');
-      if (state.data.running) throw new Error('请先停止当前任务，再修改预设设置。');
+      if (state.data.running && !(patch.deferWorkflow === true && Object.keys(patch).length === 1)) throw new Error('请先停止当前任务，再修改预设设置。');
       if (Object.hasOwn(patch, 'mode') && state.data.pendingMode) throw new Error('当前模式切换等待处理，请先在宿主提示中继续。');
       if (Object.hasOwn(patch, 'projectMemory') && (state.data.product.id !== 'zcode' || state.data.mode !== 'default'
         || state.data.pendingMode || Object.keys(patch).some(key => key !== 'projectMemory')))
@@ -227,13 +227,17 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     if (!compact && visible && state.sessionId) void settings.refresh();
   }, [settings, state.sessionId, compact, visible]);
   const data = state.data, product = data?.product;
+  useEffect(() => {
+    if (compact || !visible || !data?.workflowTransition || data.workflowTransition.deferred || state.saving || state.loading || state.error) return;
+    const timer = setTimeout(() => void settings.refresh(), 2000); return () => clearTimeout(timer);
+  }, [compact, visible, settings, data, state.loading, state.saving, state.error]);
   const enhancementWorkMode = state.pendingPatch?.enhancementWorkMode ?? workModeOf(data);
   const enhancementWorkSubmode = state.pendingPatch?.enhancementWorkSubmode ?? workSubmodeOf(data);
   const activeWorkMode = workModeAvailable(data) && data.enhancementWorkModeActive === true
     ? workLabel(data.enhancementWorkModeCurrent ?? workModeOf(data), data.enhancementWorkSubmodeCurrent ?? workSubmodeOf(data)) : '';
   const compactProduct = product ?? productForPreset(state.agentPreset);
   const compactName = compactProduct?.id === 'pi' ? 'Pi' : compactProduct?.id === 'grok' ? 'Grok' : compactProduct?.name;
-  const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.running ? 'running' : data?.pendingMode ? 'pending' : 'ready';
+  const phase = state.saving ? 'saving' : state.loading ? 'loading' : state.error ? 'error' : data?.pendingMode ? 'pending' : data?.running ? 'running' : 'ready';
   const phaseLabel = { error: '读取失败', saving: '保存中', loading: '读取中', running: '执行中', pending: '待确认' }[phase];
   const compactStatus = phaseLabel || (product ? (data.mode !== 'default' ? modeLabel(data.mode) : activeWorkMode || (data.enhancementActive ? 'OMD' : '')) : '');
   if (compact) return compactProduct ? <Button type="button" variant="ghost" className="omaa-preset-chip" aria-label={`${compactProduct.name} 预设设置`}
@@ -257,6 +261,9 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
     {state.saving && <p role="status" className="omaa-help">正在保存会话设置…</p>}
     {(!state.loading && state.error || localError || appearanceState.error) && <p role="alert" className="omaa-error">{!state.loading && state.error || localError || appearanceState.error}</p>}
     {product && <>
+      {data.workflowTransition && <p role="status" className="omaa-help">本预设工作流：{data.workflowStatus} → {data.workflowTransition.target}。{data.workflowTransition.deferred
+        ? <>已延后，继续使用原生工作流。<Button disabled={disabled} onClick={() => change({ retryWorkflow: true })}>重新尝试切换</Button></>
+        : <>等待安全切换（运行中代理 {data.workflowTransition.agents}，工作流作业 {data.workflowTransition.jobs}）。{data.workflowTransition.canDefer && <Button disabled={state.saving || state.loading} onClick={() => change({ deferWorkflow: true })}>保留原生工作流</Button>}</>}</p>}
       {data.workflowStatus === 'failed' && <p role="alert" className="omaa-error">工作流暂不可用：{data.workflowError}
         <Button type="button" disabled={disabled} onClick={() => change({ retryWorkflow: true })}>重试工作流</Button></p>}
       {product.id === 'pi' ? <div className="omaa-setting-row"><span>工作模式</span><span className="omaa-setting-value">执行（Pi 默认模式）</span></div>

@@ -8,6 +8,7 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
   const id = session.sessionId, enabled = session.data?.product?.id === 'cursor';
   const [state, setState] = useState({ data: null, error: '', busy: false, loading: false });
   const [turn, setTurn] = useState();
+  const [confirmation, setConfirmation] = useState(null);
   const [reload, setReload] = useState(0);
   const ticket = useRef(0);
   const api = async (query = '', patch, signal) => {
@@ -20,7 +21,7 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     return value;
   };
   useEffect(() => {
-    setState({ data: null, error: '', busy: false, loading: false }); setTurn(undefined);
+    setState({ data: null, error: '', busy: false, loading: false }); setTurn(undefined); setConfirmation(null);
   }, [id, enabled]);
   useEffect(() => {
     const controller = new AbortController(), revision = ++ticket.current;
@@ -56,12 +57,15 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
       if (settings.getSnapshot().sessionId === id && ticket.current === revision) setState(previous => ({ ...previous, busy: false, error: error.message }));
     }
   };
+  const requestRestore = paths => setConfirmation({ id, turn, paths, selected });
   const restore = paths => act(async () => {
     const current = settings.getSnapshot();
-    if (current.loading || current.saving || current.error || current.data?.pendingMode || current.data?.mode !== 'default') throw Error('请在设置已确认的执行模式下恢复文件。');
+    if (current.data?.running || current.loading || current.saving || current.error || current.data?.pendingMode || current.data?.mode !== 'default') throw Error('请在设置已确认的执行模式下恢复文件。');
+    setConfirmation(null);
     const result = await api('', { turn, paths });
     assertCheckpointSession(settings, id, sidebarRight);
-    const data = await api();
+    let data;
+    try { data = await api(); } catch (error) { return { data: null, result, error: `已收到恢复回执，列表未刷新：${error.message}。请刷新检查点，不要重复恢复。` }; }
     return { data, result, error: result.ok ? '' : result.conflicts.map(item => `${item.path}: ${item.message}`).join('\n') };
   });
   const navigate = operation => {
@@ -87,7 +91,7 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
       <code>{file.path}</code>
       {(file.restored ? file.before : file.after)?.kind !== 'absent' && <Button type="button" disabled={readingBusy} onClick={() => navigate(() => openCheckpointFile(settings, sidebarRight, id, file))}>预览当前文件</Button>}
       <Button type="button" disabled={cannotFindIssues} onClick={() => findIssues(file.path)}>查找此文件问题</Button>
-      <Button type="button" disabled={!canRestore || !file.restorable || file.restored} onClick={() => restore([file.path])}>{file.restored ? '已恢复' : '恢复文件'}</Button>
+      <Button type="button" disabled={!canRestore || !file.restorable || file.restored} onClick={() => requestRestore([file.path])}>{file.restored ? '已恢复' : '恢复文件'}</Button>
       {!file.restorable && <small>此文件无法精确恢复</small>}
     </div>)}
     {selected?.files.length > 0 && <div className="omaa-checkpoint-review">
@@ -107,7 +111,13 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     </div>}
     {selected && !selected.reviewAvailable && <p className="omaa-help">该回合的宿主比较已不可用；仍可恢复已保存的文本文件。</p>}
     {selected?.captureLimitReached && <p className="omaa-help">本回合超过捕获上限，部分文件无法恢复。</p>}
-    {selected?.files.some(file => file.restorable && !file.restored) && <Button type="button" disabled={!canRestore} onClick={() => restore(selected.files.filter(file => file.restorable && !file.restored).map(file => file.path))}>恢复本回合可恢复文件</Button>}
+    {selected?.files.some(file => file.restorable && !file.restored) && <Button type="button" disabled={!canRestore} onClick={() => requestRestore(selected.files.filter(file => file.restorable && !file.restored).map(file => file.path))}>恢复本回合可恢复文件</Button>}
+    {confirmation && confirmation.selected === selected && confirmation.id === id && confirmation.turn === turn && <div role="group" aria-label="确认恢复检查点">
+      <p>将以下 {confirmation.paths.length} 个文件还原至回合 {turn} 修改前，保留对话：</p>
+      <ul>{confirmation.paths.map(path => <li key={path}><code>{path}</code></li>)}</ul>
+      <Button type="button" onClick={() => setConfirmation(null)}>取消</Button>
+      <Button type="button" disabled={!canRestore} onClick={() => restore(confirmation.paths)}>确认恢复</Button>
+    </div>}
     {state.result && <p role="status">{state.result.ok ? `已恢复 ${state.result.restored.length} 个文件。` : state.result.partial ? '仅部分文件已恢复，请查看冲突。' : '未恢复文件，请查看冲突。'}</p>}
     {state.error && <p role="alert" className="omaa-error">{state.error}</p>}
   </section>;

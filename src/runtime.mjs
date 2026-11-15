@@ -95,13 +95,18 @@ async function mount(ctx) {
         enhancementWorkSubmode: workView?.submode ?? 'free', enhancementWorkSavedSubmode: workView?.savedSubmode ?? workView?.submode ?? 'free',
         enhancementWorkModeCurrent: currentWorkMode, enhancementWorkSubmodeCurrent: workView?.currentSubmode ?? workControl?.submode?.(session, agent) ?? workView?.submode ?? 'free',
         enhancementWorkModePending: Boolean(enhancementActive && workView?.pending),
-        workflowStatus: hub.workflowFor(agent)?.mode ?? null, workflowError: hub.workflowFor(agent)?.error ?? null,
+        workflowTransition: hub.workflowFor(agent)?.transition ?? null, workflowStatus: hub.workflowFor(agent)?.mode ?? null, workflowError: hub.workflowFor(agent)?.error ?? null,
         enhancementTeamAvailable: workView?.teamAvailable === true, enhancementWorkModeAvailable: workAvailable, enhancementWorkModeActive: currentWorkMode !== 'off' } };
     },
     async update(sessionId, patch) {
       const { agent, session, value } = await hub.inspect(sessionId);
       const product = hub.product(session);
       if (!product) throw new Error('请选择 OMAA 预设会话');
+      if (patch?.deferWorkflow === true && Object.keys(patch).length === 1) {
+        const workflow = hub.workflowFor(agent);
+        if (!workflow) throw Error('工作流组件尚未加载');
+        workflow.defer(); return (await hub.inspect(sessionId)).value;
+      }
       if (agent?.status === 'running' || hub.piExtensions?.states.get(session.id)?.sessionOperation) throw new Error('请先停止当前任务，再修改预设设置');
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('无效的预设设置');
       if (Object.hasOwn(patch, 'retryWorkflow')) {

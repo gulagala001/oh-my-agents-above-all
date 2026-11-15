@@ -1,16 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { realpath } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { checkpointFileAddress, checkpointReviewAddress, openCheckpointFile, openCheckpointReview, assertCheckpointSession } from '../src/client/checkpoint-navigation.mjs';
 
-const packages = await readdir(new URL('../node_modules/.pnpm/', import.meta.url));
-const source = (name, file) => new URL(`../node_modules/.pnpm/${packages.find(value => value.startsWith('@deepseek-ai+' + name + '@'))}/node_modules/@deepseek-ai/${name}/${file}`, import.meta.url);
-const { sessionFileAddress } = await import(source('dsh-util-workspace-path', 'lib/index.js'));
-// This native helper is internal to the browser bundle, not a public export.
-const nativeBundle = await readFile(source('dsh-client-ui-deliverables', 'lib/client.js'), 'utf8');
-const addressConstant = nativeBundle.match(/const CHANGES_REVIEW_ADDRESS = [^;]+;/)[0];
-const addressFunction = nativeBundle.match(/function changesReviewAddress\(coordinates\) \{[\s\S]*?\n\t\t\}/)[0];
-const changesReviewAddress = new Function(`${addressConstant}\n${addressFunction}\nreturn changesReviewAddress;`)();
+const sdk = createRequire(await realpath(new URL('../node_modules/@deepseek-ai/dsh/package.json', import.meta.url)));
+const { sessionFileAddress } = await import(pathToFileURL(sdk.resolve('@deepseek-ai/dsh-util-workspace-path')));
+const { changesReviewAddress } = await import(pathToFileURL(sdk.resolve('@deepseek-ai/dsh-client-ui-deliverables/src/changes.ts')));
 const checkpoint = { turn: 3, seq: 27, reviewAvailable: true, summary: { files: [{ path: 'src/a.js' }, { path: 'src/b.js' }] } };
 function fixture() {
   let state = { sessionId: 'a/#', data: { product: { id: 'cursor' }, running: false } }, mounted = state.sessionId;

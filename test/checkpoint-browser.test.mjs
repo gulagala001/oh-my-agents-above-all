@@ -30,7 +30,7 @@ test('packed Cursor checkpoints open native review and current preview without c
   t.after(async () => { try { if (!t.passed && !page.isClosed()) { await page.screenshot({ path: '.cache/checkpoint-browser-failure.png' }); t.diagnostic((await page.locator('body').innerText()).slice(-6000)); t.diagnostic(JSON.stringify(errors)); } } finally { await browser.close(); } });
   await page.goto(f.origin); await page.getByRole('button', { name: /^(Continue|继续)$/ }).click();
   const openSettings = async () => { await page.getByRole('button', { name: 'Cursor 预设设置', exact: true }).click(); await page.getByRole('region', { name: 'Cursor 文件检查点' }).waitFor(); };
-  await page.getByText('Cursor review navigation', { exact: true }).first().click(); await openSettings();
+  await page.locator(`[data-row-key="session:${cursor.sessionId}"]:visible`).first().click(); await openSettings();
   const files = page.getByRole('region', { name: 'Cursor 文件检查点' });
   await files.getByRole('button', { name: '审阅本回合 2 个文件', exact: true }).click();
   const review = page.locator('[data-changes-review]:visible');
@@ -63,13 +63,17 @@ test('packed Cursor checkpoints open native review and current preview without c
       && buttons.some(button => button.textContent === '预览当前文件' && !button.disabled);
   });
   await page.screenshot({ path: '.cache/cursor-checkpoint-running.png' });
-  await page.getByText('Codex unchanged session', { exact: true }).first().click();
+  await page.locator(`[data-row-key="session:${codex.sessionId}"]:visible`).first().click();
   await page.getByRole('button', { name: 'Codex 预设设置', exact: true }).click();
   assert.equal(await page.getByRole('region', { name: 'Cursor 文件检查点' }).count(), 0);
   release(); await until(async () => !(await f.api(cursor.sessionId)).value.running);
   assert.equal(await readFile(join(f.workspace, 'review-a.txt'), 'utf8'), 'After review\nSecond line\n');
-  await page.getByText('Cursor review navigation', { exact: true }).first().click(); await openSettings();
+  await page.locator(`[data-row-key="session:${cursor.sessionId}"]:visible`).first().click(); await openSettings();
   await a.getByRole('button', { name: '恢复文件', exact: true }).click();
+  assert.equal(await readFile(join(f.workspace, 'review-a.txt'), 'utf8'), 'After review\nSecond line\n');
+  await files.getByRole('button', { name: '取消', exact: true }).click();
+  await a.getByRole('button', { name: '恢复文件', exact: true }).click();
+  await files.getByRole('button', { name: '确认恢复', exact: true }).click();
   await files.getByRole('status').filter({ hasText: '已恢复 1 个文件' }).waitFor();
   await a.getByRole('button', { name: '预览当前文件', exact: true }).click();
   await page.locator('[data-textpreview-body]:visible').getByText('Before review', { exact: true }).waitFor();

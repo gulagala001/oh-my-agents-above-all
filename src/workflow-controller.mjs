@@ -16,7 +16,7 @@ export async function apply(ctx, config) {
   const tree = ctx.fiber.entry.parent.tree;
   const { scope: revision, matches: owned } = await scopeBinding(ctx);
   let branch, bridge = ctx.get('omd'), active = true, pending = false, draining;
-  let replacing, failedTarget;
+  let replacing, failedTarget, deferredTarget, waiting;
   const retiring = new Set();
   const retire = async owner => {
     if (!owner) return;
@@ -24,10 +24,20 @@ export async function apply(ctx, config) {
     await owner.dispose(); retiring.delete(owner);
   };
   const controller = { matches: owned, mode: 'native', error: null,
+    get transition() {
+      const wanted = target();
+      if (deferredTarget && deferredTarget.bridge === bridge && deferredTarget.provider === ctx.subagents.getProvider('omd-workflow')) return { deferred: true, target: 'omd' };
+      if (waiting && same(waiting.target, wanted)) return { target: wanted.mode, agents: liveAgents().filter(agent => agent.status === 'running').length, jobs: activeJobs().length,
+        canDefer: branch?.mode === 'native' && wanted.mode === 'omd' };
+      return null;
+    },
+    defer() {
+      if (!controller.transition?.canDefer) throw Error('切换已开始或目标已变化，不能取消等待。');
+      deferredTarget = waiting.target; schedule();
+    },
     async retry() {
       if (!active) throw Error('工作流组件已停止');
-      await draining;
-      failedTarget = undefined;
+      deferredTarget = undefined; failedTarget = undefined;
       await schedule();
       if (controller.mode === 'failed') throw Error(controller.error);
     } };
@@ -35,7 +45,7 @@ export async function apply(ctx, config) {
   ctx.effect(() => {
     hub.workflowControllers.add(controller);
     return async () => {
-      active = false;
+      active = false; waiting?.cancel.abort();
       controller.mode = 'closed';
       hub.workflowControllers.delete(controller);
       const results = await Promise.allSettled([...new Set([branch?.owner, ...retiring].filter(Boolean))].map(retire));
@@ -47,11 +57,13 @@ export async function apply(ctx, config) {
   const target = () => {
     const provider = ctx.subagents.getProvider('omd-workflow');
     if (typeof bridge?.omaaWorkflowComposition !== 'function' || !provider
+      || deferredTarget?.bridge === bridge && deferredTarget?.provider === provider
       || failedTarget?.bridge === bridge && failedTarget?.provider === provider) return { mode: 'native' };
     return { mode: 'omd', bridge, provider };
   };
   const same = (a, b) => a?.mode === b.mode && a?.bridge === b.bridge && a?.provider === b.provider;
-  const busyJobs = () => liveAgents().some(agent => ctx.get('jobs')?.list(agent.id).some(job => job.kind === 'workflow' && ['running', 'stopping'].includes(job.status)));
+  const activeJobs = () => liveAgents().flatMap(agent => (ctx.get('jobs')?.list(agent.id) ?? []).filter(job => job.kind === 'workflow' && ['running', 'stopping'].includes(job.status)));
+  const busyJobs = () => activeJobs().length > 0;
 
   async function mount(wanted) {
     const rows = wanted.mode === 'omd' ? wanted.bridge.omaaWorkflowComposition().filter(row => !row.disabled) : config.native;
@@ -75,13 +87,13 @@ export async function apply(ctx, config) {
     } catch (error) { await retire(owner); throw error; }
   }
 
-  async function waitJobs() {
-    if (!busyJobs()) return;
+  async function waitJobs(signal) {
+    if (signal.aborted || !busyJobs()) return;
     await new Promise(resolve => {
       const jobs = ctx.get('jobs');
       const remove = jobs?.events.subscribe({ owners: 'scope' }, check);
-      const dispose = ctx.effect(() => () => { remove?.(); resolve(); });
-      function check() { if (!active || !busyJobs()) { remove?.(); dispose(); resolve(); } }
+      signal.addEventListener('abort', check, { once: true });
+      function check() { if (signal.aborted || !active || !busyJobs()) { signal.removeEventListener('abort', check); remove?.(); resolve(); } }
       check();
     });
   }
@@ -90,8 +102,13 @@ export async function apply(ctx, config) {
     // whenIdle includes Pi maintenance. Reserve all announced agents without
     // yielding between reservations; queued input wakes after we release them.
     for (;;) {
-      await Promise.all(liveAgents().map(agent => agent.whenIdle()));
-      await waitJobs();
+      const cancel = new AbortController(); waiting = { target: wanted, cancel };
+      try {
+        const cancelled = new Promise(resolve => cancel.signal.addEventListener('abort', resolve, { once: true }));
+        await Promise.race([Promise.all(liveAgents().map(agent => agent.whenIdle())), cancelled]);
+        await waitJobs(cancel.signal);
+        if (cancel.signal.aborted) return;
+      } finally { waiting = undefined; cancel.abort(); }
       if (!active || !same(wanted, target())) return;
       const gate = Promise.withResolvers(), holds = [];
       let reserved = true;
@@ -132,6 +149,7 @@ export async function apply(ctx, config) {
 
   function schedule() {
     pending = true;
+    if (waiting && !same(waiting.target, target())) waiting.cancel.abort();
     if (draining || !active) return draining;
     draining = (async () => {
       while (active && pending) {
