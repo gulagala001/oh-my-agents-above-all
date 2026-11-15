@@ -1,16 +1,20 @@
 import { Button, Select } from './ui.jsx';
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import css from './checkpoint-controls.css';
 import { assertCheckpointSession, findCheckpointIssues, openCheckpointFile, openCheckpointReview } from './checkpoint-navigation.mjs';
 
 export function CheckpointControls({ settings, sidebarRight, sessions, visible = true }) {
   const session = useSyncExternalStore(settings.subscribe, settings.getSnapshot);
   const id = session.sessionId, enabled = session.data?.product?.id === 'cursor';
-  const [state, setState] = useState({ data: null, error: '', busy: false, loading: false });
+  const [state, setState] = useState({ data: null, error: '', readError: '', busy: false, loading: false });
   const [turn, setTurn] = useState();
   const [confirmation, setConfirmation] = useState(null);
   const [reload, setReload] = useState(0);
-  const ticket = useRef(0);
+  const readTicket = useRef(0), lifetime = useRef(null), writing = useRef(null);
+  useLayoutEffect(() => {
+    const owner = {}; lifetime.current = owner;
+    return () => { if (lifetime.current === owner) { lifetime.current = null; writing.current = null; } };
+  }, [id, enabled]);
   const api = async (query = '', patch, signal) => {
     const response = await fetch(`omaa/api/checkpoints?session=${encodeURIComponent(id)}${query}`, {
       credentials: 'same-origin', signal,
@@ -21,40 +25,45 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     return value;
   };
   useEffect(() => {
-    setState({ data: null, error: '', busy: false, loading: false }); setTurn(undefined); setConfirmation(null);
+    setState({ data: null, error: '', readError: '', busy: false, loading: false }); setTurn(undefined); setConfirmation(null);
   }, [id, enabled]);
   useEffect(() => {
-    const controller = new AbortController(), revision = ++ticket.current;
-    const reading = enabled && visible && !session.data?.running;
-    setState(previous => ({ ...previous, loading: reading, ...(reading ? { error: '' } : {}) }));
+    const controller = new AbortController(), revision = ++readTicket.current;
+    const reading = enabled && visible && !session.data?.running && !state.busy;
+    setState(previous => ({ ...previous, loading: reading, ...(reading ? { readError: '' } : {}) }));
     if (reading) {
       api('', undefined, controller.signal).then(data => {
-        if (!controller.signal.aborted && ticket.current === revision && settings.getSnapshot().sessionId === id) {
-          setState({ data, error: '', busy: false, loading: false });
+        if (!controller.signal.aborted && readTicket.current === revision && settings.getSnapshot().sessionId === id) {
+          setState(previous => ({ ...previous, data, readError: '', loading: false }));
           setTurn(previous => data.checkpoints.some(row => row.turn === previous) ? previous : data.checkpoints.at(-1)?.turn);
         }
-      }).catch(error => { if (!controller.signal.aborted && ticket.current === revision && settings.getSnapshot().sessionId === id) setState(previous => ({ ...previous, loading: false, error: error.message })); });
+      }).catch(error => { if (!controller.signal.aborted && readTicket.current === revision && settings.getSnapshot().sessionId === id) setState(previous => ({ ...previous, loading: false, readError: previous.result ? `已收到操作回执，列表未刷新：${error.message}。请刷新检查点，不要重复恢复。` : error.message })); });
     }
-    return () => { controller.abort(); ++ticket.current; };
-  }, [id, enabled, visible, session.data?.running, reload]);
+    return () => { controller.abort(); ++readTicket.current; };
+  }, [id, enabled, visible, session.data?.running, reload, state.busy]);
   if (!enabled || !visible) return null;
   const data = state.data?.sessionId === id ? state.data : null;
   const selected = data?.checkpoints.find(row => row.turn === turn);
   const readingBusy = state.busy || state.loading;
   const busy = readingBusy || Boolean(session.data?.running);
   const stale = session.loading || session.saving || Boolean(session.error);
-  const canRestore = !busy && !stale && !session.data?.pendingMode && session.data?.mode === 'default';
+  const canRestore = !busy && !stale && !state.readError && !session.data?.pendingMode && session.data?.mode === 'default';
   const cannotFindIssues = busy || stale || session.data?.pendingMode || session.data?.mode === 'plan';
   const act = async operation => {
+    if (writing.current) return;
     try { assertCheckpointSession(settings, id, sidebarRight); }
     catch (error) { if (settings.getSnapshot().sessionId === id) setState(previous => ({ ...previous, error: error.message })); return; }
-    const revision = ++ticket.current;
+    const owner = lifetime.current, operationId = {}; writing.current = operationId; ++readTicket.current;
+    const owns = () => lifetime.current === owner && writing.current === operationId && settings.getSnapshot().sessionId === id;
+    setConfirmation(null);
     setState(previous => ({ ...previous, busy: true, error: '', result: undefined }));
     try {
       const result = await operation();
-      if (settings.getSnapshot().sessionId === id && ticket.current === revision) setState(previous => ({ ...previous, ...result, busy: false }));
+      if (owns()) setState(previous => ({ ...previous, ...result }));
     } catch (error) {
-      if (settings.getSnapshot().sessionId === id && ticket.current === revision) setState(previous => ({ ...previous, busy: false, error: error.message }));
+      if (owns()) setState(previous => ({ ...previous, error: error.message }));
+    } finally {
+      if (owns()) { writing.current = null; setState(previous => ({ ...previous, busy: false })); }
     }
   };
   const requestRestore = paths => setConfirmation({ id, turn, paths, selected });
@@ -63,10 +72,8 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     if (current.data?.running || current.loading || current.saving || current.error || current.data?.pendingMode || current.data?.mode !== 'default') throw Error('请在设置已确认的执行模式下恢复文件。');
     setConfirmation(null);
     const result = await api('', { turn, paths });
-    assertCheckpointSession(settings, id, sidebarRight);
-    let data;
-    try { data = await api(); } catch (error) { return { data: null, result, error: `已收到恢复回执，列表未刷新：${error.message}。请刷新检查点，不要重复恢复。` }; }
-    return { data, result, error: result.ok ? '' : result.conflicts.map(item => `${item.path}: ${item.message}`).join('\n') };
+    assertCheckpointSession(settings, id, sidebarRight, false);
+    return { data: null, result, error: result.ok ? '' : result.conflicts.map(item => `${item.path}: ${item.message}`).join('\n') };
   });
   const navigate = operation => {
     try { operation(); }
@@ -83,8 +90,8 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
     <p className="omaa-help">恢复会将选中文件还原到该回合修改前，保留对话。文件已被再次修改时会拒绝覆盖。</p>
     {session.data?.running && data?.checkpoints.length > 0 && <p className="omaa-help">运行中可查看已加载回合和当前文件；恢复和问题检查需先停止。</p>}
     <label>检查点 <Select aria-label="文件检查点" value={turn ?? ''} disabled={readingBusy || !data?.checkpoints.length}
-      onChange={event => { setTurn(Number(event.target.value)); setState(previous => ({ ...previous, error: '', result: undefined })); }}>
-      {!data?.checkpoints.length && <option value="">{session.data?.running ? '运行中，停止后加载检查点' : state.error ? '读取失败，请刷新' : !data ? '正在加载检查点…' : '暂无文件改动'}</option>}
+      onChange={event => { setConfirmation(null); setTurn(Number(event.target.value)); setState(previous => ({ ...previous, error: '', result: undefined })); }}>
+      {!data?.checkpoints.length && <option value="">{session.data?.running ? '运行中，停止后加载检查点' : state.readError ? '读取失败，请刷新' : !data ? '正在加载检查点…' : '暂无文件改动'}</option>}
       {data?.checkpoints.slice().reverse().map(row => <option key={row.turn} value={row.turn}>回合 {row.turn}</option>)}
     </Select></label>
     {selected?.files.map(file => <div className="omaa-checkpoint-file" key={file.path}>
@@ -119,6 +126,6 @@ export function CheckpointControls({ settings, sidebarRight, sessions, visible =
       <Button type="button" disabled={!canRestore} onClick={() => restore(confirmation.paths)}>确认恢复</Button>
     </div>}
     {state.result && <p role="status">{state.result.ok ? `已恢复 ${state.result.restored.length} 个文件。` : state.result.partial ? '仅部分文件已恢复，请查看冲突。' : '未恢复文件，请查看冲突。'}</p>}
-    {state.error && <p role="alert" className="omaa-error">{state.error}</p>}
+    {(state.error || state.readError) && <p role="alert" className="omaa-error">{[state.error, state.readError].filter(Boolean).join('\n')}</p>}
   </section>;
 }

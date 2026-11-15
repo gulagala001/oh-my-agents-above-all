@@ -28,6 +28,18 @@ test('Codex uses its own durable route and preserves native Git action revisions
   assert.deepEqual(JSON.parse(f.calls[2].options.body), { scope: 'unstaged', revision: 'r1', path: 'a.js', action: 'stage', hunk: 0 });
   f.store.dispose();
 });
+
+test('a background refresh retains queued navigation while a note is saving', async () => {
+  const f = fixture(); await f.store.open(); await f.store.refreshNotes();
+  let finish;
+  f.respond((url, options) => options.method === 'POST' ? new Promise(resolve => { finish = resolve; })
+    : new Response(JSON.stringify({ ...summary, scope: new URL(url, 'http://local/').searchParams.get('scope'), files: [] })));
+  const saving = f.store.update({ action: 'save' });
+  await f.store.open({ scope: 'turn', seq: 7 }); await f.store.open();
+  finish(new Response(JSON.stringify({ revision: 2, comments: [], reviewed: [] }))); await saving;
+  assert.equal(f.store.getSnapshot().options.scope, 'turn'); assert.equal(f.store.getSnapshot().options.seq, 7);
+  f.store.dispose();
+});
 test('session and product switches fence reads, late writes, and subsequent feedback admission', async () => {
   const f = fixture(); await f.store.open();
   let finish; f.respond(() => new Promise(resolve => { finish = resolve; }));

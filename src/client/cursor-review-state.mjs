@@ -32,7 +32,7 @@ export function createCursorReviewState(settings, request = fetch, product = 'cu
       if (!signal.aborted && owns(id, ticket)) emit({ notes, notesLoading: false });
     } catch (error) { if (!signal.aborted && owns(id, ticket)) emit({ notesLoading: false, error: error.message, errorCode: error.code || '' }); }
   }
-  async function open(input = { ...state.options, path: state.detail?.diff?.path }) {
+  async function open(input = pendingOpen ?? { ...state.options, path: state.detail?.diff?.path }) {
     const id = state.sessionId, ticket = generation; assertCursorReview(settings, id, product);
     const options = cursorReviewOptions(input);
     if (state.writing) { pendingOpen = options; return; }

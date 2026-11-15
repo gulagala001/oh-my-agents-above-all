@@ -33,7 +33,7 @@ export function CursorReview({ settings, sidebarRight, visible = true, navigatio
     const freshNavigation = navigation && navigated.current !== navigation.revision;
     if (freshNavigation) navigated.current = navigation.revision;
     if (freshNavigation && params?.scope === 'turn' && Number.isSafeInteger(params.seq)) void store.open({ scope: 'turn', seq: params.seq, path: params.path });
-    else if (!current.data?.running) void store.open({ ...store.getSnapshot().options, path: store.getSnapshot().detail?.diff?.path });
+    else if (!current.data?.running) void store.open();
     void store.metadata(); void store.refreshNotes();
   }, [store, enabled, visible, id, current.data?.running, navigation?.revision]);
   if (!enabled || !visible || state.sessionId !== id) return null;

@@ -36,13 +36,13 @@ export function createSessionSettings(ctx, request = fetch, enabled) {
     return { ...data, running: Boolean(data.running || row?.running),
       pendingMode: Boolean(data.pendingMode || row?.projectionValues?.plan?.pending) };
   };
-  const refresh = async () => {
+  const refresh = async ({ quiet = false } = {}) => {
     const sessionId = state.sessionId;
     if (disposed || !sessionId || enabled && !enabled.includes(productForPreset(state.agentPreset)?.id)) return;
     if (state.saving) { refreshAfterSave = true; return; }
     controller?.abort(); controller = new AbortController();
     const ticket = ++revision, signal = controller.signal;
-    state = { ...state, loading: true }; emit();
+    state = { ...state, loading: !quiet || !state.data }; emit();
     try {
       const data = await api(sessionId, undefined, signal);
       if (!disposed && state.sessionId === sessionId && revision === ticket) {
@@ -56,7 +56,7 @@ export function createSessionSettings(ctx, request = fetch, enabled) {
   };
   const scheduleRefresh = () => {
     if (queued || disposed) return; queued = true;
-    queueMicrotask(() => { queued = false; if (!disposed) void refresh(); });
+    queueMicrotask(() => { queued = false; if (!disposed) void refresh({ quiet: true }); });
   };
   const sync = () => {
     const sessionId = ctx.sidebarRight.mounted.getSnapshot();
@@ -229,7 +229,7 @@ export function PresetControls({ settings, getThemeRuntime, compact = false, vis
   const data = state.data, product = data?.product;
   useEffect(() => {
     if (compact || !visible || !data?.workflowTransition || data.workflowTransition.deferred || state.saving || state.loading || state.error) return;
-    const timer = setTimeout(() => void settings.refresh(), 2000); return () => clearTimeout(timer);
+    const timer = setTimeout(() => void settings.refresh({ quiet: true }), 2000); return () => clearTimeout(timer);
   }, [compact, visible, settings, data, state.loading, state.saving, state.error]);
   const enhancementWorkMode = state.pendingPatch?.enhancementWorkMode ?? workModeOf(data);
   const enhancementWorkSubmode = state.pendingPatch?.enhancementWorkSubmode ?? workSubmodeOf(data);
