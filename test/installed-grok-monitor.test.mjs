@@ -42,16 +42,24 @@ test('installed Grok monitor uses native guarded jobs, emits stdout events and s
   assert(actual && JSON.stringify(actual.messages).includes('Use `monitor` for watch processes'));
   assert(f.requests.slice(from).some(payload => JSON.stringify(payload.messages).includes('<monitor-event')));
 
-  // Monitoring reads absolute offsets; the native model cursor still sees all output.
+  // Monitor reads absolute offsets. Native DSH can deliver short output once in
+  // the completion notice or leave it available to the job_output cursor.
   phase = 0; const outputFrom = f.requests.length;
   f.replyWith(payload => phase++ === 0 ? toolReply('job_output', { job_id: id }) : textReply('Native monitor output collected.'));
   await f.prompt(session.sessionId, 'GROK_MONITOR_NATIVE_OUTPUT');
-  assert(f.requests.slice(outputFrom).some(payload => payload.messages.some(message => message.role === 'tool' && text(message).includes('DONE first') && text(message).includes('FAILED second'))));
+  const nativeReads = f.requests.slice(outputFrom).flatMap(payload => payload.messages.filter(message => message.role === 'tool').map(text));
+  const nativeNotices = events(await f.snapshot(session.sessionId)).filter(e => e.type === 'user/message')
+    .map(e => e.data.message ?? e.data).filter(m => m.source?.kind === 'tool-jobs').map(text);
+  const containsOutput = value => value.includes('DONE first') && value.includes('FAILED second');
+  if (!nativeReads.some(containsOutput)) {
+    assert(nativeReads.some(value => value.includes('no new output') && value.includes('completed')));
+    assert(nativeNotices.some(value => value.includes(id) && containsOutput(value)), 'the native settlement already delivered this job output');
+  }
 
   phase = 0; let cancelledId;
   f.replyWith(payload => {
     if (phase++ === 0) return toolReply('monitor', { command: 'sleep 1; printf late > should-not-exist.txt', description: 'Explicitly stopped monitor', timeout_ms: 0 });
-    if (phase === 2) { const value = toolValue(payload, 'monitor'); cancelledId = value?.taskId; assert(cancelledId); assert.equal(value.timeoutMs, 0); assert.equal(value.persistent, false); return toolReply('job_kill', { job_id: cancelledId }); }
+    if (phase === 2) { const value = toolValue(payload, 'monitor'); cancelledId = value?.taskId; assert(cancelledId); assert.equal(value.timeoutMs, 0); assert.equal(value.persistent, true); return toolReply('job_kill', { job_id: cancelledId }); }
     return textReply('Native monitor process stopped.');
   });
   await f.prompt(session.sessionId, 'GROK_MONITOR_EXPLICIT_STOP');

@@ -63,3 +63,13 @@ test('duplicate providers and incompatible protocol versions reject instead of c
   assert.throws(() => broker.register({ id: 'omd', select: () => null, mount: () => () => {} }), /already registered/);
   assert.throws(() => appearanceCoordinator({ [Symbol.for('omd.omaa.appearance.v1')]: { version: 2 } }), /Incompatible/);
 });
+
+test('a failed release or partial mount fences every provider until the exact owner retires', () => {
+  const broker=appearanceCoordinator({}), mounted=new Set();let fail=true;
+  const remove=broker.register({id:'old',select:()=>({key:'old'}),mount(){mounted.add('old');return()=>{if(fail)throw Error('release');mounted.delete('old');};}});
+  broker.register({id:'new',priority:2,select:()=>({key:'new'}),mount(){mounted.add('new');return()=>mounted.delete('new');}});
+  assert.deepEqual([...mounted],['old']);assert.equal(broker.getSnapshot().phase,'cleanup-failed');
+  fail=false;remove();assert.deepEqual([...mounted],['new']);
+  const broken=broker.register({id:'broken',priority:3,select:()=>({key:'broken'}),mount(_s,_f,own){own(()=>mounted.delete('partial'));mounted.add('partial');throw Error('mount');}});
+  assert.deepEqual([...mounted],[]);broken();assert.deepEqual([...mounted],['new']);
+});

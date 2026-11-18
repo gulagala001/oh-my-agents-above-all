@@ -53,7 +53,7 @@ export async function findCheckpointIssues(settings, sessions, sidebarRight, ses
     const submission = session.beginSubmission({ mode: 'queue', text, attachments: [] });
     try {
       const result = await session.prompt([{ type: 'text', text }], 'queue', undefined, submission.requestId);
-      if (!result.ok) throw new Error(result.error?.message || '宿主未接受问题检查。');
+      if (!result.ok || result.value?.accepted !== true) throw new Error(result.error?.message || '宿主未确认接收问题检查。');
       return result;
     } catch (error) { submission.abandon(); throw error; }
   });

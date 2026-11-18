@@ -129,3 +129,12 @@ test('validated argument material retains negative zero, exponent, quoted keys a
   await assert.rejects(submitSavedWorkflowRequest(f.deps, 'run', { name: 'reuse', scope: 'project', args: checked.args, argsJson: checked.argsJson.replace('"direct":-0', '"direct":0') }), /参数材料/);
   assert.equal(f.prompts.length, 1);
 });
+
+test('all workflow submission surfaces reserve the same session before awaiting its binding',async()=>{
+ const {withWorkflowSubmission}=await import('../src/client/zcode-workflow-input-state.mjs');
+ const sessions={},gate=Promise.withResolvers(),first=withWorkflowSubmission(sessions,'s',()=>gate.promise);
+ assert.throws(()=>withWorkflowSubmission(sessions,'s',()=>true),/正在发送/);
+ assert.equal(await withWorkflowSubmission(sessions,'other',()=>2),2);
+ gate.reject(Error('refused'));await assert.rejects(first,/refused/);
+ assert.equal(await withWorkflowSubmission(sessions,'s',()=>1),1);
+});

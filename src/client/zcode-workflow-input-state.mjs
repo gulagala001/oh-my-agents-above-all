@@ -11,3 +11,14 @@ export function assertWorkflowInputIdle(session) {
   if (['next-turn', 'next-step'].some(key => inbox[key].some(message => message?.source?.kind === 'user')))
     throw Error('当前会话已有用户请求在队列中，请等待结束后再发送工作流请求。');
 }
+
+// Saved definitions, resume, live holes and question cards all send through
+// the same native composer. Reserve it before awaiting the session binding.
+const submissions = new WeakMap();
+export function withWorkflowSubmission(sessions, sessionId, send) {
+  let pending = submissions.get(sessions);
+  if (!pending) submissions.set(sessions, pending = new Set());
+  if (pending.has(sessionId)) throw Error('此会话正在发送工作流请求，请等待请求结果。');
+  pending.add(sessionId);
+  return (async () => { try { return await send(); } finally { pending.delete(sessionId); } })();
+}

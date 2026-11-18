@@ -1,6 +1,6 @@
 import { SavedWorkflowMetaSchema, SavedWorkflowEntrySchema, SavedWorkflowInvalidEntrySchema, isValidSavedWorkflowName } from '../../lib/zcode-saved-contract.mjs';
 import { validateWorkflowArgs } from '../../lib/zcode-saved-args.mjs';
-import { assertWorkflowInputIdle } from './zcode-workflow-input-state.mjs';
+import { assertWorkflowInputIdle, withWorkflowSubmission } from './zcode-workflow-input-state.mjs';
 
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
 export function savedWorkflowResult(block) {
@@ -12,7 +12,7 @@ export function savedWorkflowResult(block) {
 
 const nonempty = value => typeof value === 'string' && value.length > 0;
 const sourceHash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
-const submissions = new WeakMap();
+
 // A component may disappear before admission returns. Keep attempted mutation
 // facts with the native sessions service and original read-call identity.
 const managementSnapshots = new WeakMap();
@@ -221,31 +221,29 @@ export async function submitSavedWorkflowRequest({ settings, sessions, sidebarRi
     : run
     ? `I choose to run this saved workflow. Load the zcode-workflows skill, then use run_saved_workflow with these arguments: ${argsText}. Read the current saved definition when running it; the current session mode and permissions apply.`
     : `Read this saved workflow with read_saved_workflow, without running it: ${argsText}.`;
-  const pending = submissions.get(sessions) ?? new Set();
-  if (pending.has(sessionId)) throw Error('此会话正在发送保存定义请求，请等待请求结果。');
   const key = management ? managementKey(sessionId, value.readCallId, value.sourceSha256) : undefined;
   const managed = management ? managementState(sessions) : undefined;
   if (managed?.locks.has(key)) throw Error('此读取快照已尝试管理请求，请核对实际结果并重新读取定义。');
-  submissions.set(sessions, pending); pending.add(sessionId);
-  let promptCalled = false;
-  try {
-    if (managed) { managed.locks.add(key); publishManagement(managed); }
-    return await sessions.using(sessionId, { source: 'omaa-zcode-saved-workflow' }, async reference => {
-    const { session } = await reference.ready;
-    check();
-    assertWorkflowInputIdle(session);
-    const submission = session.beginSubmission({ mode: 'queue', text, attachments: [] });
+  return withWorkflowSubmission(sessions, sessionId, async () => {
+    let promptCalled = false;
     try {
-      // A thrown/failed admission round-trip cannot prove the host did not
-      // accept. Retain this read-snapshot lock once prompt() is called.
-      promptCalled = true;
-      const result = await session.prompt([{ type: 'text', text }], 'queue', undefined, submission.requestId);
-      if (!result.ok || result.value?.accepted !== true) throw Error(result.error?.message || (management ? '无法确认宿主接受管理请求，请核对对话与实际结果。' : '宿主未接受工作流请求。'));
-      return result;
-    } catch (error) { submission.abandon(); throw error; }
-  }); } finally {
-    pending.delete(sessionId);
-    // Only failures before the native call can reopen this same snapshot.
-    if (managed && !promptCalled) { managed.locks.delete(key); publishManagement(managed); }
-  }
+      if (managed) { managed.locks.add(key); publishManagement(managed); }
+      return await sessions.using(sessionId, { source: 'omaa-zcode-saved-workflow' }, async reference => {
+      const { session } = await reference.ready;
+      check();
+      assertWorkflowInputIdle(session);
+      const submission = session.beginSubmission({ mode: 'queue', text, attachments: [] });
+      try {
+        // A thrown/failed admission round-trip cannot prove the host did not
+        // accept. Retain this read-snapshot lock once prompt() is called.
+        promptCalled = true;
+        const result = await session.prompt([{ type: 'text', text }], 'queue', undefined, submission.requestId);
+        if (!result.ok || result.value?.accepted !== true) throw Error(result.error?.message || (management ? '无法确认宿主接受管理请求，请核对对话与实际结果。' : '宿主未接受工作流请求。'));
+        return result;
+      } catch (error) { submission.abandon(); throw error; }
+    }); } finally {
+      // Only failures before the native call can reopen this same snapshot.
+      if (managed && !promptCalled) { managed.locks.delete(key); publishManagement(managed); }
+    }
+  });
 }

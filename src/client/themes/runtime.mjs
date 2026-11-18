@@ -27,33 +27,34 @@ export function createThemeRuntime(ctx, settings, adapterCss, layouts = {}, resp
       if (id !== 'host' && !packs.has(id)) return null;
       return { key: id, id };
     },
-    mount: selection => {
+    mount: (selection, _foreground, onCleanup) => {
       const item = packs.get(selection.id);
       state = { ...state, active: Boolean(item), selected: item?.skin.id ?? 'default', error: '' }; emit();
       if (!item) return () => { state = { ...state, active: false, selected: 'default' }; emit(); };
       const root = surface.documentElement, previousClass = root.classList.contains('omd');
       const names = ['omaaTheme', 'omdSkin', 'omdLayout', 'omdColors', 'appearance'];
       const previous = Object.fromEntries(names.map(name => [name, root.dataset[name]]));
-      root.classList.add('omd'); root.dataset.omaaTheme = item.skin.id; root.dataset.omdSkin = item.skin.id;
-      root.dataset.omdColors = ''; root.dataset.appearance = ctx.theme.getTheme().active.colorScheme;
-      if (item.skin.layout) root.dataset.omdLayout = item.skin.layout; else delete root.dataset.omdLayout;
-      const style = surface.createElement('style'); style.dataset.omaaThemeStyle = item.skin.id;
-      setHostStyle(style, tokenCss(item.skin) + '\n' + adapterCss + '\n' + responsiveCss + '\n' + item.css
-        + (item.skin.layout ? '\n' + (layouts[item.skin.layout] || '') : ''));
-      surface.head.append(style);
-      // Writing inherited aliases back to --dsw-* would create a CSS cycle.
-      const disposeTokens = item.skin.inheritsHost ? undefined : ctx.theme.overrideTokens('omaa/theme', hostTokens(item.skin));
-      let released = false;
+      let released = false, style, disposeTokens;
       releaseCurrent = () => {
-        if (released) return; released = true;
+        if (released) return;
         state = { ...state, active: false, selected: 'default' };
-        disposeTokens?.(); style.remove();
+        disposeTokens?.(); disposeTokens = undefined; style?.remove();
         if (!previousClass) root.classList.remove('omd');
         for (const name of names) {
           if (previous[name] === undefined) delete root.dataset[name]; else root.dataset[name] = previous[name];
         }
-        emit();
+        released = true; emit();
       };
+      onCleanup?.(releaseCurrent);
+      root.classList.add('omd'); root.dataset.omaaTheme = item.skin.id; root.dataset.omdSkin = item.skin.id;
+      root.dataset.omdColors = ''; root.dataset.appearance = ctx.theme.getTheme().active.colorScheme;
+      if (item.skin.layout) root.dataset.omdLayout = item.skin.layout; else delete root.dataset.omdLayout;
+      style = surface.createElement('style'); style.dataset.omaaThemeStyle = item.skin.id;
+      setHostStyle(style, tokenCss(item.skin) + '\n' + adapterCss + '\n' + responsiveCss + '\n' + item.css
+        + (item.skin.layout ? '\n' + (layouts[item.skin.layout] || '') : ''));
+      surface.head.append(style);
+      // Writing inherited aliases back to --dsw-* would create a CSS cycle.
+      disposeTokens = item.skin.inheritsHost ? undefined : ctx.theme.overrideTokens('omaa/theme', hostTokens(item.skin));
       return releaseCurrent;
     },
   });

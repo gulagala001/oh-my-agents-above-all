@@ -1,5 +1,5 @@
-const piDelegation = new Set(['workflow', 'subagent', 'send_message', 'interrupt_agent', 'list_agents', 'job_list', 'job_output', 'job_kill']);
-const nativeTeamCommunication = new Set(['send_message', 'interrupt_agent', 'list_agents']);
+const nativeTeamCommunication = new Set(['send_message', 'interrupt_agent', 'list_agents', 'wait_agent']);
+const piDelegation = new Set(['workflow', 'subagent', 'subagent_fork', ...nativeTeamCommunication, 'job_list', 'job_output', 'job_kill']);
 
 export function toolNeedsEnhancement(ctx, product, name, agent) {
   const enhanced = name === 'codegraph_index' || name.startsWith('mcp__codegraph__')

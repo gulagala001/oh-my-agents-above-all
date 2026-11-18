@@ -1,9 +1,9 @@
 import { assertSavedWorkflowSession } from './zcode-saved-workflow-state.mjs';
-import { assertWorkflowInputIdle } from './zcode-workflow-input-state.mjs';
+import { assertWorkflowInputIdle, withWorkflowSubmission } from './zcode-workflow-input-state.mjs';
 
 const MAX_SCRIPT_BYTES = 256 * 1024;
 const runPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-const submissions = new WeakMap();
+
 export async function submitLiveHoleRequest({ settings, sessions, sidebarRight, sessionId, alive }, { runId, siteId, body }) {
   if (!runPattern.test(runId) || typeof siteId !== 'string' || !siteId
     || typeof body !== 'string' || !body.trim() || new TextEncoder().encode(body).length > MAX_SCRIPT_BYTES)
@@ -38,10 +38,7 @@ async function submitNativeRequest({ settings, sessions, sidebarRight, sessionId
     assertSavedWorkflowSession(settings, sidebarRight, sessionId, true);
   };
   check();
-  const pending = submissions.get(sessions) ?? new Set();
-  if (pending.has(sessionId)) throw Error('此会话正在发送工作流请求，请等待请求结果。');
-  submissions.set(sessions, pending); pending.add(sessionId);
-  try { return await sessions.using(sessionId, { source }, async reference => {
+  return withWorkflowSubmission(sessions, sessionId, () => sessions.using(sessionId, { source }, async reference => {
     const { session } = await reference.ready;
     check();
     assertWorkflowInputIdle(session);
@@ -51,7 +48,7 @@ async function submitNativeRequest({ settings, sessions, sidebarRight, sessionId
       if (!result.ok || result.value?.accepted !== true) throw Error(result.error?.message || '宿主未接受工作流请求。');
       return result;
     } catch (error) { submission.abandon(); throw error; }
-  }); } finally { pending.delete(sessionId); }
+  }));
 }
 
 // The server bounds the decoded source. Also bound its JSON envelope before
