@@ -17,11 +17,17 @@ export async function apply(ctx, config) {
   const { scope: revision, matches: owned } = await scopeBinding(ctx);
   let branch, bridge = ctx.get('omd'), active = true, pending = false, draining;
   let replacing, failedTarget, deferredTarget, waiting;
-  const retiring = new Set();
-  const retire = async owner => {
-    if (!owner) return;
-    retiring.add(owner);
-    await owner.dispose(); retiring.delete(owner);
+  const owners = new Set(), retiring = new Map();
+  const retire = owner => {
+    if (!owners.has(owner)) return;
+    let cleanup = retiring.get(owner);
+    if (!cleanup) {
+      cleanup = Promise.resolve().then(() => owner.dispose()).then(() => {
+        owners.delete(owner); retiring.delete(owner);
+      }, error => { retiring.set(owner, null); throw error; });
+      retiring.set(owner, cleanup);
+    }
+    return cleanup;
   };
   const controller = { matches: owned, mode: 'native', error: null,
     get transition() {
@@ -48,7 +54,8 @@ export async function apply(ctx, config) {
       active = false; waiting?.cancel.abort();
       controller.mode = 'closed';
       hub.workflowControllers.delete(controller);
-      const results = await Promise.allSettled([...new Set([branch?.owner, ...retiring].filter(Boolean))].map(retire));
+      const results = await Promise.allSettled([...owners].map(retire));
+      await draining;
       const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
       if (errors.length) throw new AggregateError(errors, 'Workflow backend cleanup failed');
     };
@@ -75,6 +82,7 @@ export async function apply(ctx, config) {
         if (row === rows[0] && !scope.get('workflowEngine')) throw new Error('Workflow engine did not become available');
       }
     } });
+    owners.add(owner);
     try {
       await owner;
       if (!active) throw Error('工作流组件已停止');
@@ -124,7 +132,7 @@ export async function apply(ctx, config) {
         controller.mode = 'changing';
         controller.error = null;
         while (active) {
-          for (const owner of [...retiring]) await retire(owner);
+          for (const owner of [...retiring.keys()]) await retire(owner);
           await retire(branch?.owner); branch = undefined;
           if (!active) return;
           const latest = target();
