@@ -1,3 +1,35 @@
+# Oh My Agents Above All 0.17.15 · DSH 0.2.2-rc.3
+
+**未发布 / Unreleased.**
+
+[中文](#zh-01715) · [English](#en-01715)
+
+<a id="zh-01715"></a>
+
+## 中文
+
+### 体验优化
+
+- 同一会话的工作流卡片、恢复入口和问答面板会防止重复提交。Cursor 检查点操作等宿主确认后才收尾。
+- 主题切换失败时可以重试。Pi 团队成员可使用原生等待工具，普通会话遵循增强工具设置。
+
+<a id="en-01715"></a>
+
+## English
+
+### Improvements
+
+- Workflow cards, resume actions and question panels prevent duplicate submissions in the same conversation. Cursor checkpoint requests wait for host confirmation.
+- Failed theme handoffs can be retried. Pi team members retain the native wait tool while other conversations follow enhancement settings.
+
+## 安装 / Installation
+
+DSH **0.2.2-rc.3** · Node.js **24.9.0+**
+
+[固定安装包 / Install package](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.15/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.15.tgz) · [安装指南 / Installation guide](https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.15/SHA256SUMS)
+
+---
+
 # Oh My Agents Above All 0.17.14 · DSH 0.2.2-rc.3
 
 [中文](#zh-01714) · [English](#en-01714)
