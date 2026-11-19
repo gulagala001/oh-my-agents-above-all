@@ -8,13 +8,13 @@ Requires DSH **0.2.2-rc.3 or rc.5** and Node.js **24.9.0+**.
 
 Open **Plugins → Add plugin** and paste:
 
-For **rc.5**, copy the [rc.5 package URL](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz). For **rc.3**, use the URL below.
+For **rc.5**, copy the [rc.5 package URL](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz) ([rc.5 checksums](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/SHA256SUMS)). For **rc.3**, use the URL below.
 
 ```text
 https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.16.tgz
 ```
 
-When your current task finishes, enable the plugin or restart DSH when prompted. Checksums: [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/SHA256SUMS).
+When your current task finishes, enable the plugin or restart DSH when prompted. Checksums: [rc.3 SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/SHA256SUMS).
 
 ## Install from the command line
 

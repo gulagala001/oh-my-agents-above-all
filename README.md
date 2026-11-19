@@ -27,13 +27,13 @@
 
 在 DSH 里打开 **插件 → ＋ 添加插件**，粘贴：
 
-使用 **rc.5** 时，复制 [rc.5 安装包链接](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz)。使用 **rc.3** 时，复制下面的地址。
+使用 **rc.5** 时，复制 [rc.5 安装包链接](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz)（[rc.5 校验文件](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.5.omaa.0.17.16/SHA256SUMS)）。使用 **rc.3** 时，复制下面的地址。
 
 ```text
 https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.16.tgz
 ```
 
-等手头的任务跑完，按提示完整重启 DSH，原来的设置和会话都还在。命令行安装、升级和卸载见[安装指南](docs/install.md)，校验文件：[SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/SHA256SUMS)。
+等手头的任务跑完，按提示完整重启 DSH，原来的设置和会话都还在。命令行安装、升级和卸载见[安装指南](docs/install.md)，校验文件：[rc.3 SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/SHA256SUMS)。
 
 ### 2. 开启一个预设
 
