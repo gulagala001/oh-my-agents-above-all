@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "published": "0.2.2-rc.3.omaa.0.17.15",
+  "published": "0.2.2-rc.3.omaa.0.17.16",
   "repository": {
     "slug": "gulagala001/oh-my-agents-above-all",
     "description": "在 DSH 里用上 Codex、Grok Build、Cursor、Pi 和 ZCode 的工作方式，模型还是你自己的。 Codex, Grok Build, Cursor, Pi and ZCode presets for DeepSeek Harness, running on your own models.",
@@ -136,6 +136,56 @@
       "path": "docs/theme-sources.md",
       "role": "sources",
       "language": "zh"
+    }
+  ],
+  "allow": [
+    {
+      "path": "README.md",
+      "rule": "version",
+      "text": "v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "README.md",
+      "rule": "version",
+      "text": "0.2.2-rc.5",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "README_EN.md",
+      "rule": "version",
+      "text": "v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "README_EN.md",
+      "rule": "version",
+      "text": "0.2.2-rc.5",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "docs/install.md",
+      "rule": "version",
+      "text": "v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "docs/install.md",
+      "rule": "version",
+      "text": "0.2.2-rc.5",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "docs/install_EN.md",
+      "rule": "version",
+      "text": "v0.2.2-rc.5.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.5.omaa.0.17.16.tgz",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
+    },
+    {
+      "path": "docs/install_EN.md",
+      "rule": "version",
+      "text": "0.2.2-rc.5",
+      "reason": "同一产品版本为 DSH 0.2.2-rc.5 提供单独发布的固定安装包。"
     }
   ]
 }

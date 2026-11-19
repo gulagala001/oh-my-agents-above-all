@@ -1,7 +1,5 @@
 # Oh My Agents Above All 0.17.16 · DSH 0.2.2-rc.3
 
-**未发布 / Unreleased.**
-
 [中文](#zh-01716) · [English](#en-01716)
 
 <a id="zh-01716"></a>
