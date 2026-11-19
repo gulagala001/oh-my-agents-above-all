@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,9 @@ const original = buildHost(manifest.engines.dsh);
 // A new build directory never overwrites another build or installed profile.
 await mkdir(allowed, { recursive: true });
 await mkdir(target);
+// The standard documentation and prepack gates inspect the candidate's Git
+// inventory. Keep the host variant attached to the source revision it adapts.
+execFileSync('git', ['worktree', 'add', '--detach', target, 'HEAD'], { cwd: source, stdio: 'inherit' });
 const excluded = new Set(['node_modules', '.codegraph', '.git', '.cache', 'work', 'dist']);
 for (const name of ['src', 'scripts', 'test', 'lib', 'docs', 'compat', 'assets', 'cordis.patch.yml', 'CHANGELOG.md', 'CONTRIBUTING.md', 'README.md', 'README_EN.md', 'LICENSE', 'NOTICE', 'LICENSING.md', 'THIRD_PARTY_NOTICES.md', 'pnpm-lock.yaml', 'pnpm-workspace.yaml']) {
   await cp(join(source, name), join(target, name), { recursive: true, filter: path => !excluded.has(basename(path)) });
