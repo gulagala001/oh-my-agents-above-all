@@ -4,9 +4,33 @@ import * as fs from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadCursorRules, apply, inject } from '../src/cursor-rules.mjs';
+import { presetHost } from './fixtures/preset-host.mjs';
+import { executeNativeTool } from '../src/host/native-tool-call.mjs';
+
 async function fixture(t) { const cwd = await fs.mkdtemp(path.join(tmpdir(), 'omaa-cursor-rules-')); t.after(() => fs.rm(cwd, { recursive: true, force: true })); return cwd; }
 async function rule(cwd, name, header, content = name) { const file = path.join(cwd, '.cursor/rules', name + '.mdc'); await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, '---\n' + header + '\n---\n' + content); return file; }
-function host() { const hooks = new Map(), tools = new Map(), sections = [], warnings = []; const ctx = { tools: { register: tool => tools.set(tool.name, tool) }, systemPrompt: { section: section => sections.push(section) }, on: (name, handler) => hooks.set(name, handler), logger: { warn: value => warnings.push(value) } }; apply(ctx); return { hooks, tools, section: sections[0], warnings, async assemble(agent, messages = []) { for (const message of messages) hooks.get('agent/inbox/claimed')({agent,message}); const initial = { sections: [{name:'existing',text:'retain'}, {name:sections[0].name,text:sections[0].text({agent}),interpolate:false}], contexts: [], tools: [] }; return hooks.get('system-prompt/assemble')(initial,{agent},async()=>initial); } }; }
+async function host(t, cwd) {
+  const ctx = await presetHost(t);
+  const agent = await ctx.agentLoop.create('cursor-rules', {}, { cwd });
+  const hooks = new Map(), sections = [], warnings = [];
+  apply({
+    agents: ctx.agents, tools: ctx.tools, effect: fn => ctx.effect(fn),
+    systemPrompt: { section: definition => sections.push(definition) },
+    logger: { warn: value => warnings.push(value) },
+    on(name, handler) { hooks.set(name, handler); ctx.on(name, handler); },
+  });
+  return {
+    agent, hooks, section: sections[0], warnings,
+    request(name) {
+      return executeNativeTool(ctx, { agent, callId: 'rule', name: 'cursor_rule', arguments: { name }, signal: new AbortController().signal });
+    },
+    async assemble(agent, messages = []) {
+      for (const message of messages) hooks.get('agent/inbox/claimed')({ agent, message });
+      const initial = { sections: [{ name: 'existing', text: 'retain' }, { name: sections[0].name, text: sections[0].text({agent}), interpolate: false }], contexts: [], tools: [] };
+      return hooks.get('system-prompt/assemble')(initial, {agent}, async () => initial);
+    },
+  };
+}
 
 test('official field precedence, glob files, description-only catalog and explicit manual', async t => {
   const cwd = await fixture(t);
@@ -67,14 +91,14 @@ test('symlinked .cursor directory and malformed metadata fail explicitly', async
 });
 
 test('plugin loads literal scope rules from real tool results, manual mentions and next-step requests', async t => {
-  const cwd = await fixture(t), agent = { session: { header: { cwd } } }, other = { session: { header: { cwd } } }, h = host();
-  assert.deepEqual(inject, ['tools','systemPrompt']); assert.equal(h.section.interpolate,false);
+  const cwd = await fixture(t), h = await host(t,cwd), agent = h.agent, other = {};
+  assert.deepEqual(inject, ['tools','systemPrompt','agents']); assert.equal(h.section.interpolate,false);
   await rule(cwd,'always','alwaysApply: true','{{not_interpolated}}'); await rule(cwd,'file','globs: src/**'); await rule(cwd,'choose','description: API rules','CHOSEN_SECRET_BODY'); await rule(cwd,'manual','');
   const step = messages => h.assemble(agent,messages);
   await step([]); assert.ok(h.section.text({agent}).includes('{{not_interpolated}}')); assert.ok(!h.section.text({agent}).includes('CHOSEN_SECRET_BODY')); assert.equal(h.section.text({agent:other}),'');
-  assert.throws(()=>h.tools.get('cursor_rule').execute({name:'unknown'},{agent}),/not found/);
-  const response=h.tools.get('cursor_rule').execute({name:'choose'},{agent}); assert.ok(response.includes('next step')); assert.ok(!response.includes('CHOSEN_SECRET_BODY')); assert.ok(!h.section.text({agent}).includes('CHOSEN_SECRET_BODY'));
-  h.hooks.get('tools/result')({agent,name:'read',arguments:{file_path:path.join(cwd,'src/file.ts')}},{isError:false});
+  assert.match((await h.request('unknown')).error.message,/not found/);
+  const result=await h.request('choose'); assert.equal(result.isError,false); const response=result.value; assert.ok(response.includes('next step')); assert.ok(!response.includes('CHOSEN_SECRET_BODY')); assert.ok(!h.section.text({agent}).includes('CHOSEN_SECRET_BODY'));
+  h.hooks.get('tools/result')({agent,name:'read',arguments:{file_path:path.join(cwd,'src/file.ts')}},{isError:false,value:{path:path.join(cwd,'src/file.ts')}});
   await step([{source:{kind:'user'},content:[{type:'text',text:'Use @manual.'},{type:'file',attachment:{name:'src/fake.ts',attachmentId:'opaque',bytes:5}}]}]);
   assert.ok(h.section.text({agent}).includes('CHOSEN_SECRET_BODY')); assert.ok(h.section.text({agent}).includes('file (glob)'));
   // Punctuation following @manual is not part of the rule name.
@@ -83,10 +107,10 @@ test('plugin loads literal scope rules from real tool results, manual mentions a
 });
 
 test('plugin does not infer workspace paths from opaque upload labels and reports invalid rule failures', async t => {
-  const cwd=await fixture(t),agent={session:{header:{cwd}}},h=host(); await rule(cwd,'scoped','globs: **/*.ts');
+  const cwd=await fixture(t),h=await host(t,cwd),agent=h.agent; await rule(cwd,'scoped','globs: **/*.ts');
   const step=messages=>h.assemble(agent,messages);
   await step([{source:{kind:'user'},content:[{type:'file',attachment:{name:'src/upload.ts',attachmentId:'opaque'}}]}]); assert.ok(!h.section.text({agent}).includes('scoped (glob)'));
-  await rule(cwd,'invalid','alwaysApply: 7'); await step([]); assert.ok(h.section.text({agent}).includes('were not applied')); assert.equal(h.warnings.length,1); assert.throws(()=>h.tools.get('cursor_rule').execute({name:'scoped'},{agent}),/catalog has not loaded/);
+  await rule(cwd,'invalid','alwaysApply: 7'); await step([]); assert.ok(h.section.text({agent}).includes('were not applied')); assert.equal(h.warnings.length,1); assert.match((await h.request('scoped')).error.message,/catalog has not loaded/);
 });
 
 test('file count and aggregate selected context are bounded', async t => {
@@ -99,7 +123,7 @@ test('file count and aggregate selected context are bounded', async t => {
 });
 
 test('manual rule bodies are not injected from assistant mentions or failed file results', async t => {
-  const cwd=await fixture(t),agent={session:{header:{cwd}}},h=host();
+  const cwd=await fixture(t),h=await host(t,cwd),agent=h.agent;
   await rule(cwd,'manual','','MANUAL_BODY'); await rule(cwd,'typed','globs: **/*.ts');
   h.hooks.get('tools/result')({agent,name:'read',arguments:{file_path:'a.ts'}},{isError:true});
   await h.assemble(agent,[{source:{kind:'assistant'},content:[{type:'text',text:'@manual'}]}]);
@@ -107,7 +131,7 @@ test('manual rule bodies are not injected from assistant mentions or failed file
 });
 
 test('DSH assemble-before-pre-step sees first-request always/manual and next-request read glob', async t => {
-  const cwd=await fixture(t),agent={session:{header:{cwd}}},h=host();
+  const cwd=await fixture(t),h=await host(t,cwd),agent=h.agent;
   await rule(cwd,'always','alwaysApply: true','FIRST_REQUEST_ALWAYS {{literal}}');
   await rule(cwd,'manual','','FIRST_REQUEST_MANUAL');
   await rule(cwd,'typed','globs: src/**/*.ts','READ_NEXT_REQUEST_GLOB');
@@ -118,7 +142,7 @@ test('DSH assemble-before-pre-step sees first-request always/manual and next-req
   assert.ok(section(first).text.includes('FIRST_REQUEST_MANUAL'));
   assert.ok(!section(first).text.includes('READ_NEXT_REQUEST_GLOB'));
   assert.equal(section(first).interpolate,false); assert.equal(first.sections[0].text,'retain');
-  h.hooks.get('tools/result')({agent,name:'read',arguments:{file_path:'src/read.ts'}},{isError:false});
+  h.hooks.get('tools/result')({agent,name:'read',arguments:{file_path:'src/read.ts'}},{isError:false,value:{path:path.join(cwd,'src/read.ts')}});
   const second=preStep(await h.assemble(agent));
   assert.ok(section(second).text.includes('READ_NEXT_REQUEST_GLOB'));
   await rule(cwd,'always','alwaysApply: true','CHANGED_FOR_THIS_REQUEST');

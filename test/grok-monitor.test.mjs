@@ -3,8 +3,18 @@ import assert from 'node:assert/strict';
 import { apply, MonitorLines, MonitorRateLimiter } from '../src/presets/grok/monitor.mjs';
 import { setTimeout as delay } from 'node:timers/promises';
 
-function fixture({ failNotice = false, foreign = false } = {}) {
-  let listener, tool, offset = 0; const disposers = [], pending = [], messages = [], killed = [];
+import { presetHost } from './fixtures/preset-host.mjs';
+
+async function registerMonitor(t, services, shell) {
+  const root = await presetHost(t);
+  root.tools.register({ name: 'bash', parameters: { type: 'object' },
+    output: { schema: { type: 'object' }, render: () => [] }, execute: (_args, exec) => shell(exec) });
+  apply({ ...services, tools: root.tools, events: root.events, get: root.get.bind(root), waterfall: root.waterfall.bind(root) });
+  return root.tools.get('monitor');
+}
+
+async function fixture(t, { failNotice = false, foreign = false } = {}) {
+  let listener, offset = 0; const disposers = [], pending = [], messages = [], killed = [];
   const job = { id: 'owned-job', owner: foreign ? 'foreign' : 'owner', kind: 'bash', label: 'owned command', status: 'running' };
   const agent = { id: 'owner', status: 'idle', followup(message) { if (failNotice) throw Error('notice unavailable'); messages.push(message); }, inject(message) { messages.push(message); } };
   const ctx = { omaaGrokMonitorShell: { run: (_call, next) => next() }, agents: { get: () => agent }, logger: { warn() {} }, effect(fn) { disposers.push(fn()); },
@@ -13,16 +23,16 @@ function fixture({ failNotice = false, foreign = false } = {}) {
         const value = pending.shift() ?? { chunks: [] }; offset += value.chunks.reduce((n, row) => n + Buffer.byteLength(row.text), 0);
         return { lossy: false, ...value, next: offset }; },
       kill(id, owner, reason) { killed.push({ id, owner, reason }); job.status = 'killed'; listener({ type: 'stopping', job }); } },
-    tools: { register(value) { tool = value; }, get: name => name === 'bash', async execute() {
-      listener({ type: 'registered', job }); return { isError: false, value: { kind: 'background', jobId: job.id } };
-    } },
   };
-  apply(ctx);
+  const shell = () => {
+    listener({ type: 'registered', job }); return { kind: 'background', jobId: job.id };
+  };
+  const tool = await registerMonitor(t, ctx, shell);
   return { job, messages, killed,
     start: args => tool.execute({ command: 'owned command', description: 'watch "own"\nstate', ...args },
       { agent, callId: 'outer', token: Symbol('accepted'), signal: new AbortController().signal }),
     output(chunks, extra = {}) { pending.push({ chunks, ...extra }); listener({ type: 'output', id: job.id }); },
-    finish() { job.status = 'completed'; listener({ type: 'settled', job, cause: 'completed' }); },
+    finish() { job.status = 'completed'; listener({ type: 'settled', job, cause: 'producer' }); },
     async close() { for (const fn of disposers.reverse()) await fn?.(); } };
 }
 
@@ -65,22 +75,22 @@ test('monitor byte cap and fragmented Unicode retain the original tail and reset
   assert.deepEqual(lines.flush(), []);
 });
 
-test('cancel after native job registration kills the exact started job even when final tool materialization loses its value', async () => {
-  let listener, tool, registeredExec; const killed = [], controller = new AbortController();
+test('cancel after native job registration kills the exact started job even when final tool materialization loses its value', async t => {
+  let listener, registeredExec; const killed = [], controller = new AbortController();
   const job = { id: 'bash-exact', owner: 'owner', kind: 'bash', label: 'sleep 30', status: 'running' };
   const ctx = {
     omaaGrokMonitorShell: { run: (_call, next) => next() },
     logger: { warn() {} }, effect() {},
     jobs: { events: { subscribe(_filter, callback) { listener = callback; } }, get() { return job; }, kill(id, owner, reason) { killed.push({ id, owner, reason }); } },
-    tools: { register(definition) { tool = definition; }, get(name) { return name === 'bash'; }, async execute(exec) {
-      registeredExec = exec;
-      listener({ type: 'registered', job });
-      controller.abort(new Error('late cancellation'));
-      return { isError: true, error: { message: 'ABORTED' } };
-    } },
   };
-  apply(ctx);
-  await assert.rejects(tool.execute({ command: 'sleep 30', description: 'cancel probe', persistent: true, timeout_ms: 36_000_001 }, { agent: { id: 'owner' }, callId: 'outer', token: 'parent-token', signal: controller.signal }), /ABORTED/);
+  const shell = exec => {
+    registeredExec = exec;
+    listener({ type: 'registered', job });
+    controller.abort(new Error('late cancellation'));
+    return { kind: 'background', jobId: job.id };
+  };
+  const tool = await registerMonitor(t, ctx, shell);
+  await assert.rejects(tool.execute({ command: 'sleep 30', description: 'cancel probe', persistent: true, timeout_ms: 36_000_001 }, { agent: { id: 'owner' }, callId: 'outer', token: 'parent-token', signal: controller.signal }), /tool call aborted/i);
   assert.equal(registeredExec.parent, 'parent-token');
   assert.equal(registeredExec.name, 'bash');
   assert.equal(registeredExec.arguments.run_in_background, true);
@@ -89,7 +99,7 @@ test('cancel after native job registration kills the exact started job even when
 });
 
 test('monitor timeout zero is persistent and a producer gap severs earlier partial stdout', async t => {
-  const f = fixture(); t.after(() => f.close());
+  const f = await fixture(t); t.after(() => f.close());
   const started = await f.start({ timeout_ms: 0 }); assert.equal(started.timeoutMs, 0); assert.equal(started.persistent, true);
   f.output([{ channel: 'stdout', text: 'BEFORE_PARTIAL' }]);
   f.output([{ channel: 'stdout', text: 'AFTER\n', gapBefore: true }, { channel: 'stderr', text: 'HIDDEN_STDERR\n' }]);
@@ -101,7 +111,7 @@ test('monitor timeout zero is persistent and a producer gap severs earlier parti
 });
 
 test('monitor complete batches include gap and truncation notices inside the UTF-8 body budget', async t => {
-  const f = fixture(); t.after(() => f.close()); await f.start({ persistent: true });
+  const f = await fixture(t); t.after(() => f.close()); await f.start({ persistent: true });
   f.output([{ channel: 'stdout', text: ('世界'.repeat(800) + '\n').repeat(20), gapBefore: true }]); f.finish();
   assert.equal(f.messages.length, 1);
   const body = f.messages[0].content[0].text.split('\n').slice(1, -1).join('\n');
@@ -109,12 +119,12 @@ test('monitor complete batches include gap and truncation notices inside the UTF
 });
 
 test('notice transport failure stops exactly the owned native job', async t => {
-  const f = fixture({ failNotice: true }); t.after(() => f.close()); await f.start({ persistent: true });
+  const f = await fixture(t, { failNotice: true }); t.after(() => f.close()); await f.start({ persistent: true });
   f.output([{ channel: 'stdout', text: 'one event\n' }]); await delay(250);
   assert.equal(f.killed.length, 1); assert.equal(f.killed[0].id, 'owned-job'); assert.equal(f.killed[0].owner, 'owner');
 });
 
 test('foreign native job identity is refused without canceling that other owner', async t => {
-  const f = fixture({ foreign: true }); t.after(() => f.close());
+  const f = await fixture(t, { foreign: true }); t.after(() => f.close());
   await assert.rejects(f.start({ persistent: true }), /identity did not match/); assert.deepEqual(f.killed, []);
 });

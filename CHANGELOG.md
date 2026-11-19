@@ -1,3 +1,33 @@
+# Oh My Agents Above All 0.17.16 · DSH 0.2.2-rc.3
+
+**未发布 / Unreleased.**
+
+[中文](#zh-01716) · [English](#en-01716)
+
+<a id="zh-01716"></a>
+
+## 中文
+
+### 体验优化
+
+- 为 DSH 0.2.2-rc.5 提供独立安装包，Pi 扩展和 Grok 定时任务使用对应的宿主实现。
+
+<a id="en-01716"></a>
+
+## English
+
+### Improvements
+
+- Adds a dedicated DSH 0.2.2-rc.5 build with matching host support for Pi extensions and Grok schedules.
+
+## 安装 / Installation
+
+DSH **0.2.2-rc.3** · Node.js **24.9.0+**
+
+[固定安装包 / Install package](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/oh-my-agents-above-all-0.2.2-rc.3.omaa.0.17.16.tgz) · [安装指南 / Installation guide](https://github.com/gulagala001/oh-my-agents-above-all/blob/main/docs/install.md) · [SHA256SUMS](https://github.com/gulagala001/oh-my-agents-above-all/releases/download/v0.2.2-rc.3.omaa.0.17.16/SHA256SUMS)
+
+---
+
 # Oh My Agents Above All 0.17.15 · DSH 0.2.2-rc.3
 
 [中文](#zh-01715) · [English](#en-01715)

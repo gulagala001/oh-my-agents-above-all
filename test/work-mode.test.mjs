@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { apply } from '../src/index.mjs';
+import { apply } from '../src/runtime.mjs';
 
 async function fixture(t) {
   const directory = await mkdtemp(join(tmpdir(), 'omaa-work-mode-'));
@@ -26,7 +26,7 @@ async function fixture(t) {
     agents: { get: () => agent, list: () => [agent] }, sessions: { flush: async () => {} },
     sessionProjections: { stateOf: () => undefined },
     effect() {}, on() {}, inject() {}, emit() {},
-    get: name => name === 'omd' ? omd : undefined,
+    get: name => name === 'omd' ? omd : name === 'omaaActivation' ? { available: () => true } : undefined,
     provide: (name, service) => { if (name === 'omaa') hub = service; },
   };
   await apply(ctx);

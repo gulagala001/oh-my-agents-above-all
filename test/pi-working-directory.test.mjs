@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { presetHost } from './fixtures/preset-host.mjs';
 import { spawn } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, readFile, readdir, stat, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -35,9 +36,15 @@ async function fixture(t) {
       register(command) { commands.set(command.name, command); return () => { if (commands.get(command.name) === command) commands.delete(command.name); }; } },
   };
   services.set('tools', ctx.tools); services.set('commands', ctx.commands);
-  const session = { id: 'directory-session', header: { cwd: first, origin: 'root', projectId: 'immutable-project' }, snapshotEvents: () => [] };
-  const agent = { id: session.id, session, ctx, status: 'idle', inbox: { nextTurn: [], nextStep: [] }, options: {} };
-  return { root, first, second, third, agentDir, ctx, services, hooks, tools, commands, agent, setCwd(value) { cwd = value; }, get ensureCalls() { return ensureCalls; } };
+  const native = await presetHost(t);
+  ctx.on = (name, callback) => { hooks.set(name, callback); return native.on(name, callback); };
+  const agent = await native.agentLoop.create('directory-session', {}, { cwd: first, agentPreset: 'omaa-pi' });
+  native.provide('commands', ctx.commands);
+  services.set('agents', native.agents);
+  services.set('agentPresets', { composedPreset: scope => scope === agent.ctx ? 'omaa-pi' : undefined });
+  ctx.agents = native.agents;
+  ctx.omaa = { product: () => ({ id: 'pi' }) };
+  return { root, first, second, third, agentDir, ctx, services, hooks, tools: { get: name => native.tools.get(name, agent) }, commands, agent, setCwd(value) { cwd = value; }, get ensureCalls() { return ensureCalls; } };
 }
 
 test('Pi resources and prompt frame follow current directory while session identity stays immutable', async t => {
@@ -60,9 +67,9 @@ test('Pi resources and prompt frame follow current directory while session ident
   assert.equal(frame.options.cwd, f.second);
   assert.equal(frame.options.customPrompt, 'SECOND_RESOURCE');
   assert.equal(f.agent.session.header.cwd, f.first);
-  assert.equal(f.agent.session.header.projectId, 'immutable-project');
+  assert.equal(f.agent.session.header.agentPreset, 'omaa-pi');
   const submitted = [];
-  f.agent.followup = value => submitted.push(value);
+  f.agent.followup = value => { submitted.push(value); f.agent.inject(value); };
   await f.commands.get('location').handler({ agent: f.agent, rawInput: ' argument', signal });
   assert.equal(submitted[0].content[0].text, '/location argument');
   f.hooks.get('agent/inbox/claimed')({ agent: f.agent, message: submitted[0] });
@@ -138,7 +145,7 @@ test('Pi starts a new guest after cd, captures each exec cwd, and retains origin
   assert.deepEqual(guestSpawns().map(value => value.cwd), [f.first, f.second]);
   assert(f.ensureCalls >= 2, 'guest startup must use public directory ensure');
   assert(requests.every(value => !value.snapshot || value.snapshot.sessionHeader.cwd === f.first));
-  assert(requests.every(value => !value.snapshot || value.snapshot.sessionHeader.projectId === 'immutable-project'));
+  assert(requests.every(value => !value.snapshot || value.snapshot.sessionHeader.agentPreset === 'omaa-pi'));
   executableGate = { entered: Promise.withResolvers(), release: Promise.withResolvers() };
   const gate = executableGate, pending = run();
   await gate.entered.promise;
